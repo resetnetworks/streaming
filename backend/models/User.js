@@ -17,12 +17,18 @@ const schema = new mongoose.Schema({
             message: "Please enter a valid email"
         }
     },
-    password: {
-        type: String,
-        required: [true, "Password is required"],
-        minlength: [8, "Password must be at least 8 characters long"],
-        select: false
-    },
+  password: {
+  type: String,
+  minlength: [8, "Password must be at least 8 characters long"],
+  select: false,
+  required: function() {
+    return !this.googleId; // agar Google login hai to password required nahi
+  }
+},
+googleId: {
+  type: String, // store Google profile id if you want
+},
+
     resetPasswordToken: {
     type: String,
 },
@@ -74,6 +80,34 @@ resetPasswordExpire: {
             ref: "Album",
         },
     ],
+
+    purchaseHistory: [
+  {
+    itemType: {
+      type: String,
+      enum: ["song", "album"],
+      required: true,
+    },
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      refPath: "purchaseHistory.itemType",
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    paymentId: {
+      type: String,
+      required: true,
+    },
+    purchasedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+],
+
 }, { timestamps: true });
 
 export const User = mongoose.model("User", schema);
