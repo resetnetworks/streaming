@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import { sendMail } from "../utils/sendResetPassMail.js";
 import crypto from "crypto";
 
+
 export const registerUser = TryCatch(async (req, res) => {
   const { name, email, password, dob } = req.body;
 
@@ -203,3 +204,29 @@ export const resetPassword = TryCatch(async (req, res) => {
 
   res.status(200).json({ message: "Password reset successful" });
 });
+
+// google callback handler
+export const googleAuthCallback = (req, res) => {
+  try {
+    generateToken(req.user._id, res);
+    res.redirect(process.env.CLIENT_URL || "/");
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    res.status(500).send("Authentication failed.");
+  }
+};
+
+// Facebook callback handler
+export const facebookAuthCallback = (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Facebook authentication failed" });
+  }
+
+  generateToken(req.user._id, res);
+
+  res.status(200).json({
+    success: true,
+    message: "Facebook login successful",
+    user: req.user,
+  });
+};

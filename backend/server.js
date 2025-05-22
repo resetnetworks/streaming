@@ -2,7 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDb from "./database/db.js";
 import cookieParser from "cookie-parser";
-import userRoutes from "./routes/userRoutes.js"
+import userRoutes from "./routes/userRoutes.js";
+import passport from "./middleware/passport.js";
 
 dotenv.config();
 
@@ -13,6 +14,9 @@ const port = process.env.PORT
 app.use(cookieParser());
 // using middlewares
 app.use(express.json());
+
+
+app.use(passport.initialize());
 
 
 // using routes  
