@@ -13,6 +13,7 @@ import {
   resetPassword,
   googleAuthCallback,
   facebookAuthCallback,
+  appleCallback,
 } from "../controllers/userControllers.js";
 
 
@@ -54,6 +55,16 @@ router.get(
   "/facebook/callback",
   passport.authenticate("facebook", { session: false, failureRedirect: "/login" }),
   facebookAuthCallback
+);
+
+
+// Apple OAuth callback URL (Apple redirects here after login)
+router.get("/apple", passport.authenticate("apple"));
+
+router.post(
+  "/apple/callback",
+  passport.authenticate("apple", { session: false, failureRedirect: "/login" }),
+  appleCallback
 );
 
 

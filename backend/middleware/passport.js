@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
+import AppleStrategy from "passport-apple";
 import { User } from "../models/User.js";
 import dotenv from "dotenv";
 
@@ -72,6 +73,45 @@ passport.use(
         return done(null, user);
       } catch (error) {
         return done(error, null);
+      }
+    }
+  )
+);
+
+
+passport.use(
+  new AppleStrategy(
+    {
+      clientID: process.env.APPLE_CLIENT_ID,
+      teamID: process.env.APPLE_TEAM_ID,
+      keyID: process.env.APPLE_KEY_ID,
+      privateKey: process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      callbackURL: process.env.APPLE_CALLBACK_URL,
+      passReqToCallback: false,
+    },
+    async (accessToken, refreshToken, idToken, profile, done) => {
+      try {
+        const email = idToken.email; // Email is only available the first time
+        const name = `${idToken.firstName || "Apple"} ${idToken.lastName || "User"}`;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+          user = new User({
+            name,
+            email,
+            appleId: idToken.sub,
+            password: null,
+            authType: "apple",
+            profileImage: "", // Apple doesn’t provide profile pictures
+            role: "user",
+          });
+          await user.save({ validateBeforeSave: false });
+        }
+
+        return done(null, user);
+      } catch (err) {
+        return done(err, null);
       }
     }
   )

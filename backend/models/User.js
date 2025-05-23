@@ -29,6 +29,13 @@ googleId: {
   type: String, // store Google profile id if you want
 },
 
+facebookId:{
+  type: String,
+},
+appleId:{
+  type: String,
+},
+
     resetPasswordToken: {
     type: String,
 },
