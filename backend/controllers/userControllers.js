@@ -230,3 +230,18 @@ export const facebookAuthCallback = (req, res) => {
     user: req.user,
   });
 };
+
+// Apple callback handler
+export const appleCallback = (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Apple authentication failed" });
+  }
+
+  generateToken(req.user._id, res);
+
+  res.status(200).json({
+    success: true,
+    message: "Apple login successful",
+    user: req.user,
+  });
+};
