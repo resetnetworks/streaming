@@ -1,23 +1,14 @@
 import { Song } from "../models/Song.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
-import { convertAudio } from "../utils/convertAudio.js";
-import path from "path";
-
-function generateConvertedUrls(outputPrefix, baseFileName) {
-  const region = process.env.AWS_REGION;
-  const bucket = process.env.AWS_S3_BUCKET;
-
-  return {
-    "64kbps": `https://${bucket}.s3.${region}.amazonaws.com/${outputPrefix}/${baseFileName}_64kbps.m4a`,
-    "128kbps": `https://${bucket}.s3.${region}.amazonaws.com/${outputPrefix}/${baseFileName}_128kbps.m4a`,
-    "256kbps": `https://${bucket}.s3.${region}.amazonaws.com/${outputPrefix}/${baseFileName}_256kbps.m4a`,
-  };
-}
-
 
 export const createSong = async (req, res) => {
   try {
-    const { title, artist, genre, duration, price, isPremium, releaseDate } = req.body;
+    let { title, artist, genre, duration, price, isPremium, releaseDate } = req.body;
+
+    // Normalize genre to array
+    if (typeof genre === "string") {
+      genre = genre.split(",").map((g) => g.trim());
+    }
 
     const coverImageFile = req.files?.coverImage?.[0];
     const audioFile = req.files?.audio?.[0];
@@ -29,13 +20,6 @@ export const createSong = async (req, res) => {
     const audioUrl = await uploadToS3(audioFile, "songs");
     const coverImageUrl = coverImageFile ? await uploadToS3(coverImageFile, "covers") : "";
 
-    const baseFileName = path.basename(audioUrl).split(".")[0];
-    const outputPrefix = `converted/${baseFileName}`;
-
-    await convertAudio(audioUrl, outputPrefix); // Use correct output path
-
-    const convertedVersions = generateConvertedUrls(outputPrefix, baseFileName);
-
     const newSong = await Song.create({
       title,
       artist,
@@ -46,7 +30,6 @@ export const createSong = async (req, res) => {
       releaseDate,
       coverImage: coverImageUrl,
       audioUrl,
-      convertedVersions,
     });
 
     res.status(201).json({ success: true, song: newSong });
@@ -61,7 +44,12 @@ export const updateSong = async (req, res) => {
     const song = await Song.findById(req.params.id);
     if (!song) return res.status(404).json({ message: "Song not found" });
 
-    const { title, artist, genre, duration, price, isPremium, releaseDate } = req.body;
+    let { title, artist, genre, duration, price, isPremium, releaseDate } = req.body;
+
+    // Normalize genre to array
+    if (typeof genre === "string") {
+      genre = genre.split(",").map((g) => g.trim());
+    }
 
     if (req.files?.coverImage?.[0]) {
       song.coverImage = await uploadToS3(req.files.coverImage[0], "covers");
@@ -70,16 +58,17 @@ export const updateSong = async (req, res) => {
     if (req.files?.audio?.[0]) {
       const audioUrl = await uploadToS3(req.files.audio[0], "songs");
       song.audioUrl = audioUrl;
-
-      const baseFileName = path.basename(audioUrl).split(".")[0];
-      const outputPrefix = `converted/${baseFileName}`;
-
-      await convertAudio(audioUrl, outputPrefix);
-
-      song.convertedVersions = generateConvertedUrls(outputPrefix, baseFileName);
     }
 
-    Object.assign(song, { title, artist, genre, duration, price, isPremium, releaseDate });
+    Object.assign(song, {
+      title,
+      artist,
+      genre,
+      duration,
+      price,
+      isPremium,
+      releaseDate,
+    });
 
     await song.save();
 
@@ -89,6 +78,7 @@ export const updateSong = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 export const deleteSong = async (req, res) => {
   try {
