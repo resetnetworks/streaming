@@ -1,6 +1,5 @@
 import { Song } from "../models/Song.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
-import { convertAudio } from "../utils/convertAudio.js";
 import path from "path";
 
 function generateConvertedUrls(outputPrefix, baseFileName) {
@@ -32,9 +31,9 @@ export const createSong = async (req, res) => {
     const baseFileName = path.basename(audioUrl).split(".")[0];
     const outputPrefix = `converted/${baseFileName}`;
 
-    await convertAudio(audioUrl, outputPrefix); // Use correct output path
+     // Use correct output path
 
-    const convertedVersions = generateConvertedUrls(outputPrefix, baseFileName);
+   
 
     const newSong = await Song.create({
       title,
@@ -46,7 +45,6 @@ export const createSong = async (req, res) => {
       releaseDate,
       coverImage: coverImageUrl,
       audioUrl,
-      convertedVersions,
     });
 
     res.status(201).json({ success: true, song: newSong });

@@ -31,11 +31,6 @@ const songSchema = new mongoose.Schema({
     type: String,
     required: [true, "Audio URL is required"],
   },
-  convertedVersions: {
-    "64kbps": { type: String, default: "" },
-    "128kbps": { type: String, default: "" },
-    "256kbps": { type: String, default: "" },
-  },
   price: {
     type: Number,
     default: 0,
