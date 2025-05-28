@@ -15,10 +15,10 @@ const songSchema = new mongoose.Schema({
     ref: "Album",
     default: null,
   },
-  genre: {
+  genre: [{
     type: String,
     required: true,
-  },
+  }],
   duration: {
     type: Number, // duration in seconds
     required: true,
@@ -30,11 +30,6 @@ const songSchema = new mongoose.Schema({
   audioUrl: {
     type: String,
     required: [true, "Audio URL is required"],
-  },
-  convertedVersions: {
-    "64kbps": { type: String, default: "" },
-    "128kbps": { type: String, default: "" },
-    "256kbps": { type: String, default: "" },
   },
   price: {
     type: Number,
