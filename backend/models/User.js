@@ -44,7 +44,7 @@ resetPasswordExpire: {
 },
 
     dob: {
-        type: Number,
+        type: Date,
     },
     role: {
         type: String,
