@@ -4,6 +4,7 @@ import connectDb from "./database/db.js";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/userRoutes.js";
 import songRoutes from "./routes/songRoutes.js";
+import albumRoutes from "./routes/albumRoutes.js"
 import passport from "./middleware/passport.js";
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(passport.initialize());
 // using routes  
 app.use("/api/users", userRoutes)
 app.use("/api/songs", songRoutes)
+app.use("/api/albums", albumRoutes)
 
 
 

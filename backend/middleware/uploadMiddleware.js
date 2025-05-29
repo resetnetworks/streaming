@@ -9,3 +9,7 @@ export const songUpload = upload.fields([
   { name: "audio", maxCount: 1 },
   { name: "coverImage", maxCount: 1 },
 ]);
+
+export const albumUpload  = upload.fields([
+  { name: "coverImage", maxCount: 1 },
+]);
