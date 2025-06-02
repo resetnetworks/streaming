@@ -1,4 +1,5 @@
 import express from "express";
+import { isAuth } from "../middleware/isAuth.js";
 import {
   createSong,
   updateSong,
@@ -11,11 +12,11 @@ import {songUpload} from "../middleware/uploadMiddleware.js";
 const router = express.Router();
 
 // Use songUpload middleware before createSong and updateSong to handle files
-router.post("/", songUpload, createSong);
-router.put("/:id", songUpload, updateSong);
+router.post("/",isAuth, songUpload, createSong);
+router.put("/:id",isAuth, songUpload, updateSong);
 
-router.delete("/:id", deleteSong);
-router.get("/", getAllSongs);
-router.get("/:id", getSongById);
+router.delete("/:id",isAuth, deleteSong);
+router.get("/",isAuth, getAllSongs);
+router.get("/:id",isAuth, getSongById);
 
 export default router;
