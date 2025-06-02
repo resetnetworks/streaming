@@ -27,6 +27,6 @@ app.use("/api/songs", songRoutes)
 
 
 app.listen(port, () => {
-  console.log(`http://loalhost:${port}`)
+  console.log(`http://localhost:${port}`)
   connectDb()
 })
