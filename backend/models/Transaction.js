@@ -4,6 +4,7 @@ const transactionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   itemType: { type: String, enum: ["song", "album", "artist-subscription"], required: true },
   itemId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  artistId: { type: mongoose.Schema.Types.ObjectId, ref: "Artist" },
   gateway: { type: String, enum: ["stripe", "razorpay"], required: true },
   amount: Number,
   currency: String,

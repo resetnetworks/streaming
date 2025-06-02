@@ -10,6 +10,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import passport from "./middleware/passport.js";
 
+
 dotenv.config();
 
 const app = express();
@@ -18,7 +19,10 @@ const port = process.env.PORT
 
 app.use(cookieParser());
 // using middlewares
+app.use("/api/webhook", webhookRoutes)
 app.use(express.json());
+
+
 
 
 app.use(passport.initialize());
@@ -30,7 +34,7 @@ app.use("/api/songs", songRoutes)
 app.use("/api/albums", albumRoutes)
 app.use("/api/artists", artistRouts)
 app.use("/api/payment", paymentRoutes)
-app.use("/api/webhook", webhookRoutes)
+
 
 
 
