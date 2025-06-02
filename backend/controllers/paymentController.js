@@ -2,12 +2,13 @@ import Stripe from 'stripe';
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import { Transaction } from '../models/Transaction.js';
+import { User } from "../models/User.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createStripePayment = async (req, res) => {
   try {
-    const { itemType, itemId, amount, currency = "INR" } = req.body;
+    const { itemType, itemId, amount, artistId, currency = "INR" } = req.body;
 
     if (!["song", "album", "artist-subscription"].includes(itemType)) {
       return res.status(400).json({ message: "Invalid item type" });
@@ -20,6 +21,7 @@ export const createStripePayment = async (req, res) => {
       itemId,
       amount,
       currency,
+      artistId,
       status: "pending",
       gateway: "stripe",
     });
@@ -60,7 +62,7 @@ const razorpay = new Razorpay({
 
 export const createRazorpayOrder = async (req, res) => {
   try {
-    const { itemType, itemId, amount, currency = "INR" } = req.body;
+    const { itemType, itemId, amount,artistId, currency = "INR" } = req.body;
 
     if (!["song", "album", "artist-subscription"].includes(itemType)) {
       return res.status(400).json({ message: "Invalid item type" });
@@ -69,7 +71,7 @@ export const createRazorpayOrder = async (req, res) => {
     const options = {
       amount: amount * 100,
       currency,
-      receipt: `${itemType}-${itemId}-${Date.now()}`,
+      receipt: `txn_${Date.now()}`,
     };
 
     const order = await razorpay.orders.create(options);
@@ -80,6 +82,7 @@ export const createRazorpayOrder = async (req, res) => {
       itemId,
       amount,
       currency,
+      artistId,
       status: "pending",
       gateway: "razorpay",
       razorpayOrderId: order.id,
@@ -111,7 +114,7 @@ export const verifyRazorpayPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid signature" });
     }
 
-    // Update the transaction as paid
+    // ✅ Find and mark the transaction as paid
     const transaction = await Transaction.findOne({
       razorpayOrderId: razorpay_order_id,
       gateway: "razorpay",
@@ -121,8 +124,33 @@ export const verifyRazorpayPayment = async (req, res) => {
       return res.status(404).json({ message: "Transaction not found" });
     }
 
+    if (transaction.status === "paid") {
+      return res.status(200).json({ success: true, message: "Payment already verified" });
+    }
+
     transaction.status = "paid";
     await transaction.save();
+
+    // ✅ Update User's purchaseHistory
+    const user = await User.findById(transaction.userId);
+    if (user) {
+      user.purchaseHistory.push({
+        itemType: transaction.itemType,
+        itemId: transaction.itemId,
+        price: transaction.amount,
+        paymentId: razorpay_payment_id,
+      });
+
+      // Optional: push into purchasedSongs or Albums
+      if (transaction.itemType === "song") {
+        user.purchasedSongs.push(transaction.itemId);
+      } else if (transaction.itemType === "album") {
+        user.purchasedAlbums.push(transaction.itemId);
+      }
+
+      await user.save();
+      console.log("📦 Razorpay: User purchase history updated");
+    }
 
     res.status(200).json({ success: true, message: "Payment verified successfully" });
   } catch (err) {

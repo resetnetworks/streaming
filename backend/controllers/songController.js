@@ -4,6 +4,7 @@ import { Album } from "../models/Album.js";
 import { Artist } from "../models/Artist.js";
 import { Transaction } from "../models/Transaction.js"
 import { User } from "../models/User.js";
+import { hasAccessToSong } from "../utils/accessControl.js";
 
 
 
@@ -170,8 +171,7 @@ export const deleteSong = async (req, res) => {
 
 export const getAllSongs = async (req, res) => {
   try {
-    const userId = req.user?._id;
-    const userRole = req.user?.role;
+    const user = req.user;
 
     const songs = await Song.find()
       .sort({ createdAt: -1 })
@@ -180,48 +180,9 @@ export const getAllSongs = async (req, res) => {
 
     const updatedSongs = await Promise.all(
       songs.map(async (song) => {
-        let hasAccess = false;
-
-        if (!song.isPremium) {
-          // Free song: everyone has access
-          hasAccess = true;
-        } else {
-          if (userId) {
-            if (userRole === "admin") {
-              hasAccess = true;
-            } else {
-              // Check paid song
-              const songPayment = await Transaction.findOne({
-                userId,
-                itemType: "song",
-                itemId: song._id,
-                status: "paid",
-              });
-              if (songPayment) hasAccess = true;
-
-              // Check paid album
-              if (!hasAccess && song.album) {
-                const albumPayment = await Transaction.findOne({
-                  userId,
-                  itemType: "album",
-                  itemId: song.album._id,
-                  status: "paid",
-                });
-                if (albumPayment) hasAccess = true;
-              }
-
-              // Check artist subscription if song included in subscription
-              if (!hasAccess && song.includeInSubscription) {
-                const user = await User.findById(userId);
-                if (user?.artistSubscriptions?.includes(song.artist._id?.toString())) {
-                  hasAccess = true;
-                }
-              }
-            }
-          }
-        }
-
+        const hasAccess = await hasAccessToSong(user, song);
         const songData = song.toObject();
+
         if (!hasAccess) {
           songData.audioUrl = null;
         }
@@ -237,9 +198,6 @@ export const getAllSongs = async (req, res) => {
   }
 };
 
-
-
-
 export const getSongById = async (req, res) => {
   try {
     const song = await Song.findById(req.params.id)
@@ -248,51 +206,9 @@ export const getSongById = async (req, res) => {
 
     if (!song) return res.status(404).json({ message: "Song not found" });
 
-    let hasAccess = false;
-
-    if (!song.isPremium) {
-      // Free song: everyone can access
-      hasAccess = true;
-    } else {
-      // Premium song access checks
-      if (req.user) {
-        if (req.user.role === "admin") {
-          hasAccess = true;
-        } else {
-          const userId = req.user._id;
-
-          // Paid for song
-          const songPayment = await Transaction.findOne({
-            userId,
-            itemType: "song",
-            itemId: song._id,
-            status: "paid",
-          });
-          if (songPayment) hasAccess = true;
-
-          // Paid for album
-          if (!hasAccess && song.album) {
-            const albumPayment = await Transaction.findOne({
-              userId,
-              itemType: "album",
-              itemId: song.album._id,
-              status: "paid",
-            });
-            if (albumPayment) hasAccess = true;
-          }
-
-          // Artist subscription if song included in subscription
-          if (!hasAccess && song.includeInSubscription) {
-            const user = await User.findById(userId);
-            if (user?.artistSubscriptions?.includes(song.artist._id?.toString())) {
-              hasAccess = true;
-            }
-          }
-        }
-      }
-    }
-
+    const hasAccess = await hasAccessToSong(req.user, song);
     const songData = song.toObject();
+
     if (!hasAccess) {
       songData.audioUrl = null;
     }
@@ -300,6 +216,57 @@ export const getSongById = async (req, res) => {
     res.status(200).json({ success: true, song: songData });
   } catch (error) {
     console.error("Get Song By ID Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const getSongsMatchingUserGenres = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: "purchasedSongs",
+      select: "genre",
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Step 1: Extract genres from purchased songs
+    const purchasedGenres = new Set();
+    user.purchasedSongs.forEach((song) => {
+      if (Array.isArray(song.genre)) {
+        song.genre.forEach((g) => purchasedGenres.add(g.toLowerCase()));
+      } else if (typeof song.genre === "string") {
+        purchasedGenres.add(song.genre.toLowerCase());
+      }
+    });
+
+    const genreArray = Array.from(purchasedGenres);
+    if (genreArray.length === 0) {
+      return res.status(200).json({
+        success: true,
+        matchingGenres: [],
+        songs: [],
+      });
+    }
+
+    // Step 2: Fetch songs with matching genres (excluding purchased)
+    const songs = await Song.find({
+      genre: { $in: genreArray },
+      _id: { $nin: user.purchasedSongs.map((s) => s._id) },
+    })
+      .populate("artist", "name image")
+      .populate("album", "title coverImage")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      matchingGenres: genreArray,
+      songs,
+    });
+  } catch (err) {
+    console.error("getSongsMatchingUserGenres Error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

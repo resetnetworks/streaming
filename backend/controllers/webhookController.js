@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import crypto from "crypto";
 import { Transaction } from "../models/Transaction.js";
+import { User } from "../models/User.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -14,7 +15,7 @@ export const stripeWebhook = async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
-    console.error("Stripe webhook signature verification failed:", err.message);
+    console.error("❌ Stripe signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -23,7 +24,6 @@ export const stripeWebhook = async (req, res) => {
     console.log("✅ Stripe PaymentIntent succeeded:", paymentIntent.id);
 
     const transactionId = paymentIntent.metadata?.transactionId;
-
     let transaction;
 
     if (transactionId) {
@@ -35,20 +35,37 @@ export const stripeWebhook = async (req, res) => {
       });
     }
 
-    if (transaction) {
-      if (transaction.status !== "paid") {
-        transaction.status = "paid";
-        await transaction.save();
-        console.log("✅ Transaction marked as paid");
+    if (transaction && transaction.status !== "paid") {
+      transaction.status = "paid";
+      await transaction.save();
+
+      // 🧠 Update user payment history
+      const user = await User.findById(transaction.userId);
+      if (user) {
+        user.purchaseHistory.push({
+          itemType: transaction.itemType,
+          itemId: transaction.itemId,
+          price: transaction.amount,
+          paymentId: paymentIntent.id,
+        });
+
+        // Optional: add to purchasedSongs or Albums
+        if (transaction.itemType === "song") {
+          user.purchasedSongs.push(transaction.itemId);
+        } else if (transaction.itemType === "album") {
+          user.purchasedAlbums.push(transaction.itemId);
+        }
+
+        await user.save();
+        console.log("📦 User purchase history updated");
       }
     } else {
-      console.warn("⚠️ No matching transaction found for Stripe PaymentIntent");
+      console.warn("⚠️ Stripe transaction not found or already paid");
     }
   }
 
   res.json({ received: true });
 };
-
 
 // --------------- RAZORPAY WEBHOOK ----------------
 export const razorpayWebhook = async (req, res) => {
@@ -76,14 +93,32 @@ export const razorpayWebhook = async (req, res) => {
       gateway: "razorpay",
     });
 
-    if (transaction) {
-      if (transaction.status !== "paid") {
-        transaction.status = "paid";
-        await transaction.save();
-        console.log("✅ Razorpay transaction marked as paid");
+    if (transaction && transaction.status !== "paid") {
+      transaction.status = "paid";
+      await transaction.save();
+
+      // 🧠 Update user payment history
+      const user = await User.findById(transaction.userId);
+      if (user) {
+        user.purchaseHistory.push({
+          itemType: transaction.itemType,
+          itemId: transaction.itemId,
+          price: transaction.amount,
+          paymentId: paymentEntity.id,
+        });
+
+        // Optional: update purchasedSongs, purchasedAlbums
+        if (transaction.itemType === "song") {
+          user.purchasedSongs.push(transaction.itemId);
+        } else if (transaction.itemType === "album") {
+          user.purchasedAlbums.push(transaction.itemId);
+        }
+
+        await user.save();
+        console.log("📦 Razorpay user purchase history updated");
       }
     } else {
-      console.warn("⚠️ Razorpay transaction not found for order:", paymentEntity.order_id);
+      console.warn("⚠️ Razorpay transaction not found or already paid");
     }
   }
 
