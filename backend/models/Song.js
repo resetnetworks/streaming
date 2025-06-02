@@ -18,6 +18,10 @@ const songSchema = new mongoose.Schema(
       ref: "Album",
       default: null,
     },
+    includeInSubscription: {
+  type: Boolean,
+  default: true,
+},
     genre: [
       {
         type: String,

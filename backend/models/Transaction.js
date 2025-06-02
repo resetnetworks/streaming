@@ -1,0 +1,16 @@
+import mongoose from "mongoose";
+
+const transactionSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  itemType: { type: String, enum: ["song", "album", "artist-subscription"], required: true },
+  itemId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  gateway: { type: String, enum: ["stripe", "razorpay"], required: true },
+  amount: Number,
+  currency: String,
+  status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
+  paymentIntentId: String, // Stripe
+  razorpayOrderId: String, // Razorpay
+  createdAt: { type: Date, default: Date.now }
+});
+
+export const Transaction = mongoose.model("Transaction", transactionSchema);

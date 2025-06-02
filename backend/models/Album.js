@@ -19,9 +19,9 @@ const albumSchema = new mongoose.Schema(
       type: String, // URL to album cover image
       default: "",
     },
-    genre: {
+    genre: [{
       type: String,
-    },
+    }],
     releaseDate: {
       type: Date,
       default: Date.now,
