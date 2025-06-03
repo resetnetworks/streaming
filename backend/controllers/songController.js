@@ -223,26 +223,40 @@ export const getSongById = async (req, res) => {
 
 export const getSongsMatchingUserGenres = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate({
-      path: "purchasedSongs",
-      select: "genre",
-    });
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: "purchasedSongs",
+        select: "genre _id",
+      });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Step 1: Extract genres from purchased songs
-    const purchasedGenres = new Set();
+    // Step 1: Merge purchasedGenres and preferredGenres
+    const genreSet = new Set();
+
+    // From purchased songs
     user.purchasedSongs.forEach((song) => {
-      if (Array.isArray(song.genre)) {
-        song.genre.forEach((g) => purchasedGenres.add(g.toLowerCase()));
-      } else if (typeof song.genre === "string") {
-        purchasedGenres.add(song.genre.toLowerCase());
-      }
+      const genres = Array.isArray(song.genre)
+        ? song.genre
+        : typeof song.genre === "string"
+        ? [song.genre]
+        : [];
+
+      genres.forEach((g) => {
+        if (g) genreSet.add(g.trim().toLowerCase());
+      });
     });
 
-    const genreArray = Array.from(purchasedGenres);
+    // From preferredGenres
+    if (Array.isArray(user.preferredGenres)) {
+      user.preferredGenres.forEach((g) => {
+        if (g) genreSet.add(g.trim().toLowerCase());
+      });
+    }
+
+    const genreArray = [...genreSet];
     if (genreArray.length === 0) {
       return res.status(200).json({
         success: true,
@@ -251,25 +265,37 @@ export const getSongsMatchingUserGenres = async (req, res) => {
       });
     }
 
-    // Step 2: Fetch songs with matching genres (excluding purchased)
-    const songs = await Song.find({
+    // Step 2: Fetch all songs that match those genres
+    const allGenreSongs = await Song.find({
       genre: { $in: genreArray },
-      _id: { $nin: user.purchasedSongs.map((s) => s._id) },
     })
       .populate("artist", "name image")
       .populate("album", "title coverImage")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    // Step 3: Apply access control logic
+    const updatedSongs = await Promise.all(
+      allGenreSongs.map(async (song) => {
+        const songData = song.toObject();
+        const hasAccess = await hasAccessToSong(user, song);
+        if (!hasAccess) {
+          songData.audioUrl = null;
+        }
+        return songData;
+      })
+    );
+
+    return res.status(200).json({
       success: true,
       matchingGenres: genreArray,
-      songs,
+      songs: updatedSongs,
     });
   } catch (err) {
     console.error("getSongsMatchingUserGenres Error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
@@ -282,7 +308,7 @@ export const createAlbum = async (req, res) => {
   }
 
   try {
-    const { title, description, artist, genre, releaseDate, price, isPremium } = req.body;
+    const { title, description, artist, releaseDate, price, isPremium } = req.body;
 
     const coverImageFile = req.files?.coverImage?.[0];
     const coverImageUrl = coverImageFile ? await uploadToS3(coverImageFile, "covers") : "";
@@ -291,7 +317,6 @@ export const createAlbum = async (req, res) => {
       title,
       description,
       artist,
-      genre,
       releaseDate,
       price,
       isPremium,

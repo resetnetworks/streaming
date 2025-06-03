@@ -83,33 +83,6 @@ export const logoutUser = TryCatch(async (req, res) => {
   });
 });
 
-export const saveToPlaylist = TryCatch(async (req, res) => {
-  const user = await User.findById(req.user._id);
-
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
-
-  const songId = req.params.id;
-
-  if (user.playlist.includes(songId)) {
-    user.playlist = user.playlist.filter(id => id !== songId);
-
-    await user.save();
-
-    return res.json({
-      message: "Removed from playlist",
-    });
-  }
-
-  user.playlist.push(songId);
-
-  await user.save();
-
-  return res.json({
-    message: "Added to playlist",
-  });
-});
 
 // New: Like/Unlike song controller matching likedsong array
 export const likeSong = TryCatch(async (req, res) => {
