@@ -8,6 +8,7 @@ import albumRoutes from "./routes/albumRoutes.js";
 import artistRouts from "./routes/artistRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import playlistRoutes from "./routes/playlistRoutes.js"
 import passport from "./middleware/passport.js";
 
 
@@ -31,6 +32,7 @@ app.use(passport.initialize());
 // using routes  
 app.use("/api/users", userRoutes)
 app.use("/api/songs", songRoutes)
+app.use("/api/playlist", playlistRoutes)
 app.use("/api/albums", albumRoutes)
 app.use("/api/artists", artistRouts)
 app.use("/api/payment", paymentRoutes)
