@@ -6,7 +6,6 @@ import {
   loginUser,
   myProfile,
   logoutUser,
-  saveToPlaylist,
   likeSong,
   updatePreferredGenres,
   forgotPassword,
@@ -17,6 +16,7 @@ import {
 } from "../controllers/userControllers.js";
 
 
+
 const router = express.Router();
 
 // User Login Routes 
@@ -24,10 +24,8 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/me", isAuth, myProfile);
 router.post("/logout", isAuth, logoutUser);
-
-router.put("/playlist/:id", isAuth, saveToPlaylist);
 router.put("/likedsong/:id", isAuth, likeSong);
-router.put("/genres", isAuth, updatePreferredGenres);
+router.put("/update-genres", isAuth, updatePreferredGenres);
 
 // forgot password
 router.post("/forgot-password", forgotPassword);
