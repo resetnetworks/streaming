@@ -1,18 +1,32 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllSongs } from "../features/songs/songSlice";
+import { selectAllSongs,selectSongsStatus } from "../features/songs/songSelectors.JS";
+import { setSelectedSong, play, } from "../features/playback/playerSlice"; // now coming from playerSlice
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
 import RecentPlays from "../components/RecentPlays";
 import AlbumCard from "../components/AlbumCard";
-import { SongData } from "../context/Song";
 import SongList from "../components/SongList";
 import { LuSquareChevronRight } from "react-icons/lu";
+import { formatDuration } from "../utills/helperFunctions";
 
 const Home = () => {
-  const { songs, setSelectedSong, selectedSong, setIsPlaying } = SongData();
+  const dispatch = useDispatch();
+
+  const songs = useSelector(selectAllSongs);
+const selectedSong = useSelector((state) => state.player.selectedSong);
+  const status = useSelector(selectSongsStatus);
 
   const recentScrollRef = useRef(null);
   const playlistScrollRef = useRef(null);
   const similarScrollRef = useRef(null);
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchAllSongs());
+    }
+  }, [dispatch, status]);
 
   const handleScroll = (ref) => {
     if (ref.current) {
@@ -21,8 +35,8 @@ const Home = () => {
   };
 
   const handlePlaySong = (songId) => {
-    setSelectedSong(songId);
-    setIsPlaying(true);
+    dispatch(setSelectedSong(songId));
+    dispatch(play());
   };
 
   const chunkSize = 5;
@@ -35,6 +49,7 @@ const Home = () => {
     <UserLayout>
       <UserHeader />
       <div className="text-white px-4 py-2 flex flex-col gap-4">
+        {/* Recent Played */}
         <div className="w-full flex justify-between items-center">
           <h2 className="md:text-xl text-lg font-semibold">recent played</h2>
           <LuSquareChevronRight
@@ -51,7 +66,7 @@ const Home = () => {
               key={song._id}
               title={song.title}
               singer={song.singer}
-              image={song.thumbnail.url}
+              image={song.coverImage || "/images/placeholder.png"}
               onPlay={() => handlePlaySong(song._id)}
               isSelected={selectedSong === song._id}
             />
@@ -106,12 +121,13 @@ const Home = () => {
               key={song._id}
               title={song.title}
               singer={song.singer}
-              image={song.thumbnail.url}
+              image={song.coverImage || "/images/placeholder.png"}
               onPlay={() => handlePlaySong(song._id)}
               isSelected={selectedSong === song._id}
             />
           ))}
         </div>
+        
 
         {/* Top Picks */}
         <h2 className="md:text-xl text-lg font-semibold">top picks for you</h2>
@@ -125,10 +141,10 @@ const Home = () => {
                 {column.map((song) => (
                   <SongList
                     key={song._id}
-                    img={song.thumbnail.url}
+                    img={song.coverImage || "/images/placeholder.png"}
                     songName={song.title}
                     singerName={song.singer}
-                    seekTime="3:00"
+                    seekTime={formatDuration(song.duration)}
                     onPlay={() => handlePlaySong(song._id)}
                     isSelected={selectedSong === song._id}
                   />

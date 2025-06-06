@@ -33,7 +33,7 @@ const SongList = ({
             isSelected ? "shadow-[0_0_5px_1px_#3b82f6]" : ""
           }`}
         />
-        <div className="ml-4">
+        <div className="mx-4">
           <h3 className="text-white text-lg leading-none">{songName}</h3>
           <p className="text-gray-400 text-xs font-light mt-1">{singerName}</p>
         </div>
@@ -50,7 +50,7 @@ const SongList = ({
         <div> </div>
       )}
 
-      <div className="flex gap-6 items-center">
+      <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
           <MdAccessTimeFilled
             className={`text-base 

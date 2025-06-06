@@ -10,6 +10,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js"
 import passport from "./middleware/passport.js";
+import cors from "cors"
 
 
 dotenv.config();
@@ -22,8 +23,10 @@ app.use(cookieParser());
 // using middlewares
 app.use("/api/webhook", webhookRoutes)
 app.use(express.json());
-
-
+app.use(cors({
+  origin: "http://localhost:5173",
+  "credentials": true
+}))
 
 
 app.use(passport.initialize());

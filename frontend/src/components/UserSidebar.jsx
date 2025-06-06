@@ -4,15 +4,11 @@ import IconHeader from "./IconHeader";
 import { RxDashboard } from "react-icons/rx";
 import MobileNavBar from "./MobileNavBar";
 import MobilePlayer from "./MobilePlayer";
-import { SongData } from "../context/Song";
-import {
-  FiGlobe,
-  FiSearch,
-  FiMusic,
-  FiPlusCircle,
-  FiHeart,
-} from "react-icons/fi";
+import { FiGlobe, FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/fi";
 import Player from "./Player";
+
+import { useSelector } from "react-redux";
+import { selectAllSongs } from "../features/songs/songSelectors.JS";  // Adjust path as needed
 
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/" },
@@ -24,7 +20,9 @@ const menuItems = [
 ];
 
 const UserSidebar = () => {
-  const { songs } = SongData();
+  // Use Redux selector instead of context
+  const songs = useSelector(selectAllSongs);
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -71,6 +69,9 @@ const UserSidebar = () => {
               </NavLink>
             ))}
           </div>
+
+          {/* You still have access to songs here if you want to do something with them */}
+          {/* But UI remains unchanged */}
 
           <div className="flex justify-center pr-2">
             <Player />

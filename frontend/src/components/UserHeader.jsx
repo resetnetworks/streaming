@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   FiChevronDown,
   FiChevronUp,
@@ -8,10 +9,10 @@ import {
   FiClock,
   FiCreditCard,
 } from "react-icons/fi";
-import { UserData } from "../context/User";
+import { selectCurrentUser } from "../features/auth/authSelectors"; // adjust path accordingly
 
 const UserHeader = () => {
-  const { user } = UserData();
+  const user = useSelector(selectCurrentUser);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -36,7 +37,6 @@ const UserHeader = () => {
           <p className="md:ml-3 ml-2 md:text-sm text-sm">
             {user ? user.name : "Guest"}
           </p>
-          {/* Toggle Icon */}
           {open ? (
             <FiChevronUp className="md:text-sm text-xs md:ml-3 ml-2 text-gray-500" />
           ) : (
