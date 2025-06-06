@@ -1,0 +1,575 @@
+openapi: 3.0.0
+info:
+  title: Streaming API
+  version: 1.0.0
+  description: API documentation for the streaming service.
+
+paths:
+  /api/albums:
+    get:
+      tags: [Album]
+      summary: List all albums
+      description: Returns a list of all albums in the system.
+      responses:
+        '200':
+          description: A list of albums
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Album'
+    post:
+      tags: [Album]
+      summary: Create a new album
+      description: Adds a new album to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumCreate'
+      responses:
+        '201':
+          description: Album created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+
+  /api/albums/{albumId}:
+    get:
+      tags: [Album]
+      summary: Get album by ID
+      description: Returns a single album by its ID.
+      parameters:
+        - $ref: '#/components/parameters/albumId'
+      responses:
+        '200':
+          description: Album details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        '404':
+          description: Album not found
+    put:
+      tags: [Album]
+      summary: Update album by ID
+      description: Updates an existing album.
+      parameters:
+        - $ref: '#/components/parameters/albumId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumUpdate'
+      responses:
+        '200':
+          description: Album updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        '404':
+          description: Album not found
+    delete:
+      tags: [Album]
+      summary: Delete album by ID
+      description: Deletes an album by its ID.
+      parameters:
+        - $ref: '#/components/parameters/albumId'
+      responses:
+        '204':
+          description: Album deleted
+        '404':
+          description: Album not found
+
+  /api/users/register:
+    post:
+      tags: [User]
+      summary: Register a new user
+      description: Creates a new user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/users/login:
+    post:
+      tags: [User]
+      summary: User login
+      description: Authenticates a user and returns a token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          description: Invalid credentials
+
+  /api/users/profile:
+    get:
+      tags: [User]
+      summary: Get user profile
+      description: Returns the authenticated user's profile information.
+      responses:
+        '200':
+          description: User profile info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/users/logout:
+    post:
+      tags: [User]
+      summary: User logout
+      description: Logs out the current user.
+      responses:
+        '204':
+          description: Logout successful
+
+  /api/songs:
+    get:
+      tags: [Songs]
+      summary: List all songs
+      description: Returns a list of all songs.
+      responses:
+        '200':
+          description: A list of songs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+    post:
+      tags: [Songs]
+      summary: Create a new song
+      description: Adds a new song to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SongCreate'
+      responses:
+        '201':
+          description: Song created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+
+  /api/songs/{songId}:
+    get:
+      tags: [Songs]
+      summary: Get song by ID
+      description: Returns a single song by its ID.
+      parameters:
+        - $ref: '#/components/parameters/songId'
+      responses:
+        '200':
+          description: Song details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '404':
+          description: Song not found
+    put:
+      tags: [Songs]
+      summary: Update song by ID
+      description: Updates an existing song.
+      parameters:
+        - $ref: '#/components/parameters/songId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SongUpdate'
+      responses:
+        '200':
+          description: Song updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '404':
+          description: Song not found
+    delete:
+      tags: [Songs]
+      summary: Delete song by ID
+      description: Deletes a song by its ID.
+      parameters:
+        - $ref: '#/components/parameters/songId'
+      responses:
+        '204':
+          description: Song deleted
+        '404':
+          description: Song not found
+
+  /api/artists:
+    get:
+      tags: [Artist]
+      summary: List all artists
+      description: Returns a list of all artists.
+      responses:
+        '200':
+          description: A list of artists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artist'
+    post:
+      tags: [Artist]
+      summary: Create a new artist
+      description: Adds a new artist to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistCreate'
+      responses:
+        '201':
+          description: Artist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+
+  /api/artists/{artistId}:
+    get:
+      tags: [Artist]
+      summary: Get artist by ID
+      description: Returns a single artist by its ID.
+      parameters:
+        - $ref: '#/components/parameters/artistId'
+      responses:
+        '200':
+          description: Artist details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '404':
+          description: Artist not found
+    put:
+      tags: [Artist]
+      summary: Update artist by ID
+      description: Updates an existing artist.
+      parameters:
+        - $ref: '#/components/parameters/artistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistUpdate'
+      responses:
+        '200':
+          description: Artist updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '404':
+          description: Artist not found
+    delete:
+      tags: [Artist]
+      summary: Delete artist by ID
+      description: Deletes an artist by its ID.
+      parameters:
+        - $ref: '#/components/parameters/artistId'
+      responses:
+        '204':
+          description: Artist deleted
+        '404':
+          description: Artist not found
+
+  /api/playlists:
+    get:
+      tags: [Playlists]
+      summary: List all playlists
+      description: Returns a list of all playlists.
+      responses:
+        '200':
+          description: A list of playlists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist'
+    post:
+      tags: [Playlists]
+      summary: Create a new playlist
+      description: Adds a new playlist to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistCreate'
+      responses:
+        '201':
+          description: Playlist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+
+  /api/playlists/{playlistId}:
+    get:
+      tags: [Playlists]
+      summary: Get playlist by ID
+      description: Returns a single playlist by its ID.
+      parameters:
+        - $ref: '#/components/parameters/playlistId'
+      responses:
+        '200':
+          description: Playlist details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '404':
+          description: Playlist not found
+    put:
+      tags: [Playlists]
+      summary: Update playlist by ID
+      description: Updates an existing playlist.
+      parameters:
+        - $ref: '#/components/parameters/playlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistUpdate'
+      responses:
+        '200':
+          description: Playlist updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '404':
+          description: Playlist not found
+    delete:
+      tags: [Playlists]
+      summary: Delete playlist by ID
+      description: Deletes a playlist by its ID.
+      parameters:
+        - $ref: '#/components/parameters/playlistId'
+      responses:
+        '204':
+          description: Playlist deleted
+        '404':
+          description: Playlist not found
+
+  /api/playlists/{playlistId}/songs:
+    post:
+      tags: [Playlists]
+      summary: Add song to playlist
+      description: Adds a song to a playlist.
+      parameters:
+        - $ref: '#/components/parameters/playlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                songId:
+                  type: string
+                  description: The ID of the song to add
+              required: [songId]
+      responses:
+        '200':
+          description: Song added to playlist
+        '404':
+          description: Playlist or song not found
+
+  /api/playlists/{playlistId}/songs/{songId}:
+    delete:
+      tags: [Playlists]
+      summary: Remove song from playlist
+      description: Removes a song from a playlist.
+      parameters:
+        - $ref: '#/components/parameters/playlistId'
+        - $ref: '#/components/parameters/songId'
+      responses:
+        '204':
+          description: Song removed from playlist
+        '404':
+          description: Playlist or song not found
+components:
+  parameters:
+    albumId:
+      name: albumId
+      in: path
+      required: true
+      description: The ID of the album
+      schema:
+        type: string
+    songId:
+      name: songId
+      in: path
+      required: true
+      description: The ID of the song
+      schema:
+        type: string
+    artistId:
+      name: artistId
+      in: path
+      required: true
+      description: The ID of the artist
+      schema:
+        type: string
+    playlistId:
+      name: playlistId
+      in: path
+      required: true
+      description: The ID of the playlist
+      schema:
+        type: string
+
+  schemas:
+    Album:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the album.
+        title:
+          type: string
+          description: The title of the album.
+        artistId:
+          type: string
+          description: The ID of the artist.
+        releaseDate:
+          type: string
+          format: date-time
+          description: The release date of the album.
+        coverImageUrl:
+          type: string
+          format: uri
+          description: URL to the album cover image.
+    Song:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        artist:
+          type: string
+        album:
+          type: string
+        genre:
+          type: string
+        duration:
+          type: string
+        cover:
+          type: string
+        price:
+          type: number
+        isPremium:
+          type: boolean
+        audioUrl:
+          type: string
+    Artist:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+        image:
+          type: string
+    Playlist:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+        songs:
+          type: array
+          items:
+            type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        playlists:
+          type: array
+          items:
+            $ref: '#/components/schemas/Playlist'
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        itemType:
+          type: string
+          enum: [song, album, artist-subscription]
+        itemId:
+          type: string
+        artistId:
+          type: string
+        gateway:
+          type: string
+          enum: [stripe, razorpay]
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, paid, failed]
+        paymentIntentId:
+          type: string
+        razorpayOrderId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

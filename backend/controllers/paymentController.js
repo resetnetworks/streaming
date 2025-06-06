@@ -3,6 +3,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { Transaction } from '../models/Transaction.js';
 import { User } from "../models/User.js";
+import { Artist } from "../models/Artist.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -157,4 +158,113 @@ export const verifyRazorpayPayment = async (req, res) => {
     console.error("Razorpay Payment Verification Error:", err);
     res.status(500).json({ message: "Payment verification failed" });
   }
+};
+
+
+// Create Stripe PaymentIntent for artist subscription
+export const createArtistSubscriptionStripe = async (req, res) => {
+  try {
+    const { artistId, amount, currency = "INR" } = req.body;
+
+    // Validate artist
+    const artist = await Artist.findById(artistId);
+    if (!artist) return res.status(404).json({ message: "Artist not found" });
+
+    // Create transaction
+    const transaction = await Transaction.create({
+      userId: req.user._id,
+      itemType: "artist-subscription",
+      itemId: artistId,
+      artistId,
+      amount,
+      currency,
+      status: "pending",
+      gateway: "stripe",
+    });
+
+    // Create Stripe PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount * 100,
+      currency,
+      metadata: {
+        transactionId: transaction._id.toString(),
+        userId: req.user._id.toString(),
+        itemType: "artist-subscription",
+        itemId: artistId,
+      },
+    });
+
+    transaction.paymentIntentId = paymentIntent.id;
+    await transaction.save();
+
+    res.status(200).json({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (err) {
+    console.error("Stripe Subscription Error:", err);
+    res.status(500).json({ message: "Stripe subscription payment failed" });
+  }
+};
+
+// Create Razorpay Order for artist subscription
+export const createArtistSubscriptionRazorpay = async (req, res) => {
+  try {
+    const { artistId, amount, currency = "INR" } = req.body;
+
+    // Validate artist
+    const artist = await Artist.findById(artistId);
+    if (!artist) return res.status(404).json({ message: "Artist not found" });
+
+    const options = {
+      amount: amount * 100,
+      currency,
+      receipt: `sub_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    await Transaction.create({
+      userId: req.user._id,
+      itemType: "artist-subscription",
+      itemId: artistId,
+      artistId,
+      amount,
+      currency,
+      status: "pending",
+      gateway: "razorpay",
+      razorpayOrderId: order.id,
+    });
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (err) {
+    console.error("Razorpay Subscription Error:", err);
+    res.status(500).json({ message: "Razorpay subscription payment failed" });
+  }
+};
+
+// After payment verification (Razorpay or Stripe webhook), update user's subscription
+export const activateArtistSubscription = async (userId, artistId) => {
+  const user = await User.findById(userId);
+  if (!user) return;
+  const now = new Date();
+  const oneMonthLater = new Date(now);
+  oneMonthLater.setMonth(now.getMonth() + 1);
+
+  if (!user.subscribedArtists) user.subscribedArtists = [];
+  let found = false;
+  user.subscribedArtists = user.subscribedArtists.map(sub => {
+    if (sub.artistId.toString() === artistId.toString()) {
+      found = true;
+      return { artistId, expiresAt: oneMonthLater };
+    }
+    return sub;
+  });
+  if (!found) {
+    user.subscribedArtists.push({ artistId, expiresAt: oneMonthLater });
+  }
+  await user.save();
 };

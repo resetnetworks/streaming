@@ -15,17 +15,24 @@ import {
   appleCallback,
 } from "../controllers/userControllers.js";
 
-
+import validate from "../middleware/validate.js";
+import {
+  registerValidation,
+  loginValidation,
+  updateGenresValidation,
+  likeSongValidation,
+  resetPasswordValidation,
+} from "../validators/userValidators.js";
 
 const router = express.Router();
 
 // User Login Routes 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+router.post("/register", registerValidation, validate, registerUser);
+router.post("/login", loginValidation, validate, loginUser);
 router.get("/me", isAuth, myProfile);
 router.post("/logout", isAuth, logoutUser);
-router.put("/likedsong/:id", isAuth, likeSong);
-router.put("/update-genres", isAuth, updatePreferredGenres);
+router.put("/likedsong/:id", isAuth, likeSongValidation, validate, likeSong);
+router.put("/update-genres", isAuth, resetPasswordValidation, validate, updatePreferredGenres);
 
 // forgot password
 router.post("/forgot-password", forgotPassword);
