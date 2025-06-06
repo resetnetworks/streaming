@@ -45,7 +45,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // CORS setup
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:517",
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   credentials: true,
 }));
 
