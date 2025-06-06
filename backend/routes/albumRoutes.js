@@ -4,15 +4,58 @@ import {
   createAlbum,
   getAlbums,
   deleteAlbum,
-} from "../controllers/songController.js";
-import {singleImageUpload} from "../middleware/uploadMiddleware.js";
+  getAlbumById,
+  updateAlbum,
+} from "../controllers/albumController.js";
+import { singleImageUpload } from "../middleware/uploadMiddleware.js";
+import {
+  createAlbumValidator,
+  updateAlbumValidator,
+  albumIdValidator,
+} from "../validators/albumValidators.js";
+import validate from "../middleware/validate.js";
 
 const router = express.Router();
 
+// Create a new album
+router.post(
+  "/",
+  isAuth,
+  singleImageUpload,
+  createAlbumValidator,
+  validate,
+  createAlbum
+);
 
-router.post("/",isAuth, singleImageUpload, createAlbum);
-router.put("/",isAuth, singleImageUpload, getAlbums);
-router.delete("/:id",isAuth, deleteAlbum);
-router.get("/",isAuth, getAlbums);
+// Update an existing album
+router.put(
+  "/:id",
+  isAuth,
+  singleImageUpload,
+  updateAlbumValidator,
+  validate,
+  updateAlbum
+);
+
+// Delete an album
+router.delete(
+  "/:id",
+  isAuth,
+  albumIdValidator,
+  validate,
+  deleteAlbum
+);
+
+// Get all albums
+router.get("/", isAuth, getAlbums);
+
+// Get album by ID
+router.get(
+  "/:id",
+  isAuth,
+  albumIdValidator,
+  validate,
+  getAlbumById
+);
 
 export default router;
