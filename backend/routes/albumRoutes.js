@@ -5,29 +5,57 @@ import {
   getAlbums,
   deleteAlbum,
   getAlbumById,
-  updateAlbum
-} from "../controllers/songController.js";
-import {singleImageUpload} from "../middleware/uploadMiddleware.js";
+  updateAlbum,
+} from "../controllers/albumController.js";
+import { singleImageUpload } from "../middleware/uploadMiddleware.js";
+import {
+  createAlbumValidator,
+  updateAlbumValidator,
+  albumIdValidator,
+} from "../validators/albumValidators.js";
+import validate from "../middleware/validate.js";
 
 const router = express.Router();
 
+// Create a new album
+router.post(
+  "/",
+  isAuth,
+  singleImageUpload,
+  createAlbumValidator,
+  validate,
+  createAlbum
+);
 
-router.post("/",isAuth, singleImageUpload, createAlbum);
-router.put("/:id",isAuth, singleImageUpload, updateAlbum);
-router.delete("/:id",isAuth, deleteAlbum);
+// Update an existing album
+router.put(
+  "/:id",
+  isAuth,
+  singleImageUpload,
+  updateAlbumValidator,
+  validate,
+  updateAlbum
+);
 
-/**
- * @swagger
- * /albums:
- *   get:
- *     summary: Returns all albums
- *     tags: [Album]
- *     responses:
- *       200:
- *         description: A list of albums
- */
+// Delete an album
+router.delete(
+  "/:id",
+  isAuth,
+  albumIdValidator,
+  validate,
+  deleteAlbum
+);
 
-router.get("/",isAuth, getAlbums);
-router.get("/:id", isAuth, getAlbumById);
+// Get all albums
+router.get("/", isAuth, getAlbums);
+
+// Get album by ID
+router.get(
+  "/:id",
+  isAuth,
+  albumIdValidator,
+  validate,
+  getAlbumById
+);
 
 export default router;

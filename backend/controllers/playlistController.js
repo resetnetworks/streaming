@@ -68,7 +68,7 @@ export const createPlaylist = TryCatch(async (req, res) => {
 // Update an existing playlist
 export const updatePlaylist = TryCatch(async (req, res) => {
   const { playlistId } = req.params;
-  const { title, description } = req.body;
+  const { name, description } = req.body;
 
   const user = await User.findById(req.user._id);
   if (!user) {
