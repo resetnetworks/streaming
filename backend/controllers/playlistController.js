@@ -1,8 +1,9 @@
 import { User } from "../models/User.js";
 import TryCatch from "../utils/TryCatch.js";
 import { hasAccessToSong } from "../utils/accessControl.js";
+import {Song} from "../models/Song.js";
 
-
+// GEt all playlists for the authenticated user
 export const getPlaylists = TryCatch(async (req, res) => {
   const user = await User.findById(req.user._id).select("playlist");
 
@@ -40,6 +41,8 @@ export const getPlaylists = TryCatch(async (req, res) => {
   res.json({ success: true, playlist: playlistsWithPopulatedSongs });
 });
 
+
+// Create a new playlist for the authenticated user
 export const createPlaylist = TryCatch(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) {
@@ -62,7 +65,30 @@ export const createPlaylist = TryCatch(async (req, res) => {
   res.status(201).json({ success: true, message: "Playlist created", playlist: user.playlist });
 });
 
+// Update an existing playlist
+export const updatePlaylist = TryCatch(async (req, res) => {
+  const { playlistId } = req.params;
+  const { name, description } = req.body;
 
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  const playlist = user.playlist.id(playlistId);
+  if (!playlist) {
+    return res.status(404).json({ message: "Playlist not found" });
+  }
+  if (title) {
+    playlist.title = title;
+  }
+  if (description) {
+    playlist.description = description;
+  }
+  await user.save();
+  res.json({ success: true, message: "Playlist updated", playlist });
+});
+
+// Delete a playlist by ID for the authenticated user
 export const deletePlaylist = TryCatch(async (req, res) => {
   const { playlistId } = req.params;
 
@@ -82,6 +108,48 @@ export const deletePlaylist = TryCatch(async (req, res) => {
   res.json({ success: true, message: "Playlist deleted" });
 });
 
+// get a specific playlist by ID for the authenticated user
+export const getPlaylistById = TryCatch(async (req, res) => {
+  const { playlistId } = req.params;
+
+  const user = await User.findById(req.user._id).select("playlist");
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const playlist = user.playlist.id(playlistId);
+  if (!playlist) {
+    return res.status(404).json({ message: "Playlist not found" });
+  }
+
+  // Populate songs with access control
+  const populatedSongs = await Song.find({ _id: { $in: playlist.songs } })
+    .populate("artist", "name")
+    .populate("album", "title");
+
+  const songsWithAccessControl = await Promise.all(
+    populatedSongs.map(async (song) => {
+      const songData = song.toObject();
+      const hasAccess = await hasAccessToSong(req.user, song);
+      if (!hasAccess) {
+        songData.audioUrl = null;
+      }
+      return songData;
+    })
+  );
+
+  res.json({
+    success: true,
+    playlist: {
+      _id: playlist._id,
+      title: playlist.title,
+      description: playlist.description,
+      songs: songsWithAccessControl,
+    },
+  });
+});
+
+// Add a song to a playlist for the authenticated user
 export const addSongToPlaylist = TryCatch(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -115,7 +183,7 @@ export const addSongToPlaylist = TryCatch(async (req, res) => {
   res.json({ success: true, message: "Song added to playlist", playlist });
 });
 
-
+// Remove a song from a playlist for the authenticated user
 export const removeSongFromPlaylist = TryCatch(async (req, res) => {
   const user = await User.findById(req.user._id);
 
