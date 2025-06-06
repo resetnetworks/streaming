@@ -43,6 +43,12 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Middleware
 
+// CORS setup
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "http://localhost:517",
+  credentials: true,
+}));
+
 app.set('trust proxy', 1);
 app.use(
   rateLimiter({
