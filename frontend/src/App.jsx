@@ -1,43 +1,110 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./user/Home";
-import Browse from "./user/Browse";
-import Login from "./user/Login";
-import Register from "./user/Register";
-import Search from "./user/Search";
-import Library from "./user/Library";
-import CreatePlayList from "./user/CreatePlayList";
-import LikedSong from "./user/LikedSong";
-import Help from "./user/Help";
-import Admin from "./admin/Admin";
-import { UserData } from "./context/User";
-import Loader from "./components/Loader";
+import React, { useEffect, Suspense, lazy } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { Toaster } from "sonner";
+import { getMyProfile } from "./features/auth/authSlice"; // thunk from slice
+import {
+  selectIsAuthenticated,
+  selectAuthStatus,
+} from "./features/auth/authSelectors";
+import Loader from "./components/Loader"; // Your loader component
+
+// Lazy load route components
+const Register = lazy(() => import("./user/Register"));
+const Login = lazy(() => import("./user/Login"));
+const FavouriteGen = lazy(() => import("./user/FavouriteGen"));
+const ForgotPassword = lazy(() => import("./user/ForgotPassword"));
+const ResetPassword = lazy(() => import("./user/ResetPassword"));
+const Home = lazy(() => import("./user/Home"));
+
+// ProtectedRoute: only render children if authenticated, else redirect
+const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) => {
+  return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
+};
+
+// PublicRoute: only render children if NOT authenticated, else redirect
+const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) => {
+  return !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
+};
 
 function App() {
-  const { loading, isAuth } = UserData();
+  const dispatch = useDispatch();
+  const status = useSelector(selectAuthStatus);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  // loading if status is "loading"
+  const loading = status === "loading";
+
+  useEffect(() => {
+    dispatch(getMyProfile())
+      .unwrap()
+      .catch(() => {
+        // Handle error if needed
+      });
+  }, [dispatch]);
+
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
     <>
-      {loading ? (
-        <Loader />
-      ) : (
-        <BrowserRouter>
+      <BrowserRouter>
+        <Suspense fallback={<Loader />}>
           <Routes>
-            <Route path="/" element={isAuth ? <Home /> : <Login />} />
-            <Route path="/login" element={isAuth ? <Home /> : <Login />} />
+            {/* Public routes */}
             <Route
               path="/register"
-              element={isAuth ? <Home /> : <Register />}
+              element={
+                <PublicRoute isAuthenticated={isAuthenticated}>
+                  <Register />
+                </PublicRoute>
+              }
             />
-            <Route path="/browse" element={isAuth ? <Browse /> : <Login />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/create-playlist" element={<CreatePlayList />} />
-            <Route path="/liked-songs" element={<LikedSong />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/admin" element={<Admin />} />
-            
+            <Route
+              path="/login"
+              element={
+                <PublicRoute isAuthenticated={isAuthenticated}>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+            {/* Protected routes */}
+            <Route
+              path="/genres"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <FavouriteGen />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Fallback route - redirect based on authentication */}
+            <Route
+              path="*"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
           </Routes>
-        </BrowserRouter>
-      )}
+        </Suspense>
+      </BrowserRouter>
+      <Toaster richColors position="top-center" />
     </>
   );
 }
