@@ -36,7 +36,7 @@ router.put("/update-genres", isAuth, resetPasswordValidation, validate, updatePr
 
 // forgot password
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+router.post("/reset-password/:token", resetPasswordValidation, resetPassword);
 
 // login with google
 router.get(
