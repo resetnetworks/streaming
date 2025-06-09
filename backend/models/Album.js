@@ -12,11 +12,12 @@ const albumSchema = new mongoose.Schema(
       default: "",
     },
     artist: {
-      type: String,
-      required: [true, "Artist name is required"],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Artist", // <-- This enables population and correct referencing
+      required: [true, "Artist is required"],
     },
     coverImage: {
-      type: String, // URL to album cover image
+      type: String,
       default: "",
     },
     releaseDate: {
@@ -32,7 +33,7 @@ const albumSchema = new mongoose.Schema(
     ],
     price: {
       type: Number,
-      default: 0, // If album is free
+      default: 0,
     },
     isPremium: {
       type: Boolean,
