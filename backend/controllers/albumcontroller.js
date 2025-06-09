@@ -1,5 +1,7 @@
 import { Album } from "../models/Album.js";
 import { Song } from "../models/Song.js";
+import { BadRequestError, UnauthorizedError } from "../errors/index.js";
+import mongoose from "mongoose";
 
 
 
@@ -124,5 +126,16 @@ export const updateAlbum = async (req, res) => {
   } catch (error) {
     console.error("Update Album Error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// GET /albums/artist/:artistId
+export const getAlbumsByArtist = async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    const albums = await Album.find({ artist: new mongoose.Types.ObjectId(artistId) });
+    res.json({ success: true, albums });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
   }
 };
