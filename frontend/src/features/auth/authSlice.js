@@ -5,9 +5,11 @@ import axios from '../../utills/axiosInstance.js';
 export const registerUser = createAsyncThunk('auth/register', async (userData, thunkAPI) => {
   try {
     const res = await axios.post('/users/register', userData);
+    localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
     return res.data.user;
   } catch (err) {
+    console.log(err)
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
