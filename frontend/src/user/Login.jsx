@@ -20,16 +20,6 @@ const Login = () => {
   const { status, isAuthenticated, user } = useSelector((state) => state.auth);
   const btnLoading = status === "loading";
 
-  // Handle redirect after login
-  useEffect(() => {
-    if (isAuthenticated) {
-      if (user?.preferredGenres?.length > 0) {
-        navigate("/");
-      } else {
-        navigate("/genres");
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
 
   const handleLogin = (e) => {
     e.preventDefault();

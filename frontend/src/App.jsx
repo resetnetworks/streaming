@@ -2,12 +2,13 @@ import React, { useEffect, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
-import { getMyProfile } from "./features/auth/authSlice"; // thunk from slice
+import { getMyProfile } from "./features/auth/authSlice"; // thunk
 import {
   selectIsAuthenticated,
   selectAuthStatus,
+  selectCurrentUser,
 } from "./features/auth/authSelectors";
-import Loader from "./components/Loader"; // Your loader component
+import Loader from "./components/Loader";
 
 // Lazy load route components
 const Register = lazy(() => import("./user/Register"));
@@ -22,6 +23,19 @@ const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>
   return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 };
 
+// RedirectedProtectedRoute: redirect to /genres if user has no preferredGenres
+const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.preferredGenres?.length === 0) {
+    return <Navigate to="/genres" replace />;
+  }
+
+  return children;
+};
+
 // PublicRoute: only render children if NOT authenticated, else redirect
 const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) => {
   return !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
@@ -31,16 +45,14 @@ function App() {
   const dispatch = useDispatch();
   const status = useSelector(selectAuthStatus);
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
 
-  // loading if status is "loading"
   const loading = status === "loading";
 
   useEffect(() => {
-    dispatch(getMyProfile())
-      .unwrap()
-      .catch(() => {
-        // Handle error if needed
-      });
+    dispatch(getMyProfile()).catch(() => {
+      // optional: handle error
+    });
   }, [dispatch]);
 
   if (loading) {
@@ -84,9 +96,9 @@ function App() {
             <Route
               path="/"
               element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
                   <Home />
-                </ProtectedRoute>
+                </RedirectedProtectedRoute>
               }
             />
 
