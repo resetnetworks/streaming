@@ -32,7 +32,7 @@ router.post("/login", loginValidation, validate, loginUser);
 router.get("/me", isAuth, myProfile);
 router.post("/logout", isAuth, logoutUser);
 router.put("/likedsong/:id", isAuth, likeSongValidation, validate, likeSong);
-router.put("/update-genres", isAuth, resetPasswordValidation, validate, updatePreferredGenres);
+router.put("/update-genres", isAuth, validate, updatePreferredGenres);
 
 // forgot password
 router.post("/forgot-password", forgotPassword);

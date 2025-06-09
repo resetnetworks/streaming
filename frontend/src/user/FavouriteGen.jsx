@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoMdCheckmark } from "react-icons/io";
 import IconHeader from "../components/IconHeader";
 import { FiSearch } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { updatePreferredGenres, getMyProfile } from "../features/auth/authSlice";
+import { selectCurrentUser, selectIsAuthenticated } from "../features/auth/authSelectors";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const tags = [
   {
@@ -29,36 +34,50 @@ const tags = [
     label: "#soundtrack",
     image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
   },
-  {
-    id: "soundtrack",
-    label: "#soundtrack",
-    image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
-  },
-  {
-    id: "soundtrack",
-    label: "#soundtrack",
-    image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
-  },
-  {
-    id: "soundtrack",
-    label: "#soundtrack",
-    image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
-  },
-  {
-    id: "soundtrack",
-    label: "#soundtrack",
-    image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
-  },
 ];
 
 const FavouriteGen = () => {
-  const [selected, setSelected] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(selectCurrentUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  
+  const [selected, setSelected] = useState(user?.preferredGenres || []);
+  const [loading, setLoading] = useState(false);
+
+  // Redirect if not authenticated or already has genres
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else if (user?.preferredGenres?.length > 0) {
+      navigate("/");
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleSelection = (id) => {
     if (selected.includes(id)) {
       setSelected(selected.filter((item) => item !== id));
     } else {
       setSelected([...selected, id]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (selected.length < 3) {
+      toast.error("Please select at least 3 genres");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await dispatch(updatePreferredGenres(selected)).unwrap();
+      await dispatch(getMyProfile()).unwrap();
+      toast.success("Genres saved successfully!");
+      navigate("/", { replace: true }); // Use replace to prevent going back to genres page
+    } catch (error) {
+      toast.error(error || "Failed to update genres");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,7 +96,7 @@ const FavouriteGen = () => {
             <FiSearch className="text-white mx-3" size={20} />
             <input
               type="text"
-              placeholder="Type here..."
+              placeholder="Search genres..."
               className="w-full bg-transparent text-white placeholder-gray-400 py-2 pr-4 outline-none"
             />
           </div>
@@ -99,11 +118,11 @@ const FavouriteGen = () => {
             >
               <div
                 className={`relative w-40 h-40 rounded-full overflow-hidden border-2 transition-all duration-300 bg-center bg-cover
-            ${
-              isSelected
-                ? "border-[#2400FF] shadow-[inset_0_0_30px_rgba(36,0,255,0.7),0_0_15px_rgba(36,0,255,0.5)]"
-                : "border-gray-700 border-2"
-            }`}
+                ${
+                  isSelected
+                    ? "border-[#2400FF] shadow-[inset_0_0_30px_rgba(36,0,255,0.7),0_0_15px_rgba(36,0,255,0.5)]"
+                    : "border-gray-700 border-2"
+                }`}
                 style={{ backgroundImage: `url(${tag.image})` }}
               >
                 {isSelected && (
@@ -119,7 +138,13 @@ const FavouriteGen = () => {
       </div>
 
       <div className="button-wrapper my-9 shadow-sm shadow-black">
-        <button className="custom-button">Continue</button>
+        <button
+          onClick={handleSubmit}
+          disabled={selected.length < 3 || loading}
+          className="custom-button"
+        >
+          {loading ? "Saving..." : "Continue"}
+        </button>
       </div>
     </section>
   );
