@@ -7,6 +7,9 @@ import {
   getAllSongs,
   getSongById,
   getSongsMatchingUserGenres,
+  getSongsByGenre,
+  getSongsByAlbum,
+  getSongsByArtist
 } from "../controllers/songController.js";
 import {songUpload} from "../middleware/uploadMiddleware.js";
 import {
@@ -26,5 +29,8 @@ router.delete("/:id",isAuth, songIdValidator, validate, deleteSong);
 router.get("/",isAuth, getAllSongs);
 router.get("/matching-genre",isAuth, getSongsMatchingUserGenres);
 router.get("/:id",isAuth, songIdValidator, validate, getSongById);
+router.get("/genre/:genre", isAuth, getSongsByGenre);
+router.get("/album/:albumId", isAuth, getSongsByAlbum);
+router.get("/artist/:artistId", isAuth, getSongsByArtist);
 
 export default router;
