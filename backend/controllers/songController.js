@@ -294,10 +294,139 @@ export const getSongsMatchingUserGenres = async (req, res) => {
     console.error("getSongsMatchingUserGenres Error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
-};                                                                                                                
+};  
+
+// GET /api/songs?genre=pop&page=1&limit=20
+export const getSongsByGenre = async (req, res, next) => {
+  const { genre, page = 1, limit = 20 } = req.query;
+  const query = genre ? { genre: { $regex: new RegExp(genre, "i") } } : {};
+
+  const initialTime = Date.now();
+  const songs = await Song.find(query)
+    .skip((page - 1) * limit)
+    .limit(Number(limit))
+    .sort({ releaseDate: -1 });
+
+    const endTime = Date.now();
+  console.log(`Query time: ${endTime - initialTime}ms`);
+  const total = await Song.countDocuments(query);
+
+  res.status(200).json({
+    success: true,
+    songs,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / limit),
+  });
+};
+
+// GET /api/songs/by-artist/:artistId?page=1&limit=20
+export const getSongsByArtist = async (req, res, next) => {
+  const { artistId } = req.params;
+  const { page = 1, limit = 20 } = req.query;
+
+  const query = { artist: artistId };
+
+  const songs = await Song.find(query)
+    .skip((page - 1) * limit)
+    .limit(Number(limit))
+    .sort({ releaseDate: -1 })
+    .populate("artist", "name image")
+    .populate("album", "title coverImage");
+
+  const total = await Song.countDocuments(query);
+
+  res.status(200).json({
+    success: true,
+    songs,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / limit),
+  });
+};
 
 
 
+export const getSongsByAlbum = async (req, res, next) => {
+  const { albumId } = req.params;
+  const { page = 1, limit = 20 } = req.query;
+
+  const query = { album: albumId };
+
+  const songs = await Song.find(query)
+    .skip((page - 1) * limit)
+    .limit(Number(limit))
+    .sort({ releaseDate: -1 })
+    .populate("artist", "name image")
+    .populate("album", "title coverImage");
+
+  const total = await Song.countDocuments(query);
+
+  res.status(200).json({
+    success: true,
+    songs,
+    total,
+    page: Number(page),
+    pages: Math.ceil(total / limit),
+  });
+}
+// GET /api/songs/purchased
+export const getPurchasedSongs = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate("purchasedSongs", "title artist genre duration coverImage audioUrl")
+      .select("purchasedSongs");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const purchasedSongs = user.purchasedSongs.map(song => song.toObject());
+
+    // Apply access control
+    const updatedSongs = await Promise.all(
+      purchasedSongs.map(async (song) => {
+        const hasAccess = await hasAccessToSong(user, song);
+        if (!hasAccess) {
+          song.audioUrl = null;
+        }
+        return song;
+      })
+    );
+
+    res.status(200).json({ success: true, songs: updatedSongs });
+  } catch (error) {
+    console.error("Get Purchased Songs Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+// GET /api/songs/premium
+export const getPremiumSongs = async (req, res) => {
+  try {
+    const user = req.user;
+
+    const songs = await Song.find({ isPremium: true })
+      .sort({ createdAt: -1 })
+      .populate("artist", "name image")
+      .populate("album", "title coverImage");
+
+    const updatedSongs = await Promise.all(
+      songs.map(async (song) => {
+        const songData = song.toObject();
+        const hasAccess = await hasAccessToSong(user, song);
+        if (!hasAccess) {
+          songData.audioUrl = null;
+        }
+        return songData;
+      })
+    );
+
+    res.status(200).json({ success: true, songs: updatedSongs });
+  } catch (error) {
+    console.error("Get Premium Songs Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 
 
