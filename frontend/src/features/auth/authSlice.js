@@ -1,5 +1,7 @@
+// ✅ Auth Slice with Like/Unlike Song Support
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utills/axiosInstance.js';
+import { toast } from 'sonner';
 
 // 👉 Register User
 export const registerUser = createAsyncThunk('auth/register', async (userData, thunkAPI) => {
@@ -9,7 +11,6 @@ export const registerUser = createAsyncThunk('auth/register', async (userData, t
     localStorage.setItem('user', JSON.stringify(res.data.user));
     return res.data.user;
   } catch (err) {
-    console.log(err)
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
@@ -64,10 +65,22 @@ export const updatePreferredGenres = createAsyncThunk(
   }
 );
 
+// 👉 Toggle Like Song
+export const toggleLikeSong = createAsyncThunk(
+  'auth/toggleLikeSong',
+  async (songId, thunkAPI) => {
+    try {
+      const res = await axios.put(`/users/likedsong/${songId}`);
+      return { songId, message: res.data.message };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
 // 👉 Initial User State
 const initialUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
 
-// ✅ Auth Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -122,16 +135,37 @@ const authSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload || 'Failed to update preferred genres';
       })
-      // 👉 Generic error handlers
+      .addCase(toggleLikeSong.fulfilled, (state, action) => {
+        const { songId, message } = action.payload;
+        if (state.user) {
+          if (state.user.likedsong?.includes(songId)) {
+            state.user.likedsong = state.user.likedsong.filter((id) => id !== songId);
+          } else {
+            if (!state.user.likedsong) state.user.likedsong = [];
+            state.user.likedsong.push(songId);
+          }
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
+        state.message = message;
+        // Don't update global status to prevent App.jsx loader
+      })
+      // 🔥 Rejected matcher (skip toggleLikeSong)
       .addMatcher(
-        (action) => action.type.startsWith('auth/') && action.type.endsWith('/rejected'),
+        (action) =>
+          action.type.startsWith('auth/') &&
+          action.type.endsWith('/rejected') &&
+          !action.type.includes('toggleLikeSong'),
         (state, action) => {
           state.status = 'failed';
           state.error = action.payload || 'Something went wrong';
         }
       )
+      // 🔥 Pending matcher (skip toggleLikeSong)
       .addMatcher(
-        (action) => action.type.startsWith('auth/') && action.type.endsWith('/pending'),
+        (action) =>
+          action.type.startsWith('auth/') &&
+          action.type.endsWith('/pending') &&
+          !action.type.includes('toggleLikeSong'),
         (state) => {
           state.status = 'loading';
           state.error = null;
