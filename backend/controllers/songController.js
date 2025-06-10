@@ -429,6 +429,29 @@ export const getPremiumSongs = async (req, res) => {
 };
 
 
+export const getLikedSongs = async (req, res) => {
+  try {
+    const song = await Song.findById('6847ce50c0a36f697d6412b7');
+    console.log(song);
+    console.log("hello from getLikedSongs")
+    const userId = req.user._id; // assuming auth middleware adds user to req
+
+    const user = await User.findById(userId).populate({
+      path: 'likedsong',
+      model: 'Song',
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ likedSongs: user.likedsong});
+  } catch (error) {
+    console.error('Error getting liked songs:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 
 
 
