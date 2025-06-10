@@ -1,8 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../features/songs/songSlice";
-import { selectAllSongs,selectSongsStatus } from "../features/songs/songSelectors.JS";
-import { setSelectedSong, play, } from "../features/playback/playerSlice"; // now coming from playerSlice
+import {
+  selectAllSongs,
+  selectSongsStatus,
+} from "../features/songs/songSelectors";
+import { setSelectedSong, play } from "../features/playback/playerSlice";
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
 import RecentPlays from "../components/RecentPlays";
@@ -15,12 +18,13 @@ const Home = () => {
   const dispatch = useDispatch();
 
   const songs = useSelector(selectAllSongs);
-const selectedSong = useSelector((state) => state.player.selectedSong);
+  const selectedSong = useSelector((state) => state.player.selectedSong);
   const status = useSelector(selectSongsStatus);
 
   const recentScrollRef = useRef(null);
   const playlistScrollRef = useRef(null);
   const similarScrollRef = useRef(null);
+  const topPicksScrollRef = useRef(null); // 👈 new ref
 
   useEffect(() => {
     if (status === "idle") {
@@ -66,7 +70,11 @@ const selectedSong = useSelector((state) => state.player.selectedSong);
               key={song._id}
               title={song.title}
               singer={song.singer}
-              image={song.coverImage || "/images/placeholder.png"}
+              image={
+                song.coverImage && song.coverImage.trim() !== ""
+                  ? song.coverImage
+                  : "/images/placeholder.png"
+              }
               onPlay={() => handlePlaySong(song._id)}
               isSelected={selectedSong === song._id}
             />
@@ -127,20 +135,29 @@ const selectedSong = useSelector((state) => state.player.selectedSong);
             />
           ))}
         </div>
-        
 
         {/* Top Picks */}
-        <h2 className="md:text-xl text-lg font-semibold">top picks for you</h2>
-        <div className="w-full overflow-x-auto no-scrollbar">
+        <div className="w-full flex justify-between items-center">
+          <h2 className="md:text-xl text-lg font-semibold">top picks for you</h2>
+          <LuSquareChevronRight
+            className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+            onClick={() => handleScroll(topPicksScrollRef)}
+          />
+        </div>
+        <div
+          ref={topPicksScrollRef}
+          className="w-full overflow-x-auto no-scrollbar"
+        >
           <div className="flex md:gap-8 gap-32">
             {songColumns.map((column, columnIndex) => (
               <div
                 key={columnIndex}
-                className="flex flex-col gap-4 min-w-[300px]"
+                className="flex flex-col gap-4 min-w-[400px]"
               >
                 {column.map((song) => (
                   <SongList
                     key={song._id}
+                    songId={song._id}
                     img={song.coverImage || "/images/placeholder.png"}
                     songName={song.title}
                     singerName={song.singer}

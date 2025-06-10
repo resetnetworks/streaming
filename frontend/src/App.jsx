@@ -17,6 +17,7 @@ const FavouriteGen = lazy(() => import("./user/FavouriteGen"));
 const ForgotPassword = lazy(() => import("./user/ForgotPassword"));
 const ResetPassword = lazy(() => import("./user/ResetPassword"));
 const Home = lazy(() => import("./user/Home"));
+const Browse = lazy(() => import("./user/Browse"));
 
 // ProtectedRoute: only render children if authenticated, else redirect
 const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) => {
@@ -98,6 +99,14 @@ function App() {
               element={
                 <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
                   <Home />
+                </RedirectedProtectedRoute>
+              }
+            />
+            <Route
+              path="/browse"
+              element={
+                <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
+                  <Browse />
                 </RedirectedProtectedRoute>
               }
             />
