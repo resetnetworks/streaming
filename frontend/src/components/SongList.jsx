@@ -2,6 +2,10 @@ import React from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleLikeSong } from "../features/auth/authSlice";
+import { selectIsSongLiked } from "../features/auth/authSelectors";
+import { toast } from "sonner";
 
 const SongList = ({
   img,
@@ -10,11 +14,32 @@ const SongList = ({
   seekTime,
   isSelected,
   onPlay,
+  songId,
 }) => {
+  const dispatch = useDispatch();
+  const isLiked = useSelector(selectIsSongLiked(songId));
+
   const handleClick = (e) => {
-    // Prevent triggering play when clicking on heart or more options
     if (!e.target.closest(".action-button")) {
       onPlay();
+    }
+  };
+
+  const handleToggleLike = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      const resultAction = await dispatch(toggleLikeSong(songId));
+      if (toggleLikeSong.fulfilled.match(resultAction)) {
+        const wasLiked = isLiked;
+        toast.success(
+          wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
+        );
+      } else if (toggleLikeSong.rejected.match(resultAction)) {
+        toast.error(resultAction.payload || "Failed to update like");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
     }
   };
 
@@ -33,9 +58,13 @@ const SongList = ({
             isSelected ? "shadow-[0_0_5px_1px_#3b82f6]" : ""
           }`}
         />
-        <div className="mx-4">
-          <h3 className="text-white text-lg leading-none">{songName}</h3>
-          <p className="text-gray-400 text-xs font-light mt-1">{singerName}</p>
+        <div className="mx-4 max-w-[160px]">
+          <h3 className="text-white text-lg leading-none truncate">
+            {songName}
+          </h3>
+          <p className="text-gray-400 text-xs font-light mt-1 truncate">
+            {singerName}
+          </p>
         </div>
       </div>
 
@@ -47,19 +76,31 @@ const SongList = ({
           <span className="equalizer-bar"></span>
         </div>
       ) : (
-        <div> </div>
+        <div></div>
       )}
 
       <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
           <MdAccessTimeFilled
-            className={`text-base 
-            ${isSelected ? "text-blue-700" : "text-gray-500"}
-            `}
+            className={`text-base ${
+              isSelected ? "text-blue-700" : "text-gray-500"
+            }`}
           />
           <span className="ml-2">{seekTime}</span>
         </div>
-        <BsHeart className="action-button text-white text-sm hover:cursor-pointer hover:text-red-700" />
+
+        <button
+          type="button"
+          className="action-button"
+          onClick={handleToggleLike}
+        >
+          {isLiked ? (
+            <BsHeartFill className="text-red-600 text-md" />
+          ) : (
+            <BsHeart className="text-white text-md hover:text-red-700" />
+          )}
+        </button>
+
         <FiMoreHorizontal className="action-button text-white text-lg hover:cursor-pointer" />
       </div>
     </div>
