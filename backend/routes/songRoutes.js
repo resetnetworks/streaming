@@ -9,7 +9,8 @@ import {
   getSongsMatchingUserGenres,
   getSongsByGenre,
   getSongsByAlbum,
-  getSongsByArtist
+  getSongsByArtist,
+  getLikedSongs
 } from "../controllers/songController.js";
 import {songUpload} from "../middleware/uploadMiddleware.js";
 import {
@@ -22,6 +23,7 @@ import validate from "../middleware/validate.js";
 const router = express.Router();
 
 // Use songUpload middleware before createSong and updateSong to handle files
+router.get("/liked", isAuth, getLikedSongs);
 router.post("/",isAuth, songUpload, createSongValidator, validate, createSong);
 router.put("/:id",isAuth, songUpload, updateSongValidator, validate, updateSong);
 
@@ -32,5 +34,7 @@ router.get("/:id",isAuth, songIdValidator, validate, getSongById);
 router.get("/genre/:genre", isAuth, getSongsByGenre);
 router.get("/album/:albumId", isAuth, getSongsByAlbum);
 router.get("/artist/:artistId", isAuth, getSongsByArtist);
+router.get("/likedliked", ()=>{console.log("Hello")}, isAuth, getLikedSongs);
+
 
 export default router;

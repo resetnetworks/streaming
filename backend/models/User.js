@@ -74,12 +74,12 @@ const schema = new mongoose.Schema({
     ],
   },
 ],
-  likedsong: [
-    {
-      type: String,
-      required: true,
-    },
-  ],
+ likedsong: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Song",
+  },
+],
   preferredGenres: [
     {
       type: String,
