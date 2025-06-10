@@ -133,7 +133,12 @@ export const updateAlbum = async (req, res) => {
 export const getAlbumsByArtist = async (req, res) => {
   try {
     const { artistId } = req.params;
-    const albums = await Album.find({ artist: new mongoose.Types.ObjectId(artistId) });
+    console.log("Fetching albums for artist:", artistId);
+    if (!mongoose.Types.ObjectId.isValid(artistId)) {
+      return res.status(400).json({ success: false, message: "Invalid artist ID" });
+    }
+    const albums = await Album.find({ artist: artistId });
+    console.log(albums)
     res.json({ success: true, albums });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error", error: err.message });
