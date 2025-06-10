@@ -85,6 +85,34 @@ export const logoutUser = TryCatch(async (req, res) => {
 
 
 // New: Like/Unlike song controller matching likedsong array
+// export const likeSong = TryCatch(async (req, res) => {
+//   const user = await User.findById(req.user._id);
+
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found" });
+//   }
+
+//   const songId = req.params.id;
+
+//   if (user.likedsong.includes(songId)) {
+//     user.likedsong = user.likedsong.filter(id => id !== songId);
+
+//     await user.save();
+
+//     return res.json({
+//       message: "Song removed from liked songs",
+//     });
+//   }
+
+//   user.likedsong.push(songId);
+
+//   await user.save();
+
+//   return res.json({
+//     message: "Song added to liked songs",
+//   });
+// });
+
 export const likeSong = TryCatch(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -94,24 +122,26 @@ export const likeSong = TryCatch(async (req, res) => {
 
   const songId = req.params.id;
 
-  if (user.likedsong.includes(songId)) {
-    user.likedsong = user.likedsong.filter(id => id !== songId);
+  const isAlreadyLiked = user.likedsong.some(id => id.equals(songId));
 
+  if (isAlreadyLiked) {
+    user.likedsong = user.likedsong.filter(id => !id.equals(songId));
     await user.save();
-
     return res.json({
       message: "Song removed from liked songs",
+      liked: false,
     });
   }
 
   user.likedsong.push(songId);
-
   await user.save();
 
   return res.json({
     message: "Song added to liked songs",
+    liked: true,
   });
 });
+
 
 
 export const updatePreferredGenres = TryCatch(async (req, res) => {
