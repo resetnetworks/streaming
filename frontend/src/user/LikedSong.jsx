@@ -5,10 +5,7 @@ import {
   selectLikedSongs,
   selectSelectedSong,
 } from "../features/songs/songSelectors";
-import {
-  setSelectedSong,
-  play,
-} from "../features/playback/playerSlice";
+import { setSelectedSong, play } from "../features/playback/playerSlice";
 import SongList from "../components/SongList";
 import UserLayout from "../components/UserLayout";
 import { formatDuration } from "../utills/helperFunctions";
@@ -21,9 +18,7 @@ const LikedSong = () => {
   const selectedSong = useSelector(selectSelectedSong);
 
   // 👇 Get the list of liked song IDs from auth.user
-  const likedSongIds = useSelector(
-    (state) => state.auth.user?.likedsong || []
-  );
+  const likedSongIds = useSelector((state) => state.auth.user?.likedsong || []);
 
   // 👇 Sync liked song details with backend or clear when empty
   useEffect(() => {
@@ -41,8 +36,8 @@ const LikedSong = () => {
 
   return (
     <UserLayout>
-      <UserHeader/>
-      <div className="bg-image min-h-screen w-[96%] bg-gradient-to-br from-[#232526] to-[#414345] py-8 px-4">
+      <UserHeader />
+      <div className=" min-h-screen w-[96%] py-8 px-4">
         <h2 className="md:text-3xl text-2xl font-bold text-white mb-8">
           Liked Songs
         </h2>
