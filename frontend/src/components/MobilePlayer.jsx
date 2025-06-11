@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAllSongs } from "../features/songs/songSelectors.JS";
+import { selectAllSongs } from "../features/songs/songSelectors.js";
 import {
   setSelectedSong,
   play,
