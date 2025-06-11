@@ -135,21 +135,31 @@ const authSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload || 'Failed to update preferred genres';
       })
+
+      // ✅ Updated toggleLikeSong handler
       .addCase(toggleLikeSong.fulfilled, (state, action) => {
         const { songId, message } = action.payload;
+
         if (state.user) {
-          if (state.user.likedsong?.includes(songId)) {
+          if (!Array.isArray(state.user.likedsong)) {
+            state.user.likedsong = [];
+          }
+
+          const isAlreadyLiked = state.user.likedsong.includes(songId);
+
+          if (isAlreadyLiked) {
             state.user.likedsong = state.user.likedsong.filter((id) => id !== songId);
           } else {
-            if (!state.user.likedsong) state.user.likedsong = [];
             state.user.likedsong.push(songId);
           }
+
           localStorage.setItem('user', JSON.stringify(state.user));
         }
+
         state.message = message;
-        // Don't update global status to prevent App.jsx loader
       })
-      // 🔥 Rejected matcher (skip toggleLikeSong)
+
+      // ❌ Generic Error Handler (Skip toggleLikeSong)
       .addMatcher(
         (action) =>
           action.type.startsWith('auth/') &&
@@ -160,7 +170,8 @@ const authSlice = createSlice({
           state.error = action.payload || 'Something went wrong';
         }
       )
-      // 🔥 Pending matcher (skip toggleLikeSong)
+
+      // 🔄 Generic Pending Handler (Skip toggleLikeSong)
       .addMatcher(
         (action) =>
           action.type.startsWith('auth/') &&
@@ -174,5 +185,6 @@ const authSlice = createSlice({
   },
 });
 
+// 👉 Export Actions and Reducer
 export const { clearMessage } = authSlice.actions;
 export default authSlice.reducer;

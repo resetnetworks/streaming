@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleLikeSong } from "../features/auth/authSlice";
 import { selectIsSongLiked } from "../features/auth/authSelectors";
 import { toast } from "sonner";
+import debounce from "lodash.debounce";
 
 const SongList = ({
   img,
@@ -25,22 +26,29 @@ const SongList = ({
     }
   };
 
-  const handleToggleLike = async (e) => {
+  // ✅ Debounced like toggle
+  const debouncedLikeToggle = useCallback(
+    debounce(async (songId, wasLiked) => {
+      try {
+        const resultAction = await dispatch(toggleLikeSong(songId));
+        if (toggleLikeSong.fulfilled.match(resultAction)) {
+          toast.success(
+            wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
+          );
+        } else if (toggleLikeSong.rejected.match(resultAction)) {
+          toast.error(resultAction.payload || "Failed to update like");
+        }
+      } catch (err) {
+        toast.error("Something went wrong");
+      }
+    }, 500), // 500ms debounce
+    []
+  );
+
+  const handleToggleLike = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    try {
-      const resultAction = await dispatch(toggleLikeSong(songId));
-      if (toggleLikeSong.fulfilled.match(resultAction)) {
-        const wasLiked = isLiked;
-        toast.success(
-          wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
-        );
-      } else if (toggleLikeSong.rejected.match(resultAction)) {
-        toast.error(resultAction.payload || "Failed to update like");
-      }
-    } catch (err) {
-      toast.error("Something went wrong");
-    }
+    debouncedLikeToggle(songId, isLiked);
   };
 
   return (

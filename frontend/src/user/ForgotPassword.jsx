@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { MdOutlineEmail } from "react-icons/md";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import IconHeader from "../components/IconHeader";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,10 +16,15 @@ const ForgotPassword = () => {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/forgot-password`,
+        `${import.meta.env.VITE_API_URL}/users/forgot-password`,
         { email }
       );
-      toast.success(res.data.message);
+      toast.success(res.data.message || "Reset link sent successfully!");
+
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       toast.error(err.response?.data?.message || "Error sending reset link");
     } finally {
@@ -40,7 +47,9 @@ const ForgotPassword = () => {
         >
           {/* Email Field */}
           <div className="w-full mb-1">
-            <label htmlFor="email" className="md:text-xl text-lg">email</label>
+            <label htmlFor="email" className="md:text-xl text-lg">
+              email
+            </label>
           </div>
           <div className="w-full relative">
             <MdOutlineEmail className="inside-icon" />

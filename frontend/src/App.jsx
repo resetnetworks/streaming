@@ -2,7 +2,7 @@ import React, { useEffect, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
-import { getMyProfile } from "./features/auth/authSlice"; // thunk
+import { getMyProfile } from "./features/auth/authSlice";
 import {
   selectIsAuthenticated,
   selectAuthStatus,
@@ -18,6 +18,8 @@ const ForgotPassword = lazy(() => import("./user/ForgotPassword"));
 const ResetPassword = lazy(() => import("./user/ResetPassword"));
 const Home = lazy(() => import("./user/Home"));
 const Browse = lazy(() => import("./user/Browse"));
+const LikedSong = lazy(() => import("./user/LikedSong"));
+const Admin = lazy(() => import("./admin/Admin"));
 
 // ProtectedRoute: only render children if authenticated, else redirect
 const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) => {
@@ -26,14 +28,15 @@ const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>
 
 // RedirectedProtectedRoute: redirect to /genres if user has no preferredGenres
 const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.preferredGenres?.length === 0) return <Navigate to="/genres" replace />;
+  return children;
+};
 
-  if (user?.preferredGenres?.length === 0) {
-    return <Navigate to="/genres" replace />;
-  }
-
+// Admin-only route
+const AdminRoute = ({ isAuthenticated, user, children }) => {
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== "admin") return <Navigate to="/" replace />;
   return children;
 };
 
@@ -51,21 +54,17 @@ function App() {
   const loading = status === "loading";
 
   useEffect(() => {
-    dispatch(getMyProfile()).catch(() => {
-      // optional: handle error
-    });
+    dispatch(getMyProfile()).catch(() => {});
   }, [dispatch]);
 
-  if (loading) {
-    return <Loader />;
-  }
+  if (loading) return <Loader />;
 
   return (
     <>
       <BrowserRouter>
         <Suspense fallback={<Loader />}>
           <Routes>
-            {/* Public routes */}
+            {/* Public routes (only if NOT authenticated) */}
             <Route
               path="/register"
               element={
@@ -82,10 +81,24 @@ function App() {
                 </PublicRoute>
               }
             />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute isAuthenticated={isAuthenticated}>
+                  <ForgotPassword />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password/:token"
+              element={
+                <PublicRoute isAuthenticated={isAuthenticated}>
+                  <ResetPassword />
+                </PublicRoute>
+              }
+            />
 
-            {/* Protected routes */}
+            {/* Authenticated users only */}
             <Route
               path="/genres"
               element={
@@ -110,8 +123,24 @@ function App() {
                 </RedirectedProtectedRoute>
               }
             />
+            <Route
+              path="/liked-songs"
+              element={
+                <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
+                  <LikedSong />
+                </RedirectedProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
+                  <Admin />
+                </AdminRoute>
+              }
+            />
 
-            {/* Fallback route - redirect based on authentication */}
+            {/* Fallback: redirect based on auth */}
             <Route
               path="*"
               element={
@@ -125,6 +154,7 @@ function App() {
           </Routes>
         </Suspense>
       </BrowserRouter>
+
       <Toaster richColors position="top-center" />
     </>
   );
