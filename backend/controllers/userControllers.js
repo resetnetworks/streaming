@@ -209,10 +209,14 @@ export const resetPassword = TryCatch(async (req, res) => {
 });
 
 // google callback handler
+// Google callback handler
 export const googleAuthCallback = (req, res) => {
   try {
     generateToken(req.user._id, res);
-    res.redirect(process.env.CLIENT_URL || "/");
+    
+    // ✅ Redirect to frontend (e.g., / or /genres)
+    const redirectUrl = process.env.CLIENT_URL || "http://localhost:5173/";
+    res.redirect(redirectUrl);
   } catch (error) {
     console.error("Google Auth Error:", error);
     res.status(500).send("Authentication failed.");
@@ -227,12 +231,11 @@ export const facebookAuthCallback = (req, res) => {
 
   generateToken(req.user._id, res);
 
-  res.status(200).json({
-    success: true,
-    message: "Facebook login successful",
-    user: req.user,
-  });
+  // ✅ Redirect to frontend after login
+  const redirectUrl = process.env.CLIENT_URL || "http://localhost:5173/";
+  res.redirect(redirectUrl);
 };
+
 
 // Apple callback handler
 export const appleCallback = (req, res) => {

@@ -8,7 +8,7 @@ import { FiGlobe, FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/f
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
-import { selectAllSongs } from "../features/songs/songSelectors.JS";  // Adjust path as needed
+import { selectAllSongs } from "../features/songs/songSelectors.js";  // Adjust path as needed
 
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/" },

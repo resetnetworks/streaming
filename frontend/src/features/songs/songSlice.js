@@ -42,11 +42,21 @@ export const fetchAllSongs = createAsyncThunk('songs/fetchAll', async (_, thunkA
   }
 });
 
+export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (_, thunkAPI) => {
+  try {
+    const res = await axios.get('/songs/liked');
+    return res.data.likedSongs;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching liked songs failed');
+  }
+});
+
 // Slice
 const songSlice = createSlice({
   name: 'songs',
   initialState: {
     songs: [],
+    likedSongs: [],
     status: 'idle',
     error: null,
     message: null,
@@ -55,6 +65,9 @@ const songSlice = createSlice({
     clearSongMessage: (state) => {
       state.error = null;
       state.message = null;
+    },
+    clearLikedSongs: (state) => {
+      state.likedSongs = []; // ✅ Clears liked songs when user unlikes all
     },
   },
   extraReducers: (builder) => {
@@ -79,6 +92,10 @@ const songSlice = createSlice({
         state.songs = action.payload;
         state.status = 'succeeded';
       })
+      .addCase(fetchLikedSongs.fulfilled, (state, action) => {
+        state.likedSongs = action.payload;
+        state.status = 'succeeded';
+      })
       .addMatcher(
         (action) => action.type.startsWith('songs/') && action.type.endsWith('/pending'),
         (state) => {
@@ -96,5 +113,8 @@ const songSlice = createSlice({
   },
 });
 
-export const { clearSongMessage } = songSlice.actions;
+// ✅ Export actions
+export const { clearSongMessage, clearLikedSongs } = songSlice.actions;
+
+// ✅ Export reducer
 export default songSlice.reducer;

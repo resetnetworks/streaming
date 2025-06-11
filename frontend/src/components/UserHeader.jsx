@@ -24,6 +24,10 @@ const UserHeader = () => {
       </h1>
 
       {/* Profile with dropdown */}
+      
+    {user.role==="admin"? <div className="button-wrapper shadow-md shadow-gray-800" onClick={()=>{navigate("/admin")}}>
+            <button className="player-button">Admin</button>
+          </div>:
       <div className="relative">
         <div
           className="flex items-center cursor-pointer"
@@ -90,7 +94,7 @@ const UserHeader = () => {
             </ul>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 };

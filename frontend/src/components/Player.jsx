@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   selectAllSongs,
   selectSelectedSong,
-} from "../features/songs/songSelectors.JS";
+} from "../features/songs/songSelectors.js";
 import {
   setSelectedSong,
   play,
@@ -339,9 +339,7 @@ const Player = () => {
                       </div>
                     </div>
                     <span className="text-xs text-gray-200">
-                      {song._id === selectedSong
-                        ? formatDuration(song.duration)
-                        : "--:--"}
+                    {formatDuration(song.duration)}
                     </span>
                   </div>
                 ))}

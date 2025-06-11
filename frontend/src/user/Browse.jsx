@@ -1,12 +1,11 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchAllSongs,
-} from "../features/songs/songSlice";
+import { fetchAllSongs } from "../features/songs/songSlice";
+import { fetchAllArtists } from "../features/artists/artistsSlice";
 import {
   selectAllSongs,
   selectSongsStatus,
-} from "../features/songs/songSelectors.JS";
+} from "../features/songs/songSelectors";
 import {
   setSelectedSong,
   play,
@@ -23,21 +22,42 @@ import { formatDuration } from "../utills/helperFunctions";
 
 const Browse = () => {
   const dispatch = useDispatch();
-
   const songs = useSelector(selectAllSongs);
   const status = useSelector(selectSongsStatus);
   const selectedSong = useSelector((state) => state.player.selectedSong);
+  const artists = useSelector((state) => state.artists.allArtists);
+
+  const [randomArtist, setRandomArtist] = useState(null);
 
   const recentScrollRef = useRef(null);
   const genreScrollRef = useRef(null);
   const similarScrollRef = useRef(null);
-  const trendingScrollRef = useRef(null); // New scroll ref for trending section
+  const trendingScrollRef = useRef(null);
 
   useEffect(() => {
     if (status === "idle") {
       dispatch(fetchAllSongs());
     }
+    dispatch(fetchAllArtists());
   }, [dispatch, status]);
+
+  useEffect(() => {
+    if (songs.length > 0 && artists.length > 0) {
+      const getValidArtist = () => {
+        const shuffled = [...artists].sort(() => 0.5 - Math.random());
+        for (let artist of shuffled) {
+          const hasSongs = songs.some(
+            (song) =>
+              song.artist === artist._id || song.artist?._id === artist._id
+          );
+          if (hasSongs) return artist;
+        }
+        return null;
+      };
+      const selected = getValidArtist();
+      setRandomArtist(selected);
+    }
+  }, [songs, artists]);
 
   const handleScroll = (ref) => {
     if (ref.current) {
@@ -93,6 +113,14 @@ const Browse = () => {
 
   const genreChunks = chunkGenres(genreData);
 
+  const songsByRandomArtist = randomArtist
+    ? songs.filter(
+        (song) =>
+          song.artist === randomArtist._id ||
+          song.artist?._id === randomArtist._id
+      )
+    : [];
+
   return (
     <UserLayout>
       <UserHeader />
@@ -139,34 +167,44 @@ const Browse = () => {
           ))}
         </div>
 
-        {/* Similar to rlung */}
-        <div className="flex md:gap-2 gap-4 items-center">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqfAcDALkSsCqPtfyFv69i8j0k_ZXVBM-Juw&s"
-            alt="Singer"
-            className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
-          />
-          <div>
-            <h2 className="text-blue-700 text-base leading-none">similar to</h2>
-            <p className="text-lg leading-none">rlung</p>
-          </div>
-          <LuSquareChevronRight
-            className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all ml-auto md:block hidden"
-            onClick={() => handleScroll(similarScrollRef)}
-          />
-        </div>
-        <div ref={similarScrollRef} className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-          {songs.map((song) => (
-            <RecentPlays
-              key={song._id}
-              title={song.title}
-              singer={song.singer}
-              image={song.coverImage || "/images/placeholder.png"}
-              onPlay={() => handlePlaySong(song._id)}
-              isSelected={selectedSong === song._id}
-            />
-          ))}
-        </div>
+        {/* Similar to random artist */}
+        {randomArtist && (
+          <>
+            <div className="flex md:gap-2 gap-4 items-center">
+              <img
+                src={
+                  randomArtist.image ||
+                  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqfAcDALkSsCqPtfyFv69i8j0k_ZXVBM-Juw&s"
+                }
+                alt={randomArtist.name}
+                className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
+              />
+              <div>
+                <h2 className="text-blue-700 text-base leading-none">similar to</h2>
+                <p className="text-lg leading-none">{randomArtist.name}</p>
+              </div>
+              <LuSquareChevronRight
+                className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all ml-auto md:block hidden"
+                onClick={() => handleScroll(similarScrollRef)}
+              />
+            </div>
+            <div
+              ref={similarScrollRef}
+              className="flex gap-4 overflow-x-auto pb-2 no-scrollbar"
+            >
+              {songsByRandomArtist.map((song) => (
+                <RecentPlays
+                  key={song._id}
+                  title={song.title}
+                  singer={song.singer}
+                  image={song.coverImage || "/images/placeholder.png"}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Trending / Top Picks */}
         <div className="w-full flex justify-between items-center">
