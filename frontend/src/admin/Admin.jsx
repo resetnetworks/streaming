@@ -5,6 +5,20 @@ import Playlists from "./Playlists";
 import Artists from "./Artists";
 import Songs from "./Songs";
 import Transactions from "./Transactions";
+import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectAllAlbums,
+  selectAlbumForm,
+  selectEditingAlbum,
+} from "../features/albums/albumsSelector";
+import {
+  setAlbumForm,
+  setEditingAlbum,
+  clearEditingAlbum,
+  createAlbum,
+  deleteAlbum as deleteAlbumAction,
+} from "../features/albums/albumsSlice";
 
 
 const initialPlaylist = { name: "", songs: [""] };
@@ -37,10 +51,16 @@ export default function Admin() {
     const [playlistForm, setPlaylistForm] = useState(initialPlaylist);
     const [editingPlaylist, setEditingPlaylist] = useState(null);
 
-    // State for Albums
-    const [albums, setAlbums] = useState([]);
-    const [albumForm, setAlbumForm] = useState(initialAlbum);
-    const [editingAlbum, setEditingAlbum] = useState(null);
+    // // State for Albums
+    // const [albums, setAlbums] = useState([]);
+    // const [albumForm, setAlbumForm] = useState(initialAlbum);
+    // const [editingAlbum, setEditingAlbum] = useState(null);
+
+    // ...inside Admin component:
+const dispatch = useDispatch();
+const albums = useSelector(selectAllAlbums);
+const albumForm = useSelector(selectAlbumForm);
+const editingAlbum = useSelector(selectEditingAlbum);
 
     // State for Artists
     const [artists, setArtists] = useState([]);
@@ -51,6 +71,8 @@ export default function Admin() {
 const [songs, setSongs] = useState([]);
 const [songForm, setSongForm] = useState(initialSong);
 const [editingSong, setEditingSong] = useState(null);
+
+const [coverFile, setCoverFile] = useState(null);
 
 // State for Transactions (for future use)
 const [transactions, setTransactions] = useState([]);
@@ -105,16 +127,16 @@ const [transactions, setTransactions] = useState([]);
         if (editingPlaylist === idx) setEditingPlaylist(null);
     };
 
-    // Album Handlers
-    const handleAlbumChange = (e, idx) => {
-        if (e.target.name === "songs") {
-            const newSongs = [...albumForm.songs];
-            newSongs[idx] = e.target.value;
-            setAlbumForm({ ...albumForm, songs: newSongs });
-        } else {
-            setAlbumForm({ ...albumForm, [e.target.name]: e.target.value });
-        }
-    };
+   // Album Handlers
+const handleAlbumChange = (e, idx) => {
+  if (e.target.name === "songs") {
+    const newSongs = [...albumForm.songs];
+    newSongs[idx] = e.target.value;
+    dispatch(setAlbumForm({ ...albumForm, songs: newSongs }));
+  } else {
+    dispatch(setAlbumForm({ ...albumForm, [e.target.name]: e.target.value }));
+  }
+};
 
     const addAlbumSongField = () =>
         setAlbumForm({ ...albumForm, songs: [...albumForm.songs, ""] });
@@ -124,28 +146,33 @@ const [transactions, setTransactions] = useState([]);
         setAlbumForm({ ...albumForm, songs: newSongs });
     };
 
-    const submitAlbum = (e) => {
-        e.preventDefault();
-        if (editingAlbum !== null) {
-            setAlbums(
-                albums.map((a, i) => (i === editingAlbum ? { ...albumForm } : a))
-            );
-            setEditingAlbum(null);
-        } else {
-            setAlbums([...albums, { ...albumForm }]);
-        }
-        setAlbumForm(initialAlbum);
-    };
+const submitAlbum = async (e) => {
+  e.preventDefault();
+  if (!albumForm.artist || albumForm.artist.length !== 24) {
+    alert("Please select a valid artist from the dropdown.");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("title", albumForm.title);
+  formData.append("description", albumForm.description);
+  formData.append("artist", albumForm.artist);
+  formData.append("price", albumForm.price);
+  if (coverFile) { // <-- use coverFile, NOT albumForm.cover
+    formData.append("coverImage", coverFile);
+  }
+  dispatch(createAlbum(formData));
+};
 
-    const editAlbum = (idx) => {
-        setEditingAlbum(idx);
-        setAlbumForm(albums[idx]);
-    };
+  
 
-    const deleteAlbum = (idx) => {
-        setAlbums(albums.filter((_, i) => i !== idx));
-        if (editingAlbum === idx) setEditingAlbum(null);
-    };
+const deleteAlbum = (idx) => {
+  dispatch(deleteAlbumAction(idx));
+};
+
+const editAlbum = (idx) => {
+  dispatch(setEditingAlbum(idx));
+  dispatch(setAlbumForm(albums[idx]));
+};
 
     // Artist Handlers
     const handleArtistChange = (e) => {
@@ -280,19 +307,21 @@ const deleteSong = (idx) => {
             <div className="flex-1 flex justify-center items-start">
                 {activeSection === "albums" && (
                 
-                    <Albums
-                        albums={albums}
-                        albumForm={albumForm}
-                        editingAlbum={editingAlbum}
-                        setEditingAlbum={setEditingAlbum}
-                        setAlbumForm={setAlbumForm}
-                        initialAlbum={initialAlbum}
-                        handleAlbumChange={handleAlbumChange}
-                        submitAlbum={submitAlbum}
-                        deleteAlbum={deleteAlbum}
-                        inputClass={inputClass}
-                        textareaClass={textareaClass}
-                    />
+   <Albums
+  albums={albums}
+  albumForm={albumForm}
+  editingAlbum={editingAlbum}
+  setEditingAlbum={(idx) => dispatch(setEditingAlbum(idx))}
+  setAlbumForm={(form) => dispatch(setAlbumForm(form))}
+  initialAlbum={initialAlbum}
+  handleAlbumChange={handleAlbumChange}
+  submitAlbum={submitAlbum}
+  deleteAlbum={deleteAlbum}
+  inputClass={inputClass}
+  textareaClass={textareaClass}
+  coverFile={coverFile}
+  setCoverFile={setCoverFile}
+/>
                 )}
                 {activeSection === "playlists" && (
 
