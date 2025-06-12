@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../features/songs/songSlice";
 import { fetchAllArtists } from "../features/artists/artistsSlice";
+import { useNavigate } from "react-router-dom";
 import {
   selectAllSongs,
   selectSongsStatus,
@@ -28,6 +29,8 @@ const Browse = () => {
   const artists = useSelector((state) => state.artists.allArtists);
 
   const [randomArtist, setRandomArtist] = useState(null);
+
+  const navigate = useNavigate()
 
   const recentScrollRef = useRef(null);
   const genreScrollRef = useRef(null);
@@ -181,7 +184,12 @@ const Browse = () => {
               />
               <div>
                 <h2 className="text-blue-700 text-base leading-none">similar to</h2>
-                <p className="text-lg leading-none">{randomArtist.name}</p>
+                <p
+                  onClick={() => navigate(`/artist/${randomArtist._id}`)}
+                  className="text-lg leading-none text-white hover:underline cursor-pointer"
+                >
+                  {randomArtist.name}
+                </p>
               </div>
               <LuSquareChevronRight
                 className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all ml-auto md:block hidden"
