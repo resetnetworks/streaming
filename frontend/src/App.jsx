@@ -9,6 +9,8 @@ import {
   selectCurrentUser,
 } from "./features/auth/authSelectors";
 import Loader from "./components/Loader";
+import Artist from "./user/Artist";
+import CreatePlayList from "./user/CreatePlayList";
 
 // Lazy load route components
 const Register = lazy(() => import("./user/Register"));
@@ -21,26 +23,23 @@ const Browse = lazy(() => import("./user/Browse"));
 const LikedSong = lazy(() => import("./user/LikedSong"));
 const Admin = lazy(() => import("./admin/Admin"));
 
-// ProtectedRoute: only render children if authenticated, else redirect
+// Protected routes
 const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) => {
   return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 };
 
-// RedirectedProtectedRoute: redirect to /genres if user has no preferredGenres
 const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.preferredGenres?.length === 0) return <Navigate to="/genres" replace />;
   return children;
 };
 
-// Admin-only route
 const AdminRoute = ({ isAuthenticated, user, children }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.role !== "admin") return <Navigate to="/" replace />;
   return children;
 };
 
-// PublicRoute: only render children if NOT authenticated, else redirect
 const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) => {
   return !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 };
@@ -53,9 +52,12 @@ function App() {
 
   const loading = status === "loading";
 
+  // ✅ Only fetch profile if not already authenticated
   useEffect(() => {
-    dispatch(getMyProfile()).catch(() => {});
-  }, [dispatch]);
+    if (!isAuthenticated) {
+      dispatch(getMyProfile()).catch(() => {});
+    }
+  }, [dispatch, isAuthenticated]);
 
   if (loading) return <Loader />;
 
@@ -64,7 +66,7 @@ function App() {
       <BrowserRouter>
         <Suspense fallback={<Loader />}>
           <Routes>
-            {/* Public routes (only if NOT authenticated) */}
+            {/* Public Routes */}
             <Route
               path="/register"
               element={
@@ -98,7 +100,7 @@ function App() {
               }
             />
 
-            {/* Authenticated users only */}
+            {/* Protected Routes */}
             <Route
               path="/genres"
               element={
@@ -123,6 +125,8 @@ function App() {
                 </RedirectedProtectedRoute>
               }
             />
+            <Route path="/artist/:artistId" element={<Artist/>}/>
+            <Route path="/create-playlist" element={<CreatePlayList/>}/>
             <Route
               path="/liked-songs"
               element={
@@ -140,7 +144,7 @@ function App() {
               }
             />
 
-            {/* Fallback: redirect based on auth */}
+            {/* Fallback route */}
             <Route
               path="*"
               element={

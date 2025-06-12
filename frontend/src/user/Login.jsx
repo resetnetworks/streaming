@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { MdOutlineEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
@@ -20,7 +20,6 @@ const Login = () => {
   const { status, isAuthenticated, user } = useSelector((state) => state.auth);
   const btnLoading = status === "loading";
 
-
   const handleLogin = (e) => {
     e.preventDefault();
 
@@ -33,9 +32,14 @@ const Login = () => {
       .unwrap()
       .then(() => {
         toast.success("Login successful");
+        navigate("/"); // Optional: redirect after login
       })
       .catch((err) => {
-        toast.error(err || "Login failed. Please check your credentials.");
+        if (err?.response?.status === 429) {
+          toast.error("Too many requests. Please wait a few seconds.");
+        } else {
+          toast.error(err?.message || "Login failed. Please check credentials.");
+        }
       });
   };
 
@@ -69,6 +73,7 @@ const Login = () => {
             <input
               required
               type="email"
+              placeholder="Enter your email"
               className="input-login"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -85,6 +90,7 @@ const Login = () => {
             <input
               required
               type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
               className="input-login"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -109,7 +115,7 @@ const Login = () => {
           </a>
 
           {/* Login Button */}
-          <div className="button-wrapper mt-9 shadow-sm shadow-black">
+           <div className="button-wrapper mt-9 shadow-sm shadow-black">
             <button className="custom-button" disabled={btnLoading}>
               {btnLoading ? "Logging in..." : "Login"}
             </button>
