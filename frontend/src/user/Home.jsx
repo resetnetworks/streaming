@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../features/songs/songSlice";
 import { fetchAllArtists } from "../features/artists/artistsSlice";
+import { useNavigate } from "react-router-dom";
 import {
   selectAllSongs,
   selectSongsStatus,
@@ -23,6 +24,8 @@ const Home = () => {
   const status = useSelector(selectSongsStatus);
   const likedSongIds = useSelector((state) => state.auth.user?.likedsong || []);
 
+  const navigate = useNavigate();
+
   const [randomArtist, setRandomArtist] = useState(null);
 
   const recentScrollRef = useRef(null);
@@ -33,7 +36,7 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchAllSongs());
     dispatch(fetchAllArtists());
-  }, [dispatch, likedSongIds]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (songs.length > 0 && artists.length > 0) {
@@ -146,8 +149,15 @@ const Home = () => {
                 className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
               />
               <div>
-                <h2 className="text-blue-700 text-base leading-none">similar to</h2>
-                <p className="text-lg leading-none">{randomArtist.name}</p>
+                <h2 className="text-blue-700 text-base leading-none">
+                  similar to
+                </h2>
+                <p
+                  onClick={() => navigate(`/artist/${randomArtist._id}`)}
+                  className="text-lg leading-none text-white hover:underline cursor-pointer"
+                >
+                  {randomArtist.name}
+                </p>
               </div>
               <LuSquareChevronRight
                 className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all ml-auto md:block hidden"
@@ -174,7 +184,9 @@ const Home = () => {
 
         {/* Top Picks */}
         <div className="w-full flex justify-between items-center">
-          <h2 className="md:text-xl text-lg font-semibold">top picks for you</h2>
+          <h2 className="md:text-xl text-lg font-semibold">
+            top picks for you
+          </h2>
           <LuSquareChevronRight
             className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
             onClick={() => handleScroll(topPicksScrollRef)}
