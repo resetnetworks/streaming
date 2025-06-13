@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance";
 
-// Thunks
+// Thunk: Fetch all albums
 export const fetchAllAlbums = createAsyncThunk(
   "albums/fetchAll",
   async (_, thunkAPI) => {
@@ -9,24 +9,14 @@ export const fetchAllAlbums = createAsyncThunk(
       const res = await axios.get("/albums");
       return res.data.albums;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch albums");
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch albums"
+      );
     }
   }
 );
 
-// NEW: Fetch album by ID
-export const fetchAlbumById = createAsyncThunk(
-  "albums/fetchById",
-  async (albumId, thunkAPI) => {
-    try {
-      const res = await axios.get(`/albums/${albumId}`);
-      return res.data.album;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch album");
-    }
-  }
-);
-
+// Thunk: Create new album
 export const createAlbum = createAsyncThunk(
   "albums/create",
   async (formData, thunkAPI) => {
@@ -36,14 +26,32 @@ export const createAlbum = createAsyncThunk(
       });
       return res.data.album;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to create album");
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to create album"
+      );
     }
   }
 );
 
+// ✅ Thunk: Fetch albums by specific artist
+export const getAlbumsByArtist = createAsyncThunk(
+  "albums/getByArtist",
+  async (artistId, thunkAPI) => {
+    try {
+      const res = await axios.get(`/albums/artist/${artistId}`);
+      return res.data.albums;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch albums for artist"
+      );
+    }
+  }
+);
+
+// Initial state
 const initialState = {
   allAlbums: [],
-  albumById: {},
+  artistAlbums: [], // ✅ New field for artist-specific albums
   albumForm: {
     title: "",
     description: "",
@@ -58,6 +66,7 @@ const initialState = {
   error: null,
 };
 
+// Albums slice
 const albumsSlice = createSlice({
   name: "albums",
   initialState,
@@ -81,6 +90,7 @@ const albumsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // fetchAllAlbums
       .addCase(fetchAllAlbums.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -93,18 +103,8 @@ const albumsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-       .addCase(fetchAlbumById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchAlbumById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.albumById[action.payload._id] = action.payload;
-      })
-      .addCase(fetchAlbumById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+
+      // createAlbum
       .addCase(createAlbum.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -118,10 +118,31 @@ const albumsSlice = createSlice({
       .addCase(createAlbum.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // ✅ getAlbumsByArtist
+      .addCase(getAlbumsByArtist.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAlbumsByArtist.fulfilled, (state, action) => {
+        state.loading = false;
+        state.artistAlbums = action.payload;
+      })
+      .addCase(getAlbumsByArtist.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { setAlbumForm, setEditingAlbum, clearEditingAlbum, setAlbums, deleteAlbum } = albumsSlice.actions;
-export const selectAlbumById = (state, albumId) => state.albums.albumById[albumId];
+// Exports
+export const {
+  setAlbumForm,
+  setEditingAlbum,
+  clearEditingAlbum,
+  setAlbums,
+  deleteAlbum,
+} = albumsSlice.actions;
+
 export default albumsSlice.reducer;
