@@ -12,6 +12,8 @@ import { fetchArtistById } from "../features/artists/artistsSlice";
 import { selectSelectedArtist } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
+import { getAlbumsByArtist } from "../features/albums/albumsSlice";
+import { selectArtistAlbums } from "../features/albums/albumsSelector";
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -22,10 +24,12 @@ const Artist = () => {
   const songs = useSelector((state) => state.songs.songs || []);
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const artist = useSelector(selectSelectedArtist);
+  const artistAlbums = useSelector(selectArtistAlbums);
 
   useEffect(() => {
     if (artistId) {
       dispatch(fetchArtistById(artistId));
+      dispatch(getAlbumsByArtist(artistId));
     }
     dispatch(fetchAllSongs());
   }, [dispatch, artistId]);
@@ -45,12 +49,13 @@ const Artist = () => {
     }
   };
 
-  const songListView = artistSongs.slice(0, 5); // For vertical view
+  const songListView = artistSongs.slice(0, 5); // Vertical list
 
   return (
     <UserLayout>
       <UserHeader />
 
+      {/* Hero Section */}
       <div className="relative h-80 w-full">
         <img
           src="https://images.unsplash.com/photo-1517230878791-4d28214057c2?q=80&w=2069&auto=format&fit=crop"
@@ -69,8 +74,12 @@ const Artist = () => {
             className="w-20 h-20 rounded-full object-cover border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]"
           />
           <div>
-            <p className="text-sm lowercase tracking-widest text-gray-200">Artist</p>
-            <h1 className="text-3xl md:text-4xl font-bold mt-1">{artist?.name || "Unknown Artist"}</h1>
+            <p className="text-sm lowercase tracking-widest text-gray-200">
+              Artist
+            </p>
+            <h1 className="text-3xl md:text-4xl font-bold mt-1">
+              {artist?.name || "Unknown Artist"}
+            </h1>
             <div className="flex items-center mt-1 text-gray-300 text-sm">
               <FiMapPin className="mr-2 text-blue-600" />
               <span>{artist?.location || "Unknown City"}</span>
@@ -79,10 +88,12 @@ const Artist = () => {
         </div>
       </div>
 
-      {/* ✅ All Songs Vertical List */}
+      {/* All Songs (vertical) */}
       <div className="flex justify-between mt-6 px-6 text-lg text-white">
         <h2>All Songs</h2>
-        <a href="#" className="text-blue-500 cursor-pointer">See all</a>
+        <a href="#" className="text-blue-500 cursor-pointer">
+          See all
+        </a>
       </div>
       <div className="px-6 py-4 flex flex-col gap-4">
         {songListView.map((song) => (
@@ -111,16 +122,21 @@ const Artist = () => {
         ref={recentScrollRef}
         className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar"
       >
-        {artistSongs.map((song) => (
-          <RecentPlays
-            key={song._id}
-            title={song.title}
-            singer={song.singer}
-            image={song.coverImage || "/images/placeholder.png"}
-            onPlay={() => handlePlaySong(song._id)}
-            isSelected={selectedSong === song._id}
-          />
-        ))}
+        {artistAlbums.length > 0 ? (
+          artistAlbums.map((album) => (
+            <RecentPlays
+              key={album._id}
+              title={album.title}
+              singer={artist?.name}
+              image={album.cover || "/images/placeholder.png"}
+              price={album.price}
+              isSelected={false}
+              // Removed onPlay because albums aren't directly playable
+            />
+          ))
+        ) : (
+          <p className="text-white text-sm">No albums found.</p>
+        )}
       </div>
 
       {/* ✅ Singles Carousel */}
@@ -151,7 +167,10 @@ const Artist = () => {
       <div className="mt-12 flex flex-col md:flex-row gap-6 px-6 pb-12 text-white">
         <div className="w-full h-72 md:w-1/4">
           <img
-            src={artist?.image || "https://images.unsplash.com/photo-1517230878791-4d28214057c2?q=80&w=2069&auto=format&fit=crop"}
+            src={
+              artist?.image ||
+              "https://images.unsplash.com/photo-1517230878791-4d28214057c2?q=80&w=2069&auto=format&fit=crop"
+            }
             alt="Artist"
             className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
           />
@@ -159,19 +178,25 @@ const Artist = () => {
         <div className="w-full md:w-2/3 bg-white/5 backdrop-blur-sm p-6 rounded-md shadow-lg border border-white/10">
           <div className="mb-2 flex items-center gap-2 text-blue-400 text-xl font-bold">
             <span className="text-blue-500 text-2xl lowercase">about</span>
-            <span className="text-white capitalize">{artist?.name || "Unknown"}</span>
+            <span className="text-white capitalize">
+              {artist?.name || "Unknown"}
+            </span>
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-300 mb-4">
             <FiMapPin className="text-blue-500" />
-            <span>{artist?.location || "Unknown Location"} • {artist?.birthYear || "N/A"}</span>
+            <span>
+              {artist?.location || "Unknown Location"} •{" "}
+              {artist?.birthYear || "N/A"}
+            </span>
           </div>
           <p className="text-sm text-gray-300 leading-relaxed">
             {artist?.bio || "This artist has not provided a biography yet."}{" "}
-            <span className="text-blue-400 cursor-pointer hover:underline">View more</span>
+            <span className="text-blue-400 cursor-pointer hover:underline">
+              View more
+            </span>
           </p>
         </div>
       </div>
-
     </UserLayout>
   );
 };

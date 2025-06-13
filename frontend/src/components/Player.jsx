@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import {
   selectAllSongs,
   selectSelectedSong,
@@ -132,8 +133,7 @@ const Player = () => {
 
     const onLoadedMetadata = () =>
       dispatch(setDuration(video.duration || currentSong?.duration || 0));
-    const onTimeUpdate = () =>
-      dispatch(setCurrentTime(video.currentTime || 0));
+    const onTimeUpdate = () => dispatch(setCurrentTime(video.currentTime || 0));
     const onEnded = () => handleNext();
 
     video.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -189,28 +189,35 @@ const Player = () => {
   };
 
   if (!currentSong || !currentSong.audioUrl?.trim()) {
-    return <div className="text-white p-4">Loading or no song available...</div>;
+    return (
+      <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+        <div className="ml-3">
+          {" "}
+          <Skeleton width={250} height={800} />
+        </div>
+      </SkeletonTheme>
+    );
   }
 
   const trackStyle = {
-    background: `linear-gradient(to right, #007aff ${volume * 100}%, #ffffff22 ${volume * 100}%)`,
+    background: `linear-gradient(to right, #007aff ${
+      volume * 100
+    }%, #ffffff22 ${volume * 100}%)`,
   };
 
   return (
     <div className="player-wrapper shadow-[-10px_-10px_80px_rgba(0,153,255,0.4)] shadow-[#0e52ff3b]">
       {/* HLS requires <video>, even for audio */}
-     {currentSong?.audioUrl && currentSong.audioUrl.trim().length > 0 && (
-  <video
-    ref={videoRef}
-    style={{ display: "none" }}
-    muted={isMuted}
-    preload="auto"
-    playsInline
-    crossOrigin="anonymous"
-  />
-)}
-
-
+      {currentSong?.audioUrl && currentSong.audioUrl.trim().length > 0 && (
+        <video
+          ref={videoRef}
+          style={{ display: "none" }}
+          muted={isMuted}
+          preload="auto"
+          playsInline
+          crossOrigin="anonymous"
+        />
+      )}
 
       <div className="player-card w-[15.25rem] py-4 px-4 flex flex-col items-center">
         <div className="w-full aspect-square overflow-hidden rounded-md">
@@ -339,7 +346,7 @@ const Player = () => {
                       </div>
                     </div>
                     <span className="text-xs text-gray-200">
-                    {formatDuration(song.duration)}
+                      {formatDuration(song.duration)}
                     </span>
                   </div>
                 ))}
