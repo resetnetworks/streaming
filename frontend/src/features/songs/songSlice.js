@@ -51,12 +51,22 @@ export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (
   }
 });
 
+// NEW: Fetch songs for an album
+export const fetchSongsByAlbum = createAsyncThunk(
+  "albums/fetchSongsByAlbum",
+  async (albumId) => {
+    const response = await axios.get(`/songs/album/${albumId}`);
+    return { albumId, songs: response.data };
+  }
+);
+
 // Slice
 const songSlice = createSlice({
   name: 'songs',
   initialState: {
     songs: [],
     likedSongs: [],
+    songsByAlbum: {},
     status: 'idle',
     error: null,
     message: null,
@@ -94,6 +104,10 @@ const songSlice = createSlice({
       })
       .addCase(fetchLikedSongs.fulfilled, (state, action) => {
         state.likedSongs = action.payload;
+        state.status = 'succeeded';
+      })
+      .addCase(fetchSongsByAlbum.fulfilled, (state, action) => {
+        state.songsByAlbum[action.payload.albumId] = action.payload.songs;
         state.status = 'succeeded';
       })
       .addMatcher(

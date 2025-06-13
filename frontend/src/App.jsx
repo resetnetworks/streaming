@@ -22,6 +22,7 @@ const Home = lazy(() => import("./user/Home"));
 const Browse = lazy(() => import("./user/Browse"));
 const LikedSong = lazy(() => import("./user/LikedSong"));
 const Admin = lazy(() => import("./admin/Admin"));
+const Album = lazy(() => import("./user/Album"));
 
 // Protected routes
 const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) => {
@@ -140,6 +141,14 @@ function App() {
               element={
                 <AdminRoute isAuthenticated={isAuthenticated} user={user}>
                   <Admin />
+                </AdminRoute>
+              }
+            />
+             <Route
+              path="/album/:albumId"
+              element={
+                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
+                  <Album />
                 </AdminRoute>
               }
             />

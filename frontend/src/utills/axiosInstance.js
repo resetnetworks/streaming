@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Create axios instance
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api", // change as needed
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api", // change as needed
   withCredentials: true, // for sending cookies (optional)
 });
 
