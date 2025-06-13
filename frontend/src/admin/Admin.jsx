@@ -42,7 +42,7 @@ const initialAlbum = {
     price: "",
     isPremium: false,
 };
-console.log("HI");
+
 const initialArtist = { name: "", bio: "", image: "" };
 
 export default function Admin() {

@@ -1,8 +1,11 @@
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectAllArtists } from "../features/artists/artistsSelectors";
+import { fetchAllArtists } from "../features/artists/artistsSlice";
+import { all } from "axios";
+import { useDispatch } from "react-redux";
 
 
 
@@ -26,6 +29,14 @@ export default function Albums({
 {
     // const { albumForm, setAlbumForm } = props;
     const allArtists = useSelector(selectAllArtists);
+ const dispatch = useDispatch();
+    useEffect(() => {
+        if (!allArtists || allArtists.length === 0) {
+            dispatch(fetchAllArtists());
+            
+        }
+    }, [allArtists, dispatch]);
+    
 
     const [artistSearch, setArtistSearch] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
@@ -154,26 +165,26 @@ export default function Albums({
     required
   />
   {showDropdown && filteredArtists.length > 0 && (
-    <ul className="absolute z-10 bg-white border border-blue-200 rounded-lg mt-1 w-full max-h-48 overflow-y-auto shadow-lg">
-      {filteredArtists.map(artist => (
-        <li
-          key={artist._id}
-          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-blue-100"
-          onClick={() => {
-            setAlbumForm({ ...albumForm, artist: artist._id, artistName: artist.name });
-            setArtistSearch(artist.name);
-            setShowDropdown(false);
-          }}
-        >
-          <img
-            src={artist.image}
-            alt={artist.name}
-            className="w-8 h-8 rounded-full object-cover border border-blue-300"
-          />
-          <span>{artist.name}</span>
-        </li>
-      ))}
-    </ul>
+   <ul className="absolute z-10 bg-white border border-blue-200 rounded-lg mt-1 w-full max-h-48 overflow-y-auto shadow-lg">
+  {filteredArtists.map(artist => (
+    <li
+      key={artist._id}
+      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-blue-100"
+      onMouseDown={() => { // <-- use onMouseDown instead of onClick
+        setAlbumForm({ ...albumForm, artist: artist._id, artistName: artist.name });
+        setArtistSearch(artist.name);
+        setShowDropdown(false);
+      }}
+    >
+      <img
+        src={artist.image}
+        alt={artist.name}
+        className="w-8 h-8 rounded-full object-cover border border-blue-300"
+      />
+      <span>{artist.name}</span>
+    </li>
+  ))}
+</ul>
   )}
 </div>
 
