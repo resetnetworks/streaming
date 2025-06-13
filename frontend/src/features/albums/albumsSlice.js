@@ -14,6 +14,19 @@ export const fetchAllAlbums = createAsyncThunk(
   }
 );
 
+// NEW: Fetch album by ID
+export const fetchAlbumById = createAsyncThunk(
+  "albums/fetchById",
+  async (albumId, thunkAPI) => {
+    try {
+      const res = await axios.get(`/albums/${albumId}`);
+      return res.data.album;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch album");
+    }
+  }
+);
+
 export const createAlbum = createAsyncThunk(
   "albums/create",
   async (formData, thunkAPI) => {
@@ -30,6 +43,7 @@ export const createAlbum = createAsyncThunk(
 
 const initialState = {
   allAlbums: [],
+  albumById: {},
   albumForm: {
     title: "",
     description: "",
@@ -79,6 +93,18 @@ const albumsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+       .addCase(fetchAlbumById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAlbumById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.albumById[action.payload._id] = action.payload;
+      })
+      .addCase(fetchAlbumById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(createAlbum.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -97,4 +123,5 @@ const albumsSlice = createSlice({
 });
 
 export const { setAlbumForm, setEditingAlbum, clearEditingAlbum, setAlbums, deleteAlbum } = albumsSlice.actions;
+export const selectAlbumById = (state, albumId) => state.albums.albumById[albumId];
 export default albumsSlice.reducer;
