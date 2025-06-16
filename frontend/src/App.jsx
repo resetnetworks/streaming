@@ -25,13 +25,18 @@ const Admin = lazy(() => import("./admin/Admin"));
 const Album = lazy(() => import("./user/Album"));
 
 // Protected routes
-const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) => {
+const ProtectedRoute = ({
+  isAuthenticated,
+  children,
+  redirectTo = "/login",
+}) => {
   return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 };
 
 const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.preferredGenres?.length === 0) return <Navigate to="/genres" replace />;
+  if (user?.preferredGenres?.length === 0)
+    return <Navigate to="/genres" replace />;
   return children;
 };
 
@@ -113,7 +118,10 @@ function App() {
             <Route
               path="/"
               element={
-                <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
                   <Home />
                 </RedirectedProtectedRoute>
               }
@@ -121,17 +129,33 @@ function App() {
             <Route
               path="/browse"
               element={
-                <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
                   <Browse />
                 </RedirectedProtectedRoute>
               }
             />
-            <Route path="/artist/:artistId" element={<Artist/>}/>
-            <Route path="/create-playlist" element={<CreatePlayList/>}/>
+            <Route
+              path="/artist/:artistId"
+              element={
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Artist />
+                </RedirectedProtectedRoute>
+              }
+            />
+            <Route path="/create-playlist" element={<CreatePlayList />} />
             <Route
               path="/liked-songs"
               element={
-                <RedirectedProtectedRoute isAuthenticated={isAuthenticated} user={user}>
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
                   <LikedSong />
                 </RedirectedProtectedRoute>
               }
@@ -144,12 +168,12 @@ function App() {
                 </AdminRoute>
               }
             />
-             <Route
+            <Route
               path="/album/:albumId"
               element={
-                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
+                <ProtectedRoute isAuthenticated={isAuthenticated} user={user}>
                   <Album />
-                </AdminRoute>
+                </ProtectedRoute>
               }
             />
 
