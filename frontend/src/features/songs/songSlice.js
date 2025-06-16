@@ -51,9 +51,9 @@ export const fetchAllSongs = createAsyncThunk(
   }
 );
 
-export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (_, thunkAPI) => {
+export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (likedSongIds, thunkAPI) => {
   try {
-    const res = await axios.get('/songs/liked');
+    const res = await axios.post('/songs/liked', { ids: likedSongIds });;
     return res.data.likedSongs;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching liked songs failed');
