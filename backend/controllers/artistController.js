@@ -1,6 +1,7 @@
 
 import { Artist } from "../models/Artist.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
+import mongoose from "mongoose";
 
 
 const isAdmin = (user) => user?.role === "admin";
@@ -87,14 +88,24 @@ export const getAllArtists = async (req, res) => {
   }
 };
 
+
 export const getArtistById = async (req, res) => {
   try {
-    const artist = await Artist.findById(req.params.id);
-    if (!artist) return res.status(404).json({ message: "Artist not found" });
+    const identifier = req.params.id;
+
+    const query = mongoose.Types.ObjectId.isValid(identifier)
+      ? { _id: identifier }
+      : { slug: identifier };
+
+    const artist = await Artist.findOne(query);
+
+    if (!artist) {
+      return res.status(404).json({ message: "Artist not found" });
+    }
 
     res.status(200).json({ success: true, artist });
   } catch (error) {
-    console.error("Get Artist By ID Error:", error);
+    console.error("Get Artist By ID/Slug Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
