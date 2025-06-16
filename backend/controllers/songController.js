@@ -174,11 +174,23 @@ export const getAllSongs = async (req, res) => {
   try {
     const user = req.user;
 
+    // Extract pagination params with default fallback
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Count total songs for pagination
+    const totalSongs = await Song.countDocuments();
+
+    // Fetch paginated songs
     const songs = await Song.find()
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("artist", "name")
       .populate("album", "title");
 
+    // Process each song based on access
     const updatedSongs = await Promise.all(
       songs.map(async (song) => {
         const hasAccess = await hasAccessToSong(user, song);
@@ -192,14 +204,18 @@ export const getAllSongs = async (req, res) => {
       })
     );
 
-    res.status(200).json({ success: true, songs: updatedSongs });
+    res.status(200).json({
+      success: true,
+      currentPage: page,
+      totalPages: Math.ceil(totalSongs / limit),
+      totalSongs,
+      songs: updatedSongs,
+    });
   } catch (error) {
     console.error("Get All Songs Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 export const getSongById = async (req, res) => {
   try {
