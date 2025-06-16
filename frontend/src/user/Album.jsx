@@ -1,11 +1,19 @@
 import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAlbumById } from "../features/albums/albumsSelector";
-import { fetchAlbumById } from "../features/albums/albumsSlice";
+
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
+import SongList from "../components/SongList";
+
+import { fetchAlbumById } from "../features/albums/albumsSlice";
+import { selectAlbumDetails, selectAlbumsLoading } from "../features/albums/albumsSelector";
+
+import { fetchAllArtists } from "../features/artists/artistsSlice";
+import { selectAllArtists } from "../features/artists/artistsSelectors";
+
 import { setSelectedSong, play } from "../features/playback/playerSlice";
+import { formatDuration } from "../utills/helperFunctions";
 
 function formatDate(dateStr) {
     const date = new Date(dateStr);
@@ -19,114 +27,85 @@ function formatDate(dateStr) {
 export default function Album() {
     const { albumId } = useParams();
     const dispatch = useDispatch();
-    const album = useSelector(state => selectAlbumById(state, albumId));
 
+    const album = useSelector(selectAlbumDetails);
+    const loading = useSelector(selectAlbumsLoading);
     const selectedSong = useSelector((state) => state.player.selectedSong);
+    const artists = useSelector(selectAllArtists);
 
     useEffect(() => {
         if (albumId) {
             dispatch(fetchAlbumById(albumId));
         }
+        dispatch(fetchAllArtists());
     }, [albumId, dispatch]);
 
-    if (!album) {
-        return <div style={{ color: "black", padding: 32 }}>Album not found.</div>;
-    }
-      const handlePlaySong = (songId) => {
-        console.log("Playing song with ID:", songId);
-        
+    const handlePlaySong = (songId) => {
         dispatch(setSelectedSong(songId));
         dispatch(play());
-      };
-    
+    };
+
+    if (loading || !album || artists.length === 0) {
+        return <div className="text-white p-8">Loading...</div>;
+    }
+
+    const artistName =
+        typeof album.artist === "object"
+            ? album.artist.name
+            : artists.find((artist) => artist._id === album.artist)?.name || "Unknown Artist";
 
     const songs = album.songs || [];
 
     return (
         <UserLayout>
             <UserHeader />
-            <div
-                style={{
-                    background: "linear-gradient(180deg, #333 0%, #181818 100%)",
-                    minHeight: "100vh",
-                    color: "white",
-                    fontFamily: "Inter, Arial, sans-serif",
-                }}
-            >
+            <div className="min-h-screen text-white">
                 {/* Album Header */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "flex-end",
-                        padding: "40px 32px 24px 32px",
-                        gap: "32px",
-                    }}
-                >
+                <div className="flex flex-col md:flex-row items-start md:items-end gap-8 px-8 pt-10 pb-6">
                     <img
                         src={album.coverImage}
                         alt="Album Cover"
-                        style={{
-                            width: 232,
-                            height: 232,
-                            objectFit: "cover",
-                            borderRadius: 8,
-                            boxShadow: "0 4px 60px rgba(0,0,0,0.5)",
-                        }}
+                        className="w-[232px] h-[232px] object-cover rounded-lg shadow-lg"
                     />
                     <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", opacity: 0.8 }}>
+                        <div className="text-sm font-bold tracking-widest uppercase opacity-80">
                             Album
                         </div>
-                        <h1 style={{ fontSize: 64, fontWeight: 900, margin: "8px 0" }}>{album.title}</h1>
-                        <div style={{ fontSize: 18, fontWeight: 400, margin: "8px 0", color: "#b3b3b3" }}>
-                            {album.description}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-                            <span style={{ fontWeight: 700 }}>{album.artist}</span>
-                            <span style={{ fontSize: 24, margin: "0 8px" }}>•</span>
+                        <h1 className="text-5xl md:text-6xl font-extrabold my-2">
+                            {album.title}
+                        </h1>
+                        <p className="text-lg text-gray-400">{album.description}</p>
+                        <div className="flex items-center gap-2 mt-4 flex-wrap text-sm md:text-base text-gray-300">
+                            <span className="font-semibold">{artistName}</span>
+                            <span className="text-xl">•</span>
                             <span>{formatDate(album.releaseDate)}</span>
-                            <span style={{ fontSize: 24, margin: "0 8px" }}>•</span>
+                            <span className="text-xl">•</span>
                             <span>{songs.length} songs</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Song List */}
-                <div style={{ padding: "0 32px" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 32 }}>
-                        <thead>
-                            <tr style={{ color: "#b3b3b3", fontSize: 14, textAlign: "left" }}>
-                                <th style={{ width: 40, padding: "8px 0" }}>#</th>
-                                <th style={{ padding: "8px 0" }}>Title</th>
-                                <th style={{ width: 80, textAlign: "right", padding: "8px 0" }}>Duration</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {songs.map((song, idx) => (
-                                <tr
-                                    key={song._id || song.id || idx}
-                                    style={{
-                                        borderTop: "1px solid #282828",
-                                        height: 56,
-                                        transition: "background 0.2s",
-                                        cursor: "pointer",
-                                    }}
-                                    onMouseOver={e => (e.currentTarget.style.background = "#282828")}
-                                    onMouseOut={e => (e.currentTarget.style.background = "transparent")}
+                <div className="px-8 pb-8">
+                    {songs.length === 0 ? (
+                        <div className="text-center text-gray-400 mt-8 text-lg">
+                            No songs in this album.
+                        </div>
+                    ) : (
+                        songs.map((song) => (
+                            <div key={song._id} className="mb-4">
+                                <SongList
+                                    songId={song._id}
+                                    img={song.coverImage || album.coverImage}
+                                    songName={song.title}
+                                    singerName={song.singer}
+                                    seekTime={formatDuration(song.duration)}
                                     onPlay={() => handlePlaySong(song._id)}
-              isSelected={selectedSong === song._id}
-                                >
-                                    <td style={{ color: "#b3b3b3", fontWeight: 500 }}>{idx + 1}</td>
-                                    <td style={{ fontWeight: 500 }}>{song.title}</td>
-                                    <td style={{ textAlign: "right", color: "#b3b3b3" }}>
-                                        {typeof song.duration === "number"
-                                            ? Math.floor(song.duration / 60) + ":" + String(song.duration % 60).padStart(2, "0")
-                                            : song.duration}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    isSelected={selectedSong === song._id}
+                                />
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </UserLayout>
