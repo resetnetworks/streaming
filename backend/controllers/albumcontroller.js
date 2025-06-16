@@ -9,6 +9,7 @@ const isAdmin = (user) => user?.role === "admin";
 
 // Album Controllers
 export const createAlbum = async (req, res) => {
+  console.log('hello')
   if (!isAdmin(req.user)) {
     return res.status(403).json({ message: "Access denied. Admins only." });
   }
@@ -42,11 +43,29 @@ export const createAlbum = async (req, res) => {
 
 export const getAlbums = async (req, res) => {
   try {
-    const albums = await Album.find()
-      .sort({ createdAt: -1 })
-      .populate("songs", "title duration coverImage"); // include basic song info
+    const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
+    const limit = parseInt(req.query.limit) > 0 ? parseInt(req.query.limit) : 10;
+    const skip = (page - 1) * limit;
 
-    res.status(200).json({ success: true, albums });
+    const [albums, total] = await Promise.all([
+      Album.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("songs", "title duration coverImage"),
+      Album.countDocuments()
+    ]);
+
+    res.status(200).json({
+      success: true,
+      albums,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.error("Get Albums Error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -81,8 +100,15 @@ export const deleteAlbum = async (req, res) => {
 
 export const getAlbumById = async (req, res) => {
   try {
-    const album = await Album.findById(req.params.id)
-      .populate("songs", "title duration coverImage audioUrl");
+    console.log("");
+    
+    const { id } = req.params;
+
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+
+    const album = isObjectId
+      ? await Album.findById(id).populate("songs", "title duration coverImage audioUrl")
+      : await Album.findOne({ slug: id }).populate("songs", "title duration coverImage audioUrl");
 
     if (!album) {
       return res.status(404).json({ message: "Album not found" });
@@ -90,7 +116,7 @@ export const getAlbumById = async (req, res) => {
 
     res.status(200).json({ success: true, album });
   } catch (error) {
-    console.error("Get Album by ID Error:", error);
+    console.error("Get Album Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

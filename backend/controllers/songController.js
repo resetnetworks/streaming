@@ -5,6 +5,7 @@ import { Artist } from "../models/Artist.js";
 import { Transaction } from "../models/Transaction.js"
 import { User } from "../models/User.js";
 import { hasAccessToSong } from "../utils/accessControl.js";
+import mongoose from "mongoose";
 
 
 
@@ -198,9 +199,18 @@ export const getAllSongs = async (req, res) => {
   }
 };
 
+
+
 export const getSongById = async (req, res) => {
   try {
-    const song = await Song.findById(req.params.id)
+    const { id } = req.params;
+
+    // Check if the id is a valid MongoDB ObjectId
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+
+    const song = await Song.findOne(
+      isValidObjectId ? { _id: id } : { slug: id }
+    )
       .populate("artist", "name image")
       .populate("album", "title coverImage");
 
@@ -215,10 +225,11 @@ export const getSongById = async (req, res) => {
 
     res.status(200).json({ success: true, song: songData });
   } catch (error) {
-    console.error("Get Song By ID Error:", error);
+    console.error("Get Song By ID or Slug Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 export const getSongsMatchingUserGenres = async (req, res) => {
@@ -321,55 +332,96 @@ export const getSongsByGenre = async (req, res, next) => {
 };
 
 // GET /api/songs/by-artist/:artistId?page=1&limit=20
-export const getSongsByArtist = async (req, res, next) => {
-  const { artistId } = req.params;
-  const { page = 1, limit = 20 } = req.query;
 
-  const query = { artist: artistId };
+export const getSongsByArtist = async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 20, 1);
+    const skip = (page - 1) * limit;
 
-  const songs = await Song.find(query)
-    .skip((page - 1) * limit)
-    .limit(Number(limit))
-    .sort({ releaseDate: -1 })
-    .populate("artist", "name image")
-    .populate("album", "title coverImage");
+    // Resolve artist by ID or slug
+    const artistQuery = mongoose.Types.ObjectId.isValid(artistId)
+      ? { _id: artistId }
+      : { slug: artistId };
 
-  const total = await Song.countDocuments(query);
+    const artist = await Artist.findOne(artistQuery);
+    if (!artist) {
+      return res.status(404).json({ message: "Artist not found" });
+    }
 
-  res.status(200).json({
-    success: true,
-    songs,
-    total,
-    page: Number(page),
-    pages: Math.ceil(total / limit),
-  });
+    // Use the resolved artist's ID
+    const query = { artist: artist._id };
+
+    const [songs, total] = await Promise.all([
+      Song.find(query)
+        .skip(skip)
+        .limit(limit)
+        .sort({ releaseDate: -1 })
+        .populate("artist", "name image")
+        .populate("album", "title coverImage"),
+      Song.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      artist: { id: artist._id, name: artist.name, slug: artist.slug },
+      songs,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Get Songs By Artist Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 
 
-export const getSongsByAlbum = async (req, res, next) => {
-  const { albumId } = req.params;
-  const { page = 1, limit = 20 } = req.query;
+export const getSongsByAlbum = async (req, res) => {
+  try {
+    const { albumId } = req.params;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 20, 1);
+    const skip = (page - 1) * limit;
 
-  const query = { album: albumId };
+    // Resolve album by ID or slug
+    const albumQuery = mongoose.Types.ObjectId.isValid(albumId)
+      ? { _id: albumId }
+      : { slug: albumId };
 
-  const songs = await Song.find(query)
-    .skip((page - 1) * limit)
-    .limit(Number(limit))
-    .sort({ releaseDate: -1 })
-    .populate("artist", "name image")
-    .populate("album", "title coverImage");
+    const album = await Album.findOne(albumQuery);
+    if (!album) {
+      return res.status(404).json({ message: "Album not found" });
+    }
 
-  const total = await Song.countDocuments(query);
+    const query = { album: album._id };
 
-  res.status(200).json({
-    success: true,
-    songs,
-    total,
-    page: Number(page),
-    pages: Math.ceil(total / limit),
-  });
-}
+    const [songs, total] = await Promise.all([
+      Song.find(query)
+        .skip(skip)
+        .limit(limit)
+        .sort({ releaseDate: -1 })
+        .populate("artist", "name image")
+        .populate("album", "title coverImage"),
+      Song.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      album: { id: album._id, title: album.title, slug: album.slug },
+      songs,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Get Songs By Album Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // GET /api/songs/purchased
 export const getPurchasedSongs = async (req, res) => {
   try {
@@ -428,29 +480,25 @@ export const getPremiumSongs = async (req, res) => {
   }
 };
 
-
 export const getLikedSongs = async (req, res) => {
   try {
-    const song = await Song.findById('6847ce50c0a36f697d6412b7');
-    console.log(song);
-    console.log("hello from getLikedSongs")
-    const userId = req.user._id; // assuming auth middleware adds user to req
+    const { ids } = req.body;
 
-    const user = await User.findById(userId).populate({
-      path: 'likedsong',
-      model: 'Song',
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "No song IDs provided" });
     }
 
-    res.status(200).json({ likedSongs: user.likedsong});
+    // Find all songs whose _id is in the provided list
+    const likedSongs = await Song.find({ _id: { $in: ids } });
+
+    res.status(200).json({ likedSongs });
   } catch (error) {
-    console.error('Error getting liked songs:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error getting liked songs:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 
 
 
