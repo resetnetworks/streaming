@@ -1,3 +1,4 @@
+// songSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utills/axiosInstance.js';
 
@@ -33,14 +34,22 @@ export const deleteSong = createAsyncThunk('songs/delete', async (id, thunkAPI) 
   }
 });
 
-export const fetchAllSongs = createAsyncThunk('songs/fetchAll', async (_, thunkAPI) => {
-  try {
-    const res = await axios.get('/songs');
-    return res.data.songs;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching songs failed');
+// Updated fetchAllSongs with pagination
+export const fetchAllSongs = createAsyncThunk(
+  'songs/fetchAll',
+  async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
+    try {
+      const res = await axios.get(`/songs?page=${page}&limit=${limit}`);
+      return {
+        songs: res.data.songs,
+        totalPages: res.data.totalPages || 1,
+        currentPage: page,
+      };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching songs failed');
+    }
   }
-});
+);
 
 export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (_, thunkAPI) => {
   try {
@@ -51,55 +60,74 @@ export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (
   }
 });
 
-// NEW: Fetch songs for an album
 export const fetchSongsByAlbum = createAsyncThunk(
-  "albums/fetchSongsByAlbum",
+  'albums/fetchSongsByAlbum',
   async (albumId) => {
     const response = await axios.get(`/songs/album/${albumId}`);
     return { albumId, songs: response.data };
   }
 );
 
-// Slice
+// Initial State
+const initialState = {
+  songs: [],            // non-paginated
+  allSongs: [],         // paginated (infinite scroll)
+  likedSongs: [],
+  songsByAlbum: {},
+  status: 'idle',
+  error: null,
+  message: null,
+  totalPages: 1,
+  currentPage: 1,
+};
+
 const songSlice = createSlice({
   name: 'songs',
-  initialState: {
-    songs: [],
-    likedSongs: [],
-    songsByAlbum: {},
-    status: 'idle',
-    error: null,
-    message: null,
-  },
+  initialState,
   reducers: {
     clearSongMessage: (state) => {
       state.error = null;
       state.message = null;
     },
     clearLikedSongs: (state) => {
-      state.likedSongs = []; // ✅ Clears liked songs when user unlikes all
+      state.likedSongs = [];
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(createSong.fulfilled, (state, action) => {
         state.songs.unshift(action.payload);
+        state.allSongs.unshift(action.payload);
         state.status = 'succeeded';
         state.message = 'Song created successfully';
       })
       .addCase(updateSong.fulfilled, (state, action) => {
         const index = state.songs.findIndex((s) => s._id === action.payload._id);
         if (index !== -1) state.songs[index] = action.payload;
+
+        const allIndex = state.allSongs.findIndex((s) => s._id === action.payload._id);
+        if (allIndex !== -1) state.allSongs[allIndex] = action.payload;
+
         state.status = 'succeeded';
         state.message = 'Song updated successfully';
       })
       .addCase(deleteSong.fulfilled, (state, action) => {
         state.songs = state.songs.filter((s) => s._id !== action.payload);
+        state.allSongs = state.allSongs.filter((s) => s._id !== action.payload);
         state.status = 'succeeded';
         state.message = 'Song deleted successfully';
       })
       .addCase(fetchAllSongs.fulfilled, (state, action) => {
-        state.songs = action.payload;
+        const { songs, totalPages, currentPage } = action.payload;
+
+        // Avoid adding duplicates
+        const newUniqueSongs = songs.filter(
+          (song) => !state.allSongs.some((existing) => existing._id === song._id)
+        );
+
+        state.allSongs = [...state.allSongs, ...newUniqueSongs];
+        state.totalPages = totalPages;
+        state.currentPage = currentPage;
         state.status = 'succeeded';
       })
       .addCase(fetchLikedSongs.fulfilled, (state, action) => {
@@ -127,8 +155,5 @@ const songSlice = createSlice({
   },
 });
 
-// ✅ Export actions
 export const { clearSongMessage, clearLikedSongs } = songSlice.actions;
-
-// ✅ Export reducer
 export default songSlice.reducer;
