@@ -1,57 +1,63 @@
+// features/albums/albumsSlice.js
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance";
 
 // Thunk: Fetch all albums
-export const fetchAllAlbums = createAsyncThunk(
-  "albums/fetchAll",
-  async (_, thunkAPI) => {
-    try {
-      const res = await axios.get("/albums");
-      return res.data.albums;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to fetch albums"
-      );
-    }
+export const fetchAllAlbums = createAsyncThunk("albums/fetchAll", async (_, thunkAPI) => {
+  try {
+    const res = await axios.get("/albums");
+    return res.data.albums;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message || "Failed to fetch albums"
+    );
   }
-);
+});
 
 // Thunk: Create new album
-export const createAlbum = createAsyncThunk(
-  "albums/create",
-  async (formData, thunkAPI) => {
-    try {
-      const res = await axios.post("/albums", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return res.data.album;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to create album"
-      );
-    }
+export const createAlbum = createAsyncThunk("albums/create", async (formData, thunkAPI) => {
+  try {
+    const res = await axios.post("/albums", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data.album;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message || "Failed to create album"
+    );
   }
-);
+});
 
-// ✅ Thunk: Fetch albums by specific artist
-export const getAlbumsByArtist = createAsyncThunk(
-  "albums/getByArtist",
-  async (artistId, thunkAPI) => {
-    try {
-      const res = await axios.get(`/albums/artist/${artistId}`);
-      return res.data.albums;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to fetch albums for artist"
-      );
-    }
+// ✅ Thunk: Fetch albums by artist
+export const getAlbumsByArtist = createAsyncThunk("albums/getByArtist", async (artistId, thunkAPI) => {
+  try {
+    const res = await axios.get(`/albums/artist/${artistId}`);
+    return res.data.albums;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message || "Failed to fetch albums for artist"
+    );
   }
-);
+});
+
+// ✅ Thunk: Fetch album by ID or slug (and get songs)
+export const fetchAlbumById = createAsyncThunk("albums/fetchById", async (id, thunkAPI) => {
+  try {
+    const res = await axios.get(`/albums/${id}`);
+    return res.data.album;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message || "Failed to fetch album"
+    );
+  }
+});
 
 // Initial state
 const initialState = {
   allAlbums: [],
-  artistAlbums: [], // ✅ New field for artist-specific albums
+  artistAlbums: [],
+  albumDetails: null, // ✅ for fetchAlbumById
   albumForm: {
     title: "",
     description: "",
@@ -66,7 +72,6 @@ const initialState = {
   error: null,
 };
 
-// Albums slice
 const albumsSlice = createSlice({
   name: "albums",
   initialState,
@@ -120,7 +125,7 @@ const albumsSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ✅ getAlbumsByArtist
+      // getAlbumsByArtist
       .addCase(getAlbumsByArtist.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -132,11 +137,24 @@ const albumsSlice = createSlice({
       .addCase(getAlbumsByArtist.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // ✅ fetchAlbumById
+      .addCase(fetchAlbumById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAlbumById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.albumDetails = action.payload;
+      })
+      .addCase(fetchAlbumById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-// Exports
 export const {
   setAlbumForm,
   setEditingAlbum,
@@ -146,3 +164,5 @@ export const {
 } = albumsSlice.actions;
 
 export default albumsSlice.reducer;
+
+

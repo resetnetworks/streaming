@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
 import SongList from "../components/SongList";
@@ -14,7 +14,10 @@ import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 import { getAlbumsByArtist } from "../features/albums/albumsSlice";
 import { selectArtistAlbums } from "../features/albums/albumsSelector";
-import { selectAllSongs, selectTotalPages } from "../features/songs/songSelectors";
+import {
+  selectAllSongs,
+  selectTotalPages,
+} from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -23,6 +26,7 @@ const Artist = () => {
   const dispatch = useDispatch();
   const recentScrollRef = useRef(null);
   const singlesScrollRef = useRef(null);
+  const navigate = useNavigate();
 
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector((state) => state.player.selectedSong);
@@ -47,15 +51,17 @@ const Artist = () => {
   }, [dispatch, artistId, albumsPage]);
 
   useEffect(() => {
-    dispatch(fetchAllSongs({ 
-      artistId, 
-      page: songsPage, 
-      limit: 10 
-    })).then((res) => {
+    dispatch(
+      fetchAllSongs({
+        artistId,
+        page: songsPage,
+        limit: 10,
+      })
+    ).then((res) => {
       if (res.payload?.songs) {
         setArtistSongs((prev) => {
-          const seen = new Set(prev.map(s => s._id));
-          const newSongs = res.payload.songs.filter(s => !seen.has(s._id));
+          const seen = new Set(prev.map((s) => s._id));
+          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
           return [...prev, ...newSongs];
         });
       }
@@ -162,31 +168,32 @@ const Artist = () => {
           </a>
         </div>
         <div className="px-6 py-4 flex flex-col gap-4">
-          {status === "loading" && artistSongs.length === 0 ? (
-            [...Array(5)].map((_, idx) => (
-              <div key={`song-skeleton-${idx}`} className="flex items-center gap-4">
-                <Skeleton circle width={50} height={50} />
-                <div className="flex-1">
-                  <Skeleton width={120} height={16} />
-                  <Skeleton width={80} height={12} />
+          {status === "loading" && artistSongs.length === 0
+            ? [...Array(5)].map((_, idx) => (
+                <div
+                  key={`song-skeleton-${idx}`}
+                  className="flex items-center gap-4"
+                >
+                  <Skeleton circle width={50} height={50} />
+                  <div className="flex-1">
+                    <Skeleton width={120} height={16} />
+                    <Skeleton width={80} height={12} />
+                  </div>
+                  <Skeleton width={40} height={16} />
                 </div>
-                <Skeleton width={40} height={16} />
-              </div>
-            ))
-          ) : (
-            songListView.map((song, idx) => (
-              <SongList
-                key={song._id}
-                songId={song._id}
-                img={song.coverImage || "/images/placeholder.png"}
-                songName={song.title}
-                singerName={song.singer}
-                seekTime={formatDuration(song.duration)}
-                onPlay={() => handlePlaySong(song._id)}
-                isSelected={selectedSong === song._id}
-              />
-            ))
-          )}
+              ))
+            : songListView.map((song, idx) => (
+                <SongList
+                  key={song._id}
+                  songId={song._id}
+                  img={song.coverImage || "/images/placeholder.png"}
+                  songName={song.title}
+                  singerName={song.singer}
+                  seekTime={formatDuration(song.duration)}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
+                />
+              ))}
         </div>
 
         {/* Albums Carousel */}
@@ -210,15 +217,22 @@ const Artist = () => {
             ))
           ) : displayedAlbums.length > 0 ? (
             displayedAlbums.map((album, idx) => (
-              <RecentPlays
-                ref={idx === displayedAlbums.length - 1 ? albumsLastRef : null}
+              <div
                 key={album._id}
-                title={album.title}
-                singer={artist?.name}
-                image={album.cover || "/images/placeholder.png"}
-                price={album.price}
-                isSelected={false}
-              />
+                onClick={() => navigate(`/album/${album._id}`)}
+                className="cursor-pointer"
+              >
+                <RecentPlays
+                  ref={
+                    idx === displayedAlbums.length - 1 ? albumsLastRef : null
+                  }
+                  title={album.title}
+                  singer={artist?.name}
+                  image={album.cover || "/images/placeholder.png"}
+                  price={album.price}
+                  isSelected={false}
+                />
+              </div>
             ))
           ) : (
             <p className="text-white text-sm">No albums found.</p>
@@ -237,26 +251,24 @@ const Artist = () => {
           ref={singlesScrollRef}
           className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
         >
-          {status === "loading" && artistSongs.length === 0 ? (
-            [...Array(5)].map((_, idx) => (
-              <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
-                <Skeleton height={160} width={160} className="rounded-xl" />
-                <Skeleton width={120} height={16} className="mt-2" />
-              </div>
-            ))
-          ) : (
-            artistSongs.map((song, idx) => (
-              <RecentPlays
-                ref={idx === artistSongs.length - 1 ? songsLastRef : null}
-                key={song._id}
-                title={song.title}
-                singer={song.singer}
-                image={song.coverImage || "/images/placeholder.png"}
-                onPlay={() => handlePlaySong(song._id)}
-                isSelected={selectedSong === song._id}
-              />
-            ))
-          )}
+          {status === "loading" && artistSongs.length === 0
+            ? [...Array(5)].map((_, idx) => (
+                <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
+                  <Skeleton height={160} width={160} className="rounded-xl" />
+                  <Skeleton width={120} height={16} className="mt-2" />
+                </div>
+              ))
+            : artistSongs.map((song, idx) => (
+                <RecentPlays
+                  ref={idx === artistSongs.length - 1 ? songsLastRef : null}
+                  key={song._id}
+                  title={song.title}
+                  singer={song.singer}
+                  image={song.coverImage || "/images/placeholder.png"}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
+                />
+              ))}
         </div>
 
         {/* About Section */}
@@ -275,7 +287,9 @@ const Artist = () => {
               </div>
               <div className="w-full md:w-2/3 bg-white/5 backdrop-blur-sm p-6 rounded-md shadow-lg border border-white/10">
                 <div className="mb-2 flex items-center gap-2 text-blue-400 text-xl font-bold">
-                  <span className="text-blue-500 text-2xl lowercase">about</span>
+                  <span className="text-blue-500 text-2xl lowercase">
+                    about
+                  </span>
                   <span className="text-white capitalize">
                     {artist?.name || "Unknown"}
                   </span>
@@ -288,7 +302,8 @@ const Artist = () => {
                   </span>
                 </div>
                 <p className="text-sm text-gray-300 leading-relaxed">
-                  {artist?.bio || "This artist has not provided a biography yet."}{" "}
+                  {artist?.bio ||
+                    "This artist has not provided a biography yet."}{" "}
                   <span className="text-blue-400 cursor-pointer hover:underline">
                     View more
                   </span>
