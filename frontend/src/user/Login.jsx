@@ -115,7 +115,7 @@ const Login = () => {
           </a>
 
           {/* Login Button */}
-           <div className="button-wrapper mt-9 shadow-sm shadow-black">
+           <div className="button-wrapper mt-9 cursor-pointer shadow-sm shadow-black">
             <button className="custom-button" disabled={btnLoading}>
               {btnLoading ? "Logging in..." : "Login"}
             </button>

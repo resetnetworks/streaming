@@ -85,6 +85,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: {
     user: initialUser,
+    isAuthenticated: !!initialUser,
     status: 'idle',
     error: null,
     message: null,
@@ -100,24 +101,29 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.status = 'succeeded';
+        state.isAuthenticated = true;
         state.message = 'Registered successfully';
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.status = 'succeeded';
+        state.isAuthenticated = true;
         state.message = 'Logged in successfully';
       })
       .addCase(getMyProfile.fulfilled, (state, action) => {
         state.user = action.payload;
         state.status = 'succeeded';
+        state.isAuthenticated = true;
       })
       .addCase(getMyProfile.rejected, (state) => {
         state.user = null;
         state.status = 'failed';
+        state.isAuthenticated = false;
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.status = 'succeeded';
+        state.isAuthenticated = false;
         state.message = 'Logged out successfully';
       })
       .addCase(updatePreferredGenres.pending, (state) => {
@@ -135,8 +141,6 @@ const authSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload || 'Failed to update preferred genres';
       })
-
-      // ✅ Updated toggleLikeSong handler
       .addCase(toggleLikeSong.fulfilled, (state, action) => {
         const { songId, message } = action.payload;
 
@@ -158,8 +162,6 @@ const authSlice = createSlice({
 
         state.message = message;
       })
-
-      // ❌ Generic Error Handler (Skip toggleLikeSong)
       .addMatcher(
         (action) =>
           action.type.startsWith('auth/') &&
@@ -170,8 +172,6 @@ const authSlice = createSlice({
           state.error = action.payload || 'Something went wrong';
         }
       )
-
-      // 🔄 Generic Pending Handler (Skip toggleLikeSong)
       .addMatcher(
         (action) =>
           action.type.startsWith('auth/') &&

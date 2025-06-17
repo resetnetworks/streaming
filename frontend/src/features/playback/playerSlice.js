@@ -6,6 +6,7 @@ const initialState = {
   currentTime: 0,
   duration: 0,
   volume: 0.5,
+  lastSelectedAt: null, // 🔥 new: force refresh even for same song
 };
 
 const playerSlice = createSlice({
@@ -16,7 +17,8 @@ const playerSlice = createSlice({
       state.selectedSong = action.payload;
       state.currentTime = 0;
       state.duration = 0;
-      state.isPlaying = true; // auto play new song
+      state.isPlaying = true;
+      state.lastSelectedAt = Date.now(); // 🔥 ensures unique change
     },
     play(state) {
       state.isPlaying = true;
