@@ -30,7 +30,7 @@ router.put("/:id",isAuth, songUpload, updateSongValidator, validate, updateSong)
 router.delete("/:id",isAuth, songIdValidator, validate, deleteSong);
 router.get("/",isAuth, getAllSongs);
 router.get("/matching-genre",isAuth, getSongsMatchingUserGenres);
-router.get("/:id",isAuth, songIdValidator, validate, getSongById);
+router.get("/:id",isAuth, getSongById);
 router.get("/genre/:genre", isAuth, getSongsByGenre);
 router.get("/album/:albumId", isAuth, getSongsByAlbum);
 router.get("/artist/:artistId", isAuth, getSongsByArtist);
