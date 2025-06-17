@@ -21,7 +21,7 @@ const router = express.Router();
 router.post("/",isAuth, singleImageUpload, createArtistValidator, validate, createArtist);
 router.put("/:id",isAuth, singleImageUpload, updateArtistValidator, validate,updateArtist);
 router.get("/",isAuth, getAllArtists);
-router.get("/:id",isAuth, artistIdValidator, validate, getArtistById);
+router.get("/:id",isAuth, getArtistById);
 router.delete("/:id",isAuth, artistIdValidator, validate, deleteArtist);
 
 export default router;
