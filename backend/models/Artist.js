@@ -1,10 +1,39 @@
 import mongoose from "mongoose";
+import slugify from "slugify";
+import { customAlphabet } from "nanoid";
+
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
 
 const artistSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    bio: { type: String, maxlength: 500, default: "" },
-    image: { type: String, default: "" },
+    name: {
+      type: String,
+      required: [true, "Artist name is required"],
+      trim: true,
+      minlength: [2, "Artist name must be at least 2 characters"],
+      maxlength: [100, "Artist name must be at most 100 characters"],
+      unique: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+      trim: true,
+      match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],
+    },
+    bio: {
+      type: String,
+      maxlength: 500,
+      default: "",
+      trim: true,
+    },
+    image: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     subscriptionPrice: {
       type: Number,
       required: true,
@@ -16,9 +45,27 @@ const artistSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    subscribers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    subscribers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
-  { timestamps: true }
+  { timestamps: true, versionKey: false }
 );
 
-export const Artist = mongoose.model("Artist", artistSchema);
+// 🔁 Auto-generate unique slug before validation
+artistSchema.pre("validate", function (next) {
+  if (!this.slug && this.name) {
+    const baseSlug = slugify(this.name, { lower: true, strict: true });
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
+
+// Indexes for fast lookup
+artistSchema.index({ name: 1 });
+artistSchema.index({ slug: 1 });
+
+export const Artist = mongoose.models.Artist || mongoose.model("Artist", artistSchema);

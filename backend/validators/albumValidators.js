@@ -33,5 +33,8 @@ export const updateAlbumValidator = [
 ];
 
 export const albumIdValidator = [
-  param("id").isMongoId().withMessage("Invalid album ID"),
+  param("id")
+    .trim()
+    .notEmpty()
+    .withMessage("Album identifier is required")
 ];
