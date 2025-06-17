@@ -24,6 +24,7 @@ const Home = () => {
   const status = useSelector((state) => state.songs.status);
   const totalPages = useSelector((state) => state.songs.totalPages);
 
+
   const [recentPage, setRecentPage] = useState(1);
   const [topPicksPage, setTopPicksPage] = useState(1);
   const [similarPage, setSimilarPage] = useState(1);

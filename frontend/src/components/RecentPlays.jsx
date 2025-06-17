@@ -5,11 +5,15 @@ const RecentPlays = React.forwardRef(
   ({ title, singer, image, price = 60, onPlay, isSelected }, ref) => {
     const truncatedTitle = title.length > 10 ? title.slice(0, 15) + "..." : title;
 
+    const handleClick = () => {
+      if (onPlay) onPlay(); // Only trigger if onPlay is provided
+    };
+
     return (
       <div
         ref={ref}
         className="min-w-[120px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group p-2"
-        onClick={onPlay}
+        onClick={handleClick}
       >
         <div
           className={`relative md:w-48 md:h-48 h-28 w-28 rounded-lg overflow-hidden 
