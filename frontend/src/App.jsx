@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense, lazy } from "react";
+import React, { useEffect, useState, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
@@ -12,7 +12,7 @@ import Loader from "./components/Loader";
 import Artist from "./user/Artist";
 import CreatePlayList from "./user/CreatePlayList";
 
-// Lazy load route components
+// Lazy-loaded components
 const Register = lazy(() => import("./user/Register"));
 const Login = lazy(() => import("./user/Login"));
 const FavouriteGen = lazy(() => import("./user/FavouriteGen"));
@@ -23,15 +23,11 @@ const Browse = lazy(() => import("./user/Browse"));
 const LikedSong = lazy(() => import("./user/LikedSong"));
 const Admin = lazy(() => import("./admin/Admin"));
 const Album = lazy(() => import("./user/Album"));
+const Search = lazy(() => import("./user/Search"));
 
-// Protected routes
-const ProtectedRoute = ({
-  isAuthenticated,
-  children,
-  redirectTo = "/login",
-}) => {
-  return isAuthenticated ? children : <Navigate to={redirectTo} replace />;
-};
+// Protected Routes
+const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>
+  isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 
 const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -46,9 +42,8 @@ const AdminRoute = ({ isAuthenticated, user, children }) => {
   return children;
 };
 
-const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) => {
-  return !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
-};
+const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) =>
+  !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 
 function App() {
   const dispatch = useDispatch();
@@ -56,16 +51,19 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
 
-  const loading = status === "loading";
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  // ✅ Only fetch profile if not already authenticated
+  // 🔁 Load profile once on app mount
   useEffect(() => {
     if (!isAuthenticated) {
-      dispatch(getMyProfile()).catch(() => {});
+      dispatch(getMyProfile()).finally(() => setInitialLoad(false));
+    } else {
+      setInitialLoad(false);
     }
   }, [dispatch, isAuthenticated]);
 
-  if (loading) return <Loader />;
+  // ⏳ Show loader while checking authentication
+  if (initialLoad) return <Loader />;
 
   return (
     <>
@@ -148,7 +146,14 @@ function App() {
                 </RedirectedProtectedRoute>
               }
             />
-            <Route path="/create-playlist" element={<CreatePlayList />} />
+            <Route
+              path="/create-playlist"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <CreatePlayList />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/liked-songs"
               element={
@@ -171,13 +176,21 @@ function App() {
             <Route
               path="/album/:albumId"
               element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} user={user}>
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
                   <Album />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <Search />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Fallback route */}
+            {/* Fallback Route */}
             <Route
               path="*"
               element={
