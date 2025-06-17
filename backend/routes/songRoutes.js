@@ -23,7 +23,7 @@ import validate from "../middleware/validate.js";
 const router = express.Router();
 
 // Use songUpload middleware before createSong and updateSong to handle files
-router.get("/liked", isAuth, getLikedSongs);
+router.post("/liked", isAuth, getLikedSongs);
 router.post("/",isAuth, songUpload, createSongValidator, validate, createSong);
 router.put("/:id",isAuth, songUpload, updateSongValidator, validate, updateSong);
 

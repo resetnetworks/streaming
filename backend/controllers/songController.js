@@ -173,38 +173,63 @@ export const getAllSongs = async (req, res) => {
   try {
     const user = req.user;
 
-    // Extract pagination params with default fallback
+    // Extract query params
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const type = req.query.type || "all"; // recent, top, similar, etc.
+    const artistId = req.query.artistId || null;
 
-    // Count total songs for pagination
-    const totalSongs = await Song.countDocuments();
+    let query = {};
+    let sortOption = { createdAt: -1 }; // default: recent first
 
-    // Fetch paginated songs
-    const songs = await Song.find()
-      .sort({ createdAt: -1 })
+    // Filter based on type
+    switch (type) {
+      case "recent":
+        sortOption = { createdAt: -1 }; // Already default
+        break;
+
+      case "top":
+        sortOption = { playCount: -1 }; // Assuming songs have playCount field
+        break;
+
+      case "similar":
+        if (artistId) {
+          query.artist = artistId;
+        } else {
+          return res.status(400).json({ message: "artistId is required for similar songs" });
+        }
+        break;
+
+      case "all":
+      default:
+        break;
+    }
+
+    // Total songs for pagination
+    const totalSongs = await Song.countDocuments(query);
+
+    // Fetch songs
+    const songs = await Song.find(query)
+      .sort(sortOption)
       .skip(skip)
       .limit(limit)
       .populate("artist", "name")
       .populate("album", "title");
 
-    // Process each song based on access
+    // Filter audio access
     const updatedSongs = await Promise.all(
       songs.map(async (song) => {
         const hasAccess = await hasAccessToSong(user, song);
         const songData = song.toObject();
-
-        if (!hasAccess) {
-          songData.audioUrl = null;
-        }
-
+        if (!hasAccess) songData.audioUrl = null;
         return songData;
       })
     );
 
     res.status(200).json({
       success: true,
+      type,
       currentPage: page,
       totalPages: Math.ceil(totalSongs / limit),
       totalSongs,
@@ -450,26 +475,22 @@ export const getPremiumSongs = async (req, res) => {
 
 export const getLikedSongs = async (req, res) => {
   try {
-    const song = await Song.findById('6847ce50c0a36f697d6412b7');
-    console.log(song);
-    console.log("hello from getLikedSongs")
-    const userId = req.user._id; // assuming auth middleware adds user to req
+    const { ids } = req.body;
 
-    const user = await User.findById(userId).populate({
-      path: 'likedsong',
-      model: 'Song',
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "No song IDs provided" });
     }
 
-    res.status(200).json({ likedSongs: user.likedsong});
+    // Find all songs whose _id is in the provided list
+    const likedSongs = await Song.find({ _id: { $in: ids } });
+
+    res.status(200).json({ likedSongs });
   } catch (error) {
-    console.error('Error getting liked songs:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error getting liked songs:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
