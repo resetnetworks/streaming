@@ -11,6 +11,8 @@ import { isAdmin } from "../utils/authHelper.js";
 // @access  Admin
 // ===================================================================
 export const createGenre = async (req, res) => {
+  console.log(isAdmin(req.user));
+  
   // Authorization check
   if (!isAdmin(req.user)) {
     throw new UnauthorizedError('Access denied. Admins only.');
@@ -50,6 +52,8 @@ export const createGenre = async (req, res) => {
 // @access  Public
 // ===================================================================
 export const getGenres = async (req, res) => {
+  console.log(req.user);
+  
 
     // Extract and validate query parameters
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -71,13 +75,6 @@ export const getGenres = async (req, res) => {
         limit,
         totalPages: Math.ceil(total / limit)
       }
-    });
-
-  
-    console.error('Get Genres Error:', error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: 'Internal server error'
     });
   }
 
