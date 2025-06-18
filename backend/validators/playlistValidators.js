@@ -1,7 +1,7 @@
 import { body, param } from "express-validator";
 
 export const createPlaylistValidator = [
-  body("name").trim().notEmpty().withMessage("Playlist name is required"),
+  body("title").trim().notEmpty().withMessage("Playlist title is required"),
   body("description").optional().trim().escape(),
 ];
 
