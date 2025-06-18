@@ -12,7 +12,6 @@ const artistSchema = new mongoose.Schema(
       trim: true,
       minlength: [2, "Artist name must be at least 2 characters"],
       maxlength: [100, "Artist name must be at most 100 characters"],
-      unique: true,
     },
     slug: {
       type: String,

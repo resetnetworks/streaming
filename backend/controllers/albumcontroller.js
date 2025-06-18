@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { StatusCodes } from 'http-status-codes';
 import { isAdmin } from "../utils/authHelper.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
+import { Artist  } from "../models/Artist.js";
 
 
 // Album Controllers
@@ -13,6 +14,7 @@ import { uploadToS3 } from "../utils/s3Uploader.js";
 // - Handles optional file upload to S3 for cover image
 // - Accepts basic album info and genre as comma-separated string
 export const createAlbum = async (req, res) => {
+  console.log(isAdmin(req.user));
   if (!isAdmin(req.user)) {
     throw new UnauthorizedError('Access denied. Admins only.');
   }
@@ -60,7 +62,8 @@ export const getAlbums = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('songs', 'title duration coverImage'),
+      .populate('songs', 'title duration coverImage')
+      .populate('artist', 'name slug'),
     Album.countDocuments()
   ]);
 
@@ -186,7 +189,8 @@ export const getAlbumsByArtist = async (req, res) => {
       .select('_id slug title coverImage releaseDate')
       .sort({ releaseDate: -1 })
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     Album.countDocuments({ artist: artist._id })
   ]);
 
@@ -195,7 +199,9 @@ export const getAlbumsByArtist = async (req, res) => {
     artist: {
       id: artist._id,
       name: artist.name,
-      slug: artist.slug
+      slug: artist.slug,
+      image: artist.image,
+      subscriptionPrice: artist.subscriptionPrice,
     },
     albums,
     pagination: {
