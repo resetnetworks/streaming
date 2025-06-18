@@ -15,10 +15,10 @@ import {
 // import validate from "../middleware/validate.js";
 const router = express.Router();
 
-router.post("/", createGenre);
+router.post("/", isAuth, createGenre);
 router.get("/", getGenres);
 router.get("/:idOrSlug", getGenreByIdOrSlug);
-router.put("/:idOrSlug", updateGenre);
-router.delete("/:idOrSlug", deleteGenre);
+router.put("/:id", isAuth, updateGenre);
+router.delete("/:id", isAuth, deleteGenre);
 
 export default router;
