@@ -6,539 +6,710 @@ import { Transaction } from "../models/Transaction.js"
 import { User } from "../models/User.js";
 import { hasAccessToSong } from "../utils/accessControl.js";
 import mongoose from "mongoose";
+import { BadRequestError, UnauthorizedError, NotFoundError } from "../errors/index.js";
+import { StatusCodes } from 'http-status-codes';
+import { isAdmin } from "../utils/authHelper.js";
 
 
 
-const isAdmin = (user) => user?.role === "admin";
 
-// Song Controller
+// ===================================================================
+// @desc    Create a new song (Admin only)
+// @route   POST /api/songs
+// @access  Admin
+// ===================================================================
 export const createSong = async (req, res) => {
-  
+  // 🔒 Authorization check
   if (!isAdmin(req.user)) {
-    return res.status(403).json({ message: "Access denied. Admins only." });
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
-  try {
-    let {
-      title,
-      artist,
-      genre,
-      duration,
-      price,
-      isPremium,
-      includeInSubscription,
-      releaseDate,
-      album,
-    } = req.body;
+  // 📝 Extract song data from request body
+  let {
+    title,
+    artist,
+    genre,
+    duration,
+    price,
+    isPremium,
+    includeInSubscription,
+    releaseDate,
+    album,
+  } = req.body;
 
-    if (typeof genre === "string") {
-      genre = genre.split(",").map((g) => g.trim());
-    }
+  // ✅ Required field validation
+  if (!title || !artist || !duration) {
+    throw new BadRequestError("Title, artist, and duration are required fields.");
+  }
 
-    const coverImageFile = req.files?.coverImage?.[0];
-    const audioFile = req.files?.audio?.[0];
+  // 🧹 Format genre if passed as comma-separated string
+  if (typeof genre === "string") {
+    genre = genre.split(",").map((g) => g.trim());
+  }
 
-    if (!audioFile) {
-      return res.status(400).json({ message: "Audio file is required" });
-    }
+  // 📦 Handle uploaded files
+  const coverImageFile = req.files?.coverImage?.[0];
+  const audioFile = req.files?.audio?.[0];
 
-    const audioUrl = await uploadToS3(audioFile, "songs");
-    const coverImageUrl = coverImageFile ? await uploadToS3(coverImageFile, "covers") : "";
+  // 🎧 Validate presence of audio file
+  if (!audioFile) {
+    throw new BadRequestError("Audio file is required.");
+  }
 
-    const newSong = await Song.create({
-      title,
-      artist,
-      album: album || null,
-      genre,
-      duration,
-      price,
-      isPremium,
-      includeInSubscription: includeInSubscription ?? true,
-      releaseDate,
-      coverImage: coverImageUrl,
-      audioUrl,
+  // ☁️ Upload audio and cover image to S3
+  const audioUrl = await uploadToS3(audioFile, "songs");
+  const coverImageUrl = coverImageFile
+    ? await uploadToS3(coverImageFile, "covers")
+    : "";
+
+  // 🎼 Create new song document
+  const newSong = await Song.create({
+    title,
+    artist,
+    album: album || null,
+    genre,
+    duration,
+    price,
+    isPremium,
+    includeInSubscription: includeInSubscription ?? true,
+    releaseDate,
+    coverImage: coverImageUrl,
+    audioUrl,
+  });
+
+  // 📚 If song is linked to an album, update the album's song list
+  if (album) {
+    await Album.findByIdAndUpdate(album, {
+      $push: { songs: newSong._id },
     });
-
-    // 👉 If song is part of an album, push to album.songs[]
-    if (album) {
-      await Album.findByIdAndUpdate(album, {
-        $push: { songs: newSong._id },
-      });
-    }
-
-    res.status(201).json({ success: true, song: newSong });
-  } catch (error) {
-    console.error("Create Song Error:", error);
-    res.status(500).json({ message: "Internal server error" });
   }
+
+  // ✅ Return created song
+  res.status(StatusCodes.CREATED).json({ success: true, song: newSong });
 };
 
+
+
+// ===================================================================
+// @desc    Update an existing song (Admin only)
+// @route   PUT /api/songs/:id
+// @access  Admin
+// ===================================================================
 export const updateSong = async (req, res) => {
-
+  // Check admin authorization
   if (!isAdmin(req.user)) {
-    return res.status(403).json({ message: "Access denied. Admins only." });
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
-  try {
-    const song = await Song.findById(req.params.id);
-    if (!song) return res.status(404).json({ message: "Song not found" });
+  // Find the song by ID
+  const song = await Song.findById(req.params.id);
+  if (!song) {
+    throw new NotFoundError("Song not found");
+  }
 
-    let {
-      title,
-      artist,
-      genre,
-      duration,
-      price,
-      isPremium,
-      includeInSubscription,
-      releaseDate,
-      album,
-    } = req.body;
+  // Extract and normalize input data
+  let {
+    title,
+    artist,
+    genre,
+    duration,
+    price,
+    isPremium,
+    includeInSubscription,
+    releaseDate,
+    album,
+  } = req.body;
 
-    if (typeof genre === "string") {
-      genre = genre.split(",").map((g) => g.trim());
-    }
+  if (typeof genre === "string") {
+    genre = genre.split(",").map((g) => g.trim());
+  }
 
-    if (req.files?.coverImage?.[0]) {
-      song.coverImage = await uploadToS3(req.files.coverImage[0], "covers");
-    }
+  // Upload new cover image if provided
+  if (req.files?.coverImage?.[0]) {
+    song.coverImage = await uploadToS3(req.files.coverImage[0], "covers");
+  }
 
-    if (req.files?.audio?.[0]) {
-      song.audioUrl = await uploadToS3(req.files.audio[0], "songs");
-    }
+  // Upload new audio file if provided
+  if (req.files?.audio?.[0]) {
+    song.audioUrl = await uploadToS3(req.files.audio[0], "songs");
+  }
 
-    const oldAlbumId = song.album?.toString();
-    const newAlbumId = album || null;
+  // Track old album to handle updates
+  const oldAlbumId = song.album?.toString();
+  const newAlbumId = album || null;
 
-    Object.assign(song, {
-      title,
-      artist,
-      genre,
-      duration,
-      price,
-      isPremium,
-      includeInSubscription: includeInSubscription ?? song.includeInSubscription,
-      releaseDate,
-      album: newAlbumId,
+  // Apply updates to the song document
+  Object.assign(song, {
+    title,
+    artist,
+    genre,
+    duration,
+    price,
+    isPremium,
+    includeInSubscription: includeInSubscription ?? song.includeInSubscription,
+    releaseDate,
+    album: newAlbumId,
+  });
+
+  // Save the updated song
+  await song.save();
+
+  // If album has changed, update album-song references
+  if (oldAlbumId && oldAlbumId !== newAlbumId) {
+    await Album.findByIdAndUpdate(oldAlbumId, {
+      $pull: { songs: song._id },
     });
-
-    await song.save();
-
-    // 👉 Update album relations if changed
-    if (oldAlbumId && oldAlbumId !== newAlbumId) {
-      await Album.findByIdAndUpdate(oldAlbumId, {
-        $pull: { songs: song._id },
-      });
-    }
-
-    if (newAlbumId && oldAlbumId !== newAlbumId) {
-      await Album.findByIdAndUpdate(newAlbumId, {
-        $addToSet: { songs: song._id }, // use addToSet to avoid duplicates
-      });
-    }
-
-    res.status(200).json({ success: true, song });
-  } catch (error) {
-    console.error("Update Song Error:", error);
-    res.status(500).json({ message: "Internal server error" });
   }
+
+  if (newAlbumId && oldAlbumId !== newAlbumId) {
+    await Album.findByIdAndUpdate(newAlbumId, {
+      $addToSet: { songs: song._id },
+    });
+  }
+
+  // Send the updated song in the response
+  res.status(StatusCodes.OK).json({ success: true, song });
 };
 
+
+
+// ===================================================================
+// @desc    Delete a song by ID (Admin only)
+// @route   DELETE /api/songs/:id
+// @access  Admin
+// ===================================================================
 export const deleteSong = async (req, res) => {
-
+  // Check admin authorization
   if (!isAdmin(req.user)) {
-    return res.status(403).json({ message: "Access denied. Admins only." });
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
-  try {
-    const song = await Song.findById(req.params.id);
-    if (!song) return res.status(404).json({ message: "Song not found" });
-
-    // 👉 If song belongs to an album, remove its reference from that album
-    if (song.album) {
-      await Album.findByIdAndUpdate(song.album, {
-        $pull: { songs: song._id },
-      });
-    }
-
-    await song.deleteOne(); // actually delete the song
-
-    res.status(200).json({ success: true, message: "Song deleted successfully" });
-  } catch (error) {
-    console.error("Delete Song Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+  // Find the song by ID
+  const song = await Song.findById(req.params.id);
+  if (!song) {
+    throw new NotFoundError("Song not found");
   }
+
+  // If the song belongs to an album, remove its reference from that album
+  if (song.album) {
+    await Album.findByIdAndUpdate(song.album, {
+      $pull: { songs: song._id },
+    });
+  }
+
+  // Permanently delete the song
+  await song.deleteOne();
+
+  // Send success response
+  res.status(StatusCodes.OK).json({ success: true, message: "Song deleted successfully" });
 };
 
+
+
+// ===================================================================
+// @desc    Get all songs with filtering, sorting, and pagination
+// @route   GET /api/songs
+// @access  Authenticated users
+// ===================================================================
 export const getAllSongs = async (req, res) => {
-  try {
-    const user = req.user;
+  const user = req.user;
 
-    // Extract query params
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-    const type = req.query.type || "all"; // recent, top, similar, etc.
-    const artistId = req.query.artistId || null;
+  // Extract and normalize query parameters
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 20);
+  const skip = (page - 1) * limit;
+  const type = req.query.type || "all"; // Options: recent, top, similar
+  const artistId = req.query.artistId || null;
 
-    let query = {};
-    let sortOption = { createdAt: -1 }; // default: recent first
+  let query = {};
+  let sortOption = { createdAt: -1 }; // Default: most recent first
 
-    // Filter based on type
-    switch (type) {
-      case "recent":
-        sortOption = { createdAt: -1 }; // Already default
-        break;
+  // Adjust query and sorting based on the type
+  switch (type) {
+    case "recent":
+      sortOption = { createdAt: -1 };
+      break;
 
-      case "top":
-        sortOption = { playCount: -1 }; // Assuming songs have playCount field
-        break;
+    case "top":
+      sortOption = { playCount: -1 }; // Requires playCount field on Song
+      break;
 
-      case "similar":
-        if (artistId) {
-          query.artist = artistId;
-        } else {
-          return res.status(400).json({ message: "artistId is required for similar songs" });
-        }
-        break;
+    case "similar":
+      if (!artistId) {
+        throw new BadRequestError("artistId is required for similar songs");
+      }
+      query.artist = artistId;
+      break;
 
-      case "all":
-      default:
-        break;
-    }
-
-    // Total songs for pagination
-    const totalSongs = await Song.countDocuments(query);
-
-    // Fetch songs
-    const songs = await Song.find(query)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit)
-      .populate("artist", "name")
-      .populate("album", "title");
-
-    // Filter audio access
-    const updatedSongs = await Promise.all(
-      songs.map(async (song) => {
-        const hasAccess = await hasAccessToSong(user, song);
-        const songData = song.toObject();
-        if (!hasAccess) songData.audioUrl = null;
-        return songData;
-      })
-    );
-
-    res.status(200).json({
-      success: true,
-      type,
-      currentPage: page,
-      totalPages: Math.ceil(totalSongs / limit),
-      totalSongs,
-      songs: updatedSongs,
-    });
-  } catch (error) {
-    console.error("Get All Songs Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    case "all":
+    default:
+      break;
   }
-};
 
-export const getSongById = async (req, res) => {
-  try {
-    const { id } = req.params;
+  // Get total song count for pagination
+  const totalSongs = await Song.countDocuments(query);
 
-    // Check if the id is a valid MongoDB ObjectId
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+  // Query songs with sorting, pagination, and population
+  const songs = await Song.find(query)
+    .sort(sortOption)
+    .skip(skip)
+    .limit(limit)
+    .populate("artist", "name")
+    .populate("album", "title");
 
-    const song = await Song.findOne(
-      isValidObjectId ? { _id: id } : { slug: id }
-    )
-      .populate("artist", "name image")
-      .populate("album", "title coverImage");
-
-    if (!song) return res.status(404).json({ message: "Song not found" });
-
-    const hasAccess = await hasAccessToSong(req.user, song);
-    const songData = song.toObject();
-
-    if (!hasAccess) {
-      songData.audioUrl = null;
-    }
-
-    res.status(200).json({ success: true, song: songData });
-  } catch (error) {
-    console.error("Get Song By ID or Slug Error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-
-
-export const getSongsMatchingUserGenres = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-      .populate({
-        path: "purchasedSongs",
-        select: "genre _id",
-      });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Step 1: Merge purchasedGenres and preferredGenres
-    const genreSet = new Set();
-
-    // From purchased songs
-    user.purchasedSongs.forEach((song) => {
-      const genres = Array.isArray(song.genre)
-        ? song.genre
-        : typeof song.genre === "string"
-        ? [song.genre]
-        : [];
-
-      genres.forEach((g) => {
-        if (g) genreSet.add(g.trim().toLowerCase());
-      });
-    });
-
-    // From preferredGenres
-    if (Array.isArray(user.preferredGenres)) {
-      user.preferredGenres.forEach((g) => {
-        if (g) genreSet.add(g.trim().toLowerCase());
-      });
-    }
-
-    const genreArray = [...genreSet];
-    if (genreArray.length === 0) {
-      return res.status(200).json({
-        success: true,
-        matchingGenres: [],
-        songs: [],
-      });
-    }
-
-    // Step 2: Fetch all songs that match those genres
-    const allGenreSongs = await Song.find({
-      genre: { $in: genreArray },
+  // Apply access control to hide audio URLs if necessary
+  const updatedSongs = await Promise.all(
+    songs.map(async (song) => {
+      const hasAccess = await hasAccessToSong(user, song);
+      const songData = song.toObject();
+      if (!hasAccess) {
+        songData.audioUrl = null;
+      }
+      return songData;
     })
-      .populate("artist", "name image")
-      .populate("album", "title coverImage")
-      .sort({ createdAt: -1 });
+  );
 
-    // Step 3: Apply access control logic
-    const updatedSongs = await Promise.all(
-      allGenreSongs.map(async (song) => {
-        const songData = song.toObject();
-        const hasAccess = await hasAccessToSong(user, song);
-        if (!hasAccess) {
-          songData.audioUrl = null;
-        }
-        return songData;
-      })
-    );
+  // Send response
+  res.status(StatusCodes.OK).json({
+    success: true,
+    type,
+    currentPage: page,
+    totalPages: Math.ceil(totalSongs / limit),
+    totalSongs,
+    songs: updatedSongs,
+  });
+};
 
+
+// ===================================================================
+// @desc    Get a single song by ID or slug
+// @route   GET /api/songs/:id
+// @access  Authenticated users
+// ===================================================================
+export const getSongById = async (req, res) => {
+  const { id } = req.params;
+
+  // Determine if the provided identifier is a valid MongoDB ObjectId
+  const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+
+  // Find the song by _id or slug
+  const song = await Song.findOne(
+    isValidObjectId ? { _id: id } : { slug: id }
+  )
+    .populate("artist", "name image")
+    .populate("album", "title coverImage");
+
+  if (!song) {
+    throw new NotFoundError("Song not found");
+  }
+
+  // Check access permissions for the current user
+  const hasAccess = await hasAccessToSong(req.user, song);
+
+  const songData = song.toObject();
+  if (!hasAccess) {
+    songData.audioUrl = null;
+  }
+
+  // Respond with the song data (with or without audioUrl)
+  res.status(StatusCodes.OK).json({ success: true, song: songData });
+};
+
+
+
+// ===================================================================
+// @desc    Get songs matching user’s preferred and purchased genres (paginated)
+// @route   GET /api/songs/matching-genres?page=1&limit=20
+// @access  Authenticated users
+// ===================================================================
+export const getSongsMatchingUserGenres = async (req, res) => {
+  // 1. Fetch user with purchased songs populated
+  const user = await User.findById(req.user._id).populate({
+    path: "purchasedSongs",
+    select: "genre _id",
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  // 2. Combine genres from purchases and preferences
+  const genreSet = new Set();
+
+  user.purchasedSongs.forEach((song) => {
+    const genres = Array.isArray(song.genre)
+      ? song.genre
+      : typeof song.genre === "string"
+      ? [song.genre]
+      : [];
+    genres.forEach((g) => g && genreSet.add(g.trim().toLowerCase()));
+  });
+
+  if (Array.isArray(user.preferredGenres)) {
+    user.preferredGenres.forEach((g) => g && genreSet.add(g.trim().toLowerCase()));
+  }
+
+  const genreArray = [...genreSet];
+
+  if (genreArray.length === 0) {
     return res.status(200).json({
       success: true,
-      matchingGenres: genreArray,
-      songs: updatedSongs,
+      matchingGenres: [],
+      songs: [],
+      total: 0,
+      page: 1,
+      pages: 0,
     });
-  } catch (err) {
-    console.error("getSongsMatchingUserGenres Error:", err);
-    return res.status(500).json({ message: "Internal server error" });
   }
-};  
 
-// GET /api/songs?genre=pop&page=1&limit=20
-export const getSongsByGenre = async (req, res, next) => {
-  const { genre, page = 1, limit = 20 } = req.query;
-  const query = genre ? { genre: { $regex: new RegExp(genre, "i") } } : {};
+  // 3. Handle pagination
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const skip = (page - 1) * limit;
 
-  const initialTime = Date.now();
-  const songs = await Song.find(query)
-    .skip((page - 1) * limit)
-    .limit(Number(limit))
-    .sort({ releaseDate: -1 });
+  // 4. Fetch paginated, genre-matched songs
+  const [songs, total] = await Promise.all([
+    Song.find({ genre: { $in: genreArray } })
+      .populate("artist", "name image")
+      .populate("album", "title coverImage")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Song.countDocuments({ genre: { $in: genreArray } }),
+  ]);
 
-    const endTime = Date.now();
-  console.log(`Query time: ${endTime - initialTime}ms`);
-  const total = await Song.countDocuments(query);
+  // 5. Filter songs by access
+  const songsWithAccess = await Promise.all(
+    songs.map(async (song) => {
+      const songObj = song.toObject();
+      const hasAccess = await hasAccessToSong(user, song);
+      if (!hasAccess) {
+        songObj.audioUrl = null;
+      }
+      return songObj;
+    })
+  );
 
-  res.status(200).json({
+  // 6. Return response with pagination
+  res.status(StatusCodes.OK).json({
     success: true,
-    songs,
+    matchingGenres: genreArray,
+    songs: songsWithAccess,
     total,
-    page: Number(page),
+    page,
     pages: Math.ceil(total / limit),
   });
 };
 
-// GET /api/songs/by-artist/:artistId?page=1&limit=20
 
+// ===================================================================
+// @desc    Get songs by genre with pagination
+// @route   GET /api/songs?genre=pop&page=1&limit=20
+// @access  Public
+// ===================================================================
+export const getSongsByGenre = async (req, res) => {
+  // 1. Extract query parameters with defaults
+  const { genre, page = 1, limit = 20 } = req.query;
+
+  // 2. Build query object (case-insensitive partial match for genre)
+  const query = genre
+    ? { genre: { $regex: new RegExp(genre, "i") } }
+    : {};
+
+  // 3. Parse pagination values safely
+  const currentPage = Math.max(1, parseInt(page, 10));
+  const pageLimit = Math.min(50, Math.max(1, parseInt(limit, 10))); // Max 50 per page
+  const skip = (currentPage - 1) * pageLimit;
+
+  // 4. Execute query and count in parallel
+  const startTime = Date.now();
+  const [songs, total] = await Promise.all([
+    Song.find(query)
+      .sort({ releaseDate: -1 })
+      .skip(skip)
+      .limit(pageLimit),
+    Song.countDocuments(query),
+  ]);
+  const queryTime = Date.now() - startTime;
+  console.log(`Query time: ${queryTime}ms`);
+
+  // 5. Respond with paginated results
+  res.status(StatusCodes.OK).json({
+    success: true,
+    genre: genre || null,
+    total,
+    page: currentPage,
+    pages: Math.ceil(total / pageLimit),
+    songs,
+  });
+};
+
+
+// ===================================================================
+// @desc    Get songs by artist ID or slug, with pagination
+// @route   GET /api/songs/by-artist/:artistId?page=1&limit=20
+// @access  Public
+// ===================================================================
 export const getSongsByArtist = async (req, res) => {
-  try {
-    const { artistId } = req.params;
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit) || 20, 1);
-    const skip = (page - 1) * limit;
+  const { artistId } = req.params;
 
-    // Resolve artist by ID or slug
-    const artistQuery = mongoose.Types.ObjectId.isValid(artistId)
-      ? { _id: artistId }
-      : { slug: artistId };
+  // 1. Parse and sanitize pagination params
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const skip = (page - 1) * limit;
 
-    const artist = await Artist.findOne(artistQuery);
-    if (!artist) {
-      return res.status(404).json({ message: "Artist not found" });
-    }
+  // 2. Resolve artist by either ObjectId or slug
+  const artistQuery = mongoose.Types.ObjectId.isValid(artistId)
+    ? { _id: artistId }
+    : { slug: artistId };
 
-    // Use the resolved artist's ID
-    const query = { artist: artist._id };
-
-    const [songs, total] = await Promise.all([
-      Song.find(query)
-        .skip(skip)
-        .limit(limit)
-        .sort({ releaseDate: -1 })
-        .populate("artist", "name image")
-        .populate("album", "title coverImage"),
-      Song.countDocuments(query),
-    ]);
-
-    res.status(200).json({
-      success: true,
-      artist: { id: artist._id, name: artist.name, slug: artist.slug },
-      songs,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
-  } catch (error) {
-    console.error("Get Songs By Artist Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+  const artist = await Artist.findOne(artistQuery);
+  if (!artist) {
+    return res.status(StatusCodes.NOT_FOUND).json({ message: "Artist not found" });
   }
+
+  // 3. Query all songs by the resolved artist ID
+  const songQuery = { artist: artist._id };
+
+  const [songs, total] = await Promise.all([
+    Song.find(songQuery)
+      .skip(skip)
+      .limit(limit)
+      .sort({ releaseDate: -1 })
+      .populate("artist", "name image")
+      .populate("album", "title coverImage"),
+    Song.countDocuments(songQuery),
+  ]);
+
+  // 4. Return paginated response with artist info
+  res.status(StatusCodes.OK).json({
+    success: true,
+    artist: {
+      id: artist._id,
+      name: artist.name,
+      slug: artist.slug,
+    },
+    songs,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+  });
 };
 
 
 
+// ===================================================================
+// @desc    Get songs by album ID or slug with pagination
+// @route   GET /api/songs/by-album/:albumId?page=1&limit=20
+// @access  Public
+// ===================================================================
 export const getSongsByAlbum = async (req, res) => {
-  try {
-    const { albumId } = req.params;
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit) || 20, 1);
-    const skip = (page - 1) * limit;
+  const { albumId } = req.params;
 
-    // Resolve album by ID or slug
-    const albumQuery = mongoose.Types.ObjectId.isValid(albumId)
-      ? { _id: albumId }
-      : { slug: albumId };
+  // 1. Parse pagination params safely
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const skip = (page - 1) * limit;
 
-    const album = await Album.findOne(albumQuery);
-    if (!album) {
-      return res.status(404).json({ message: "Album not found" });
-    }
+  // 2. Find album by ID or slug
+  const albumQuery = mongoose.Types.ObjectId.isValid(albumId)
+    ? { _id: albumId }
+    : { slug: albumId };
 
-    const query = { album: album._id };
-
-    const [songs, total] = await Promise.all([
-      Song.find(query)
-        .skip(skip)
-        .limit(limit)
-        .sort({ releaseDate: -1 })
-        .populate("artist", "name image")
-        .populate("album", "title coverImage"),
-      Song.countDocuments(query),
-    ]);
-
-    res.status(200).json({
-      success: true,
-      album: { id: album._id, title: album.title, slug: album.slug },
-      songs,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-    });
-  } catch (error) {
-    console.error("Get Songs By Album Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+  const album = await Album.findOne(albumQuery);
+  if (!album) {
+    return res.status(StatusCodes.NOT_FOUND).json({ message: "Album not found" });
   }
+
+  // 3. Query for songs belonging to the album
+  const query = { album: album._id };
+
+  const [songs, total] = await Promise.all([
+    Song.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ releaseDate: -1 })
+      .populate("artist", "name image")
+      .populate("album", "title coverImage"),
+    Song.countDocuments(query),
+  ]);
+
+  // 4. Send response with pagination metadata
+  res.status(StatusCodes.OK).json({
+    success: true,
+    album: {
+      id: album._id,
+      title: album.title,
+      slug: album.slug,
+    },
+    songs,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+  });
 };
 
-// GET /api/songs/purchased
+
+// ===================================================================
+// @desc    Get all purchased songs for the authenticated user
+// @route   GET /api/songs/purchased?page=1&limit=20
+// @access  Private
+// ===================================================================
 export const getPurchasedSongs = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-      .populate("purchasedSongs", "title artist genre duration coverImage audioUrl")
-      .select("purchasedSongs");
+  // 1. Parse pagination parameters
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const skip = (page - 1) * limit;
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+  // 2. Fetch user and their purchased songs
+  const user = await User.findById(req.user._id)
+    .populate({
+      path: "purchasedSongs",
+      select: "title artist genre duration coverImage audioUrl",
+      options: {
+        skip,
+        limit,
+      },
+      populate: [
+        { path: "artist", select: "name" },
+        { path: "album", select: "title" },
+      ],
+    })
+    .select("purchasedSongs");
 
-    const purchasedSongs = user.purchasedSongs.map(song => song.toObject());
-
-    // Apply access control
-    const updatedSongs = await Promise.all(
-      purchasedSongs.map(async (song) => {
-        const hasAccess = await hasAccessToSong(user, song);
-        if (!hasAccess) {
-          song.audioUrl = null;
-        }
-        return song;
-      })
-    );
-
-    res.status(200).json({ success: true, songs: updatedSongs });
-  } catch (error) {
-    console.error("Get Purchased Songs Error:", error);
-    res.status(500).json({ message: "Internal server error" });
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
   }
-};
-// GET /api/songs/premium
-export const getPremiumSongs = async (req, res) => {
-  try {
-    const user = req.user;
 
-    const songs = await Song.find({ isPremium: true })
+  const totalPurchased = await Song.countDocuments({
+    _id: { $in: user.purchasedSongs.map(song => song._id) },
+  });
+
+  // 3. Apply access control for each song
+  const songs = await Promise.all(
+    user.purchasedSongs.map(async (song) => {
+      const songObj = song.toObject();
+      const hasAccess = await hasAccessToSong(req.user, song);
+      if (!hasAccess) {
+        songObj.audioUrl = null;
+      }
+      return songObj;
+    })
+  );
+
+  // 4. Return paginated purchased songs
+  res.status(StatusCodes.OK).json({
+    success: true,
+    songs,
+    total: totalPurchased,
+    page,
+    pages: Math.ceil(totalPurchased / limit),
+  });
+};
+
+
+// ===================================================================
+// @desc    Get all premium songs with access control and pagination
+// @route   GET /api/songs/premium?page=1&limit=20
+// @access  Private (user must be logged in)
+// ===================================================================
+export const getPremiumSongs = async (req, res) => {
+  const user = req.user;
+
+  // 1. Parse pagination parameters with defaults
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+  const skip = (page - 1) * limit;
+
+  // 2. Query total count and paginated premium songs
+  const [total, songs] = await Promise.all([
+    Song.countDocuments({ isPremium: true }),
+    Song.find({ isPremium: true })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("artist", "name image")
+      .populate("album", "title coverImage")
+  ]);
+
+  // 3. Apply access control per song
+  const filteredSongs = await Promise.all(
+    songs.map(async (song) => {
+      const songObj = song.toObject();
+      const hasAccess = await hasAccessToSong(user, song);
+      if (!hasAccess) {
+        songObj.audioUrl = null;
+      }
+      return songObj;
+    })
+  );
+
+  // 4. Send response
+  res.status(StatusCodes.OK).json({
+    success: true,
+    songs: filteredSongs,
+    total,
+    page,
+    pages: Math.ceil(total / limit)
+  });
+};
+
+
+
+// ===================================================================
+// @desc    Get paginated liked songs by song IDs
+// @route   POST /api/songs/liked
+// @access  Private
+// ===================================================================
+export const getLikedSongs = async (req, res) => {
+  const { ids } = req.body;
+
+  // 1. Validate song ID array
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "No song IDs provided" });
+  }
+
+  // 2. Filter valid MongoDB ObjectIds
+  const validIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+  if (validIds.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ message: "No valid song IDs provided" });
+  }
+
+  // 3. Pagination parameters
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  // 4. Fetch paginated songs
+  const [total, songs] = await Promise.all([
+    Song.countDocuments({ _id: { $in: validIds } }),
+    Song.find({ _id: { $in: validIds } })
+      .skip(skip)
+      .limit(limit)
       .sort({ createdAt: -1 })
       .populate("artist", "name image")
-      .populate("album", "title coverImage");
+      .populate("album", "title coverImage"),
+  ]);
 
-    const updatedSongs = await Promise.all(
-      songs.map(async (song) => {
-        const songData = song.toObject();
-        const hasAccess = await hasAccessToSong(user, song);
-        if (!hasAccess) {
-          songData.audioUrl = null;
-        }
-        return songData;
-      })
-    );
+  // 5. Access control: hide audioUrl if unauthorized
+  const filteredSongs = await Promise.all(
+    songs.map(async (song) => {
+      const songObj = song.toObject();
+      const hasAccess = await hasAccessToSong(req.user, song);
+      if (!hasAccess) songObj.audioUrl = null;
+      return songObj;
+    })
+  );
 
-    res.status(200).json({ success: true, songs: updatedSongs });
-  } catch (error) {
-    console.error("Get Premium Songs Error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+  // 6. Send paginated response
+  res.status(StatusCodes.OK).json({
+    success: true,
+    songs: filteredSongs,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+  });
 };
-
-export const getLikedSongs = async (req, res) => {
-  try {
-    const { ids } = req.body;
-
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ message: "No song IDs provided" });
-    }
-
-    // Find all songs whose _id is in the provided list
-    const likedSongs = await Song.find({ _id: { $in: ids } });
-
-    res.status(200).json({ likedSongs });
-  } catch (error) {
-    console.error("Error getting liked songs:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 
 
 
