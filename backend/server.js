@@ -12,6 +12,7 @@ import YAML from "yamljs";
 import swaggerUi from "swagger-ui-express";
 import path from "path";
 import { fileURLToPath } from "url";
+import discoverRoutes from "./routes/discoverRoutes.js";
 
 
 
@@ -30,6 +31,7 @@ import webhookRoutes from "./routes/webhookRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import genreRoutes from "./routes/genreRoutes.js";
+import adminplaylistRoutes from "./routes/adminPlaylist.js"
 
 // Load environment variables
 dotenv.config();
@@ -96,6 +98,8 @@ app.use("/api/artists", artistRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/genre", genreRoutes)
+app.use("/api/discover", discoverRoutes);
+app.use("/api/adminPlaylist", adminplaylistRoutes);
 
 
 // NotFoundMiddleware
