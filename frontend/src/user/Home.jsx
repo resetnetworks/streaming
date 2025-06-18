@@ -75,6 +75,7 @@ const Home = () => {
     });
   }, [dispatch, topPicksPage]);
 
+  
   useEffect(() => {
     if (randomArtist?._id) {
       dispatch(
@@ -84,7 +85,9 @@ const Home = () => {
           page: similarPage,
           limit: 10,
         })
+
       ).then((res) => {
+        
         if (res.payload?.songs) {
           setSimilarSongs((prev) => {
             const seen = new Set(prev.map((s) => s._id));
@@ -95,6 +98,8 @@ const Home = () => {
       });
     }
   }, [dispatch, similarPage, randomArtist]);
+
+
 
   useEffect(() => {
     if (!randomArtist && allSongs.length > 0 && artists.length > 0) {
