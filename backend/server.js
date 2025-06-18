@@ -1,3 +1,4 @@
+import 'express-async-errors';
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -11,6 +12,8 @@ import YAML from "yamljs";
 import swaggerUi from "swagger-ui-express";
 import path from "path";
 import { fileURLToPath } from "url";
+
+
 
 // Database and middleware
 import connectDb from "./database/db.js";

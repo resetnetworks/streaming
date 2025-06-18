@@ -5,7 +5,7 @@ import {
   updateGenre,
   deleteGenre,
   getGenres,
-  getGenre
+  getGenreByIdOrSlug
 } from "../controllers/genreController.js";
 // import {
 //   createGenreValidator,
@@ -17,7 +17,7 @@ const router = express.Router();
 
 router.post("/", createGenre);
 router.get("/", getGenres);
-router.get("/:idOrSlug", getGenre);
+router.get("/:idOrSlug", getGenreByIdOrSlug);
 router.put("/:idOrSlug", updateGenre);
 router.delete("/:idOrSlug", deleteGenre);
 
