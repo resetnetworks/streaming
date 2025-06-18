@@ -1,103 +1,191 @@
 import Genre from "../models/Genre.js";
 import mongoose from "mongoose";
+import { StatusCodes } from 'http-status-codes';
+import { BadRequestError, UnauthorizedError, NotFoundError } from '../errors/index.js';
+import { isAdmin } from "../utils/authHelper.js";
 
-// Create a new genre
+
+// ===================================================================
+// @desc    Create a new genre
+// @route   POST /api/genres
+// @access  Admin
+// ===================================================================
 export const createGenre = async (req, res) => {
-  try {
-    const { name, description, image } = req.body;
-    if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return res.status(400).json({ message: "Valid genre name is required." });
-    }
-    const genre = new Genre({ name, description, image });
-    await genre.save();
-    res.status(201).json(genre);
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "Genre name or slug already exists." });
-    }
-    res.status(400).json({ message: error.message });
+  // Authorization check
+  if (!isAdmin(req.user)) {
+    throw new UnauthorizedError('Access denied. Admins only.');
   }
+
+  const { name, description, image } = req.body;
+
+  // Input validation
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    throw new BadRequestError('Genre name must be at least 2 characters.');
+  }
+
+  // Generate slug from name
+  const slug = name.trim().toLowerCase().replace(/\s+/g, '-');
+
+  // Check for duplicates
+  const existing = await Genre.findOne({ $or: [{ name }, { slug }] });
+  if (existing) {
+    throw new BadRequestError('Genre with this name or slug already exists.');
+  }
+
+  // Create and save genre
+  const genre = await Genre.create({
+    name: name.trim(),
+    description: description?.trim() || '',
+    image: image || '',
+    slug,
+  });
+
+  res.status(StatusCodes.CREATED).json({ success: true, genre });
 };
 
-// Get all genres (with optional pagination)
+
+// ===================================================================
+// @desc    Get all genres with optional pagination
+// @route   GET /api/genres
+// @access  Public
+// ===================================================================
 export const getGenres = async (req, res) => {
-  try {
+
+    // Extract and validate query parameters
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
 
+    // Fetch genres and total count concurrently
     const [genres, total] = await Promise.all([
       Genre.find().skip(skip).limit(limit).sort({ name: 1 }),
       Genre.countDocuments()
     ]);
 
-    res.json({
-      results: genres,
-      total,
-      page,
-      pages: Math.ceil(total / limit)
+    res.status(StatusCodes.OK).json({
+      success: true,
+      genres,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  
+    console.error('Get Genres Error:', error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: 'Internal server error'
+    });
   }
+
+
+// ===================================================================
+// @desc    Get a single genre by ID or slug
+// @route   GET /api/genres/:idOrSlug
+// @access  Public
+// ================================================================
+export const getGenreByIdOrSlug = async (req, res) => {
+  const { idOrSlug } = req.params;
+
+  const query = mongoose.Types.ObjectId.isValid(idOrSlug)
+    ? { _id: idOrSlug }
+    : { slug: idOrSlug };
+
+  const genre = await Genre.findOne(query);
+
+  if (!genre) {
+    throw new NotFoundError('Genre not found');
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    genre
+  });
 };
 
-// Get a single genre by ID or slug
-export const getGenre = async (req, res) => {
-  try {
-    const { idOrSlug } = req.params;
-    const genre =
-      await Genre.findOne(
-        mongoose.Types.ObjectId.isValid(idOrSlug)
-          ? { _id: idOrSlug }
-          : { slug: idOrSlug }
-      );
-    if (!genre) return res.status(404).json({ message: "Genre not found" });
-    res.json(genre);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
-// Update a genre by ID or slug
+// ===================================================================
+// @desc    Update a genre by ID or slug (Admin only)
+// @route   PATCH /api/genres/:idOrSlug
+// @access  Admin
+// ===================================================================
 export const updateGenre = async (req, res) => {
-  try {
-    const { idOrSlug } = req.params;
-    const update = {};
-    if (req.body.name) update.name = req.body.name;
-    if (req.body.description) update.description = req.body.description;
-    if (req.body.image) update.image = req.body.image;
-
-    // If name is updated, slug will auto-update via pre-validate hook
-    const genre = await Genre.findOneAndUpdate(
-      mongoose.Types.ObjectId.isValid(idOrSlug)
-        ? { _id: idOrSlug }
-        : { slug: idOrSlug },
-      update,
-      { new: true, runValidators: true }
-    );
-    if (!genre) return res.status(404).json({ message: "Genre not found" });
-    res.json(genre);
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "Genre name or slug already exists." });
-    }
-    res.status(400).json({ message: error.message });
+  // Admin check
+  if (!isAdmin(req.user)) {
+    throw new UnauthorizedError('Access denied. Admins only.');
   }
+
+  const { idOrSlug } = req.params;
+  const { name, description, image } = req.body;
+
+  // Build update object
+  const update = {};
+  if (name) {
+    if (typeof name !== 'string' || name.trim().length < 2) {
+      throw new BadRequestError('Genre name must be at least 2 characters.');
+    }
+    update.name = name.trim();
+  }
+  if (description) update.description = description.trim();
+  if (image) update.image = image;
+
+  // Determine filter condition
+  const filter = mongoose.Types.ObjectId.isValid(idOrSlug)
+    ? { _id: idOrSlug }
+    : { slug: idOrSlug };
+
+  // Check for duplicate name/slug
+  if (name) {
+    const existing = await Genre.findOne({ name: name.trim(), ...{ _id: { $ne: filter._id } } });
+    if (existing) {
+      throw new BadRequestError('Another genre with this name already exists.');
+    }
+  }
+
+  // Update genre
+  const genre = await Genre.findOneAndUpdate(filter, update, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!genre) {
+    throw new NotFoundError('Genre not found.');
+  }
+
+  res.status(StatusCodes.OK).json({ success: true, genre });
 };
 
-// Delete a genre by ID or slug
+
+// ===================================================================
+// @desc    Delete a genre by ID or slug (Admin only)
+// @route   DELETE /api/genres/:idOrSlug
+// @access  Admin
+// ===================================================================
 export const deleteGenre = async (req, res) => {
-  try {
-    const { idOrSlug } = req.params;
-    const genre = await Genre.findOneAndDelete(
-      mongoose.Types.ObjectId.isValid(idOrSlug)
-        ? { _id: idOrSlug }
-        : { slug: idOrSlug }
-    );
-    if (!genre) return res.status(404).json({ message: "Genre not found" });
-    res.json({ message: "Genre deleted" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  // Admin authorization check
+  if (!isAdmin(req.user)) {
+    throw new UnauthorizedError('Access denied. Admins only.');
   }
+
+  const { idOrSlug } = req.params;
+
+  // Determine query type: ObjectId or slug
+  const filter = mongoose.Types.ObjectId.isValid(idOrSlug)
+    ? { _id: idOrSlug }
+    : { slug: idOrSlug };
+
+  // Attempt deletion
+  const genre = await Genre.findOneAndDelete(filter);
+
+  if (!genre) {
+    throw new NotFoundError('Genre not found.');
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Genre deleted successfully',
+  });
 };

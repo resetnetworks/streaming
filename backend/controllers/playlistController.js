@@ -1,31 +1,41 @@
 import { User } from "../models/User.js";
-import TryCatch from "../utils/TryCatch.js";
 import { hasAccessToSong } from "../utils/accessControl.js";
 import {Song} from "../models/Song.js";
+import { BadRequestError, NotFoundError } from "../errors/index.js";
+import mongoose from "mongoose";
+import { StatusCodes } from 'http-status-codes';
 
-// GEt all playlists for the authenticated user
-export const getPlaylists = TryCatch(async (req, res) => {
-  const user = await User.findById(req.user._id).select("playlist");
 
+// @desc    Get all playlists for the authenticated user
+// @route   GET /api/playlists
+// @access  Private
+export const getPlaylists = async (req, res) => {
+  const user = await User.findById(req.user._id).select('playlist');
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError('User not found');
   }
 
-  // Deep clone and populate songs for each playlist
-  const playlistsWithPopulatedSongs = await Promise.all(
-    user.playlist.map(async (playlist) => {
-      const populatedSongs = await Song.find({ _id: { $in: playlist.songs } })
-        .populate("artist", "name")
-        .populate("album", "title");
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
+  const skip = (page - 1) * limit;
 
-      const songsWithAccessControl = await Promise.all(
-        populatedSongs.map(async (song) => {
-          const songData = song.toObject();
+  const totalPlaylists = user.playlist.length;
+  const slicedPlaylists = user.playlist.slice(skip, skip + limit);
+
+  const playlists = await Promise.all(
+    slicedPlaylists.map(async (playlist) => {
+      const songs = await Song.find({ _id: { $in: playlist.songs } })
+        .populate('artist', 'name')
+        .populate('album', 'title');
+
+      const filteredSongs = await Promise.all(
+        songs.map(async (song) => {
+          const songObj = song.toObject();
           const hasAccess = await hasAccessToSong(req.user, song);
           if (!hasAccess) {
-            songData.audioUrl = null;
+            songObj.audioUrl = null;
           }
-          return songData;
+          return songObj;
         })
       );
 
@@ -33,100 +43,164 @@ export const getPlaylists = TryCatch(async (req, res) => {
         _id: playlist._id,
         title: playlist.title,
         description: playlist.description,
-        songs: songsWithAccessControl,
+        songs: filteredSongs,
       };
     })
   );
 
-  res.json({ success: true, playlist: playlistsWithPopulatedSongs });
-});
+  res.status(StatusCodes.OK).json({
+    success: true,
+    playlist: playlists,
+    pagination: {
+      total: totalPlaylists,
+      page,
+      limit,
+      totalPages: Math.ceil(totalPlaylists / limit),
+    },
+  });
+};
 
 
-// Create a new playlist for the authenticated user
-export const createPlaylist = TryCatch(async (req, res) => {
+// @desc    Create a new playlist for the authenticated user
+// @route   POST /api/playlists
+// @access  Private
+export const createPlaylist = async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError('User not found');
   }
 
+  // Enforce a limit of 10 playlists per user
   if (user.playlist.length >= 10) {
-    return res.status(400).json({ message: "You can only create up to 10 playlists" });
+    throw new BadRequestError('You can only create up to 10 playlists');
   }
 
-  const { title, description = "" } = req.body;
-  if (!title) {
-    return res.status(400).json({ message: "Playlist title is required" });
+  const { title, description = '' } = req.body;
+
+  // Basic validation
+  if (!title || typeof title !== 'string' || title.trim().length < 1) {
+    throw new BadRequestError('Playlist title is required');
   }
 
-  // No image upload here, so image is always empty string
-  user.playlist.push({ title, description, image: "" });
+  // Add playlist to user
+  user.playlist.push({
+    title: title.trim(),
+    description: description.trim(),
+    image: '', // Image upload not implemented here
+    songs: [],
+  });
+
   await user.save();
 
-  res.status(201).json({ success: true, message: "Playlist created", playlist: user.playlist });
-});
+  res.status(StatusCodes.CREATED).json({
+    success: true,
+    message: 'Playlist created successfully',
+    playlist: user.playlist,
+  });
+};
 
-// Update an existing playlist
-export const updatePlaylist = TryCatch(async (req, res) => {
+
+
+// ===================================================================
+// @desc    Update a playlist (title/description) for the authenticated user
+// @route   PATCH /api/playlists/:playlistId
+// @access  Private
+// ===================================================================
+export const updatePlaylist = async (req, res) => {
   const { playlistId } = req.params;
-  const { name, description } = req.body;
+  const { title, description } = req.body;
 
+  // Validate user
   const user = await User.findById(req.user._id);
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError("User not found");
   }
+
+  // Find playlist by ID within user's playlists
   const playlist = user.playlist.id(playlistId);
   if (!playlist) {
-    return res.status(404).json({ message: "Playlist not found" });
+    throw new NotFoundError("Playlist not found");
   }
-  if (title) {
-    playlist.title = title;
-  }
-  if (description) {
-    playlist.description = description;
-  }
-  await user.save();
-  res.json({ success: true, message: "Playlist updated", playlist });
-});
 
-// Delete a playlist by ID for the authenticated user
-export const deletePlaylist = TryCatch(async (req, res) => {
+  // Update fields only if provided
+  if (title && typeof title === "string") {
+    playlist.title = title.trim();
+  }
+  if (description && typeof description === "string") {
+    playlist.description = description.trim();
+  }
+
+  // Save updated user document
+  await user.save();
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Playlist updated successfully",
+    playlist,
+  });
+};
+
+
+
+// ===================================================================
+// @desc    Delete a playlist by ID for the authenticated user
+// @route   DELETE /api/playlists/:playlistId
+// @access  Private
+// ===================================================================
+export const deletePlaylist = async (req, res) => {
   const { playlistId } = req.params;
 
+  // Fetch user
   const user = await User.findById(req.user._id);
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
-  const playlistExists = user.playlist.some(item => item._id.toString() === playlistId);
-  if (!playlistExists) {
-    return res.status(404).json({ message: "Playlist not found" });
+  // Locate the playlist by ID
+  const playlist = user.playlist.id(playlistId);
+  if (!playlist) {
+    throw new NotFoundError("Playlist not found");
   }
 
-  user.playlist = user.playlist.filter(item => item._id.toString() !== playlistId);
+  // Remove the playlist from user's subdocument array
+  playlist.deleteOne(); // Mongoose method on subdocument
   await user.save();
 
-  res.json({ success: true, message: "Playlist deleted" });
-});
+  // Respond with success
+  res.status(StatusCodes.Ok).json({
+    success: true,
+    message: "Playlist deleted successfully",
+  });
+};
 
-// get a specific playlist by ID for the authenticated user
-export const getPlaylistById = TryCatch(async (req, res) => {
+
+
+// ===================================================================
+// @desc    Get a specific playlist by ID for the authenticated user
+// @route   GET /api/playlists/:playlistId
+// @access  Private
+// ===================================================================
+export const getPlaylistById = async (req, res) => {
   const { playlistId } = req.params;
 
+  // Fetch user with playlist field only
   const user = await User.findById(req.user._id).select("playlist");
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
+  // Locate playlist by ID
   const playlist = user.playlist.id(playlistId);
   if (!playlist) {
-    return res.status(404).json({ message: "Playlist not found" });
+    throw new NotFoundError("Playlist not found");
   }
 
-  // Populate songs with access control
+  // Populate songs
   const populatedSongs = await Song.find({ _id: { $in: playlist.songs } })
     .populate("artist", "name")
     .populate("album", "title");
 
+  // Access control: Hide audio URL if user is unauthorized
   const songsWithAccessControl = await Promise.all(
     populatedSongs.map(async (song) => {
       const songData = song.toObject();
@@ -138,7 +212,8 @@ export const getPlaylistById = TryCatch(async (req, res) => {
     })
   );
 
-  res.json({
+  // Send response
+  res.status(StatusCodes.OK).json({
     success: true,
     playlist: {
       _id: playlist._id,
@@ -147,62 +222,79 @@ export const getPlaylistById = TryCatch(async (req, res) => {
       songs: songsWithAccessControl,
     },
   });
-});
+};
 
-// Add a song to a playlist for the authenticated user
-export const addSongToPlaylist = TryCatch(async (req, res) => {
+
+/**
+ * @desc    Add a song to a user's playlist
+ * @route   POST /api/playlists/:playlistId/songs
+ * @access  Private (authenticated users only)
+ */
+export const addSongToPlaylist = async (req, res) => {
   const user = await User.findById(req.user._id);
-
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
   const { playlistId } = req.params;
   const { songId } = req.body;
 
   if (!songId) {
-    return res.status(400).json({ message: "Song ID is required" });
+    throw new BadRequestError("Song ID is required");
   }
 
-  // Find the playlist by ID
   const playlist = user.playlist.id(playlistId);
-
   if (!playlist) {
-    return res.status(404).json({ message: "Playlist not found" });
+    throw new NotFoundError("Playlist not found");
   }
 
-  // Check if song already exists in playlist
   if (playlist.songs.includes(songId)) {
-    return res.status(400).json({ message: "Song already exists in playlist" });
+    throw new BadRequestError("Song already exists in playlist");
   }
 
-  // Add song
   playlist.songs.push(songId);
   await user.save();
 
-  res.json({ success: true, message: "Song added to playlist", playlist });
-});
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Song added to playlist",
+    playlist,
+  });
+};
 
-// Remove a song from a playlist for the authenticated user
-export const removeSongFromPlaylist = TryCatch(async (req, res) => {
+
+/**
+ * @desc    Remove a song from a user's playlist
+ * @route   DELETE /api/playlists/:playlistId/songs/:songId
+ * @access  Private (authenticated users only)
+ */
+export const removeSongFromPlaylist = async (req, res) => {
   const user = await User.findById(req.user._id);
-
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
   const { playlistId, songId } = req.params;
 
   const playlist = user.playlist.id(playlistId);
   if (!playlist) {
-    return res.status(404).json({ message: "Playlist not found" });
+    throw new NotFoundError("Playlist not found");
   }
 
+  const originalLength = playlist.songs.length;
   playlist.songs = playlist.songs.filter(
     id => id.toString() !== songId
   );
 
+  if (playlist.songs.length === originalLength) {
+    throw new NotFoundError("Song not found in playlist");
+  }
+
   await user.save();
 
-  res.json({ success: true, message: "Song removed from playlist", playlist });
-});
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Song removed from playlist",
+    playlist,
+  });
+};
