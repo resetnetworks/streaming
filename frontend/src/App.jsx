@@ -24,6 +24,7 @@ const LikedSong = lazy(() => import("./user/LikedSong"));
 const Admin = lazy(() => import("./admin/Admin"));
 const Album = lazy(() => import("./user/Album"));
 const Search = lazy(() => import("./user/Search"));
+const Library = lazy(() => import("./user/Library"));
 
 // Protected Routes
 const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>

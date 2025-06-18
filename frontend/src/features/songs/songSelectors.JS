@@ -1,5 +1,4 @@
-// songSelectors.js
-
+import { createSelector } from "@reduxjs/toolkit";
 // All paginated songs (infinite scroll)
 export const selectAllSongs = (state) => state.songs.allSongs;
 
@@ -15,8 +14,15 @@ export const selectCurrentPage = (state) => state.songs.currentPage;
 // Selected song for player (not modified, uses player slice)
 export const selectSelectedSong = (state) => state.player.selectedSong;
 
+export const selectSongsState = (state) => state.songs;
+
+
 // Liked songs
 export const selectLikedSongs = (state) => state.songs.likedSongs;
 
 // Songs by specific album
 export const selectSongsByAlbum = (state, albumId) => state.songs.songsByAlbum[albumId] || [];
+export const selectSongsByArtist = createSelector(
+  [selectSongsState, (_, artistId) => artistId],
+  (songs, artistId) => songs.songsByArtist[artistId] || {}
+);

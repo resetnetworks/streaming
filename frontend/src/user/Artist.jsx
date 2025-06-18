@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
@@ -7,17 +7,14 @@ import SongList from "../components/SongList";
 import RecentPlays from "../components/RecentPlays";
 import { FiMapPin } from "react-icons/fi";
 import { LuSquareChevronRight } from "react-icons/lu";
-import { fetchAllSongs } from "../features/songs/songSlice";
 import { fetchArtistById } from "../features/artists/artistsSlice";
 import { selectSelectedArtist } from "../features/artists/artistsSelectors";
-import { setSelectedSong, play } from "../features/playback/playerSlice";
+import { setSelectedSong,play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 import { getAlbumsByArtist } from "../features/albums/albumsSlice";
 import { selectArtistAlbums } from "../features/albums/albumsSelector";
-import {
-  selectAllSongs,
-  selectTotalPages,
-} from "../features/songs/songSelectors";
+import { fetchSongsByArtist } from "../features/songs/songSlice";
+import { selectSongsByArtist } from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -28,72 +25,81 @@ const Artist = () => {
   const singlesScrollRef = useRef(null);
   const navigate = useNavigate();
 
-  const songs = useSelector(selectAllSongs);
+  // Selectors with proper memoization
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const artist = useSelector(selectSelectedArtist);
   const artistAlbums = useSelector(selectArtistAlbums);
-  const totalPages = useSelector(selectTotalPages);
-  const status = useSelector((state) => state.songs.status);
+  const artistSongsData = useSelector(
+    (state) => selectSongsByArtist(state, artistId),
+    shallowEqual
+  );
+  
+  // Destructure with default values
+  const { 
+    songs: artistSongs = [], 
+    pages: totalPages = 1, 
+    status = 'idle' 
+  } = artistSongsData || {};
 
+  // Local state
   const [songsPage, setSongsPage] = useState(1);
-  const [artistSongs, setArtistSongs] = useState([]);
   const [albumsPage, setAlbumsPage] = useState(1);
   const [displayedAlbums, setDisplayedAlbums] = useState([]);
 
+  // Refs
   const songsObserverRef = useRef();
   const albumsObserverRef = useRef();
 
+  
+
+  // Initial data fetch
   useEffect(() => {
     if (artistId) {
       dispatch(fetchArtistById(artistId));
       dispatch(getAlbumsByArtist(artistId));
+      dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
     }
-  }, [dispatch, artistId, albumsPage]);
+  }, [dispatch, artistId]);
 
+  // Pagination for songs
   useEffect(() => {
-    dispatch(
-      fetchAllSongs({
-        artistId,
-        page: songsPage,
-        limit: 10,
-      })
-    ).then((res) => {
-      if (res.payload?.songs) {
-        setArtistSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
-      }
-    });
+    if (artistId && songsPage > 1) {
+      dispatch(fetchSongsByArtist({ artistId, page: songsPage, limit: 10 }));
+    }
   }, [dispatch, artistId, songsPage]);
 
+  // Set displayed albums
   useEffect(() => {
     if (artistAlbums.length > 0) {
       setDisplayedAlbums(artistAlbums);
     }
   }, [artistAlbums]);
 
+  // Handlers
   const handlePlaySong = (songId) => {
     dispatch(setSelectedSong(songId));
     dispatch(play());
   };
 
   const handleScroll = (ref) => {
-    if (ref?.current) {
-      ref.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
+    ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
   };
 
+  // Intersection observers
   const songsLastRef = useCallback(
     (node) => {
       if (status === "loading") return;
-      if (songsObserverRef.current) songsObserverRef.current.disconnect();
+      
+      if (songsObserverRef.current) {
+        songsObserverRef.current.disconnect();
+      }
+      
       songsObserverRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && songsPage < totalPages) {
           setSongsPage((prev) => prev + 1);
         }
       });
+      
       if (node) songsObserverRef.current.observe(node);
     },
     [status, songsPage, totalPages]
@@ -102,17 +108,24 @@ const Artist = () => {
   const albumsLastRef = useCallback(
     (node) => {
       if (status === "loading") return;
-      if (albumsObserverRef.current) albumsObserverRef.current.disconnect();
+      
+      if (albumsObserverRef.current) {
+        albumsObserverRef.current.disconnect();
+      }
+      
       albumsObserverRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           setAlbumsPage((prev) => prev + 1);
         }
       });
+      
       if (node) albumsObserverRef.current.observe(node);
     },
     [status]
   );
 
+
+  // Derived values
   const songListView = artistSongs.slice(0, 5);
 
   return (
@@ -163,44 +176,46 @@ const Artist = () => {
         {/* All Songs (vertical list) */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
-          <a href="#" className="text-blue-500 cursor-pointer">
+          <button 
+            className="text-blue-500 cursor-pointer hover:underline"
+            onClick={() => navigate(`/artist/${artistId}/songs`)}
+          >
             See all
-          </a>
+          </button>
         </div>
         <div className="px-6 py-4 flex flex-col gap-4">
-          {status === "loading" && artistSongs.length === 0
-            ? [...Array(5)].map((_, idx) => (
-                <div
-                  key={`song-skeleton-${idx}`}
-                  className="flex items-center gap-4"
-                >
-                  <Skeleton circle width={50} height={50} />
-                  <div className="flex-1">
-                    <Skeleton width={120} height={16} />
-                    <Skeleton width={80} height={12} />
-                  </div>
-                  <Skeleton width={40} height={16} />
+          {status === "loading" && artistSongs.length === 0 ? (
+            [...Array(5)].map((_, idx) => (
+              <div key={`song-skeleton-${idx}`} className="flex items-center gap-4">
+                <Skeleton circle width={50} height={50} />
+                <div className="flex-1">
+                  <Skeleton width={120} height={16} />
+                  <Skeleton width={80} height={12} />
                 </div>
-              ))
-            : songListView.map((song, idx) => (
-                <SongList
-                  key={song._id}
-                  songId={song._id}
-                  img={song.coverImage || "/images/placeholder.png"}
-                  songName={song.title}
-                  singerName={song.singer}
-                  seekTime={formatDuration(song.duration)}
-                  onPlay={() => handlePlaySong(song._id)}
-                  isSelected={selectedSong === song._id}
-                />
-              ))}
+                <Skeleton width={40} height={16} />
+              </div>
+            ))
+          ) : (
+            songListView.map((song) => (
+              <SongList
+                key={song._id}
+                songId={song._id}
+                img={song.coverImage || "/images/placeholder.png"}
+                songName={song.title}
+                singerName={song.singer}
+                seekTime={formatDuration(song.duration)}
+                onPlay={() => handlePlaySong(song._id)}
+                isSelected={selectedSong === song._id}
+              />
+            ))
+          )}
         </div>
 
         {/* Albums Carousel */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Albums</h2>
           <LuSquareChevronRight
-            className="text-white cursor-pointer hover:text-blue-800"
+            className="text-white cursor-pointer hover:text-blue-800 text-2xl"
             onClick={() => handleScroll(recentScrollRef)}
           />
         </div>
@@ -220,12 +235,10 @@ const Artist = () => {
               <div
                 key={album._id}
                 onClick={() => navigate(`/album/${album._id}`)}
-                className="cursor-pointer"
+                className="cursor-pointer min-w-[160px]"
               >
                 <RecentPlays
-                  ref={
-                    idx === displayedAlbums.length - 1 ? albumsLastRef : null
-                  }
+                  ref={idx === displayedAlbums.length - 1 ? albumsLastRef : null}
                   title={album.title}
                   singer={artist?.name}
                   image={album.cover || "/images/placeholder.png"}
@@ -243,7 +256,7 @@ const Artist = () => {
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Singles</h2>
           <LuSquareChevronRight
-            className="text-white cursor-pointer hover:text-blue-800"
+            className="text-white cursor-pointer hover:text-blue-800 text-2xl"
             onClick={() => handleScroll(singlesScrollRef)}
           />
         </div>
@@ -251,24 +264,26 @@ const Artist = () => {
           ref={singlesScrollRef}
           className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
         >
-          {status === "loading" && artistSongs.length === 0
-            ? [...Array(5)].map((_, idx) => (
-                <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
-                  <Skeleton height={160} width={160} className="rounded-xl" />
-                  <Skeleton width={120} height={16} className="mt-2" />
-                </div>
-              ))
-            : artistSongs.map((song, idx) => (
-                <RecentPlays
-                  ref={idx === artistSongs.length - 1 ? songsLastRef : null}
-                  key={song._id}
-                  title={song.title}
-                  singer={song.singer}
-                  image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song._id)}
-                  isSelected={selectedSong === song._id}
-                />
-              ))}
+          {status === "loading" && artistSongs.length === 0 ? (
+            [...Array(5)].map((_, idx) => (
+              <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
+                <Skeleton height={160} width={160} className="rounded-xl" />
+                <Skeleton width={120} height={16} className="mt-2" />
+              </div>
+            ))
+          ) : (
+            artistSongs.map((song, idx) => (
+              <RecentPlays
+                ref={idx === artistSongs.length - 1 ? songsLastRef : null}
+                key={song._id}
+                title={song.title}
+                singer={song.singer}
+                image={song.coverImage || "/images/placeholder.png"}
+                onPlay={() => handlePlaySong(song._id)}
+                isSelected={selectedSong === song._id}
+              />
+            ))
+          )}
         </div>
 
         {/* About Section */}
