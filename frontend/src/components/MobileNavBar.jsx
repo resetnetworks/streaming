@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { FaRegUser } from "react-icons/fa";
 import {
   RxDashboard,
   RxGlobe,
@@ -11,11 +12,10 @@ import { FiMusic } from "react-icons/fi";
 
 const menuItems = [
   { name: "Home", icon: <RxDashboard size={24} />, path: "/" },
-  { name: "Browse", icon: <RxGlobe size={24} />, path: "/browse" },
+  { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "Search", icon: <RxMagnifyingGlass size={24} />, path: "/search" },
   { name: "Library", icon: <FiMusic size={24} />, path: "/library" },
   { name: "Liked", icon: <RxHeart size={24} />, path: "/liked-songs" },
-  { name: "Create", icon: <RxPlus size={24} />, path: "/create-playlist" },
 ];
 
 const MobileNavBar = () => {
