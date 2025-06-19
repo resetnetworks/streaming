@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const tabs = ["albums", "songs", "artists", "playlists"];
+const tabs = ["albums", "songs", "artists",];
 
 export default function LibraryTabs() {
   const [activeTab, setActiveTab] = useState("albums");
@@ -31,30 +31,19 @@ export default function LibraryTabs() {
       <div className="transition-opacity duration-500 ease-in-out opacity-100">
         {activeTab === "albums" && (
           <div>
-            <h1 className="text-center text-3xl text-white">
-              This is Album Tab
-            </h1>
           </div>
         )}
         {activeTab === "songs" && (
           <div>
-            <h1 className="text-center text-3xl text-white">
-              This is Song Tab
-            </h1>
           </div>
         )}
         {activeTab === "artists" && (
           <div>
-            <h1 className="text-center text-3xl text-white">
-              This is Artists Tab
-            </h1>
+            
           </div>
         )}
         {activeTab === "playlists" && (
           <div>
-            <h1 className="text-center text-3xl text-white">
-              This is Playlists Tab
-            </h1>
           </div>
         )}
       </div>

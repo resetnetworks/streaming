@@ -85,7 +85,7 @@ const Search = () => {
         {!query.trim() ? (
           <>
             {/* 🔀 Random Songs Section */}
-            <h2 className="text-white text-lg mt-6 mb-2">Discover New Songs</h2>
+            <h2 className="text-white text-lg mt-6 mb-2">Discover New Songs, Artists And Albums</h2>
             <div className="flex flex-wrap gap-6">
               {getRandomItems(trendingSongs, 10).map((song) => (
                 <RecentPlays

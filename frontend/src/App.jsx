@@ -148,11 +148,14 @@ function App() {
               }
             />
             <Route
-              path="/create-playlist"
+              path="/library"
               element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <CreatePlayList />
-                </ProtectedRoute>
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Library />
+                </RedirectedProtectedRoute>
               }
             />
             <Route

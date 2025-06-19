@@ -5,7 +5,7 @@ import { RxDashboard } from "react-icons/rx";
 import { FaRegUser } from "react-icons/fa";
 import MobileNavBar from "./MobileNavBar";
 import MobilePlayer from "./MobilePlayer";
-import { FiGlobe, FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/fi";
+import { FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/fi";
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
@@ -16,7 +16,6 @@ const menuItems = [
   { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "search", icon: <FiSearch />, path: "/search" },
   { name: "library", icon: <FiMusic />, path: "/library" },
-  { name: "create playlist", icon: <FiPlusCircle />, path: "/create-playlist" },
   { name: "liked songs", icon: <FiHeart />, path: "/liked-songs" },
 ];
 
