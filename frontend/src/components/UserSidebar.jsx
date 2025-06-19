@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import IconHeader from "./IconHeader";
 import { RxDashboard } from "react-icons/rx";
+import { FaRegUser } from "react-icons/fa";
 import MobileNavBar from "./MobileNavBar";
 import MobilePlayer from "./MobilePlayer";
 import { FiGlobe, FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/fi";
@@ -12,7 +13,7 @@ import { selectAllSongs } from "../features/songs/songSelectors.js";  // Adjust 
 
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/" },
-  { name: "browse", icon: <FiGlobe />, path: "/browse" },
+  { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "search", icon: <FiSearch />, path: "/search" },
   { name: "library", icon: <FiMusic />, path: "/library" },
   { name: "create playlist", icon: <FiPlusCircle />, path: "/create-playlist" },
