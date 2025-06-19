@@ -19,7 +19,7 @@ const FavouriteGen = lazy(() => import("./user/FavouriteGen"));
 const ForgotPassword = lazy(() => import("./user/ForgotPassword"));
 const ResetPassword = lazy(() => import("./user/ResetPassword"));
 const Home = lazy(() => import("./user/Home"));
-const Browse = lazy(() => import("./user/Browse"));
+const Artists = lazy(() => import("./user/Artists"));
 const LikedSong = lazy(() => import("./user/LikedSong"));
 const Admin = lazy(() => import("./admin/Admin"));
 const Album = lazy(() => import("./user/Album"));
@@ -126,13 +126,13 @@ function App() {
               }
             />
             <Route
-              path="/browse"
+              path="/artists"
               element={
                 <RedirectedProtectedRoute
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <Browse />
+                  <Artists />
                 </RedirectedProtectedRoute>
               }
             />
