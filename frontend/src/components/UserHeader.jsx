@@ -18,6 +18,8 @@ const UserHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+
+
   const isHomePage = location.pathname === "/";
 
   return (

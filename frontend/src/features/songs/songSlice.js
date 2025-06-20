@@ -51,14 +51,24 @@ export const fetchAllSongs = createAsyncThunk(
   }
 );
 
-export const fetchLikedSongs = createAsyncThunk('songs/fetchLikedSongs', async (likedSongIds, thunkAPI) => {
-  try {
-    const res = await axios.post('/songs/liked', { ids: likedSongIds });
-    return res.data.likedSongs;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching liked songs failed');
+export const fetchLikedSongs = createAsyncThunk(
+  'songs/fetchLikedSongs', 
+  async ({ ids, page = 1, limit = 20 }, thunkAPI) => {
+    try {
+      const res = await axios.post('/songs/liked', { ids }, {
+        params: { page, limit }
+      });
+      return {
+        songs: res.data.songs,
+        total: res.data.total,
+        page: res.data.page,
+        pages: res.data.pages,
+      };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching liked songs failed');
+    }
   }
-});
+);
 
 export const fetchSongsByAlbum = createAsyncThunk(
   'albums/fetchSongsByAlbum',
@@ -68,7 +78,6 @@ export const fetchSongsByAlbum = createAsyncThunk(
   }
 );
 
-// ✅ NEW THUNK: Fetch Songs by Artist
 export const fetchSongsByArtist = createAsyncThunk(
   'songs/fetchSongsByArtist',
   async ({ artistId, page = 1, limit = 20 }, thunkAPI) => {
@@ -92,7 +101,12 @@ export const fetchSongsByArtist = createAsyncThunk(
 const initialState = {
   songs: [],            // for quick access
   allSongs: [],         // paginated for homepage etc.
-  likedSongs: [],
+  likedSongs: {
+    songs: [],
+    total: 0,
+    page: 1,
+    pages: 1,
+  },
   songsByAlbum: {},
   songsByArtist: {},    // artistId: { songs, page, pages, total, artist }
   status: 'idle',
@@ -111,7 +125,7 @@ const songSlice = createSlice({
       state.message = null;
     },
     clearLikedSongs: (state) => {
-      state.likedSongs = [];
+      state.likedSongs = initialState.likedSongs;
     },
   },
   extraReducers: (builder) => {
@@ -149,14 +163,26 @@ const songSlice = createSlice({
         state.status = 'succeeded';
       })
       .addCase(fetchLikedSongs.fulfilled, (state, action) => {
-        state.likedSongs = action.payload;
+        const { songs, total, page, pages } = action.payload;
+        
+        // Merge new songs with existing ones, avoiding duplicates
+        const existingSongs = state.likedSongs.songs;
+        const newSongs = songs.filter(
+          song => !existingSongs.some(existing => existing._id === song._id)
+        );
+        
+        state.likedSongs = {
+          songs: [...existingSongs, ...newSongs],
+          total,
+          page,
+          pages,
+        };
         state.status = 'succeeded';
       })
       .addCase(fetchSongsByAlbum.fulfilled, (state, action) => {
         state.songsByAlbum[action.payload.albumId] = action.payload.songs;
         state.status = 'succeeded';
       })
-      // ✅ NEW CASE: fetchSongsByArtist
       .addCase(fetchSongsByArtist.fulfilled, (state, action) => {
         const { artistId, songs, total, page, pages, artist } = action.payload;
         const existing = state.songsByArtist[artistId]?.songs || [];
