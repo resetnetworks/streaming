@@ -17,8 +17,10 @@ export const selectSelectedSong = (state) => state.player.selectedSong;
 export const selectSongsState = (state) => state.songs;
 
 
-// Liked songs
-export const selectLikedSongs = (state) => state.songs.likedSongs;
+export const selectLikedSongs = (state) => state.songs.likedSongs.songs;
+export const selectLikedSongsTotal = (state) => state.songs.likedSongs.total;
+export const selectLikedSongsPage = (state) => state.songs.likedSongs.page;
+export const selectLikedSongsPages = (state) => state.songs.likedSongs.pages;
 
 // Songs by specific album
 export const selectSongsByAlbum = (state, albumId) => state.songs.songsByAlbum[albumId] || [];

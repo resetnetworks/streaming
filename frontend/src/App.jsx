@@ -10,7 +10,8 @@ import {
 } from "./features/auth/authSelectors";
 import Loader from "./components/Loader";
 import Artist from "./user/Artist";
-import CreatePlayList from "./user/CreatePlayList";
+import PaymentSuccess from "./user/PaymentSuccess";
+import PaymentFailure from "./user/PaymentFailure";
 
 // Lazy-loaded components
 const Register = lazy(() => import("./user/Register"));
@@ -72,6 +73,8 @@ function App() {
         <Suspense fallback={<Loader />}>
           <Routes>
             {/* Public Routes */}
+            <Route path="/payment-success" element={<PaymentSuccess/>} />
+            <Route path="/payment-fail" element={<PaymentFailure/>}/>
             <Route
               path="/register"
               element={
