@@ -160,7 +160,7 @@ const Home = () => {
         <div className="text-white px-4 py-2 flex flex-col gap-4">
           {/* Recent Played */}
           <div className="w-full flex justify-between items-center">
-            <h2 className="md:text-xl text-lg font-semibold">recent played</h2>
+            <h2 className="md:text-xl text-lg font-semibold">new tracks</h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
               onClick={() => handleScroll(scrollRefs.recent)}
@@ -315,7 +315,7 @@ const Home = () => {
 
           {/* Top Picks */}
           <div className="w-full flex justify-between items-center">
-            <h2 className="md:text-xl text-lg font-semibold">top picks for you</h2>
+            <h2 className="md:text-xl text-lg font-semibold">all tracks for you</h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
               onClick={() => handleScroll(scrollRefs.topPicks)}
