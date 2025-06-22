@@ -1,15 +1,16 @@
 import { FaUserAlt } from 'react-icons/fa';
-import AdminDataTable from "../components/AdminDataTable"
+import AdminDataTable from "../components/AdminDataTable";
+import { Link } from 'react-router-dom';
 
 const Artists = ({ artists }) => {
   const columns = ['ID', 'Name', 'Songs', 'Albums', 'Actions'];
   
-  const formattedArtists = artists.map(artist => ({
-    id: artist.id,
+  const formattedArtists = artists.map((artist, index) => ({
+    id: index + 1,
     name: artist.name,
-    songs: artist.songs,
-    albums: artist.albums,
-    actions: '' // Placeholder for actions column
+    songs: artist.songs?.length || 0, // Ensure this is a number/string
+    albums: artist.albums?.length || 0, // Ensure this is a number/string
+    _id: artist._id
   }));
 
   return (
@@ -18,9 +19,9 @@ const Artists = ({ artists }) => {
       columns={columns}
       data={formattedArtists}
       addButton={
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+        <Link to="/admin/create-artist" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
           <FaUserAlt className="mr-2" /> Add Artist
-        </button>
+        </Link>
       }
     />
   );

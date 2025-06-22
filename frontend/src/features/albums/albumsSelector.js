@@ -5,3 +5,6 @@ export const selectAlbumsLoading = (state) => state.albums.loading;
 export const selectAlbumsError = (state) => state.albums.error;
 export const selectArtistAlbums = (state) => state.albums.artistAlbums;
 export const selectAlbumDetails = (state) => state.albums.albumDetails;
+export const selectAlbumPagination = (state) => state.albums.pagination;
+export const selectArtistAlbumPagination = (state) => state.albums.artistAlbumPagination;
+export const selectArtistInfo = (state) => state.albums.artistInfo;
