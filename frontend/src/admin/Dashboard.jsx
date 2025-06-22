@@ -1,5 +1,5 @@
 import AdminStatsCard from "../components/AdminStatsCard"
-import RecentItems from '../../components/admin/RecentItems';
+import RecentItems from "../components/AdminRecentItems"
 
 const Dashboard = ({ artists, albums, songs }) => {
   return (
