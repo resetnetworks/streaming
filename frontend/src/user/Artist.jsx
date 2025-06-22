@@ -9,10 +9,14 @@ import { FiMapPin } from "react-icons/fi";
 import { LuSquareChevronRight } from "react-icons/lu";
 import { fetchArtistById } from "../features/artists/artistsSlice";
 import { selectSelectedArtist } from "../features/artists/artistsSelectors";
-import { setSelectedSong,play } from "../features/playback/playerSlice";
+import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 import { getAlbumsByArtist } from "../features/albums/albumsSlice";
-import { selectArtistAlbums } from "../features/albums/albumsSelector";
+import { 
+  selectArtistAlbums, 
+  selectArtistAlbumPagination,
+  selectArtistInfo
+} from "../features/albums/albumsSelector";
 import { fetchSongsByArtist } from "../features/songs/songSlice";
 import { selectSongsByArtist } from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
@@ -29,6 +33,8 @@ const Artist = () => {
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const artist = useSelector(selectSelectedArtist);
   const artistAlbums = useSelector(selectArtistAlbums);
+  const artistAlbumPagination = useSelector(selectArtistAlbumPagination);
+  const artistInfo = useSelector(selectArtistInfo);
   const artistSongsData = useSelector(
     (state) => selectSongsByArtist(state, artistId),
     shallowEqual
@@ -38,28 +44,57 @@ const Artist = () => {
   const { 
     songs: artistSongs = [], 
     pages: totalPages = 1, 
-    status = 'idle' 
+    status: songsStatus = 'idle' 
   } = artistSongsData || {};
 
   // Local state
   const [songsPage, setSongsPage] = useState(1);
   const [albumsPage, setAlbumsPage] = useState(1);
-  const [displayedAlbums, setDisplayedAlbums] = useState([]);
+  const [albumsStatus, setAlbumsStatus] = useState('idle');
+  const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
 
   // Refs
   const songsObserverRef = useRef();
   const albumsObserverRef = useRef();
 
-  
-
   // Initial data fetch
   useEffect(() => {
     if (artistId) {
       dispatch(fetchArtistById(artistId));
-      dispatch(getAlbumsByArtist(artistId));
+      fetchAlbums(1); // Initial fetch for first page
       dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
     }
   }, [dispatch, artistId]);
+
+  // Fetch albums function
+  const fetchAlbums = async (page) => {
+    if (albumsStatus === 'loading') return;
+    
+    setAlbumsStatus('loading');
+    try {
+      await dispatch(getAlbumsByArtist({ 
+        artistId, 
+        page, 
+        limit: 10 
+      })).unwrap();
+      
+      // Check if there are more pages
+      if (page >= artistAlbumPagination.totalPages) {
+        setHasMoreAlbums(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch albums:", error);
+    } finally {
+      setAlbumsStatus('idle');
+    }
+  };
+
+  // Load more albums when page changes
+  useEffect(() => {
+    if (albumsPage > 1 && hasMoreAlbums) {
+      fetchAlbums(albumsPage);
+    }
+  }, [albumsPage]);
 
   // Pagination for songs
   useEffect(() => {
@@ -67,13 +102,6 @@ const Artist = () => {
       dispatch(fetchSongsByArtist({ artistId, page: songsPage, limit: 10 }));
     }
   }, [dispatch, artistId, songsPage]);
-
-  // Set displayed albums
-  useEffect(() => {
-    if (artistAlbums.length > 0) {
-      setDisplayedAlbums(artistAlbums);
-    }
-  }, [artistAlbums]);
 
   // Handlers
   const handlePlaySong = (songId) => {
@@ -88,7 +116,7 @@ const Artist = () => {
   // Intersection observers
   const songsLastRef = useCallback(
     (node) => {
-      if (status === "loading") return;
+      if (songsStatus === "loading") return;
       
       if (songsObserverRef.current) {
         songsObserverRef.current.disconnect();
@@ -102,28 +130,27 @@ const Artist = () => {
       
       if (node) songsObserverRef.current.observe(node);
     },
-    [status, songsPage, totalPages]
+    [songsStatus, songsPage, totalPages]
   );
 
   const albumsLastRef = useCallback(
     (node) => {
-      if (status === "loading") return;
+      if (albumsStatus === "loading" || !hasMoreAlbums) return;
       
       if (albumsObserverRef.current) {
         albumsObserverRef.current.disconnect();
       }
       
       albumsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && hasMoreAlbums) {
           setAlbumsPage((prev) => prev + 1);
         }
       });
       
       if (node) albumsObserverRef.current.observe(node);
     },
-    [status]
+    [albumsStatus, hasMoreAlbums]
   );
-
 
   // Derived values
   const songListView = artistSongs.slice(0, 5);
@@ -184,7 +211,7 @@ const Artist = () => {
           </button>
         </div>
         <div className="px-6 py-4 flex flex-col gap-4">
-          {status === "loading" && artistSongs.length === 0 ? (
+          {songsStatus === "loading" && artistSongs.length === 0 ? (
             [...Array(5)].map((_, idx) => (
               <div key={`song-skeleton-${idx}`} className="flex items-center gap-4">
                 <Skeleton circle width={50} height={50} />
@@ -214,39 +241,54 @@ const Artist = () => {
         {/* Albums Carousel */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Albums</h2>
-          <LuSquareChevronRight
-            className="text-white cursor-pointer hover:text-blue-800 text-2xl"
-            onClick={() => handleScroll(recentScrollRef)}
-          />
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">
+              Page {artistAlbumPagination.page} of {artistAlbumPagination.totalPages}
+            </span>
+            <LuSquareChevronRight
+              className="text-white cursor-pointer hover:text-blue-800 text-2xl"
+              onClick={() => handleScroll(recentScrollRef)}
+            />
+          </div>
         </div>
         <div
           ref={recentScrollRef}
           className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
         >
-          {status === "loading" && displayedAlbums.length === 0 ? (
+          {albumsStatus === "loading" && artistAlbums.length === 0 ? (
             [...Array(5)].map((_, idx) => (
               <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
                 <Skeleton height={160} width={160} className="rounded-xl" />
                 <Skeleton width={120} height={16} className="mt-2" />
               </div>
             ))
-          ) : displayedAlbums.length > 0 ? (
-            displayedAlbums.map((album, idx) => (
-              <div
-                key={album._id}
-                onClick={() => navigate(`/album/${album._id}`)}
-                className="cursor-pointer min-w-[160px]"
-              >
-                <RecentPlays
-                  ref={idx === displayedAlbums.length - 1 ? albumsLastRef : null}
-                  title={album.title}
-                  singer={artist?.name}
-                  image={album.cover || "/images/placeholder.png"}
-                  price={album.price}
-                  isSelected={false}
-                />
-              </div>
-            ))
+          ) : artistAlbums.length > 0 ? (
+            <>
+              {artistAlbums.map((album, idx) => (
+                <div
+                  key={album._id}
+                  onClick={() => navigate(`/album/${album._id}`)}
+                  className="cursor-pointer min-w-[160px]"
+                >
+                  <RecentPlays
+                    ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
+                    title={album.title}
+                    singer={artistInfo?.name || artist?.name}
+                    image={album.cover || "/images/placeholder.png"}
+                    price={album.price}
+                    isSelected={false}
+                  />
+                </div>
+              ))}
+              {albumsStatus === "loading" && hasMoreAlbums && (
+                [...Array(2)].map((_, idx) => (
+                  <div key={`album-loading-${idx}`} className="min-w-[160px]">
+                    <Skeleton height={160} width={160} className="rounded-xl" />
+                    <Skeleton width={120} height={16} className="mt-2" />
+                  </div>
+                ))
+              )}
+            </>
           ) : (
             <p className="text-white text-sm">No albums found.</p>
           )}
@@ -264,7 +306,7 @@ const Artist = () => {
           ref={singlesScrollRef}
           className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
         >
-          {status === "loading" && artistSongs.length === 0 ? (
+          {songsStatus === "loading" && artistSongs.length === 0 ? (
             [...Array(5)].map((_, idx) => (
               <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
                 <Skeleton height={160} width={160} className="rounded-xl" />
