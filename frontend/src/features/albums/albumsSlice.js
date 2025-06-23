@@ -33,6 +33,39 @@ export const createAlbum = createAsyncThunk(
   }
 );
 
+// Thunk: Update album by ID
+export const updateAlbum = createAsyncThunk(
+  "albums/update",
+  async ({ albumId, formData }, thunkAPI) => {
+    try {
+      const res = await axios.put(`/albums/${albumId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data.album;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to update album"
+      );
+    }
+  }
+);
+
+// Thunk: Delete album by ID
+export const deleteAlbumById = createAsyncThunk(
+  "albums/delete",
+  async (albumId, thunkAPI) => {
+    try {
+      await axios.delete(`/albums/${albumId}`);
+      return albumId; // Return the deleted ID to remove from Redux state
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to delete album"
+      );
+    }
+  }
+);
+
+
 // Thunk: Fetch albums by artist with pagination
 export const getAlbumsByArtist = createAsyncThunk(
   "albums/getByArtist",
@@ -151,6 +184,24 @@ const albumsSlice = createSlice({
         state.error = action.payload;
       })
 
+      .addCase(updateAlbum.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateAlbum.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload;
+        const index = state.allAlbums.findIndex((a) => a._id === updated._id);
+        if (index !== -1) {
+          state.allAlbums[index] = updated;
+        }
+        state.editingAlbum = null;
+      })
+      .addCase(updateAlbum.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
       .addCase(getAlbumsByArtist.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -181,7 +232,21 @@ const albumsSlice = createSlice({
       .addCase(fetchAlbumById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(deleteAlbumById.pending, (state) => {
+  state.loading = true;
+  state.error = null;
+})
+.addCase(deleteAlbumById.fulfilled, (state, action) => {
+  state.loading = false;
+  const deletedId = action.payload;
+  state.allAlbums = state.allAlbums.filter((a) => a._id !== deletedId);
+})
+.addCase(deleteAlbumById.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+});
+
   },
 });
 
@@ -194,3 +259,4 @@ export const {
 } = albumsSlice.actions;
 
 export default albumsSlice.reducer;
+
