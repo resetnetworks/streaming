@@ -52,7 +52,7 @@ export const createAlbum = async (req, res) => {
 // Get a paginated list of all albums
 // - Supports `page` and `limit` query parameters
 // - Populates songs with selected fields
-export const getAlbums = async (req, res) => {
+export const getAllAlbums = async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, parseInt(req.query.limit) || 10);
   const skip = (page - 1) * limit;

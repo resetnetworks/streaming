@@ -22,6 +22,14 @@ const artistSchema = new mongoose.Schema(
       trim: true,
       match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],
     },
+    location: {
+      type: String,
+      maxlength: 100,
+      default: "",
+      trim: true,
+      minlength: 2,
+      
+    },
     bio: {
       type: String,
       maxlength: 500,
