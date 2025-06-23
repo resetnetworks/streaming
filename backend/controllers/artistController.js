@@ -1,4 +1,6 @@
 import { Artist } from "../models/Artist.js";
+import { Song } from "../models/Song.js";
+import { Album } from "../models/Album.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
 import mongoose from "mongoose";
 import { NotFoundError, BadRequestError, UnauthorizedError } from '../errors/index.js';
@@ -19,7 +21,7 @@ export const createArtist = async (req, res) => {
     throw new UnauthorizedError('Access denied. Admins only.');;
   }
 
-  const { name, bio, subscriptionPrice } = req.body;
+  const { name, bio, location, subscriptionPrice } = req.body;
 
   // Basic validation
   if (!name) {
@@ -35,6 +37,7 @@ export const createArtist = async (req, res) => {
     name,
     bio,
     subscriptionPrice,
+    location,
     image: imageUrl,
     createdBy: req.user._id,
   });
@@ -65,11 +68,12 @@ export const updateArtist = async (req, res) => {
     throw new NotFoundError('Artist not found.');
   }
 
-  const { name, bio, subscriptionPrice } = req.body;
+  const { name, bio, location, subscriptionPrice } = req.body;
 
   // Update only the provided fields
   if (name) artist.name = name;
   if (bio) artist.bio = bio;
+  if (location) artist.location = location
   if (subscriptionPrice !== undefined) artist.subscriptionPrice = subscriptionPrice;
 
   // Optional image replacement
@@ -120,27 +124,38 @@ export const deleteArtist = async (req, res) => {
 // @route   GET /api/artists
 // @access  Public
 // ===================================================================
+
 export const getAllArtists = async (req, res) => {
-  // Extract pagination params with fallback defaults
   const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
   const limit = parseInt(req.query.limit) > 0 ? parseInt(req.query.limit) : 10;
   const skip = (page - 1) * limit;
 
-  // Optional query filters (extend as needed)
-  const query = {}; // e.g., add search filtering later
+  const query = {};
 
-  // Fetch artists and total count in parallel
   const [artists, total] = await Promise.all([
-    Artist.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit),
+    Artist.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
     Artist.countDocuments(query),
   ]);
 
+  // Add songCount and albumCount to each artist
+  const enrichedArtists = await Promise.all(
+    artists.map(async (artist) => {
+      const [songCount, albumCount] = await Promise.all([
+        Song.countDocuments({ artist: artist._id }),
+        Album.countDocuments({ artist: artist._id }),
+      ]);
+
+      return {
+        ...artist.toObject(),
+        songCount,
+        albumCount,
+      };
+    })
+  );
+
   res.status(StatusCodes.OK).json({
     success: true,
-    artists,
+    artists: enrichedArtists,
     pagination: {
       total,
       page,

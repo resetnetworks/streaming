@@ -2,7 +2,7 @@ import express from "express";
 import { isAuth } from "../middleware/isAuth.js";
 import {
   createAlbum,
-  getAlbums,
+  getAllAlbums,
   deleteAlbum,
   getAlbumById,
   updateAlbum,
@@ -48,7 +48,7 @@ router.delete(
 );
 
 // Get all albums
-router.get("/", isAuth, getAlbums);
+router.get("/", isAuth, getAllAlbums);
 
 // Get album by ID
 router.get(
