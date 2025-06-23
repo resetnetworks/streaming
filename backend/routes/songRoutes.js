@@ -34,7 +34,7 @@ router.get("/:id",isAuth, getSongById);
 router.get("/genre/:genre", isAuth, getSongsByGenre);
 router.get("/album/:albumId", isAuth, getSongsByAlbum);
 router.get("/artist/:artistId", isAuth, getSongsByArtist);
-router.get("/likedliked", ()=>{console.log("Hello")}, isAuth, getLikedSongs);
+// router.get("/likedliked", ()=>{console.log("Hello")}, isAuth, getLikedSongs);
 
 
 export default router;
