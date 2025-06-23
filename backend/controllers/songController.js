@@ -662,38 +662,33 @@ export const getPremiumSongs = async (req, res) => {
 // @access  Private
 // ===================================================================
 export const getLikedSongs = async (req, res) => {
-  const { ids } = req.body;
+  const userId = req.user._id;
 
-  // 1. Validate song ID array
-  if (!ids || !Array.isArray(ids) || ids.length === 0) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ message: "No song IDs provided" });
+  // 1. Fetch user and populate liked songs
+  const user = await User.findById(userId).populate({
+    path: "likedsong",
+    populate: [
+      { path: "artist", select: "name image" },
+      { path: "album", select: "title coverImage" },
+    ],
+    options: { sort: { createdAt: -1 } },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
   }
 
-  // 2. Filter valid MongoDB ObjectIds
-  const validIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
-  if (validIds.length === 0) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ message: "No valid song IDs provided" });
-  }
-
-  // 3. Pagination parameters
+  // 2. Pagination setup
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
   const skip = (page - 1) * limit;
+  const total = user.likedsong.length;
 
-  // 4. Fetch paginated songs
-  const [total, songs] = await Promise.all([
-    Song.countDocuments({ _id: { $in: validIds } }),
-    Song.find({ _id: { $in: validIds } })
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .populate("artist", "name image")
-      .populate("album", "title coverImage"),
-  ]);
+  const paginatedSongs = user.likedsong.slice(skip, skip + limit);
 
-  // 5. Access control: hide audioUrl if unauthorized
+  // 3. Access control per song
   const filteredSongs = await Promise.all(
-    songs.map(async (song) => {
+    paginatedSongs.map(async (song) => {
       const songObj = song.toObject();
       const hasAccess = await hasAccessToSong(req.user, song);
       if (!hasAccess) songObj.audioUrl = null;
@@ -701,7 +696,7 @@ export const getLikedSongs = async (req, res) => {
     })
   );
 
-  // 6. Send paginated response
+  // 4. Respond
   res.status(StatusCodes.OK).json({
     success: true,
     songs: filteredSongs,
