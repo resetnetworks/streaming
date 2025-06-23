@@ -4,7 +4,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
   return (
     <div className="fixed md:static inset-y-0 left-0 w-64 bg-gray-800 z-40">
       <div className="flex items-center justify-center h-16 px-4 bg-gray-900">
-        <h1 className="text-xl font-bold text-blue-400">StreamAdmin</h1>
+        <h1 className="text-xl font-bold text-blue-400">Admin</h1>
       </div>
       <nav className="px-4 py-6 h-[calc(100%-8rem)] overflow-y-auto">
         <ul className="space-y-2">

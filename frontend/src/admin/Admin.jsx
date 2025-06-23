@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllArtists } from '../features/artists/artistsSlice'; 
-import { selectAllArtists,selectArtistLoading,selectArtistError } from '../features/artists/artistsSelectors';
+import { selectAllArtists, selectArtistLoading, selectArtistError } from '../features/artists/artistsSelectors';
 import AdminLayout from './AdminLayout';
 import Dashboard from './Dashboard';
 import Artists from './Artists';
@@ -17,23 +17,26 @@ const Admin = () => {
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
   
-  // Local state for albums and songs (you might want to move these to Redux too)
-  const [albums, setAlbums] = useState([
-    { id: 1, title: 'After Hours', artist: 'The Weeknd', year: 2020 },
-    { id: 2, title: 'Midnights', artist: 'Taylor Swift', year: 2022 },
-    { id: 3, title: 'Certified Lover Boy', artist: 'Drake', year: 2021 }
-  ]);
-  
-  const [songs, setSongs] = useState([
-    { id: 1, title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20' },
-    { id: 2, title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20' },
-    { id: 3, title: 'Way 2 Sexy', artist: 'Drake', album: 'Certified Lover Boy', duration: '4:17' }
-  ]);
+  // State for albums and songs
+  const [albums, setAlbums] = useState([]);
+  const [songs, setSongs] = useState([]);
 
-  // Fetch artists when component mounts
+  // Fetch initial data
   useEffect(() => {
     dispatch(fetchAllArtists());
+
+    const initialSongs = [
+      { id: 1, title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20' },
+      { id: 2, title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20' },
+      { id: 3, title: 'Way 2 Sexy', artist: 'Drake', album: 'Certified Lover Boy', duration: '4:17' }
+    ];
+    setSongs(initialSongs);
   }, [dispatch]);
+
+  // Handler for updating albums
+  const handleAlbumUpdate = (updatedAlbums) => {
+    setAlbums(updatedAlbums);
+  };
 
   const renderContent = () => {
     if (loading) return <div>Loading...</div>;
@@ -43,7 +46,7 @@ const Admin = () => {
       case 'artists':
         return <Artists artists={artists} />;
       case 'albums':
-        return <Albums albums={albums} />;
+        return <Albums albums={albums} onAlbumUpdate={handleAlbumUpdate} />;
       case 'songs':
         return <Songs songs={songs} />;
       default:
