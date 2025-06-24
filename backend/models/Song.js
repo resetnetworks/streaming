@@ -60,6 +60,18 @@ const songSchema = new mongoose.Schema(
       required: [true, "Audio URL is required"],
       trim: true,
     },
+        audioUrl: {
+      type: String,
+      required: [true, "Audio URL is required"],
+      trim: true,
+    },
+    // Key used for matching in the HLS completion lambda
+    audioKey: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+    },
     price: {
       type: Number,
       default: 0,
@@ -72,6 +84,15 @@ const songSchema = new mongoose.Schema(
     releaseDate: {
       type: Date,
       default: Date.now,
+    },
+    hlsUrl: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    hlsReady: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true, versionKey: false }
