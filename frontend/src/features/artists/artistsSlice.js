@@ -4,12 +4,17 @@ import axios from "../../utills/axiosInstance";
 // Thunks
 export const fetchAllArtists = createAsyncThunk(
   "artists/fetchAll",
-  async (_, thunkAPI) => {
+  async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
     try {
-      const res = await axios.get("/artists");
-      return res.data.artists;
+      const res = await axios.get(`/artists?page=${page}&limit=${limit}`);
+      return {
+        artists: res.data.artists,
+        pagination: res.data.pagination,
+      };
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch artists");
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch artists"
+      );
     }
   }
 );
@@ -21,7 +26,9 @@ export const fetchArtistById = createAsyncThunk(
       const res = await axios.get(`/artists/${id}`);
       return res.data.artist;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch artist");
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch artist"
+      );
     }
   }
 );
@@ -37,7 +44,9 @@ export const createArtist = createAsyncThunk(
       });
       return res.data.artist;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to create artist");
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to create artist"
+      );
     }
   }
 );
@@ -50,6 +59,12 @@ const artistSlice = createSlice({
     selectedArtist: null,
     loading: false,
     error: null,
+    pagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    },
   },
   reducers: {
     clearSelectedArtist: (state) => {
@@ -65,7 +80,8 @@ const artistSlice = createSlice({
       })
       .addCase(fetchAllArtists.fulfilled, (state, action) => {
         state.loading = false;
-        state.allArtists = action.payload;
+        state.allArtists = action.payload.artists;
+        state.pagination = action.payload.pagination;
       })
       .addCase(fetchAllArtists.rejected, (state, action) => {
         state.loading = false;

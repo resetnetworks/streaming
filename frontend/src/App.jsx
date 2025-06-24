@@ -23,7 +23,6 @@ const Home = lazy(() => import("./user/Home"));
 const Artists = lazy(() => import("./user/Artists"));
 const LikedSong = lazy(() => import("./user/LikedSong"));
 const Admin = lazy(() => import("./admin/Admin"));
-const CreateArtistPage = lazy(() => import("./admin/CreateArtistPage"));
 const Album = lazy(() => import("./user/Album"));
 const Search = lazy(() => import("./user/Search"));
 const Library = lazy(() => import("./user/Library"));
@@ -178,14 +177,6 @@ function App() {
               element={
                 <AdminRoute isAuthenticated={isAuthenticated} user={user}>
                   <Admin />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/create-artist"
-              element={
-                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
-                  <CreateArtistPage />
                 </AdminRoute>
               }
             />
