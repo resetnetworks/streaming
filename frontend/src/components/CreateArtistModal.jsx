@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createArtist } from "../features/artists/artistsSlice";
-import { selectArtistLoading, selectArtistError } from "../features/artists/artistsSelectors";
+import { createArtist, updateArtist } from "../features/artists/artistsSlice";
+import {
+  selectArtistLoading,
+  selectArtistError,
+} from "../features/artists/artistsSelectors";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 
-const CreateArtistModal = ({ isOpen, onClose }) => {
+const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
   const dispatch = useDispatch();
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
@@ -15,10 +18,32 @@ const CreateArtistModal = ({ isOpen, onClose }) => {
     name: "",
     bio: "",
     subscriptionPrice: "0",
+    location: "",
   });
 
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        name: initialData.name || "",
+        bio: initialData.bio || "",
+        subscriptionPrice: initialData.subscriptionPrice?.toString() || "0",
+        location: initialData.location || "",
+      });
+      setImagePreview(initialData.image || null);
+    } else {
+      setForm({
+        name: "",
+        bio: "",
+        subscriptionPrice: "0",
+        location: "",
+      });
+      setImage(null);
+      setImagePreview(null);
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -44,30 +69,45 @@ const CreateArtistModal = ({ isOpen, onClose }) => {
       return;
     }
 
+    if (form.location.trim().length < 2) {
+      toast.error("Location must be at least 2 characters");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("bio", form.bio);
     formData.append("subscriptionPrice", form.subscriptionPrice);
+    formData.append("location", form.location);
     if (image) {
-      formData.append("coverImage", image);
+      formData.append("image", image);
     }
 
     try {
-      await dispatch(createArtist(formData)).unwrap();
-      toast.success("Artist created successfully!");
+      if (initialData) {
+        await dispatch(updateArtist({ id: initialData._id, formData })).unwrap();
+        toast.success("Artist updated successfully!");
+      } else {
+        await dispatch(createArtist(formData)).unwrap();
+        toast.success("Artist created successfully!");
+      }
       onClose();
     } catch (err) {
-      toast.error(err || "Failed to create artist");
+      toast.error(err || "Failed to submit artist");
     }
   };
 
   if (!isOpen) return null;
 
+  const mode = initialData ? "Edit" : "Create";
+
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-gray-900 rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">Create New Artist</h2>
+          <h2 className="text-xl font-bold text-white">
+            {mode} Artist
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <FaTimes />
           </button>
@@ -76,7 +116,7 @@ const CreateArtistModal = ({ isOpen, onClose }) => {
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         <form onSubmit={handleSubmit} encType="multipart/form-data">
-          {/* Artist Name */}
+          {/* Name */}
           <div className="mb-4">
             <label className="block font-medium mb-1 text-gray-300">Artist Name *</label>
             <input
@@ -98,6 +138,20 @@ const CreateArtistModal = ({ isOpen, onClose }) => {
               onChange={handleChange}
               className="w-full border p-2 rounded bg-gray-800 border-gray-700 text-white"
               rows="4"
+            />
+          </div>
+
+          {/* Location */}
+          <div className="mb-4">
+            <label className="block font-medium mb-1 text-gray-300">Location *</label>
+            <input
+              type="text"
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+              className="w-full border p-2 rounded bg-gray-800 border-gray-700 text-white"
+              required
+              minLength={2}
             />
           </div>
 
@@ -155,7 +209,7 @@ const CreateArtistModal = ({ isOpen, onClose }) => {
             disabled={loading}
             className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium transition-colors"
           >
-            {loading ? "Creating..." : "Create Artist"}
+            {loading ? `${mode}ing...` : `${mode} Artist`}
           </button>
         </form>
       </div>
