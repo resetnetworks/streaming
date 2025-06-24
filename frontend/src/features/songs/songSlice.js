@@ -1,4 +1,3 @@
-// songSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utills/axiosInstance.js';
 
@@ -39,7 +38,6 @@ export const fetchAllSongs = createAsyncThunk(
   async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
     try {
       const res = await axios.get(`/songs?page=${page}&limit=${limit}`);
-      console.log("song fetch")
       return {
         songs: res.data.songs,
         totalPages: res.data.totalPages || 1,
@@ -51,12 +49,13 @@ export const fetchAllSongs = createAsyncThunk(
   }
 );
 
+// ✅ Updated fetchLikedSongs using new GET endpoint
 export const fetchLikedSongs = createAsyncThunk(
-  'songs/fetchLikedSongs', 
-  async ({ ids, page = 1, limit = 20 }, thunkAPI) => {
+  'songs/fetchLikedSongs',
+  async ({ page = 1, limit = 20 }, thunkAPI) => {
     try {
-      const res = await axios.post('/songs/liked', { ids }, {
-        params: { page, limit }
+      const res = await axios.get('/songs/liked', {
+        params: { page, limit },
       });
       return {
         songs: res.data.songs,
@@ -65,7 +64,9 @@ export const fetchLikedSongs = createAsyncThunk(
         pages: res.data.pages,
       };
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching liked songs failed');
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || 'Fetching liked songs failed'
+      );
     }
   }
 );
@@ -99,8 +100,8 @@ export const fetchSongsByArtist = createAsyncThunk(
 
 // Initial State
 const initialState = {
-  songs: [],            // for quick access
-  allSongs: [],         // paginated for homepage etc.
+  songs: [],
+  allSongs: [],
   likedSongs: {
     songs: [],
     total: 0,
@@ -108,7 +109,7 @@ const initialState = {
     pages: 1,
   },
   songsByAlbum: {},
-  songsByArtist: {},    // artistId: { songs, page, pages, total, artist }
+  songsByArtist: {},
   status: 'idle',
   error: null,
   message: null,
@@ -164,15 +165,10 @@ const songSlice = createSlice({
       })
       .addCase(fetchLikedSongs.fulfilled, (state, action) => {
         const { songs, total, page, pages } = action.payload;
-        
-        // Merge new songs with existing ones, avoiding duplicates
-        const existingSongs = state.likedSongs.songs;
-        const newSongs = songs.filter(
-          song => !existingSongs.some(existing => existing._id === song._id)
-        );
-        
+        const existing = state.likedSongs.songs;
+        const unique = songs.filter((s) => !existing.some((e) => e._id === s._id));
         state.likedSongs = {
-          songs: [...existingSongs, ...newSongs],
+          songs: [...existing, ...unique],
           total,
           page,
           pages,
@@ -198,7 +194,6 @@ const songSlice = createSlice({
         };
         state.status = 'succeeded';
       })
-      // Generic matchers
       .addMatcher(
         (action) => action.type.startsWith('songs/') && action.type.endsWith('/pending'),
         (state) => {

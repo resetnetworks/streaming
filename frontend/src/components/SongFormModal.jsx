@@ -2,16 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { createSong } from '../features/songs/songSlice';
 import { toast } from 'sonner';
-import { FaTimes, FaMusic, FaCloudUploadAlt, FaSearch } from 'react-icons/fa';
-import { MdAudiotrack, MdAccessTime } from 'react-icons/md';
+import { FaTimes, FaMusic, FaCloudUploadAlt } from 'react-icons/fa';
+import { MdAudiotrack } from 'react-icons/md';
 
 const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
   const dispatch = useDispatch();
 
   const [newSong, setNewSong] = useState({
     title: '',
-    artist: '',
-    artistId: '',
+    artist: '', // Now storing artist name directly
     album: '',
     albumId: '',
     duration: 0,
@@ -24,23 +23,16 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
     releaseDate: new Date().toISOString().split('T')[0]
   });
 
-  const [searchTermArtist, setSearchTermArtist] = useState('');
   const [searchTermAlbum, setSearchTermAlbum] = useState('');
-  const [showArtistDropdown, setShowArtistDropdown] = useState(false);
   const [showAlbumDropdown, setShowAlbumDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const coverImageRef = useRef(null);
   const audioFileRef = useRef(null);
 
-  const filteredArtists = artists.filter(artist =>
-    artist.name.toLowerCase().includes(searchTermArtist.toLowerCase())
+  const filteredAlbums = albums.filter(album =>
+    album.title.toLowerCase().includes(searchTermAlbum.toLowerCase())
   );
-
-  const filteredAlbums = albums
-    .filter(album => album.artist === newSong.artistId)
-    .filter(album =>
-      album.title.toLowerCase().includes(searchTermAlbum.toLowerCase())
-    );
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -70,19 +62,6 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
     }
   };
 
-  const handleArtistSelect = (artist) => {
-    setNewSong(prev => ({
-      ...prev,
-      artist: artist.name,
-      artistId: artist._id,
-      album: '',
-      albumId: ''
-    }));
-    setSearchTermArtist(artist.name);
-    setShowArtistDropdown(false);
-    setSearchTermAlbum('');
-  };
-
   const handleAlbumSelect = (album) => {
     setNewSong(prev => ({
       ...prev,
@@ -95,20 +74,44 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
+    // Validate required fields
+    if (!newSong.title || !newSong.artist || !newSong.audioFile) {
+      toast.error('Title, artist, and audio file are required');
+      setIsSubmitting(false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append('title', newSong.title);
-    formData.append('artist', newSong.artistId);
-    if (newSong.albumId) formData.append('album', newSong.albumId);
+    formData.append('artist', newSong.artist); // Now sending artist name directly
+    
+    // Only append album if selected
+    if (newSong.albumId) {
+      formData.append('album', newSong.albumId);
+    }
+    
     formData.append('duration', newSong.duration);
-    formData.append('genre', JSON.stringify(newSong.genre.split(',').map(g => g.trim())));
+    
+    // Handle genre array conversion
+    const genres = newSong.genre
+      ? newSong.genre.split(',').map(g => g.trim()).filter(g => g)
+      : [];
+    formData.append('genre', JSON.stringify(genres));
+    
     formData.append('price', parseFloat(newSong.price));
     formData.append('isPremium', newSong.isPremium);
     formData.append('includeInSubscription', newSong.includeInSubscription);
     formData.append('releaseDate', newSong.releaseDate);
 
-    if (newSong.coverImage) formData.append('coverImage', newSong.coverImage);
-    if (newSong.audioFile) formData.append('audioFile', newSong.audioFile);
+    // Append files if they exist
+    if (newSong.coverImage) {
+      formData.append('coverImage', newSong.coverImage);
+    }
+    if (newSong.audioFile) {
+      formData.append('audio', newSong.audioFile);
+    }
 
     try {
       await dispatch(createSong(formData)).unwrap();
@@ -116,22 +119,24 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
       onClose();
     } catch (err) {
       toast.error(err?.message || 'Failed to create song');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
     if (!isOpen) {
       setNewSong({
-        title: '', artist: '', artistId: '', album: '', albumId: '',
+        title: '', artist: '', album: '', albumId: '',
         duration: 0, coverImage: null, audioFile: null,
         genre: '', price: 0, isPremium: false,
         includeInSubscription: true,
         releaseDate: new Date().toISOString().split('T')[0]
       });
-      setSearchTermArtist('');
       setSearchTermAlbum('');
-      setShowArtistDropdown(false);
       setShowAlbumDropdown(false);
+      if (coverImageRef.current) coverImageRef.current.value = '';
+      if (audioFileRef.current) audioFileRef.current.value = '';
     }
   }, [isOpen]);
 
@@ -144,7 +149,11 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
           <h3 className="text-xl font-semibold flex items-center">
             <FaMusic className="mr-2 text-blue-400" /> Add New Song
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button 
+            onClick={onClose} 
+            className="text-gray-400 hover:text-white"
+            disabled={isSubmitting}
+          >
             <FaTimes />
           </button>
         </div>
@@ -152,14 +161,18 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           {/* Cover Image */}
           <div className="col-span-2">
-            <label className="text-gray-300 mb-2 block">Cover Image*</label>
+            <label className="text-gray-300 mb-2 block">Cover Image</label>
             <div
               className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500"
-              onClick={() => coverImageRef.current.click()}
+              onClick={() => !isSubmitting && coverImageRef.current.click()}
             >
               {newSong.coverImage ? (
                 <div className="flex flex-col items-center">
-                  <img src={URL.createObjectURL(newSong.coverImage)} alt="Preview" className="h-32 w-32 object-cover rounded mb-2" />
+                  <img 
+                    src={URL.createObjectURL(newSong.coverImage)} 
+                    alt="Preview" 
+                    className="h-32 w-32 object-cover rounded mb-2" 
+                  />
                   <span className="text-sm text-gray-400">{newSong.coverImage.name}</span>
                 </div>
               ) : (
@@ -168,54 +181,50 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
                   <p className="text-gray-400">Click to upload</p>
                 </>
               )}
-              <input type="file" ref={coverImageRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+              <input 
+                type="file" 
+                ref={coverImageRef} 
+                onChange={handleImageUpload} 
+                accept="image/*" 
+                className="hidden" 
+                disabled={isSubmitting}
+              />
             </div>
           </div>
 
           {/* Title */}
           <div className="col-span-2">
             <label className="text-gray-300 mb-2 block">Title*</label>
-            <input type="text" name="title" value={newSong.title} onChange={handleChange} className="w-full bg-gray-700 text-white px-4 py-2 rounded" required />
+            <input 
+              type="text" 
+              name="title" 
+              value={newSong.title} 
+              onChange={handleChange} 
+              className="w-full bg-gray-700 text-white px-4 py-2 rounded" 
+              required 
+              disabled={isSubmitting}
+            />
           </div>
 
-          {/* Artist Search */}
-          <div className="col-span-1 relative">
+          {/* Artist (simple text input) */}
+          <div className="col-span-1">
             <label className="text-gray-300 mb-2 block">Artist*</label>
-            <div className="relative">
-              <FaSearch className="absolute top-3 left-3 text-gray-400" />
-              <input
-                type="text"
-                value={searchTermArtist}
-                onChange={(e) => {
-                  setSearchTermArtist(e.target.value);
-                  setShowArtistDropdown(true);
-                }}
-                onFocus={() => setShowArtistDropdown(true)}
-                className="pl-10 w-full bg-gray-700 text-white px-4 py-2 rounded"
-                placeholder="Search artist..."
-                required
-              />
-            </div>
-            {showArtistDropdown && filteredArtists.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-gray-700 rounded shadow max-h-60 overflow-auto">
-                {filteredArtists.map(artist => (
-                  <div
-                    key={artist._id}
-                    className="px-4 py-2 hover:bg-gray-600 cursor-pointer"
-                    onClick={() => handleArtistSelect(artist)}
-                  >
-                    {artist.name}
-                  </div>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              name="artist"
+              value={newSong.artist}
+              onChange={handleChange}
+              className="w-full bg-gray-700 text-white px-4 py-2 rounded"
+              required
+              disabled={isSubmitting}
+              placeholder="Enter artist name"
+            />
           </div>
 
           {/* Album Search */}
           <div className="col-span-1 relative">
             <label className="text-gray-300 mb-2 block">Album</label>
             <div className="relative">
-              <FaSearch className="absolute top-3 left-3 text-gray-400" />
               <input
                 type="text"
                 value={searchTermAlbum}
@@ -224,9 +233,9 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
                   setShowAlbumDropdown(true);
                 }}
                 onFocus={() => setShowAlbumDropdown(true)}
-                className="pl-10 w-full bg-gray-700 text-white px-4 py-2 rounded"
+                className="w-full bg-gray-700 text-white px-4 py-2 rounded"
                 placeholder="Search album..."
-                disabled={!newSong.artistId}
+                disabled={isSubmitting}
               />
             </div>
             {showAlbumDropdown && filteredAlbums.length > 0 && (
@@ -249,17 +258,19 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
             <label className="text-gray-300 mb-2 block">Audio File*</label>
             <div
               className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500"
-              onClick={() => audioFileRef.current.click()}
+              onClick={() => !isSubmitting && audioFileRef.current.click()}
             >
               {newSong.audioFile ? (
                 <div className="flex flex-col items-center">
                   <MdAudiotrack className="text-3xl text-gray-400 mb-2" />
                   <span className="text-sm text-gray-400">{newSong.audioFile.name}</span>
+                  <span className="text-xs text-gray-500 mt-1">{newSong.duration}s</span>
                 </div>
               ) : (
                 <>
                   <MdAudiotrack className="text-3xl text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-400">Click to upload audio</p>
+                  <p className="text-xs text-gray-500 mt-1">MP3, WAV (Max 20MB)</p>
                 </>
               )}
               <input
@@ -268,16 +279,8 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
                 onChange={handleAudioUpload}
                 accept="audio/*"
                 className="hidden"
+                disabled={isSubmitting}
               />
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div className="col-span-1">
-            <label className="text-gray-300 mb-2 block">Duration</label>
-            <div className="flex items-center text-white">
-              <MdAccessTime className="mr-2 text-gray-400" />
-              <span>{newSong.duration}s</span>
             </div>
           </div>
 
@@ -290,7 +293,7 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
               value={newSong.genre}
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-              required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -303,7 +306,7 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
               value={newSong.releaseDate}
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-              required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -317,6 +320,8 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
               step="0.01"
+              min="0"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -328,6 +333,7 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
                 name="isPremium"
                 checked={newSong.isPremium}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               <span className="text-gray-300">Premium Song</span>
             </label>
@@ -338,6 +344,7 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
                 name="includeInSubscription"
                 checked={newSong.includeInSubscription}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               <span className="text-gray-300">Include in Subscription</span>
             </label>
@@ -346,10 +353,29 @@ const SongFormModal = ({ isOpen, onClose, artists = [], albums = [] }) => {
           {/* Submit */}
           <div className="col-span-2 flex justify-end mt-4">
             <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center"
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded text-gray-300 hover:text-white mr-2"
+              disabled={isSubmitting}
             >
-              <FaMusic className="mr-2" /> Add Song
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center justify-center min-w-24"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2">↻</span>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FaMusic className="mr-2" />
+                  Add Song
+                </>
+              )}
             </button>
           </div>
         </form>

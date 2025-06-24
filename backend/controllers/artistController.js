@@ -165,6 +165,37 @@ export const getAllArtists = async (req, res) => {
   });
 };
 
+// ===================================================================
+// @desc    Get all artists without pagination (Admin/Utility use)
+// @route   GET /api/artists/all
+// @access  Public or Admin (based on need)
+// ===================================================================
+export const getAllArtistsWithoutPagination = async (req, res) => {
+  const artists = await Artist.find().sort({ createdAt: -1 });
+
+  // Enrich with song & album counts
+  const enrichedArtists = await Promise.all(
+    artists.map(async (artist) => {
+      const [songCount, albumCount] = await Promise.all([
+        Song.countDocuments({ artist: artist._id }),
+        Album.countDocuments({ artist: artist._id }),
+      ]);
+
+      return {
+        ...artist.toObject(),
+        songCount,
+        albumCount,
+      };
+    })
+  );
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    artists: enrichedArtists,
+  });
+};
+
+
 
 // ===================================================================
 // @desc    Get artist by ID or slug

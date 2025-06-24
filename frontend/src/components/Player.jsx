@@ -89,10 +89,10 @@ const Player = () => {
     if (Hls.isSupported()) {
       const hls = new Hls();
       hlsRef.current = hls;
-      hls.loadSource(currentSong.audioUrl);
+      hls.loadSource("https://reset-streaming.s3.ap-south-1.amazonaws.com/songs-hls/12e49fd3-7728-4430-924c-a65a3c75a1d3/12e49fd3-7728-4430-924c-a65a3c75a1d3_hls.m3u8");
       hls.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = currentSong.audioUrl;
+      video.src = "https://reset-streaming.s3.ap-south-1.amazonaws.com/songs-hls/12e49fd3-7728-4430-924c-a65a3c75a1d3/12e49fd3-7728-4430-924c-a65a3c75a1d3_hls.m3u8";
     }
 
     dispatch(setCurrentTime(0));
