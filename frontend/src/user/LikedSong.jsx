@@ -82,11 +82,12 @@ const LikedSongs = () => {
     }
   };
 
-  const handleToggleLike = async (songId) => {
-    await dispatch(toggleLikeSong(songId));
-    // Remove from both local and Redux state manually
-    setLocalSongs((prev) => prev.filter((song) => song._id !== songId));
-  };
+const handleToggleLike = async (songId) => {
+  await dispatch(toggleLikeSong(songId));
+  dispatch(clearLikedSongs());
+  dispatch(fetchLikedSongs({ page: 1, limit }));
+};
+
 
   const hasMore = page < pages && localSongs.length < total;
 
