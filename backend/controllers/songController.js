@@ -62,6 +62,9 @@ export const createSong = async (req, res) => {
     ? await uploadToS3(coverImageFile, "covers")
     : "";
 
+     // 🧠 Extract audioKey from uploaded audio file name (remove extension)
+  const audioKey = audioUrl.split("/").pop().replace(/\.[^/.]+$/, "");
+
   // 🎼 Create new song document
   const newSong = await Song.create({
     title,
@@ -75,6 +78,7 @@ export const createSong = async (req, res) => {
     releaseDate,
     coverImage: coverImageUrl,
     audioUrl,
+    audioKey,
   });
 
   // 📚 If song is linked to an album, update the album's song list
