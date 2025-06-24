@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../features/songs/songSlice";
-import { fetchAllArtists } from "../features/artists/artistsSlice";
+import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
+import {selectRandomArtist, selectRandomArtistSongs} from "../features/artists/artistsSelectors"
 import { useNavigate } from "react-router-dom";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import UserLayout from "../components/UserLayout";
@@ -17,22 +18,18 @@ import "react-loading-skeleton/dist/skeleton.css";
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const allSongs = useSelector((state) => state.songs.allSongs);
-  const artists = useSelector((state) => state.artists.allArtists);
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const status = useSelector((state) => state.songs.status);
   const totalPages = useSelector((state) => state.songs.totalPages);
 
+  const randomArtist = useSelector(selectRandomArtist);
+  const similarSongs = useSelector(selectRandomArtistSongs);
 
   const [recentPage, setRecentPage] = useState(1);
   const [topPicksPage, setTopPicksPage] = useState(1);
-  const [similarPage, setSimilarPage] = useState(1);
-  const [randomArtist, setRandomArtist] = useState(null);
-
-  const [recentSongs, setRecentSongs] = useState([]);
+  const [similarPage] = useState(1); // similarPage is fixed at 1 since the API paginates internally
   const [topSongs, setTopSongs] = useState([]);
-  const [similarSongs, setSimilarSongs] = useState([]);
+  const [recentSongs, setRecentSongs] = useState([]);
 
   const observerRefs = {
     recent: useRef(),
@@ -49,7 +46,8 @@ const Home = () => {
 
   useEffect(() => {
     dispatch(fetchAllArtists());
-  }, [dispatch]);
+    dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
+  }, [dispatch, similarPage]);
 
   useEffect(() => {
     dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {
@@ -74,48 +72,6 @@ const Home = () => {
       }
     });
   }, [dispatch, topPicksPage]);
-
-  
-  useEffect(() => {
-    if (randomArtist?._id) {
-      dispatch(
-        fetchAllSongs({
-          type: "similar",
-          artistId: randomArtist._id,
-          page: similarPage,
-          limit: 10,
-        })
-
-      ).then((res) => {
-        
-        if (res.payload?.songs) {
-          setSimilarSongs((prev) => {
-            const seen = new Set(prev.map((s) => s._id));
-            const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-            return [...prev, ...newSongs];
-          });
-        }
-      });
-    }
-  }, [dispatch, similarPage, randomArtist]);
-
-
-
-  useEffect(() => {
-    if (!randomArtist && allSongs.length > 0 && artists.length > 0) {
-      const getValidArtist = () => {
-        const shuffled = [...artists].sort(() => 0.5 - Math.random());
-        for (let artist of shuffled) {
-          const hasSongs = allSongs.some(
-            (song) => song.artist === artist._id || song.artist?._id === artist._id
-          );
-          if (hasSongs) return artist;
-        }
-        return null;
-      };
-      setRandomArtist(getValidArtist());
-    }
-  }, [allSongs, artists, randomArtist]);
 
   const handleScroll = (ref) => {
     if (ref.current) {
@@ -151,14 +107,14 @@ const Home = () => {
 
   const recentLastRef = createObserverRef("recent", recentPage, setRecentPage);
   const topPicksLastRef = createObserverRef("topPicks", topPicksPage, setTopPicksPage);
-  const similarLastRef = createObserverRef("similar", similarPage, setSimilarPage);
 
   return (
     <UserLayout>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
-          {/* Recent Played */}
+
+           {/* Recent Played */}
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">new tracks</h2>
             <LuSquareChevronRight
@@ -231,31 +187,7 @@ const Home = () => {
           </div>
 
           {/* Similar to random artist */}
-          {status === "loading" && !randomArtist ? (
-            <>
-              <div className="flex md:gap-2 gap-4 items-center">
-                <Skeleton circle width={48} height={48} />
-                <div className="flex flex-col gap-1">
-                  <Skeleton width={80} height={14} />
-                  <Skeleton width={100} height={18} />
-                </div>
-              </div>
-              <div
-                ref={scrollRefs.similar}
-                className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
-              >
-                {[...Array(10)].map((_, idx) => (
-                  <div
-                    key={`similar-skeleton-${idx}`}
-                    className="w-[160px] flex flex-col gap-2 skeleton-wrapper"
-                  >
-                    <Skeleton height={160} width={160} className="rounded-xl" />
-                    <Skeleton width={100} height={12} />
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : randomArtist ? (
+          {randomArtist ? (
             <>
               <div className="flex md:gap-2 gap-4 items-center">
                 <img
@@ -267,9 +199,7 @@ const Home = () => {
                   className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
                 />
                 <div>
-                  <h2 className="text-blue-700 text-base leading-none">
-                    similar to
-                  </h2>
+                  <h2 className="text-blue-700 text-base leading-none">similar to</h2>
                   <p
                     onClick={() => navigate(`/artist/${randomArtist._id}`)}
                     className="text-lg leading-none text-white hover:underline cursor-pointer"
@@ -282,24 +212,17 @@ const Home = () => {
                   onClick={() => handleScroll(scrollRefs.similar)}
                 />
               </div>
-              <div
-                ref={scrollRefs.similar}
-                className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
-              >
-                {similarSongs.length === 0 && status === "loading" ? (
-                  [...Array(10)].map((_, idx) => (
-                    <div
-                      key={`similar-loading-${idx}`}
-                      className="w-[160px] flex flex-col gap-2 skeleton-wrapper"
-                    >
-                      <Skeleton height={160} width={160} className="rounded-xl" />
-                      <Skeleton width={100} height={12} />
-                    </div>
-                  ))
-                ) : (
-                  similarSongs.map((song, idx) => (
+
+              {similarSongs.length === 0 ? (
+                <p className="text-gray-400 italic">No songs available for this artist.</p>
+              ) : (
+                <div
+                  ref={scrollRefs.similar}
+                  className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
+                >
+                  {similarSongs.map((song, idx) => (
                     <RecentPlays
-                      ref={idx === similarSongs.length - 1 ? similarLastRef : null}
+                      ref={idx === similarSongs.length - 1 ? null : null}
                       key={song._id}
                       title={song.title}
                       singer={song.singer}
@@ -307,11 +230,32 @@ const Home = () => {
                       onPlay={() => handlePlaySong(song._id)}
                       isSelected={selectedSong === song._id}
                     />
-                  ))
-                )}
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex md:gap-2 gap-4 items-center">
+                <Skeleton circle width={48} height={48} />
+                <div className="flex flex-col gap-1">
+                  <Skeleton width={80} height={14} />
+                  <Skeleton width={100} height={18} />
+                </div>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]">
+                {[...Array(10)].map((_, idx) => (
+                  <div
+                    key={`similar-skeleton-${idx}`}
+                    className="w-[160px] flex flex-col gap-2 skeleton-wrapper"
+                  >
+                    <Skeleton height={160} width={160} className="rounded-xl" />
+                    <Skeleton width={100} height={12} />
+                  </div>
+                ))}
               </div>
             </>
-          ) : null}
+          )}
 
           {/* Top Picks */}
           <div className="w-full flex justify-between items-center">
@@ -381,3 +325,6 @@ const Home = () => {
 };
 
 export default Home;
+
+
+

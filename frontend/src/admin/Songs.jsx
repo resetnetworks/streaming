@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaMusic, FaPlus } from 'react-icons/fa';
+import { FaMusic, FaPlus, FaSearch } from 'react-icons/fa';
 import AdminSongCard from '../components/AdminSongCard';
 import SongFormModal from '../components/SongFormModal';
 import {
@@ -18,7 +18,9 @@ const Songs = ({ artists = [], albums = [] }) => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
   const status = useSelector(selectSongsStatus);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (status === 'idle') {
@@ -45,32 +47,54 @@ const Songs = ({ artists = [], albums = [] }) => {
   };
 
   const handleAddSong = async (formData) => {
-    // You can implement song creation API call here
+    // Implement song creation API here if needed
     console.log('TODO: Create song with formData:', formData);
     setIsModalOpen(false);
   };
 
+  const filteredSongs = songs.filter(song =>
+    song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    song.artist?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    song.album?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-white">Songs</h2>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-        >
-          <FaPlus className="mr-2" /> Add Song
-        </button>
+
+        <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-80">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by title, artist or album..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded"
+            />
+          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <FaPlus className="mr-2" /> Add Song
+          </button>
+        </div>
       </div>
 
       {status === 'loading' ? (
         <div className="text-center text-gray-400">Loading songs...</div>
-      ) : songs.length === 0 ? (
+      ) : filteredSongs.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
-          No songs found. Add your first song!
+          No songs found.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {songs.map((song) => (
+          {filteredSongs.map((song) => (
             <AdminSongCard
               key={song._id}
               song={song}
@@ -93,5 +117,3 @@ const Songs = ({ artists = [], albums = [] }) => {
 };
 
 export default Songs;
-
-
