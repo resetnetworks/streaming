@@ -4,10 +4,8 @@ export const createSongValidator = [
   body("title").trim().notEmpty().withMessage("Title is required"),
   body("artist").notEmpty().withMessage("Artist is required"),
   body("genre").notEmpty().withMessage("Genre is required"),
-  body("duration").notEmpty().withMessage("Duration is required"),
   body("price").optional().isNumeric().withMessage("Price must be a number"),
-  body("isPremium").optional().isBoolean().withMessage("isPremium must be boolean"),
-  body("includeInSubscription").optional().isBoolean().withMessage("includeInSubscription must be boolean"),
+  body("accessType").notEmpty().withMessage("adminAccess is required"),
   body("releaseDate").optional().isISO8601().toDate().withMessage("Invalid release date"),
   body("album").optional().isMongoId().withMessage("Invalid album ID"),
 ];

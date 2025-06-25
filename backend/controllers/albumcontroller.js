@@ -14,40 +14,51 @@ import { Artist  } from "../models/Artist.js";
 // - Handles optional file upload to S3 for cover image
 // - Accepts basic album info and genre as comma-separated string
 export const createAlbum = async (req, res) => {
-  console.log(isAdmin(req.user));
+  // 🔒 Admin check
   if (!isAdmin(req.user)) {
-    throw new UnauthorizedError('Access denied. Admins only.');
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
-  const { title, description, artist, releaseDate, price, isPremium, genre } = req.body;
+  // 📝 Extract body
+  const { title, description, artist, releaseDate, price, accessType, genre } = req.body;
 
+  // ✅ Validate required fields
   if (!title || !artist || !releaseDate) {
-    throw new BadRequestError('Title, artist, and release date are required.');
+    throw new BadRequestError("Title, artist, and release date are required.");
   }
 
+  // 🛡 Validate pricing for purchase-only albums
+  if (accessType === "purchase-only" && (!price || price <= 0)) {
+    throw new BadRequestError("Purchase-only albums must have a valid price.");
+  }
+
+  // ☁️ Handle cover image upload
   const coverImageFile = req.files?.coverImage?.[0];
   const coverImageUrl = coverImageFile
-    ? await uploadToS3(coverImageFile, 'covers')
-    : '';
+    ? await uploadToS3(coverImageFile, "covers")
+    : "";
 
+  // 🎧 Process genre if needed
   let processedGenre = genre;
-  if (typeof processedGenre === 'string') {
-    processedGenre = processedGenre.split(',').map((g) => g.trim());
+  if (typeof processedGenre === "string") {
+    processedGenre = processedGenre.split(",").map((g) => g.trim());
   }
 
+  // 💿 Create album document
   const newAlbum = await Album.create({
     title,
     description,
     artist,
     releaseDate,
-    price,
-    isPremium,
+    accessType: accessType || "subscription",
+    price: accessType === "purchase-only" ? price : 0,
     coverImage: coverImageUrl,
     genre: processedGenre,
   });
 
   res.status(StatusCodes.CREATED).json({ success: true, album: newAlbum });
 };
+
 
 // Get a paginated list of all albums
 // - Supports `page` and `limit` query parameters
