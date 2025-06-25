@@ -6,9 +6,9 @@ const initialState = {
   loading: false,
   error: null,
   results: {
-    artists: { results: [], total: 0, page: 1, pages: 0 },
-    songs: { results: [], total: 0, page: 1, pages: 0 },
-    albums: { results: [], total: 0, page: 1, pages: 0 },
+    artists: [],
+    songs: [],
+    albums: [],
   },
 };
 
@@ -22,7 +22,7 @@ const searchSlice = createSlice({
     },
     fetchSearchSuccess: (state, action) => {
       state.loading = false;
-      state.results = action.payload;
+      state.results = action.payload.results;
       state.error = null;
     },
     fetchSearchFailure: (state, action) => {
@@ -47,12 +47,12 @@ export const {
 export default searchSlice.reducer;
 
 // Thunk: Unified Search API
-export const fetchUnifiedSearchResults = (query, page = 1, limit = 10) => async (dispatch) => {
+export const fetchUnifiedSearchResults = (query) => async (dispatch) => {
   try {
     dispatch(fetchSearchStart());
 
     const response = await axios.get("/search", {
-      params: { q: query, page, limit },
+      params: { q: query },
     });
 
     dispatch(fetchSearchSuccess(response.data));
