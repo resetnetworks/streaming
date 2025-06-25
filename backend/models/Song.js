@@ -34,10 +34,6 @@ const songSchema = new mongoose.Schema(
       ref: "Album",
       default: null,
     },
-    includeInSubscription: {
-      type: Boolean,
-      default: true,
-    },
     genre: [
       {
         type: String,
@@ -45,22 +41,22 @@ const songSchema = new mongoose.Schema(
         trim: true,
       },
     ],
-    duration: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
     coverImage: {
       type: String,
       default: "",
       trim: true,
     },
-    audioUrl: {
+    accessType: {
       type: String,
-      required: [true, "Audio URL is required"],
-      trim: true,
+      enum: ["free", "subscription", "purchase-only"],
+      default: "subscription",
+     },
+     price: {
+     type: Number,
+     default: 0,
+     min: 0,
     },
-        audioUrl: {
+    audioUrl: {
       type: String,
       required: [true, "Audio URL is required"],
       trim: true,
@@ -71,15 +67,6 @@ const songSchema = new mongoose.Schema(
       required: true,
       trim: true,
       index: true,
-    },
-    price: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    isPremium: {
-      type: Boolean,
-      default: false,
     },
     releaseDate: {
       type: Date,
