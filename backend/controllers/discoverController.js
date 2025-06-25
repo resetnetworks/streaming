@@ -1,6 +1,5 @@
 import { Artist } from "../models/Artist.js";
 import { Song } from "../models/Song.js";
-import { Album } from "../models/Album.js";
 import { StatusCodes } from "http-status-codes";
 
 export const getRandomArtistWithSongs = async (req, res) => {
@@ -12,7 +11,7 @@ export const getRandomArtistWithSongs = async (req, res) => {
     });
   }
 
-  // Random artist
+  // Pick a random artist
   const randomIndex = Math.floor(Math.random() * totalArtists);
   const artist = await Artist.findOne().skip(randomIndex).lean();
 
@@ -23,23 +22,20 @@ export const getRandomArtistWithSongs = async (req, res) => {
     });
   }
 
-  // Pagination query params
+  // Pagination params
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
   const skip = (page - 1) * limit;
 
-  // Get all song IDs from albums
-  const albums = await Album.find({ artist: artist._id }).select("songs").lean();
-  const allSongIds = albums.flatMap(album => album.songs);
+  // Get total songs by the artist
+  const totalSongs = await Song.countDocuments({ artist: artist._id });
 
-  const totalSongs = allSongIds.length;
-
-  // Paginated song IDs
-  const paginatedIds = allSongIds.slice(skip, skip + limit);
-
-  const songs = await Song.find({ _id: { $in: paginatedIds } })
+  // Get paginated songs
+  const songs = await Song.find({ artist: artist._id })
     .select("_id title coverImage duration")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
   res.status(StatusCodes.OK).json({
     success: true,
