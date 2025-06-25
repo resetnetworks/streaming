@@ -31,20 +31,24 @@ export const createSong = async (req, res) => {
     genre,
     duration,
     price,
-    isPremium,
-    includeInSubscription,
+    accessType,
     releaseDate,
     album,
   } = req.body;
 
   // ✅ Required field validation
-  if (!title || !artist || !duration) {
+  if (!title || !artist ) {
     throw new BadRequestError("Title, artist, and duration are required fields.");
   }
 
-  // 🧹 Format genre if passed as comma-separated string
+  // 🔁 Format genre if passed as comma-separated string
   if (typeof genre === "string") {
     genre = genre.split(",").map((g) => g.trim());
+  }
+
+  // 🛡️ Validate pricing if accessType is purchase-only
+  if (accessType === "purchase-only" && (!price || price <= 0)) {
+    throw new BadRequestError("Purchase-only songs must have a valid price.");
   }
 
   // 📦 Handle uploaded files
@@ -62,7 +66,7 @@ export const createSong = async (req, res) => {
     ? await uploadToS3(coverImageFile, "covers")
     : "";
 
-     // 🧠 Extract audioKey from uploaded audio file name (remove extension)
+  // 🧠 Extract audioKey from uploaded audio file name (remove extension)
   const audioKey = audioUrl.split("/").pop().replace(/\.[^/.]+$/, "");
 
   // 🎼 Create new song document
@@ -72,16 +76,15 @@ export const createSong = async (req, res) => {
     album: album || null,
     genre,
     duration,
-    price,
-    isPremium,
-    includeInSubscription: includeInSubscription ?? true,
+    accessType: accessType || "subscription",
+    price: accessType === "purchase-only" ? price : 0,
     releaseDate,
     coverImage: coverImageUrl,
     audioUrl,
     audioKey,
   });
 
-  // 📚 If song is linked to an album, update the album's song list
+  // 🔗 Update album's song list if linked
   if (album) {
     await Album.findByIdAndUpdate(album, {
       $push: { songs: newSong._id },

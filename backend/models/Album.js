@@ -50,15 +50,16 @@ const albumSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    accessType: {
+        type: String,
+        enum: ["free", "subscription", "purchase-only"],
+        default: "subscription",
+    },
     price: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    isPremium: {
-      type: Boolean,
-      default: false,
-    },
+        type: Number,
+        default: 0,
+        min: 0,
+  }
   },
   { timestamps: true, versionKey: false }
 );

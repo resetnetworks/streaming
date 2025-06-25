@@ -2,10 +2,11 @@ import Stripe from "stripe";
 import crypto from "crypto";
 import { Transaction } from "../models/Transaction.js";
 import { User } from "../models/User.js";
-
+import { Subscription } from "../models/Subscription.js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // --------------- STRIPE WEBHOOK ----------------
+
 export const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -39,7 +40,6 @@ export const stripeWebhook = async (req, res) => {
       transaction.status = "paid";
       await transaction.save();
 
-      // 🧠 Update user payment history
       const user = await User.findById(transaction.userId);
       if (user) {
         user.purchaseHistory.push({
@@ -49,15 +49,40 @@ export const stripeWebhook = async (req, res) => {
           paymentId: paymentIntent.id,
         });
 
-        // Optional: add to purchasedSongs or Albums
+        // 🎵 Purchased Song
         if (transaction.itemType === "song") {
           user.purchasedSongs.push(transaction.itemId);
-        } else if (transaction.itemType === "album") {
+        }
+
+        // 💿 Purchased Album
+        else if (transaction.itemType === "album") {
           user.purchasedAlbums.push(transaction.itemId);
         }
 
+        // 🎫 Artist Subscription
+        else if (transaction.itemType === "artist-subscription") {
+          const existing = await Subscription.findOne({
+            userId: transaction.userId,
+            artistId: transaction.artistId,
+            status: "active",
+            validUntil: { $gte: new Date() },
+          });
+
+          if (!existing) {
+            await Subscription.create({
+              userId: transaction.userId,
+              artistId: transaction.artistId,
+              status: "active",
+              validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            });
+            console.log("📅 Subscription created for user and artist");
+          } else {
+            console.log("⚠️ Active subscription already exists — skipping creation");
+          }
+        }
+
         await user.save();
-        console.log("📦 User purchase history updated");
+        console.log("📦 User updated with purchase history");
       }
     } else {
       console.warn("⚠️ Stripe transaction not found or already paid");
@@ -67,7 +92,9 @@ export const stripeWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
-// --------------- RAZORPAY WEBHOOK ----------------
+
+// --------------- RAZORPAY WEBHOOK --------------
+
 export const razorpayWebhook = async (req, res) => {
   const secret = process.env.RAZORPAY_SECRET;
   const body = JSON.stringify(req.body);
@@ -97,7 +124,6 @@ export const razorpayWebhook = async (req, res) => {
       transaction.status = "paid";
       await transaction.save();
 
-      // 🧠 Update user payment history
       const user = await User.findById(transaction.userId);
       if (user) {
         user.purchaseHistory.push({
@@ -107,15 +133,40 @@ export const razorpayWebhook = async (req, res) => {
           paymentId: paymentEntity.id,
         });
 
-        // Optional: update purchasedSongs, purchasedAlbums
+        // 🎵 Song Purchase
         if (transaction.itemType === "song") {
           user.purchasedSongs.push(transaction.itemId);
-        } else if (transaction.itemType === "album") {
+        }
+
+        // 💿 Album Purchase
+        else if (transaction.itemType === "album") {
           user.purchasedAlbums.push(transaction.itemId);
         }
 
+        // 🎫 Artist Subscription
+        else if (transaction.itemType === "artist-subscription") {
+          const existing = await Subscription.findOne({
+            userId: transaction.userId,
+            artistId: transaction.artistId,
+            status: "active",
+            validUntil: { $gte: new Date() },
+          });
+
+          if (!existing) {
+            await Subscription.create({
+              userId: transaction.userId,
+              artistId: transaction.artistId,
+              status: "active",
+              validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            });
+            console.log("📅 Razorpay: Subscription created");
+          } else {
+            console.log("⚠️ Razorpay: Active subscription already exists");
+          }
+        }
+
         await user.save();
-        console.log("📦 Razorpay user purchase history updated");
+        console.log("📦 Razorpay: User updated with purchase history");
       }
     } else {
       console.warn("⚠️ Razorpay transaction not found or already paid");
