@@ -40,6 +40,10 @@ const Artist = () => {
     shallowEqual
   );
   
+  // Local state for subscription
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  
   // Destructure with default values
   const { 
     songs: artistSongs = [], 
@@ -52,10 +56,23 @@ const Artist = () => {
   const [albumsPage, setAlbumsPage] = useState(1);
   const [albumsStatus, setAlbumsStatus] = useState('idle');
   const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
+  const [showAllSongs, setShowAllSongs] = useState(false);
 
   // Refs
   const songsObserverRef = useRef();
   const albumsObserverRef = useRef();
+
+  // Generate color from artist name
+  const getArtistColor = (name) => {
+    if (!name) return 'bg-blue-600';
+    const colors = [
+      'bg-blue-600', 'bg-purple-600', 'bg-pink-600', 
+      'bg-red-600', 'bg-orange-600', 'bg-yellow-600',
+      'bg-green-600', 'bg-teal-600', 'bg-indigo-600'
+    ];
+    const hash = name.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+    return colors[hash % colors.length];
+  };
 
   // Initial data fetch
   useEffect(() => {
@@ -63,6 +80,10 @@ const Artist = () => {
       dispatch(fetchArtistById(artistId));
       fetchAlbums(1); // Initial fetch for first page
       dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
+      
+      // Check subscription status (mock implementation)
+      const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists')) || [];
+      setIsSubscribed(subscribedArtists.includes(artistId));
     }
   }, [dispatch, artistId]);
 
@@ -78,7 +99,6 @@ const Artist = () => {
         limit: 10 
       })).unwrap();
       
-      // Check if there are more pages
       if (page >= artistAlbumPagination.totalPages) {
         setHasMoreAlbums(false);
       }
@@ -111,6 +131,30 @@ const Artist = () => {
 
   const handleScroll = (ref) => {
     ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
+  };
+
+  // Subscription handler
+  const handleSubscribe = async () => {
+    setSubscriptionLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const subscribedArtists = JSON.parse(localStorage.getItem('subscribedArtists') || []);
+      
+      if (isSubscribed) {
+        const updated = subscribedArtists.filter(id => id !== artistId);
+        localStorage.setItem('subscribedArtists', JSON.stringify(updated));
+        setIsSubscribed(false);
+      } else {
+        subscribedArtists.push(artistId);
+        localStorage.setItem('subscribedArtists', JSON.stringify(subscribedArtists));
+        setIsSubscribed(true);
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
   };
 
   // Intersection observers
@@ -153,7 +197,51 @@ const Artist = () => {
   );
 
   // Derived values
-  const songListView = artistSongs.slice(0, 5);
+  const songListView = showAllSongs ? artistSongs : artistSongs.slice(0, 5);
+  const subscriptionPrice = artist?.subscriptionPrice || 4.99;
+  const artistColor = getArtistColor(artist?.name);
+
+  // Render artist image or fallback
+  const renderArtistImage = (imageUrl, name, size = 'w-20 h-20') => {
+    if (imageUrl) {
+      return (
+        <img
+          src={imageUrl}
+          alt={name || "Artist"}
+          className={`${size} rounded-full object-cover border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
+        />
+      );
+    }
+    
+    return (
+      <div 
+        className={`${size} ${artistColor} rounded-full flex items-center justify-center text-white font-bold text-xl border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
+      >
+        {name ? name.charAt(0).toUpperCase() : 'A'}
+      </div>
+    );
+  };
+
+  // Render cover image or fallback
+  const renderCoverImage = (imageUrl, title, size = 'w-full h-full') => {
+    if (imageUrl) {
+      return (
+        <img
+          src={imageUrl}
+          alt={title || "Cover"}
+          className={`${size} object-cover`}
+        />
+      );
+    }
+    
+    return (
+      <div 
+        className={`${size} ${artistColor} flex items-center justify-center text-white font-bold text-2xl`}
+      >
+        {title ? title.charAt(0).toUpperCase() : 'C'}
+      </div>
+    );
+  };
 
   return (
     <UserLayout>
@@ -163,22 +251,19 @@ const Artist = () => {
         <div className="relative h-80 w-full">
           {artist ? (
             <>
-              <img
-                src="https://images.unsplash.com/photo-1517230878791-4d28214057c2?q=80&w=2069&auto=format&fit=crop"
-                className="w-full h-full object-cover opacity-80"
-                alt="Artist Background"
-              />
+              {artist.image ? (
+                <img
+                  src={artist.image}
+                  className="w-full h-full object-cover opacity-80"
+                  alt="Artist Background"
+                />
+              ) : (
+                <div className={`w-full h-full ${artistColor} opacity-80`} />
+              )}
               <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
               <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
               <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
-                <img
-                  src={
-                    artist?.image ||
-                    "https://images.unsplash.com/photo-1502767089025-6572583495b0?q=80&w=400&auto=format&fit=crop"
-                  }
-                  alt="Artist Profile"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]"
-                />
+                {renderArtistImage(artist?.image, artist?.name)}
                 <div>
                   <p className="text-sm lowercase tracking-widest text-gray-200">
                     Artist
@@ -189,6 +274,28 @@ const Artist = () => {
                   <div className="flex items-center mt-1 text-gray-300 text-sm">
                     <FiMapPin className="mr-2 text-blue-600" />
                     <span>{artist?.location || "Unknown City"}</span>
+                  </div>
+                  <div className="flex items-center gap-4 mt-3">
+                    <span className="text-lg font-semibold text-blue-400">
+                      ${subscriptionPrice.toFixed(2)}/month
+                    </span>
+                    <button
+                      onClick={handleSubscribe}
+                      disabled={subscriptionLoading}
+                      className={`px-4 py-1 rounded-full text-sm font-medium transition-all ${
+                        isSubscribed
+                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      } ${
+                        subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {subscriptionLoading
+                        ? "Processing..."
+                        : isSubscribed
+                        ? "Subscribed ✓"
+                        : "Subscribe"}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -203,12 +310,14 @@ const Artist = () => {
         {/* All Songs (vertical list) */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
-          <button 
-            className="text-blue-500 cursor-pointer hover:underline"
-            onClick={() => navigate(`/artist/${artistId}/songs`)}
-          >
-            See all
-          </button>
+          {artistSongs.length > 5 && (
+            <button 
+              className="text-blue-500 cursor-pointer hover:underline"
+              onClick={() => setShowAllSongs(!showAllSongs)}
+            >
+              {showAllSongs ? "Show less" : "See all"}
+            </button>
+          )}
         </div>
         <div className="px-6 py-4 flex flex-col gap-4">
           {songsStatus === "loading" && artistSongs.length === 0 ? (
@@ -223,18 +332,32 @@ const Artist = () => {
               </div>
             ))
           ) : (
-            songListView.map((song) => (
-              <SongList
-                key={song._id}
-                songId={song._id}
-                img={song.coverImage || "/images/placeholder.png"}
-                songName={song.title}
-                singerName={song.singer}
-                seekTime={formatDuration(song.duration)}
-                onPlay={() => handlePlaySong(song._id)}
-                isSelected={selectedSong === song._id}
-              />
-            ))
+            <>
+              {songListView.map((song) => (
+                <SongList
+                  key={song._id}
+                  songId={song._id}
+                  img={song.coverImage ? song.coverImage : renderCoverImage(null, song.title, 'w-12 h-12')}
+                  songName={song.title}
+                  singerName={song.singer}
+                  seekTime={formatDuration(song.duration)}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
+                />
+              ))}
+              {songsStatus === "loading" && songsPage < totalPages && (
+                [...Array(5)].map((_, idx) => (
+                  <div key={`song-loading-${idx}`} className="flex items-center gap-4">
+                    <Skeleton circle width={50} height={50} />
+                    <div className="flex-1">
+                      <Skeleton width={120} height={16} />
+                      <Skeleton width={80} height={12} />
+                    </div>
+                    <Skeleton width={40} height={16} />
+                  </div>
+                ))
+              )}
+            </>
           )}
         </div>
 
@@ -274,7 +397,7 @@ const Artist = () => {
                     ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
                     title={album.title}
                     singer={artistInfo?.name || artist?.name}
-                    image={album.cover || "/images/placeholder.png"}
+                    image={album.cover ? album.cover : renderCoverImage(null, album.title, 'w-full h-40')}
                     price={album.price}
                     isSelected={false}
                   />
@@ -320,7 +443,7 @@ const Artist = () => {
                 key={song._id}
                 title={song.title}
                 singer={song.singer}
-                image={song.coverImage || "/images/placeholder.png"}
+                image={song.coverImage ? song.coverImage : renderCoverImage(null, song.title, 'w-full h-40')}
                 onPlay={() => handlePlaySong(song._id)}
                 isSelected={selectedSong === song._id}
               />
@@ -333,14 +456,17 @@ const Artist = () => {
           {artist ? (
             <>
               <div className="w-full h-72 md:w-1/4">
-                <img
-                  src={
-                    artist?.image ||
-                    "https://images.unsplash.com/photo-1517230878791-4d28214057c2?q=80&w=2069&auto=format&fit=crop"
-                  }
-                  alt="Artist"
-                  className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
-                />
+                {artist.image ? (
+                  <img
+                    src={artist.image}
+                    alt="Artist"
+                    className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
+                  />
+                ) : (
+                  <div className={`w-full h-full ${artistColor} flex items-center justify-center text-white text-8xl font-bold border-t-4 border-b-4 border-blue-600`}>
+                    {artist.name ? artist.name.charAt(0).toUpperCase() : 'A'}
+                  </div>
+                )}
               </div>
               <div className="w-full md:w-2/3 bg-white/5 backdrop-blur-sm p-6 rounded-md shadow-lg border border-white/10">
                 <div className="mb-2 flex items-center gap-2 text-blue-400 text-xl font-bold">
@@ -365,6 +491,42 @@ const Artist = () => {
                     View more
                   </span>
                 </p>
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <h3 className="text-lg font-semibold text-blue-400 mb-2">
+                    Subscription Details
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-300">
+                        {isSubscribed ? (
+                          <span className="text-green-400">✓ You are subscribed</span>
+                        ) : (
+                          "Subscribe for exclusive content"
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        ${subscriptionPrice.toFixed(2)} per month • Cancel anytime
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSubscribe}
+                      disabled={subscriptionLoading}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        isSubscribed
+                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      } ${
+                        subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {subscriptionLoading
+                        ? "Processing..."
+                        : isSubscribed
+                        ? "Manage Subscription"
+                        : "Subscribe Now"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </>
           ) : (

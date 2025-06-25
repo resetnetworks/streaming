@@ -18,16 +18,27 @@ const UserHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-
-
   const isHomePage = location.pathname === "/";
+
+  // Function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    
+    if (hour < 12) {
+      return "Good morning";
+    } else if (hour < 18) {
+      return "Good afternoon";
+    } else {
+      return "Good evening";
+    }
+  };
 
   return (
     <div className="w-full flex justify-between items-center px-4 py-4 relative">
       {/* Left side: Greeting or Back */}
       {isHomePage ? (
         <h1 className="md:text-3xl text-xl">
-          Good morning,{" "}
+          {getTimeBasedGreeting()},{" "}
           <span className="text-blue-700">{user ? user.name : "Guest"}</span>
         </h1>
       ) : (

@@ -7,17 +7,22 @@ import {
   fetchAllSongs,
   deleteSong,
   updateSong,
+  createSong,
 } from '../features/songs/songSlice';
 import {
   selectAllSongs,
   selectSongsStatus,
 } from '../features/songs/songSelectors';
+import { selectFullArtistList } from '../features/artists/artistsSelectors';
+import { selectAllAlbums } from '../features/albums/albumsSelector';
 import { toast } from 'sonner';
 
-const Songs = ({ artists = [], albums = [] }) => {
+const Songs = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
   const status = useSelector(selectSongsStatus);
+  const artists = useSelector(selectFullArtistList);
+  const albums = useSelector(selectAllAlbums);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,9 +52,13 @@ const Songs = ({ artists = [], albums = [] }) => {
   };
 
   const handleAddSong = async (formData) => {
-    // Implement song creation API here if needed
-    console.log('TODO: Create song with formData:', formData);
-    setIsModalOpen(false);
+    try {
+      await dispatch(createSong(formData)).unwrap();
+      toast.success('Song created successfully');
+      setIsModalOpen(false);
+    } catch (error) {
+      toast.error(error?.message || 'Failed to create song');
+    }
   };
 
   const filteredSongs = songs.filter(song =>
@@ -110,7 +119,7 @@ const Songs = ({ artists = [], albums = [] }) => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddSong}
         artists={artists}
-        albums={albums}
+        initialAlbums={albums}
       />
     </div>
   );

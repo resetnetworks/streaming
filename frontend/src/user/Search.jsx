@@ -20,7 +20,6 @@ const Search = () => {
   const { results, loading, error } = useSelector((state) => state.search);
   const trendingSongs = useSelector((state) => state.songs.songs);
   const selectedSong = useSelector((state) => state.player.selectedSong);
-  
 
   useEffect(() => {
     dispatch(fetchAllSongs());
@@ -39,7 +38,6 @@ const Search = () => {
     dispatch(play());
   };
 
-  // Utility: Pick N random items from an array
   const getRandomItems = (arr, count) => {
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
@@ -84,14 +82,15 @@ const Search = () => {
 
         {!query.trim() ? (
           <>
-            {/* 🔀 Random Songs Section */}
-            <h2 className="text-white text-lg mt-6 mb-2">Discover New Songs, Artists And Albums</h2>
+            <h2 className="text-white text-lg mt-6 mb-2">
+              Discover New Songs, Artists And Albums
+            </h2>
             <div className="flex flex-wrap gap-6">
               {getRandomItems(trendingSongs, 10).map((song) => (
                 <RecentPlays
                   key={song._id}
                   title={song.title}
-                  singer={song.singer}
+                  singer={song.artist?.name || "Unknown Artist"}
                   image={song.coverImage || "/images/placeholder.png"}
                   onPlay={() => handlePlaySong(song._id)}
                   isSelected={selectedSong === song._id}
@@ -101,16 +100,16 @@ const Search = () => {
           </>
         ) : (
           <>
-            {/* Songs Section */}
-            {results?.songs?.results?.length > 0 && (
+            {/* Songs */}
+            {results?.songs?.length > 0 && (
               <>
                 <h2 className="text-blue-500 font-bold text-lg mt-6 mb-2">Songs</h2>
                 <div className="flex flex-wrap gap-6">
-                  {results.songs.results.map((song) => (
+                  {results.songs.map((song) => (
                     <RecentPlays
                       key={song._id}
                       title={song.title}
-                      singer={song.singer}
+                      singer={song.artist?.name || "Unknown"}
                       image={song.coverImage || "/images/placeholder.png"}
                       onPlay={() => handlePlaySong(song._id)}
                       isSelected={selectedSong === song._id}
@@ -120,12 +119,12 @@ const Search = () => {
               </>
             )}
 
-            {/* Artists Section */}
-            {results?.artists?.results?.length > 0 && (
+            {/* Artists */}
+            {results?.artists?.length > 0 && (
               <>
                 <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Artists</h2>
                 <div className="flex flex-wrap gap-6">
-                  {results.artists.results.map((artist) => (
+                  {results.artists.map((artist) => (
                     <RecentPlays
                       key={artist._id}
                       title={artist.name}
@@ -138,12 +137,12 @@ const Search = () => {
               </>
             )}
 
-            {/* Albums Section */}
-            {results?.albums?.results?.length > 0 && (
+            {/* Albums */}
+            {results?.albums?.length > 0 && (
               <>
                 <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Albums</h2>
                 <div className="flex flex-wrap gap-6">
-                  {results.albums.results.map((album) => (
+                  {results.albums.map((album) => (
                     <RecentPlays
                       key={album._id}
                       title={album.title}
@@ -157,9 +156,9 @@ const Search = () => {
             )}
 
             {/* No results */}
-            {!results?.songs?.results?.length &&
-              !results?.artists?.results?.length &&
-              !results?.albums?.results?.length && (
+            {results?.songs?.length === 0 &&
+              results?.artists?.length === 0 &&
+              results?.albums?.length === 0 && (
                 <p className="text-white/70 mt-8">No results found.</p>
               )}
           </>

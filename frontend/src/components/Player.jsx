@@ -1,3 +1,5 @@
+
+
 import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,6 +16,8 @@ import {
   setDuration,
   setVolume,
 } from "../features/playback/playerSlice";
+import { toggleLikeSong } from "../features/auth/authSlice.js";
+import { selectIsSongLiked } from "../features/auth/authSelectors.js";
 import { formatDuration } from "../utills/helperFunctions";
 
 import {
@@ -25,8 +29,8 @@ import {
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { IoIosMore } from "react-icons/io";
 import { FaPlay, FaPause } from "react-icons/fa";
+import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { LuDna } from "react-icons/lu";
-import { CiHeart } from "react-icons/ci";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60) || 0;
@@ -51,23 +55,24 @@ const Player = () => {
   const hlsRef = useRef(null);
 
   const currentSong =
-    songs.find((s) => s._id === selectedSong) || songs[0] || null;
-  const currentIndex = songs.findIndex((s) => s._id === selectedSong);
+    selectedSong && songs.length
+      ? songs.find((s) => s._id === selectedSong)
+      : null;
+
+  const currentIndex = currentSong
+    ? songs.findIndex((s) => s._id === selectedSong)
+    : -1;
+
   const nextSongs =
     currentIndex !== -1
       ? songs.slice(currentIndex, currentIndex + 4)
       : songs.slice(0, 4);
 
+  const isLiked = useSelector(selectIsSongLiked(currentSong?._id));
+
   useEffect(() => {
     const video = videoRef.current;
-
-    if (
-      !video ||
-      !currentSong ||
-      !currentSong.audioUrl ||
-      !currentSong.audioUrl.trim()
-    )
-      return;
+    if (!video || !currentSong || !currentSong.hlsUrl) return;
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -75,11 +80,13 @@ const Player = () => {
     }
 
     const handleCanPlay = async () => {
+      dispatch(setCurrentTime(0));
+      dispatch(setDuration(video.duration || currentSong?.duration || 0));
       if (isPlaying) {
         try {
           await video.play();
         } catch (err) {
-          console.warn("Playback error:", err);
+          console.warn("Playback error on canplay:", err);
         }
       }
     };
@@ -89,33 +96,43 @@ const Player = () => {
     if (Hls.isSupported()) {
       const hls = new Hls();
       hlsRef.current = hls;
-      hls.loadSource("https://reset-streaming.s3.ap-south-1.amazonaws.com/songs-hls/12e49fd3-7728-4430-924c-a65a3c75a1d3/12e49fd3-7728-4430-924c-a65a3c75a1d3_hls.m3u8");
+      hls.loadSource(currentSong.hlsUrl);
       hls.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = "https://reset-streaming.s3.ap-south-1.amazonaws.com/songs-hls/12e49fd3-7728-4430-924c-a65a3c75a1d3/12e49fd3-7728-4430-924c-a65a3c75a1d3_hls.m3u8";
+      video.src = currentSong.hlsUrl;
     }
-
-    dispatch(setCurrentTime(0));
-    dispatch(setDuration(0));
 
     return () => {
       video.removeEventListener("canplay", handleCanPlay);
     };
-  }, [currentSong, dispatch, isPlaying]);
+  }, [currentSong, dispatch]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     if (isPlaying) {
-      const tryPlay = async () => {
+      const playAudio = async () => {
         try {
-          await video.play();
+          if (video.readyState >= 3) {
+            await video.play();
+          } else {
+            const onCanPlay = async () => {
+              try {
+                await video.play();
+              } catch (err) {
+                console.warn("Playback error during delayed play:", err);
+              }
+              video.removeEventListener("canplay", onCanPlay);
+            };
+            video.addEventListener("canplay", onCanPlay);
+          }
         } catch (err) {
-          console.warn("Playback error:", err);
+          console.warn("Playback error on isPlaying change:", err);
         }
       };
-      tryPlay();
+
+      playAudio();
     } else {
       video.pause();
     }
@@ -129,7 +146,7 @@ const Player = () => {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !currentSong) return;
 
     const onLoadedMetadata = () =>
       dispatch(setDuration(video.duration || currentSong?.duration || 0));
@@ -162,14 +179,14 @@ const Player = () => {
   };
 
   const handleNext = () => {
-    if (songs.length === 0) return;
+    if (!currentSong || songs.length === 0) return;
     const nextIndex = (currentIndex + 1) % songs.length;
     dispatch(setSelectedSong(songs[nextIndex]._id));
     dispatch(play());
   };
 
   const handlePrev = () => {
-    if (songs.length === 0) return;
+    if (!currentSong || songs.length === 0) return;
     const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
     dispatch(setSelectedSong(songs[prevIndex]._id));
     dispatch(play());
@@ -188,11 +205,16 @@ const Player = () => {
     if (isMuted) setIsMuted(false);
   };
 
-  if (!currentSong || !currentSong.audioUrl?.trim()) {
+  const handleLikeToggle = () => {
+    if (currentSong?._id) {
+      dispatch(toggleLikeSong(currentSong._id));
+    }
+  };
+
+  if (!currentSong) {
     return (
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="ml-3">
-          {" "}
           <Skeleton width={250} height={800} />
         </div>
       </SkeletonTheme>
@@ -200,14 +222,11 @@ const Player = () => {
   }
 
   const trackStyle = {
-    background: `linear-gradient(to right, #007aff ${
-      volume * 100
-    }%, #ffffff22 ${volume * 100}%)`,
+    background: `linear-gradient(to right, #007aff ${volume * 100}%, #ffffff22 ${volume * 100}%)`,
   };
 
   return (
-    <div className="player-wrapper shadow-[-10px_-10px_80px_rgba(0,153,255,0.4)] shadow-[#0e52ff3b]">
-      {/* HLS requires <video>, even for audio */}
+      <div className="player-wrapper shadow-[-10px_-10px_80px_rgba(0,153,255,0.4)] shadow-[#0e52ff3b]">
       {currentSong?.audioUrl && currentSong.audioUrl.trim().length > 0 && (
         <video
           ref={videoRef}
@@ -258,7 +277,14 @@ const Player = () => {
         </div>
 
         <div className="w-full mt-4 flex justify-between items-center">
-          <CiHeart className="text-xl text-gray-400" />
+          <button onClick={handleLikeToggle} className="focus:outline-none">
+            {isLiked ? (
+              <BsHeartFill className="text-base text-red-500" />
+            ) : (
+              <BsHeart className="text-base text-gray-400" />
+            )}
+          </button>
+
           <RiSkipLeftFill
             className="text-md text-white cursor-pointer"
             onClick={handlePrev}
@@ -360,3 +386,6 @@ const Player = () => {
 };
 
 export default Player;
+
+
+
