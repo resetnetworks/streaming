@@ -6,7 +6,8 @@ import {
   deleteAlbum,
   getAlbumById,
   updateAlbum,
-  getAlbumsByArtist
+  getAlbumsByArtist,
+  getAllAlbumsWithoutpagination
 } from "../controllers/albumController.js";
 import { singleImageUpload } from "../middleware/uploadMiddleware.js";
 import {
@@ -58,6 +59,8 @@ router.get(
   validate,
   getAlbumById
 );
+
+router.get("/findAlbums", isAuth, getAllAlbumsWithoutpagination);
 
 router.get("/artist/:artistId", isAuth, getAlbumsByArtist);
 

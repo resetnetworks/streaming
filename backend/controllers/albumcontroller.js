@@ -212,3 +212,21 @@ export const getAlbumsByArtist = async (req, res) => {
     }
   });
 };
+
+
+
+// Get All Album Without Pagination
+
+
+export const getAllAlbumsWithoutpagination = async (req, res) => {
+  const albums = await Album.find()
+    .sort({ createdAt: -1 })
+    .populate('songs', 'title duration coverImage')
+    .populate('artist', 'name slug');
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    albums,
+    total: albums.length
+  });
+};
