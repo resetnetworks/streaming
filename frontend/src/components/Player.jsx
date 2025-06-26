@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
@@ -37,6 +35,11 @@ const formatTime = (seconds) => {
   const secs = Math.floor(seconds % 60) || 0;
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
+
+import { toast } from "sonner";
+const handleFeatureSoon = ()=>{
+  toast.success("this feature will available soon")
+}
 
 const Player = () => {
   const dispatch = useDispatch();
@@ -267,12 +270,12 @@ const Player = () => {
 
         <div className="w-full flex justify-between mt-4">
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button flex justify-center items-center gap-2">
+            <button className="player-button flex justify-center items-center gap-2" onClick={handleFeatureSoon}>
               <LuDna className="text-blue-500 text-sm" /> lossless
             </button>
           </div>
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button">reset master</button>
+            <button className="player-button" onClick={handleFeatureSoon}>reset master</button>
           </div>
         </div>
 
@@ -305,7 +308,7 @@ const Player = () => {
             className="text-md text-white cursor-pointer"
             onClick={handleNext}
           />
-          <IoIosMore className="text-md text-white" />
+          <IoIosMore className="text-md text-white" onClick={handleFeatureSoon}/>
         </div>
 
         <div className="player-gradiant-line mt-4"></div>
@@ -386,6 +389,8 @@ const Player = () => {
 };
 
 export default Player;
+
+
 
 
 
