@@ -78,12 +78,6 @@ app.use(xssClean());
 app.use(mongoSanitize());
 
 
-// Rate limiting
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 100,
-// });
-// app.use(limiter);
 
 
 // Passport

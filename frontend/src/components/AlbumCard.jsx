@@ -5,7 +5,8 @@ const AlbumCard = ({
   tag = "#electronic",
   artists = "Julian Gomez, Noah Rosa and more",
   image = Img,
-  onClick
+  onClick,
+  price
 }) => {
   return (
     <div 
@@ -30,8 +31,9 @@ const AlbumCard = ({
         </div>
       </div>
 
-      <div className="w-full bg-gray-800/40 md:p-4 p-3">
+      <div className="w-full flex justify-between bg-gray-800/40 md:p-4 p-3">
         <p className="text-xs text-white text-wrap">{artists}</p>
+        <p className="text-xs text-white text-wrap">{price}</p>
       </div>
     </div>
   );

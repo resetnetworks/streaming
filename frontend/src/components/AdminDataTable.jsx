@@ -7,7 +7,7 @@ const AdminDataTable = ({ title, columns, data, addButton, loading, error, onEdi
       </div>
 
       {loading ? (
-        <div className="text-gray-300 text-center py-6">Loading...</div>
+        <div className="text-gray-300 text-center py-6">NoLoading</div>
       ) : error ? (
         <div className="text-red-400 text-center py-6">{error}</div>
       ) : data.length === 0 ? (
