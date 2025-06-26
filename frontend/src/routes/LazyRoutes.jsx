@@ -1,0 +1,17 @@
+import { lazy } from "react";
+export const Register = lazy(() => import("../user/Register"));
+export const Login = lazy(() => import("../user/Login"));
+export const ForgotPassword = lazy(() => import("../user/ForgotPassword"));
+export const ResetPassword = lazy(() => import("../user/ResetPassword"));
+export const FavouriteGen = lazy(() => import("../user/FavouriteGen"));
+export const Home = lazy(() => import("../user/Home"));
+export const Artists = lazy(() => import("../user/Artists"));
+export const Artist = lazy(() => import("../user/Artist"));
+export const LikedSong = lazy(() => import("../user/LikedSong"));
+export const Album = lazy(() => import("../user/Album"));
+export const Search = lazy(() => import("../user/Search"));
+export const Library = lazy(() => import("../user/Library"));
+export const Admin = lazy(() => import("../admin/Admin"));
+export const PaymentSuccess = lazy(() => import("../user/PaymentSuccess"));
+export const PaymentFailure = lazy(() => import("../user/PaymentFailure"));
+export const Help = lazy(() => import("../user/Help"));

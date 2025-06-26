@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
 import { fetchAllArtists } from '../features/artists/artistsSlice'; 
 import { selectAllArtists, selectArtistLoading, selectArtistError } from '../features/artists/artistsSelectors';
+
 import AdminLayout from './AdminLayout';
 import Dashboard from './Dashboard';
 import Artists from './Artists';
@@ -10,18 +14,15 @@ import Songs from './Songs';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // Get data from Redux store
+
   const dispatch = useDispatch();
   const artists = useSelector(selectAllArtists);
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
-  
-  // State for albums and songs
+
   const [albums, setAlbums] = useState([]);
   const [songs, setSongs] = useState([]);
 
-  // Fetch initial data
   useEffect(() => {
     dispatch(fetchAllArtists());
 
@@ -33,15 +34,22 @@ const Admin = () => {
     setSongs(initialSongs);
   }, [dispatch]);
 
-  // Handler for updating albums
   const handleAlbumUpdate = (updatedAlbums) => {
     setAlbums(updatedAlbums);
   };
 
+  const renderSkeleton = () => (
+    <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+      <div className="space-y-4 px-4 py-6 rounded-md">
+        <Skeleton height={900} width="100%" />
+      </div>
+    </SkeletonTheme>
+  );
+
   const renderContent = () => {
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
-    
+    if (loading) return renderSkeleton();
+    if (error) return <div className="text-red-400 text-sm px-4 py-2">Error: {error}</div>;
+
     switch (activeTab) {
       case 'artists':
         return <Artists artists={artists} />;

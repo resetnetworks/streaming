@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
@@ -9,53 +9,21 @@ import {
   selectCurrentUser,
 } from "./features/auth/authSelectors";
 import Loader from "./components/Loader";
-import Artist from "./user/Artist";
-import PaymentSuccess from "./user/PaymentSuccess";
-import PaymentFailure from "./user/PaymentFailure";
+import {
+  ProtectedRoute,
+  RedirectedProtectedRoute,
+  AdminRoute,
+  PublicRoute,
+} from "./components/RouteGuards";
 
-// Lazy-loaded components
-const Register = lazy(() => import("./user/Register"));
-const Login = lazy(() => import("./user/Login"));
-const FavouriteGen = lazy(() => import("./user/FavouriteGen"));
-const ForgotPassword = lazy(() => import("./user/ForgotPassword"));
-const ResetPassword = lazy(() => import("./user/ResetPassword"));
-const Home = lazy(() => import("./user/Home"));
-const Artists = lazy(() => import("./user/Artists"));
-const LikedSong = lazy(() => import("./user/LikedSong"));
-const Admin = lazy(() => import("./admin/Admin"));
-const Album = lazy(() => import("./user/Album"));
-const Search = lazy(() => import("./user/Search"));
-const Library = lazy(() => import("./user/Library"));
-
-// Protected Routes
-const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>
-  isAuthenticated ? children : <Navigate to={redirectTo} replace />;
-
-const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.preferredGenres?.length === 0)
-    return <Navigate to="/genres" replace />;
-  return children;
-};
-
-const AdminRoute = ({ isAuthenticated, user, children }) => {
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.role !== "admin") return <Navigate to="/" replace />;
-  return children;
-};
-
-const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) =>
-  !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
+import * as Pages from "./routes/LazyRoutes";
 
 function App() {
   const dispatch = useDispatch();
-  const status = useSelector(selectAuthStatus);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
-
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // 🔁 Load profile once on app mount
   useEffect(() => {
     if (!isAuthenticated) {
       dispatch(getMyProfile()).finally(() => setInitialLoad(false));
@@ -64,7 +32,6 @@ function App() {
     }
   }, [dispatch, isAuthenticated]);
 
-  // ⏳ Show loader while checking authentication
   if (initialLoad) return <Loader />;
 
   return (
@@ -72,14 +39,14 @@ function App() {
       <BrowserRouter>
         <Suspense fallback={<Loader />}>
           <Routes>
-            {/* Public Routes */}
-            <Route path="/payment-success" element={<PaymentSuccess/>} />
-            <Route path="/payment-fail" element={<PaymentFailure/>}/>
+            {/* Public */}
+            <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
+            <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route
               path="/register"
               element={
                 <PublicRoute isAuthenticated={isAuthenticated}>
-                  <Register />
+                  <Pages.Register />
                 </PublicRoute>
               }
             />
@@ -87,7 +54,7 @@ function App() {
               path="/login"
               element={
                 <PublicRoute isAuthenticated={isAuthenticated}>
-                  <Login />
+                  <Pages.Login />
                 </PublicRoute>
               }
             />
@@ -95,7 +62,7 @@ function App() {
               path="/forgot-password"
               element={
                 <PublicRoute isAuthenticated={isAuthenticated}>
-                  <ForgotPassword />
+                  <Pages.ForgotPassword />
                 </PublicRoute>
               }
             />
@@ -103,17 +70,17 @@ function App() {
               path="/reset-password/:token"
               element={
                 <PublicRoute isAuthenticated={isAuthenticated}>
-                  <ResetPassword />
+                  <Pages.ResetPassword />
                 </PublicRoute>
               }
             />
 
-            {/* Protected Routes */}
+            {/* Protected */}
             <Route
               path="/genres"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <FavouriteGen />
+                  <Pages.FavouriteGen />
                 </ProtectedRoute>
               }
             />
@@ -124,7 +91,7 @@ function App() {
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <Home />
+                  <Pages.Home />
                 </RedirectedProtectedRoute>
               }
             />
@@ -135,7 +102,7 @@ function App() {
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <Artists />
+                  <Pages.Artists />
                 </RedirectedProtectedRoute>
               }
             />
@@ -146,7 +113,7 @@ function App() {
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <Artist />
+                  <Pages.Artist />
                 </RedirectedProtectedRoute>
               }
             />
@@ -157,7 +124,7 @@ function App() {
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <Library />
+                  <Pages.Library />
                 </RedirectedProtectedRoute>
               }
             />
@@ -168,23 +135,15 @@ function App() {
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <LikedSong />
+                  <Pages.LikedSong />
                 </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
-                  <Admin />
-                </AdminRoute>
               }
             />
             <Route
               path="/album/:albumId"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Album />
+                  <Pages.Album />
                 </ProtectedRoute>
               }
             />
@@ -192,20 +151,28 @@ function App() {
               path="/search"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Search />
+                  <Pages.Search />
                 </ProtectedRoute>
               }
             />
 
-            {/* Fallback Route */}
+            {/* Admin */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
+                  <Pages.Admin />
+                </AdminRoute>
+              }
+            />
+
+            <Route path="/help" element={<Pages.Help/>}/>
+
+            {/* Fallback */}
             <Route
               path="*"
               element={
-                isAuthenticated ? (
-                  <Navigate to="/" replace />
-                ) : (
-                  <Navigate to="/login" replace />
-                )
+                <Navigate to={isAuthenticated ? "/" : "/login"} replace />
               }
             />
           </Routes>

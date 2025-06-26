@@ -7,6 +7,9 @@ import { toggleLikeSong } from "../features/auth/authSlice";
 import { selectIsSongLiked } from "../features/auth/authSelectors";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
+const handleFeatureSoon = ()=>{
+  toast.success("this feature will available soon")
+}
 
 const SongList = ({
   img,
@@ -109,7 +112,7 @@ const SongList = ({
           )}
         </button>
 
-        <FiMoreHorizontal className="action-button text-white text-lg hover:cursor-pointer" />
+        <FiMoreHorizontal className="action-button text-white text-lg hover:cursor-pointer" onClick={handleFeatureSoon}/>
       </div>
     </div>
   );

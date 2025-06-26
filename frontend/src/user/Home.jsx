@@ -163,6 +163,7 @@ const Home = () => {
                   ref={idx === recentSongs.length - 1 ? recentLastRef : null}
                   key={song._id}
                   title={song.title}
+                  price={song.accessType === 'purchase-only' ? `$${song.price}` : 'Subs..'}
                   singer={song.singer}
                   image={song.coverImage || "/images/placeholder.png"}
                   onPlay={() => handlePlaySong(song._id)}
@@ -204,6 +205,7 @@ const Home = () => {
                     tag={`#${album.title || 'music'}`}
                     artists={album.artist?.name || "Various Artists"}
                     image={album.cover || "/images/placeholder.png"}
+                    price={`$${album.price}` || "subs.."}
                     onClick={() => navigate(`/album/${album._id}`)}
                   />
                 </div>
