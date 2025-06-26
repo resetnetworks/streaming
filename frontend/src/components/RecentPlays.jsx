@@ -2,7 +2,7 @@ import React from "react";
 import { RiPlayFill } from "react-icons/ri";
 
 const RecentPlays = React.forwardRef(
-  ({ title, singer, image, price = 60, onPlay, isSelected }, ref) => {
+  ({ title, singer, image, price = 0, onPlay, isSelected }, ref) => {
     const truncatedTitle = title.length > 10 ? title.slice(0, 15) + "..." : title;
 
     const handleClick = () => {
@@ -44,7 +44,7 @@ const RecentPlays = React.forwardRef(
             <span className="text-blue-500 text-xs truncate">{singer}</span>
           </div>
           {price && (
-            <p className="text-blue-500 text-xs font-semibold">${price}</p>
+            <p className="text-blue-500 text-xs font-semibold">{price}</p>
           )}
         </div>
       </div>

@@ -6,12 +6,12 @@ const faqData = [
         topic: "Account",
         questions: [
             {
-                q: "How do I reset my password?",
-                a: "Go to settings, select 'Change Password', and follow the instructions."
+                q: "What should I do if I forgot my password?",
+                a: 'To reset your password, first log out of your account. Then, go to the login page and click on the "Reset Password" text located below the password field. Enter your email address and click the "Send Reset Link" button. A reset link will be sent to your email. Click on that link, create your new password, and submit it. Please make sure to do this only once.'
             },
             {
-                q: "How do I update my email address?",
-                a: "Navigate to your profile and click 'Edit Email'."
+                q: "I made a payment but didn't receive the song or subscription. What should I do?",
+                a: 'If you\'ve successfully completed a payment for a song or an artist subscription but haven\'t received access, please contact us immediately. Email us at <a href="mailto:info@reset93.net" class="text-blue-400 hover:underline">info@reset93.net</a> with the following:<br/><br/>- Your registered email or username<br/>- Payment proof (screenshot or transaction ID)<br/>- Name of the song or artist you paid for<br/><br/>We\'ll verify and resolve the issue as quickly as possible.'
             }
         ]
     },
@@ -20,7 +20,7 @@ const faqData = [
         questions: [
             {
                 q: "How do I cancel my subscription?",
-                a: "Visit the subscription page and click 'Cancel Subscription'."
+                a: "To cancel your subscription, click on your profile and go to Manage Subscription. From there, find the subscription you want to cancel and click the Cancel button."
             },
             {
                 q: "Can I change my plan?",
@@ -33,7 +33,7 @@ const faqData = [
         questions: [
             {
                 q: "The video is not loading. What should I do?",
-                a: "Try refreshing the page or check your internet connection."
+                a: "Try refreshing the page or check your internet connection. If the problem persists, please contact our support team at <a href='mailto:info@reset93.net' class='text-blue-400 hover:underline'>info@reset93.net</a>."
             }
         ]
     }
@@ -44,36 +44,86 @@ function Help() {
     const [selectedQuestionIdx, setSelectedQuestionIdx] = useState(null);
     const [expandedTopics, setExpandedTopics] = useState([]);
 
-    let leftBoxContent;
-    if (
-        selectedTopicIdx === null ||
-        selectedQuestionIdx === null
-    ) {
-        leftBoxContent = (
-            <div>
-                <h2 className="text-2xl font-semibold mb-2">Contact & Information</h2>
-                <p className="mb-2">
-                    Need help? Reach out to our support team:
-                </p>
-                <ul className="mb-4">
-                    <li>Email: <a className="text-blue-600 underline" href="mailto:support@example.com">support@example.com</a></li>
-                    <li>Phone: <a className="text-blue-600 underline" href="tel:+1234567890">+1 234 567 890</a></li>
-                </ul>
-                <h3 className="text-lg font-semibold mb-1">Support Hours</h3>
-                <p>Mon-Fri: 9am - 6pm</p>
+    const renderContactInfo = () => (
+        <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-white">Contact & Information</h2>
+            <p className="text-gray-200">
+                Need help? Reach out to our support team:
+            </p>
+            
+            <div className="space-y-3">
+                <div>
+                    <h3 className="font-medium text-white">Email Support</h3>
+                    <a 
+                        href="mailto:info@reset93.net" 
+                        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
+                    >
+                        info@reset93.net
+                    </a>
+                </div>
+                
+                <div>
+                    <h3 className="font-medium text-white">Phone Support</h3>
+                    <a 
+                        href="tel:+1234567890" 
+                        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
+                    >
+                        +1 (234) 567-890
+                    </a>
+                </div>
+                
+                <div>
+                    <h3 className="font-medium text-white">Live Chat</h3>
+                    <button 
+                        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
+                        onClick={() => alert("Live chat would open here")}
+                    >
+                        Start Chat
+                    </button>
+                </div>
             </div>
-        );
-    } else {
+            
+            <div className="pt-2">
+                <h3 className="font-medium text-white">Support Hours</h3>
+                <p className="text-gray-300">Monday - Friday: 9am - 6pm EST</p>
+                <p className="text-gray-300">Saturday: 10am - 4pm EST</p>
+            </div>
+        </div>
+    );
+
+    const renderSelectedQuestion = () => {
         const topic = faqData[selectedTopicIdx];
         const question = topic.questions[selectedQuestionIdx];
-        leftBoxContent = (
-            <div>
-                <h2 className="text-2xl font-semibold mb-4">{topic.topic}</h2>
-                <div className="font-bold mb-2">{question.q}</div>
-                <div className="text-gray-600">{question.a}</div>
+        
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                    <button 
+                        onClick={() => {
+                            setSelectedTopicIdx(null);
+                            setSelectedQuestionIdx(null);
+                        }}
+                        className="text-blue-300 hover:text-blue-200 transition-colors"
+                    >
+                        ← Back
+                    </button>
+                    <h2 className="text-2xl font-semibold text-white">{topic.topic}</h2>
+                </div>
+                
+                <div className="bg-white/10 rounded-lg p-4">
+                    <h3 className="font-bold text-white mb-3">{question.q}</h3>
+                    <div 
+                        className="text-gray-200 space-y-3"
+                        dangerouslySetInnerHTML={{ __html: question.a }}
+                    />
+                </div>
             </div>
         );
-    }
+    };
+
+    const leftBoxContent = selectedTopicIdx !== null && selectedQuestionIdx !== null 
+        ? renderSelectedQuestion() 
+        : renderContactInfo();
 
     const toggleTopic = (idx) => {
         setExpandedTopics(prev =>
@@ -90,58 +140,57 @@ function Help() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-100 box-border bg-image px-2">
+        <div className="flex flex-col min-h-screen bg-gray-900 px-2 md:px-4">
             {/* Header at the top */}
             <IconHeader />
-            <div className="flex justify-center items-center flex-1 w-full">
-                <div className="flex flex-col md:flex-row gap-6 w-full max-w-5xl">
+            
+            <div className="flex justify-center items-center flex-1 w-full py-8">
+                <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl">
                     {/* Left/Main Box */}
-                    <div className="text-white backdrop-blur-xl bg-white/10  rounded-xl shadow-md p-6 md:p-10 flex-1 min-w-0 min-h-[350px] md:min-h-[420px] max-h-[600px] flex flex-col justify-start overflow-auto transition-all duration-200"
-                        style={{ minWidth: 0 }}>
+                    <div className="text-white bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 lg:p-8 flex-1 min-w-0 min-h-[400px] max-h-[600px] flex flex-col overflow-auto transition-all duration-200">
                         {leftBoxContent}
                     </div>
 
                     {/* FAQ Box */}
-                    <div className="backdrop-blur-xl bg-white/10 rounded-xl shadow-md p-4 flex-1 md:max-w-[340px] md:min-w-[260px] min-h-[350px] max-h-[600px] flex flex-col overflow-auto transition-all duration-200"
-                        style={{ minWidth: 0 }}
-                    >
-                        <h3 className=" text-white mb-4 font-semibold text-lg">FAQs</h3>
-                        <div>
+                    <div className="bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-5 lg:p-6 flex-1 lg:max-w-[380px] min-h-[400px] max-h-[600px] flex flex-col overflow-auto">
+                        <h3 className="text-white mb-5 font-semibold text-xl">Frequently Asked Questions</h3>
+                        
+                        <div className="space-y-3">
                             {faqData.map((topic, tIdx) => {
                                 const expanded = expandedTopics.includes(tIdx);
                                 return (
-                                    <div key={topic.topic} className="mb-4">
-                                        <div
+                                    <div key={topic.topic} className="mb-2">
+                                        <button
                                             onClick={() => toggleTopic(tIdx)}
-                                            className={`cursor-pointer flex items-center justify-between rounded-md font-medium px-4 py-3 transition-colors ${
+                                            className={`w-full text-left flex items-center justify-between rounded-lg font-medium px-4 py-3 transition-all ${
                                                 expanded
-                                                    ? "bg-blue-100"
-                                                    : "bg-gray-100 hover:bg-gray-200"
+                                                    ? "bg-blue-600/30 text-white"
+                                                    : "bg-gray-700 hover:bg-gray-600 text-gray-200"
                                             }`}
                                         >
-                                            <span>{topic.topic}</span>
-                                            <span className="text-xs">
+                                            <span className="font-medium">{topic.topic}</span>
+                                            <span className="text-sm">
                                                 {expanded ? "▲" : "▼"}
                                             </span>
-                                        </div>
+                                        </button>
+                                        
                                         {expanded && (
-                                            <div className="mt-2">
+                                            <div className="mt-2 pl-2 space-y-2">
                                                 {topic.questions.map((q, qIdx) => (
-                                                    <div
+                                                    <button
                                                         key={qIdx}
-                                                        onClick={e => {
-                                                            e.stopPropagation();
+                                                        onClick={() => {
                                                             setSelectedTopicIdx(tIdx);
                                                             setSelectedQuestionIdx(qIdx);
                                                         }}
-                                                        className={`cursor-pointer rounded-md px-5 py-2 text-[15px] my-1 transition-colors ${
+                                                        className={`w-full text-left rounded-lg px-4 py-2.5 text-sm transition-all ${
                                                             selectedTopicIdx === tIdx && selectedQuestionIdx === qIdx
-                                                                ? "bg-blue-200 font-semibold"
-                                                                : "bg-gray-50 hover:bg-blue-50 font-normal"
-                                                        } text-gray-800`}
+                                                                ? "bg-blue-500 text-white font-medium"
+                                                                : "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                                                        }`}
                                                     >
                                                         {q.q}
-                                                    </div>
+                                                    </button>
                                                 ))}
                                             </div>
                                         )}
@@ -157,4 +206,3 @@ function Help() {
 }
 
 export default Help;
-

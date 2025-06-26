@@ -1,7 +1,7 @@
+// src/components/UserHeader.jsx
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { IoChevronBackOutline } from "react-icons/io5";
 import {
   FiChevronDown,
   FiChevronUp,
@@ -9,33 +9,38 @@ import {
   FiHelpCircle,
   FiClock,
   FiCreditCard,
+  FiLogOut,
 } from "react-icons/fi";
+import { IoChevronBackOutline } from "react-icons/io5";
+import { toast } from "sonner";
 import { selectCurrentUser } from "../features/auth/authSelectors";
+import { logoutUser } from "../features/auth/authSlice";
 
 const UserHeader = () => {
   const user = useSelector(selectCurrentUser);
   const [open, setOpen] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isHomePage = location.pathname === "/";
 
-  // Function to get time-based greeting
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
-    
-    if (hour < 12) {
-      return "Good morning";
-    } else if (hour < 18) {
-      return "Good afternoon";
-    } else {
-      return "Good evening";
-    }
+    if (hour < 12) return "Good morning";
+    else if (hour < 18) return "Good afternoon";
+    else return "Good evening";
+  };
+
+  const handleLogout = async () => {
+    setOpen(false);
+    await dispatch(logoutUser());
+    toast.success("Logged out successfully");
+    navigate("/login");
   };
 
   return (
     <div className="w-full flex justify-between items-center px-4 py-4 relative">
-      {/* Left side: Greeting or Back */}
       {isHomePage ? (
         <h1 className="md:text-3xl text-xl">
           {getTimeBasedGreeting()},{" "}
@@ -50,13 +55,10 @@ const UserHeader = () => {
         </div>
       )}
 
-      {/* Right side: Admin button or dropdown */}
       {user.role === "admin" ? (
         <div
           className="button-wrapper shadow-md shadow-gray-800"
-          onClick={() => {
-            navigate("/admin");
-          }}
+          onClick={() => navigate("/admin")}
         >
           <button className="player-button">Admin</button>
         </div>
@@ -67,7 +69,7 @@ const UserHeader = () => {
             onClick={() => setOpen(!open)}
           >
             <img
-              src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2070"
               alt="user profile"
               className="md:w-8 md:h-8 w-6 h-6 rounded-full object-cover"
             />
@@ -123,6 +125,13 @@ const UserHeader = () => {
                 >
                   <FiHelpCircle />
                   Help & Support
+                </li>
+                <li
+                  className="px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-red-500"
+                  onClick={handleLogout}
+                >
+                  <FiLogOut />
+                  Logout
                 </li>
               </ul>
             </div>
