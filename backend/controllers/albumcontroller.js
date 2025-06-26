@@ -14,37 +14,30 @@ import { Artist  } from "../models/Artist.js";
 // - Handles optional file upload to S3 for cover image
 // - Accepts basic album info and genre as comma-separated string
 export const createAlbum = async (req, res) => {
-  // 🔒 Admin check
   if (!isAdmin(req.user)) {
     throw new UnauthorizedError("Access denied. Admins only.");
   }
 
-  // 📝 Extract body
   const { title, description, artist, releaseDate, price, accessType, genre } = req.body;
 
-  // ✅ Validate required fields
   if (!title || !artist || !releaseDate) {
     throw new BadRequestError("Title, artist, and release date are required.");
   }
 
-  // 🛡 Validate pricing for purchase-only albums
   if (accessType === "purchase-only" && (!price || price <= 0)) {
     throw new BadRequestError("Purchase-only albums must have a valid price.");
   }
 
-  // ☁️ Handle cover image upload
   const coverImageFile = req.files?.coverImage?.[0];
   const coverImageUrl = coverImageFile
     ? await uploadToS3(coverImageFile, "covers")
     : "";
 
-  // 🎧 Process genre if needed
   let processedGenre = genre;
   if (typeof processedGenre === "string") {
     processedGenre = processedGenre.split(",").map((g) => g.trim());
   }
 
-  // 💿 Create album document
   const newAlbum = await Album.create({
     title,
     description,

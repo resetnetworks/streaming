@@ -25,7 +25,6 @@ const GenreSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      index: true,
       trim: true,
       match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],
     },
