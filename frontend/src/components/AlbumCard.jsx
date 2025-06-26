@@ -5,9 +5,13 @@ const AlbumCard = ({
   tag = "#electronic",
   artists = "Julian Gomez, Noah Rosa and more",
   image = Img,
+  onClick
 }) => {
   return (
-    <div className="md:w-56 w-32 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative">
+    <div 
+      className="md:w-56 w-32 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative"
+      onClick={onClick}
+    >
       <div className="relative">
         <img
           src={image}

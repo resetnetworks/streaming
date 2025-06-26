@@ -1,40 +1,55 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { LuSquareChevronRight } from "react-icons/lu";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+
+// Redux actions
 import { fetchAllSongs } from "../features/songs/songSlice";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
-import {selectRandomArtist, selectRandomArtistSongs} from "../features/artists/artistsSelectors"
-import { useNavigate } from "react-router-dom";
+import { fetchAllAlbums } from "../features/albums/albumsSlice";
+import { selectRandomArtist, selectRandomArtistSongs } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
+
+// Components
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
 import RecentPlays from "../components/RecentPlays";
 import AlbumCard from "../components/AlbumCard";
 import SongList from "../components/SongList";
-import { LuSquareChevronRight } from "react-icons/lu";
+
+// Utils
 import { formatDuration } from "../utills/helperFunctions";
-import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
 
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const selectedSong = useSelector((state) => state.player.selectedSong);
-  const status = useSelector((state) => state.songs.status);
-  const totalPages = useSelector((state) => state.songs.totalPages);
 
+  // Redux selectors
+  const selectedSong = useSelector((state) => state.player.selectedSong);
+  const songsStatus = useSelector((state) => state.songs.status);
+  const songsTotalPages = useSelector((state) => state.songs.totalPages);
+  const albumsStatus = useSelector((state) => state.albums.loading);
+  const albumsTotalPages = useSelector((state) => state.albums.pagination.totalPages);
+  const allAlbums = useSelector((state) => state.albums.allAlbums);
   const randomArtist = useSelector(selectRandomArtist);
   const similarSongs = useSelector(selectRandomArtistSongs);
 
+  // State
   const [recentPage, setRecentPage] = useState(1);
   const [topPicksPage, setTopPicksPage] = useState(1);
-  const [similarPage] = useState(1); // similarPage is fixed at 1 since the API paginates internally
+  const [similarPage] = useState(1);
+  const [albumsPage, setAlbumsPage] = useState(1);
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
 
+  // Refs
   const observerRefs = {
     recent: useRef(),
     topPicks: useRef(),
     similar: useRef(),
+    albums: useRef(),
   };
 
   const scrollRefs = {
@@ -44,10 +59,12 @@ const Home = () => {
     topPicks: useRef(null),
   };
 
+  // Fetch data on mount and page changes
   useEffect(() => {
     dispatch(fetchAllArtists());
     dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
-  }, [dispatch, similarPage]);
+    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
+  }, [dispatch, similarPage, albumsPage]);
 
   useEffect(() => {
     dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {
@@ -73,6 +90,7 @@ const Home = () => {
     });
   }, [dispatch, topPicksPage]);
 
+  // Handlers
   const handleScroll = (ref) => {
     if (ref.current) {
       ref.current.scrollBy({ left: 200, behavior: "smooth" });
@@ -84,13 +102,15 @@ const Home = () => {
     dispatch(play());
   };
 
+  // Create chunks for top songs grid
   const chunkSize = 5;
   const songColumns = [];
   for (let i = 0; i < topSongs.length; i += chunkSize) {
     songColumns.push(topSongs.slice(i, i + chunkSize));
   }
 
-  const createObserverRef = (key, pageState, setPageState) =>
+  // Observer callback factory
+  const createObserverRef = (key, pageState, setPageState, totalPages, status) =>
     useCallback(
       (node) => {
         if (status === "loading") return;
@@ -105,8 +125,9 @@ const Home = () => {
       [status, pageState, totalPages]
     );
 
-  const recentLastRef = createObserverRef("recent", recentPage, setRecentPage);
-  const topPicksLastRef = createObserverRef("topPicks", topPicksPage, setTopPicksPage);
+  const recentLastRef = createObserverRef("recent", recentPage, setRecentPage, songsTotalPages, songsStatus);
+  const topPicksLastRef = createObserverRef("topPicks", topPicksPage, setTopPicksPage, songsTotalPages, songsStatus);
+  const albumsLastRef = createObserverRef("albums", albumsPage, setAlbumsPage, albumsTotalPages, albumsStatus);
 
   return (
     <UserLayout>
@@ -114,7 +135,7 @@ const Home = () => {
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
 
-           {/* Recent Played */}
+          {/* Recent Played Section */}
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">new tracks</h2>
             <LuSquareChevronRight
@@ -126,7 +147,7 @@ const Home = () => {
             ref={scrollRefs.recent}
             className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
           >
-            {status === "loading" && recentSongs.length === 0 ? (
+            {songsStatus === "loading" && recentSongs.length === 0 ? (
               [...Array(10)].map((_, idx) => (
                 <div
                   key={`recent-skeleton-${idx}`}
@@ -151,11 +172,9 @@ const Home = () => {
             )}
           </div>
 
-          {/* Suggested Playlist */}
+          {/* Albums Section */}
           <div className="w-full flex justify-between items-center">
-            <h2 className="md:text-xl text-lg font-semibold">
-              suggested playlist for you
-            </h2>
+            <h2 className="md:text-xl text-lg font-semibold">new albums for you</h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
               onClick={() => handleScroll(scrollRefs.playlist)}
@@ -163,9 +182,9 @@ const Home = () => {
           </div>
           <div
             ref={scrollRefs.playlist}
-            className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[140px]"
+            className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
           >
-            {status === "loading" ? (
+            {albumsStatus ? (
               [...Array(7)].map((_, idx) => (
                 <div
                   key={`playlist-skeleton-${idx}`}
@@ -176,17 +195,23 @@ const Home = () => {
                 </div>
               ))
             ) : (
-              [...Array(7)].map((_, index) => (
-                <AlbumCard
-                  key={`playlist-${index}`}
-                  tag="#rock"
-                  artists="Led Zeppelin, The Rolling Stones"
-                />
+              allAlbums.map((album, idx) => (
+                <div 
+                  key={album._id} 
+                  ref={idx === allAlbums.length - 1 ? albumsLastRef : null}
+                >
+                  <AlbumCard
+                    tag={`#${album.title || 'music'}`}
+                    artists={album.artist?.name || "Various Artists"}
+                    image={album.cover || "/images/placeholder.png"}
+                    onClick={() => navigate(`/album/${album._id}`)}
+                  />
+                </div>
               ))
             )}
           </div>
 
-          {/* Similar to random artist */}
+          {/* Similar Artist Section */}
           {randomArtist ? (
             <>
               <div className="flex md:gap-2 gap-4 items-center">
@@ -220,9 +245,8 @@ const Home = () => {
                   ref={scrollRefs.similar}
                   className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
                 >
-                  {similarSongs.map((song, idx) => (
+                  {similarSongs.map((song) => (
                     <RecentPlays
-                      ref={idx === similarSongs.length - 1 ? null : null}
                       key={song._id}
                       title={song.title}
                       singer={song.singer}
@@ -257,7 +281,7 @@ const Home = () => {
             </>
           )}
 
-          {/* Top Picks */}
+          {/* Top Picks Section */}
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">all tracks for you</h2>
             <LuSquareChevronRight
@@ -270,7 +294,7 @@ const Home = () => {
             className="w-full overflow-x-auto no-scrollbar min-h-[280px]"
           >
             <div className="flex md:gap-8 gap-32">
-              {status === "loading" && topSongs.length === 0 ? (
+              {songsStatus === "loading" && topSongs.length === 0 ? (
                 [...Array(5)].map((_, idx) => (
                   <div
                     key={`top-picks-skeleton-${idx}`}
@@ -325,6 +349,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
-
