@@ -13,6 +13,8 @@ import swaggerUi from "swagger-ui-express";
 import path from "path";
 import { fileURLToPath } from "url";
 import discoverRoutes from "./routes/discoverRoutes.js";
+import streamRoutes from "./routes/streamRoutes.js";
+
 
 
 
@@ -70,6 +72,7 @@ app.use(
     max: 200,
   })
 );
+app.use("/api/webhooks", webhookRoutes);
 app.use(cookieParser());
 app.use(express.json());
 app.use(helmet());
@@ -84,7 +87,7 @@ app.use(mongoSanitize());
 app.use(passport.initialize());
 
 // Webhook route (placed before JSON parsing if needed)
-app.use("/api/webhook", webhookRoutes);
+// app.use("/api/webhook", webhookRoutes);
 
  
 
@@ -101,14 +104,24 @@ app.use("/api/discover", discoverRoutes);
 app.use("/api/adminPlaylist", adminplaylistRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
-app.use("/api/webhooks", webhookRoutes);
+app.use("/api/stream", streamRoutes);
+
 
 
 // NotFoundMiddleware
 app.use(notFoundMiddleware);
 
 // Start server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  connectDb();
-});
+const start = async () => {
+  try {
+    await connectDb(); // Wait for DB to connect first
+    app.listen(port, () => {
+      console.log(`🚀 Server running at http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to start server:", err.message);
+    process.exit(1); // Crash app if DB fails
+  }
+};
+
+start();

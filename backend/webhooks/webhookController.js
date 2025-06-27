@@ -22,6 +22,9 @@ export const stripeWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // 🔍 Log every event
+  console.log(`📥 Stripe webhook received: ${event.type}`);
+
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
 
