@@ -27,8 +27,6 @@ export const createAlbum = async (req, res) => {
   if (accessType === "purchase-only" && (!price || price <= 0)) {
     throw new BadRequestError("Purchase-only albums must have a valid price.");
   }
-  // 📝 Extract body
-  const { title, description, artist, releaseDate, price, accessType, genre } = req.body;
 
   const coverImageFile = req.files?.coverImage?.[0];
   const coverImageUrl = coverImageFile
@@ -236,3 +234,5 @@ export const getAllAlbumsWithoutpagination = async (req, res) => {
     total: albums.length
   });
 };
+
+
