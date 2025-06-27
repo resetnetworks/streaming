@@ -41,13 +41,16 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
       validUntil: { $gte: new Date() },
     });
 
-    if (!existing) {
+    if (existing) {
+      console.log("🟡 Subscription already active. Skipping creation.");
+    } else {
       await Subscription.create({
         userId: transaction.userId,
         artistId: transaction.artistId,
         status: "active",
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       });
+      console.log("✅ New subscription created successfully.");
     }
   }
 

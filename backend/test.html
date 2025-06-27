@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Stripe Payment</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+    }
+    #card-element {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      background-color: #6772e5;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #bbb;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h2>Test Stripe Payment</h2>
+  <form id="payment-form">
+    <div id="card-element"></div>
+    <button type="submit" id="submitButton">Pay</button>
+  </form>
+
+  <script>
+    const stripe = Stripe("pk_test_51Kr3X3SJADrx40al3R8tFGDrAXJPHUKWYXdV5hDRYRG8Mld4FRaJ7fRozKbYxeUShBinMsfXCWNrj20OAgfojcme0093XF6ijY"); // ✅ Replace with your test key
+    const elements = stripe.elements();
+
+    const card = elements.create("card", {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+        },
+      },
+    });
+
+    card.mount("#card-element");
+
+    const clientSecret = "pi_3ReXSWSJADrx40al0xh09JrQ_secret_UOybyy3qcUu7CS8okj8Dus6aU"; // ✅ Replace with your actual secret
+
+    const form = document.getElementById("payment-form");
+    const submitButton = document.getElementById("submitButton");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      submitButton.disabled = true;
+
+      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: card,
+          billing_details: {
+            address: {
+              postal_code: '400001', // ✅ Required for India
+            },
+          },
+        },
+      });
+
+      if (error) {
+        alert("❌ Payment failed: " + error.message);
+        submitButton.disabled = false;
+      } else if (paymentIntent.status === "succeeded") {
+        alert("✅ Payment succeeded!");
+      }
+    });
+  </script>
+</body>
+</html>
