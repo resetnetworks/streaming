@@ -1,3 +1,4 @@
+import { StatusCodes } from "http-status-codes";
 import { Subscription } from "../models/Subscription.js";
 import { Artist } from "../models/Artist.js";
 import { Transaction } from "../models/Transaction.js";
@@ -5,32 +6,34 @@ import { BadRequestError, NotFoundError } from "../errors/index.js";
 import { createStripePaymentIntent } from "../utils/stripe.js";
 import { createRazorpayOrder } from "../utils/razorpay.js";
 
+// ✅ Initiate artist subscription via Stripe or Razorpay
 export const initiateArtistSubscription = async (req, res) => {
   const userId = req.user._id;
   const { gateway } = req.body;
   const { artistId } = req.params;
 
-  // 1. Validate input
+  // 1. Validate gateway
   if (!["stripe", "razorpay"].includes(gateway)) {
-    throw new BadRequestError("Invalid payment gateway.");
+    throw new BadRequestError("Invalid payment gateway. Must be 'stripe' or 'razorpay'.");
   }
 
+  // 2. Check artist validity
   const artist = await Artist.findById(artistId);
-  if (!artist) throw new NotFoundError("Artist not found");
+  if (!artist) throw new NotFoundError("Artist not found.");
 
-  // 2. Check for existing subscription
-  const existing = await Subscription.findOne({
+  // 3. Check for existing active subscription
+  const existingSub = await Subscription.findOne({
     userId,
     artistId,
     status: "active",
     validUntil: { $gt: new Date() },
   });
 
-  if (existing) {
+  if (existingSub) {
     throw new BadRequestError("You already have an active subscription to this artist.");
   }
 
-  // 3. Calculate amount (in paise or cents)
+  // 4. Validate subscription price
   const amount = artist.subscriptionPrice;
   if (!amount || amount <= 0) {
     throw new BadRequestError("Artist subscription price is invalid.");
@@ -40,34 +43,45 @@ export const initiateArtistSubscription = async (req, res) => {
   let razorpayOrderId = null;
   let clientSecret = null;
 
-  // 4. Create payment
+  // 5. Call utility to create gateway payment session
   if (gateway === "stripe") {
-    const payment = await createStripePaymentIntent(amount, userId);
-    paymentIntentId = payment.id;
-    clientSecret = payment.client_secret;
-  } else if (gateway === "razorpay") {
-    const order = await createRazorpayOrder(amount, userId);
-    razorpayOrderId = order.id;
+    const stripeRes = await createStripePaymentIntent(amount, userId, {
+      itemType: "artist-subscription",
+      itemId: artistId,
+    });
+
+    paymentIntentId = stripeRes.id;
+    clientSecret = stripeRes.client_secret;
+  } else {
+    const razorpayRes = await createRazorpayOrder(amount, userId, {
+      itemType: "artist-subscription",
+      itemId: artistId,
+    });
+
+    razorpayOrderId = razorpayRes.id;
   }
 
-  // 5. Save initial Transaction
+  // 6. Save pending transaction
   const transaction = await Transaction.create({
     userId,
     itemType: "artist-subscription",
-    itemId: artist._id,
-    artistId: artist._id,
-    gateway,
+    itemId: artistId,
+    artistId,
     amount,
-    currency: "INR", // or "USD"
+    currency: "INR",
     status: "pending",
+    gateway,
     paymentIntentId,
     razorpayOrderId,
   });
 
-  return res.status(201).json({
+  // 7. Respond with appropriate fields
+  return res.status(StatusCodes.CREATED).json({
     success: true,
     transactionId: transaction._id,
     gateway,
-    ...(gateway === "stripe" ? { clientSecret } : { razorpayOrderId }),
+    ...(gateway === "stripe"
+      ? { clientSecret }
+      : { razorpayOrderId: razorpayOrderId }),
   });
 };
