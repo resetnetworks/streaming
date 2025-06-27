@@ -8,8 +8,8 @@ import {
   selectArtistError,
   selectArtistPagination,
 } from "../features/artists/artistsSelectors";
-import UserLayout from "../components/UserLayout";
-import UserHeader from "../components/UserHeader";
+import UserLayout from "../components/user/UserLayout";
+import UserHeader from "../components/user/UserHeader";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 

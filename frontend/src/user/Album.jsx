@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 
-import UserLayout from "../components/UserLayout";
-import UserHeader from "../components/UserHeader";
-import SongList from "../components/SongList";
+import UserLayout from "../components/user/UserLayout";
+import UserHeader from "../components/user/UserHeader";
+import SongList from "../components/user/SongList";
 
 import { fetchAlbumById } from "../features/albums/albumsSlice";
 import { selectAlbumDetails, selectAlbumsLoading } from "../features/albums/albumsSelector";

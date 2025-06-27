@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { MdOutlineEmail } from "react-icons/md";
 import { toast } from "sonner";
-import IconHeader from "../components/IconHeader";
+import IconHeader from "../components/user/IconHeader";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

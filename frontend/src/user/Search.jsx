@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import UserLayout from "../components/UserLayout";
-import UserHeader from "../components/UserHeader";
-import RecentPlays from "../components/RecentPlays";
+import UserLayout from "../components/user/UserLayout";
+import UserHeader from "../components/user/UserHeader";
+import RecentPlays from "../components/user/RecentPlays";
 import {
   fetchUnifiedSearchResults,
   clearSearchResults,

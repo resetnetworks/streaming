@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaMusic, FaPlus, FaSearch } from 'react-icons/fa';
-import AdminSongCard from '../components/AdminSongCard';
-import SongFormModal from '../components/SongFormModal';
+import AdminSongCard from '../components/admin/AdminSongCard';
+import SongFormModal from '../components/admin/SongFormModal';
 import {
   fetchAllSongs,
   deleteSong,

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaPlus, FaSearch } from 'react-icons/fa';
-import AdminAlbumCard from '../components/AdminAlbumCard';
-import AlbumFormModal from '../components/AlbumFormModal';
+import AdminAlbumCard from '../components/admin/AdminAlbumCard';
+import AlbumFormModal from '../components/admin/AlbumFormModal';
 import {
   fetchAllAlbums,
   createAlbum,

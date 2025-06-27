@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import UserLayout from "../components/UserLayout";
-import UserHeader from "../components/UserHeader";
-import SongList from "../components/SongList";
-import RecentPlays from "../components/RecentPlays";
+import UserLayout from "../components/user/UserLayout";
+import UserHeader from "../components/user/UserHeader";
+import SongList from "../components/user/SongList";
+import RecentPlays from "../components/user/RecentPlays";
 import { FiMapPin } from "react-icons/fi";
 import { LuSquareChevronRight } from "react-icons/lu";
 import { fetchArtistById } from "../features/artists/artistsSlice";

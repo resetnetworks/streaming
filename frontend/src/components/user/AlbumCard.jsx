@@ -1,5 +1,5 @@
 import React from "react";
-import Img from "../images/player.jpg";
+import Img from "../../images/player.jpg";
 
 const AlbumCard = ({
   tag = "#electronic",

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAllSongs } from "../features/songs/songSelectors.js";
+import { selectAllSongs } from "../../features/songs/songSelectors.js";
 import {
   setSelectedSong,
   play,
@@ -9,7 +9,7 @@ import {
   setCurrentTime,
   setDuration,
   setVolume,
-} from "../features/playback/playerSlice";
+} from "../../features/playback/playerSlice.js";
 import { FaPlay, FaPause } from "react-icons/fa";
 import { RiVolumeUpFill, RiVolumeMuteFill } from "react-icons/ri";
 import { IoIosArrowDown, IoIosInfinite, IoMdShuffle } from "react-icons/io";

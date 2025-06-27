@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import IconHeader from "../components/IconHeader";
+import IconHeader from "../components/user/IconHeader";
 
 const faqData = [
     {
@@ -32,9 +32,9 @@ const faqData = [
         topic: "Technical Issues",
         questions: [
             {
-                q: "The video is not loading. What should I do?",
-                a: "Try refreshing the page or check your internet connection. If the problem persists, please contact our support team at <a href='mailto:info@reset93.net' class='text-blue-400 hover:underline'>info@reset93.net</a>."
-            }
+    q: "My player is stuck in the loading state. What should I do?",
+    a: "You need to click on a song to start playback. This is a common situation for new users — once you select a song, the player will activate and start working normally."
+  }
         ]
     }
 ];
@@ -46,49 +46,38 @@ function Help() {
 
     const renderContactInfo = () => (
         <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Contact & Information</h2>
-            <p className="text-gray-200">
-                Need help? Reach out to our support team:
-            </p>
-            
-            <div className="space-y-3">
-                <div>
-                    <h3 className="font-medium text-white">Email Support</h3>
-                    <a 
-                        href="mailto:info@reset93.net" 
-                        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
-                    >
-                        info@reset93.net
-                    </a>
-                </div>
-                
-                <div>
-                    <h3 className="font-medium text-white">Phone Support</h3>
-                    <a 
-                        href="tel:+1234567890" 
-                        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
-                    >
-                        +1 (234) 567-890
-                    </a>
-                </div>
-                
-                <div>
-                    <h3 className="font-medium text-white">Live Chat</h3>
-                    <button 
-                        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
-                        onClick={() => alert("Live chat would open here")}
-                    >
-                        Start Chat
-                    </button>
-                </div>
-            </div>
-            
-            <div className="pt-2">
-                <h3 className="font-medium text-white">Support Hours</h3>
-                <p className="text-gray-300">Monday - Friday: 9am - 6pm EST</p>
-                <p className="text-gray-300">Saturday: 10am - 4pm EST</p>
-            </div>
-        </div>
+  <h2 className="text-2xl font-semibold text-white">Contact & Information</h2>
+  <p className="text-gray-200">
+    We're here to help! Whether you have a question about your purchase, subscription, technical issue, or anything else, our support team is ready to assist you.
+  </p>
+
+  <p className="text-gray-300 italic">
+    If you made a payment but didn’t receive the song or subscription access, please contact us with your payment proof. We'll resolve the issue as soon as possible.
+  </p>
+
+  <div className="space-y-3">
+    <div>
+      <h3 className="font-medium text-white">Email Support</h3>
+      <a
+        href="mailto:info@reset93.net"
+        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
+      >
+        info@reset93.net
+      </a>
+    </div>
+
+    <div>
+      <h3 className="font-medium text-white">Phone Support</h3>
+      <a
+        href="tel:+918392077241"
+        className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
+      >
+        +918392077241
+      </a>
+    </div>
+  </div>
+</div>
+
     );
 
     const renderSelectedQuestion = () => {
