@@ -29,9 +29,6 @@ import artistRoutes from "./routes/artistRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js";
-import searchRoutes from "./routes/searchRoutes.js";
-import genreRoutes from "./routes/genreRoutes.js";
-import adminplaylistRoutes from "./routes/adminPlaylist.js"
 
 // Load environment variables
 dotenv.config();
@@ -74,11 +71,11 @@ app.use(mongoSanitize());
 
 
 // Rate limiting
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 100,
-// });
-// app.use(limiter);
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+app.use(limiter);
 
 
 // Passport
@@ -96,11 +93,6 @@ app.use("/api/playlist", playlistRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/artists", artistRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/api/genre", genreRoutes)
-app.use("/api/discover", discoverRoutes);
-app.use("/api/adminPlaylist", adminplaylistRoutes);
-
 
 // NotFoundMiddleware
 app.use(notFoundMiddleware);

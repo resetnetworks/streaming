@@ -11,18 +11,6 @@ const songSchema = new mongoose.Schema(
       type: String,
       required: [true, "Song title is required"],
       trim: true,
-      minlength: [2, "Song title must be at least 2 characters"],
-      maxlength: [200, "Song title must be at most 200 characters"],
-      unique: true,
-    },
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      index: true,
-      trim: true,
-      match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],
     },
     artist: {
       type: mongoose.Schema.Types.ObjectId,
