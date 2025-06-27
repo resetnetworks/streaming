@@ -140,6 +140,28 @@ function App() {
               }
             />
             <Route
+              path="/payment-history"
+              element={
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Pages.PaymentHistory />
+                </RedirectedProtectedRoute>
+              }
+            />
+            <Route
+              path="/manage-subscriptions"
+              element={
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Pages.ManageSubscriptions />
+                </RedirectedProtectedRoute>
+              }
+            />
+            <Route
               path="/album/:albumId"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>

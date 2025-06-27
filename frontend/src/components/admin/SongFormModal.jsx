@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { FaTimes, FaMusic, FaCloudUploadAlt, FaSearch } from 'react-icons/fa';
 import { MdAudiotrack } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
-import { getAlbumsByArtist } from '../features/albums/albumsSlice';
+import { getAlbumsByArtist } from '../../features/albums/albumsSlice';
 import { toast } from 'sonner';
 
 const SongFormModal = ({

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import IconHeader from "../components/IconHeader";
+import IconHeader from "../components/user/IconHeader";
 
 const ResetPassword = () => {
   const { token } = useParams();

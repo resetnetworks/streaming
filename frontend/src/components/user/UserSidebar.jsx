@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import IconHeader from "./IconHeader";
+import IconHeader from "./IconHeader.jsx"
 import { RxDashboard } from "react-icons/rx";
 import { FaRegUser } from "react-icons/fa";
 import MobileNavBar from "./MobileNavBar";
@@ -9,7 +9,7 @@ import { FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/fi";
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
-import { selectAllSongs } from "../features/songs/songSelectors.js";  // Adjust path as needed
+import { selectAllSongs } from "../../features/songs/songSelectors.js";  // Adjust path as needed
 
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/" },

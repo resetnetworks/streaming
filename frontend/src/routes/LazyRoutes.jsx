@@ -15,3 +15,5 @@ export const Admin = lazy(() => import("../admin/Admin"));
 export const PaymentSuccess = lazy(() => import("../user/PaymentSuccess"));
 export const PaymentFailure = lazy(() => import("../user/PaymentFailure"));
 export const Help = lazy(() => import("../user/Help"));
+export const PaymentHistory = lazy(() => import("../user/PaymentHistory"));
+export const ManageSubscriptions = lazy(() => import("../user/ManageSubscriptions"));

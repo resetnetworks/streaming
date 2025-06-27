@@ -5,7 +5,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import {
   selectAllSongs,
   selectSelectedSong,
-} from "../features/songs/songSelectors.js";
+} from "../../features/songs/songSelectors.js";
 import {
   setSelectedSong,
   play,
@@ -13,10 +13,10 @@ import {
   setCurrentTime,
   setDuration,
   setVolume,
-} from "../features/playback/playerSlice";
-import { toggleLikeSong } from "../features/auth/authSlice.js";
-import { selectIsSongLiked } from "../features/auth/authSelectors.js";
-import { formatDuration } from "../utills/helperFunctions";
+} from "../../features/playback/playerSlice.js";
+import { toggleLikeSong } from "../../features/auth/authSlice.js";
+import { selectIsSongLiked } from "../../features/auth/authSelectors.js";
+import { formatDuration } from "../../utills/helperFunctions.js";
 
 import {
   RiSkipLeftFill,

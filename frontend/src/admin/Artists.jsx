@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaUserAlt, FaSearch } from 'react-icons/fa';
-import AdminDataTable from "../components/AdminDataTable";
-import CreateArtistModal from '../components/CreateArtistModal';
+import AdminDataTable from "../components/admin/AdminDataTable";
+import CreateArtistModal from '../components/admin/CreateArtistModal';
 import {
   fetchAllArtistsNoPagination,
   deleteArtist

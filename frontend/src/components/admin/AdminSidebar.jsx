@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../features/auth/authSlice';
+import { logoutUser } from '../../features/auth/authSlice';
 import { toast } from 'sonner';
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {

@@ -13,11 +13,11 @@ import { selectRandomArtist, selectRandomArtistSongs } from "../features/artists
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 
 // Components
-import UserLayout from "../components/UserLayout";
-import UserHeader from "../components/UserHeader";
-import RecentPlays from "../components/RecentPlays";
-import AlbumCard from "../components/AlbumCard";
-import SongList from "../components/SongList";
+import UserLayout from "../components/user/UserLayout";
+import UserHeader from "../components/user/UserHeader";
+import RecentPlays from "../components/user/RecentPlays";
+import AlbumCard from "../components/user/AlbumCard";
+import SongList from "../components/user/SongList";
 
 // Utils
 import { formatDuration } from "../utills/helperFunctions";

@@ -3,7 +3,7 @@ import { MdOutlineEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { assets } from "../assets/assets";
-import IconHeader from "../components/IconHeader";
+import IconHeader from "../components/user/IconHeader";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";

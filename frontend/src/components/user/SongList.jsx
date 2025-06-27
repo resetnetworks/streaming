@@ -3,8 +3,8 @@ import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleLikeSong } from "../features/auth/authSlice";
-import { selectIsSongLiked } from "../features/auth/authSelectors";
+import { toggleLikeSong } from "../../features/auth/authSlice";
+import { selectIsSongLiked } from "../../features/auth/authSelectors";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
 const handleFeatureSoon = ()=>{

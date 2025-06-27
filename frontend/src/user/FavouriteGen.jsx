@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IoMdCheckmark } from "react-icons/io";
-import IconHeader from "../components/IconHeader";
+import IconHeader from "../components/user/IconHeader";
 import { FiSearch } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { updatePreferredGenres, getMyProfile } from "../features/auth/authSlice";

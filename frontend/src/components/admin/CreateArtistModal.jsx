@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createArtist, updateArtist } from "../features/artists/artistsSlice";
+import { createArtist, updateArtist } from "../../features/artists/artistsSlice";
 import {
   selectArtistLoading,
   selectArtistError,
-} from "../features/artists/artistsSelectors";
+} from "../../features/artists/artistsSelectors";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "sonner";

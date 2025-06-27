@@ -1,4 +1,4 @@
-import IconHeader from "./IconHeader";
+import IconHeader from "../user/IconHeader";
 
 const AdminHeader = ({ activeTab }) => {
   return (
