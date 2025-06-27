@@ -37,7 +37,7 @@ export const createSong = async (req, res) => {
   } = req.body;
 
   // ✅ Required field validation
-  if (!title || !artist ) {
+  if (!title || !artist || !duration) {
     throw new BadRequestError("Title, artist, and duration are required fields.");
   }
 
