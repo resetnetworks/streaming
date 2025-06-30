@@ -204,9 +204,9 @@ const Home = () => {
                   <AlbumCard
                     tag={`#${album.title || 'music'}`}
                     artists={album.artist?.name || "Various Artists"}
-                    image={album.cover || "/images/placeholder.png"}
+                    image={album.coverImage || "/images/placeholder.png"}
                     price={`$${album.price}` || "subs.."}
-                    onClick={() => navigate(`/album/${album._id}`)}
+                    onClick={() => navigate(`/album/${album.slug}`)}
                   />
                 </div>
               ))

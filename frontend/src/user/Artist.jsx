@@ -397,7 +397,7 @@ const Artist = () => {
                     ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
                     title={album.title}
                     singer={artistInfo?.name || artist?.name}
-                    image={album.cover ? album.cover : renderCoverImage(null, album.title, 'w-full h-40')}
+                    image={album.coverImage ? album.coverImage : renderCoverImage(null, album.title, 'w-full h-40')}
                     price={album.price}
                     isSelected={false}
                   />
