@@ -1,134 +1,31 @@
-import 'express-async-errors';
-import express from "express";
-import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import helmet from "helmet";
-import cors from "cors";
-import rateLimit from "express-rate-limit";
-import xssClean from "xss-clean";
-import mongoSanitize from "express-mongo-sanitize";
-import morgan from "morgan";
-import YAML from "yamljs";
-import swaggerUi from "swagger-ui-express";
-import path from "path";
-import { fileURLToPath } from "url";
-import discoverRoutes from "./routes/discoverRoutes.js";
-import streamRoutes from "./routes/streamRoutes.js";
-
-
-
-
-// Database and middleware
-import connectDb from "./database/db.js";
-import passport from "./middleware/passport.js";
-import notFoundMiddleware from "./middleware/not-found.js";
-
-// Routes
-import userRoutes from "./routes/userRoutes.js";
-import songRoutes from "./routes/songRoutes.js";
-import albumRoutes from "./routes/albumRoutes.js";
-import artistRoutes from "./routes/artistRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
-import webhookRoutes from "./routes/webhookRoutes.js";
-import playlistRoutes from "./routes/playlistRoutes.js";
-import searchRoutes from "./routes/searchRoutes.js";
-import genreRoutes from "./routes/genreRoutes.js";
-import adminplaylistRoutes from "./routes/adminPlaylist.js"
-import subscriptionRoutes from "./routes/subscriptionRoutes.js";
-import userDashboardRoutes from "./routes/userDashboardRoutes.js";
-import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
-
-
-
-
-
-
-// Load environment variables
+// File: server.js
+import dotenv from 'dotenv';
 dotenv.config();
 
-// Path helpers
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import mongoose from 'mongoose';
+import connectDb from './database/db.js';
+import app from './app.js';
+import gracefulShutdown from './middleware/gracefulShutdown.js';
 
-// Initialize app
-const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 4000;
+let server;
 
-
-// testing 
-// Swagger setup
-const swaggerDocument = YAML.load(path.join(__dirname, "swagger.yaml"));
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-// Middleware
-
-// CORS setup
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-  credentials: true,
-}));
-
-app.set('trust proxy', 1);
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200,
-  })
-);
-app.use("/api/webhooks", webhookRoutes);
-app.use(cookieParser());
-app.use(express.json());
-app.use(helmet());
-app.use(morgan("combined"));
-app.use(xssClean());
-app.use(mongoSanitize());
-
-
-
-
-// Passport
-app.use(passport.initialize());
-
-// Webhook route (placed before JSON parsing if needed)
-// app.use("/api/webhook", webhookRoutes);
-
- 
-
-// API routes
-app.use("/api/users", userRoutes);
-app.use("/api/songs", songRoutes);
-app.use("/api/playlist", playlistRoutes);
-app.use("/api/albums", albumRoutes);
-app.use("/api/artists", artistRoutes);
-app.use("/api/payment", paymentRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/api/genre", genreRoutes)
-app.use("/api/discover", discoverRoutes);
-app.use("/api/adminPlaylist", adminplaylistRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/subscriptions", subscriptionRoutes);
-app.use("/api/stream", streamRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/users", userDashboardRoutes); 
-app.use("/api/admin", adminDashboardRoutes);
-
-
-
-
-// NotFoundMiddleware
-app.use(notFoundMiddleware);
-
-// Start server
 const start = async () => {
   try {
-    await connectDb(); // Wait for DB to connect first
-    app.listen(port, () => {
+    if (!process.env.MONGO_URL || !process.env.PORT) {
+      console.error('❌ Missing required environment variables');
+      process.exit(1);
+    }
+
+    await connectDb();
+    server = app.listen(port, () => {
       console.log(`🚀 Server running at http://localhost:${port}`);
     });
   } catch (err) {
-    console.error("❌ Failed to start server:", err.message);
-    process.exit(1); // Crash app if DB fails
+    console.error('❌ Failed to start server:', err.message);
+    process.exit(1);
   }
 };
 
 start();
+gracefulShutdown(server, mongoose);

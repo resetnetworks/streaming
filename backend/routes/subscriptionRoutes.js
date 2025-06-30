@@ -1,9 +1,18 @@
 import express from "express";
-import { isAuth } from "../middleware/isAuth.js";
+import { authenticateUser } from "../middleware/authenticate.js";
 import { initiateArtistSubscription } from "../controllers/subscriptionController.js";
+import { artistIdValidator } from "../validators/artistValidators.js";
+import validate from "../middleware/validate.js";
 
 const router = express.Router();
 
-router.post("/artist/:artistId", isAuth, initiateArtistSubscription);
+// Initiate subscription for an artist
+router.post(
+  "/artist/:artistId",
+  authenticateUser,
+  artistIdValidator,
+  validate,
+  initiateArtistSubscription
+);
 
 export default router;
