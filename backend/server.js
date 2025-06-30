@@ -36,6 +36,7 @@ import genreRoutes from "./routes/genreRoutes.js";
 import adminplaylistRoutes from "./routes/adminPlaylist.js"
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import userDashboardRoutes from "./routes/userDashboardRoutes.js";
+import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 
 
 
@@ -109,6 +110,7 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/stream", streamRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/users", userDashboardRoutes); 
+app.use("/api/admin", adminDashboardRoutes);
 
 
 
