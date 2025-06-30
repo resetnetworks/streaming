@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { BadRequestError, UnauthorizedError, NotFoundError } from "../errors/index.js";
 import { StatusCodes } from 'http-status-codes';
 import { isAdmin } from "../utils/authHelper.js";
+import { log } from "console";
 
 
 
@@ -263,7 +264,7 @@ export const getAllSongs = async (req, res) => {
     .limit(limit)
     .populate("artist", "name")
     .populate("album", "title");
-
+ 
   // Apply access control to hide audio URLs if necessary
   const updatedSongs = await Promise.all(
     songs.map(async (song) => {
@@ -309,6 +310,8 @@ export const getSongById = async (req, res) => {
   if (!song) {
     throw new NotFoundError("Song not found");
   }
+  console.log(song);
+  
 
   // Check access permissions for the current user
   const hasAccess = await hasAccessToSong(req.user, song);

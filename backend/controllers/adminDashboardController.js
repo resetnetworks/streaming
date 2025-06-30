@@ -7,7 +7,7 @@ import { Artist } from "../models/Artist.js";
 import { BadRequestError, NotFoundError } from "../errors/index.js";
 
 // ✅ 1. Get all transactions for a specific artist (with optional filters)
-export const getArtistTransactions = async (req, res) => {
+export const getAllTransactionsByArtist = async (req, res) => {
   const { artistId } = req.query;
   const { itemType, status, startDate, endDate } = req.query;
 
@@ -28,7 +28,7 @@ export const getArtistTransactions = async (req, res) => {
 };
 
 // ✅ 2. Get all purchased songs for an artist
-export const getPurchasedSongs = async (req, res) => {
+export const getPurchasedSongsByArtist = async (req, res) => {
   const { artistId } = req.params;
   if (!artistId) throw new BadRequestError("artistId is required");
 
@@ -43,7 +43,7 @@ export const getPurchasedSongs = async (req, res) => {
 };
 
 // ✅ 3. Get all purchased albums for an artist
-export const getPurchasedAlbums = async (req, res) => {
+export const getPurchasedAlbumsByArtist = async (req, res) => {
   const { artistId } = req.params;
   if (!artistId) throw new BadRequestError("artistId is required");
 
@@ -58,7 +58,7 @@ export const getPurchasedAlbums = async (req, res) => {
 };
 
 // ✅ 4. Get active subscriber count and optional revenue for an artist
-export const getArtistSubscriberStats = async (req, res) => {
+export const getSubscriberCount = async (req, res) => {
   const { artistId } = req.params;
   if (!artistId) throw new BadRequestError("artistId is required");
 
