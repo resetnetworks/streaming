@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
+import logger from "../utils/logger.js";
 
-export const isAuth = async (req, res, next) => {
+export const authenticateUser = async (req, res, next) => {
   try {
     const token = req.cookies.token;
 
@@ -15,8 +16,15 @@ export const isAuth = async (req, res, next) => {
     try {
       decodedData = jwt.verify(token, process.env.jwt_secret);
     } catch (err) {
+      logger.warn("JWT verification failed:", err.message);
       return res.status(401).json({
         message: "Invalid or expired token. Please login again.",
+      });
+    }
+
+    if (!decodedData || !decodedData.id) {
+      return res.status(401).json({
+        message: "Invalid token payload. Please login again.",
       });
     }
 
@@ -29,10 +37,9 @@ export const isAuth = async (req, res, next) => {
     }
 
     req.user = user;
-
-    next();
+    return next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    logger.error("Authentication middleware error:", error);
     res.status(500).json({
       message: "Internal server error during authentication.",
     });

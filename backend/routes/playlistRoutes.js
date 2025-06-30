@@ -1,38 +1,68 @@
 import express from "express";
-import { 
+import {
   getPlaylists,
   createPlaylist,
   deletePlaylist,
   addSongToPlaylist,
   removeSongFromPlaylist,
   getPlaylistById,
-  updatePlaylist 
+  updatePlaylist,
 } from "../controllers/playlistController.js";
-import { isAuth } from "../middleware/isAuth.js";
+import { authenticateUser } from "../middleware/authenticate.js";
 import {
   createPlaylistValidator,
   updatePlaylistValidator,
   playlistIdValidator,
   addSongToPlaylistValidator,
-  removeSongFromPlaylistValidator
+  removeSongFromPlaylistValidator,
 } from "../validators/playlistValidators.js";
 import validate from "../middleware/validate.js";
 
 const router = express.Router();
 
+// Get all playlists for user
+router.get("/", authenticateUser, getPlaylists);
 
-router.get("/", isAuth, getPlaylists);
+// Create new playlist
+router.post("/", authenticateUser, createPlaylistValidator, validate, createPlaylist);
 
-router.post("/", isAuth, createPlaylistValidator, validate, createPlaylist);
+// Get a single playlist by ID
+router.get("/:playlistId", authenticateUser, playlistIdValidator, validate, getPlaylistById);
 
-router.delete("/:playlistId", isAuth, playlistIdValidator, validate, deletePlaylist);
+// Update a playlist
+router.put(
+  "/:playlistId",
+  authenticateUser,
+  updatePlaylistValidator,
+  validate,
+  updatePlaylist
+);
 
-router.put("/:playlistId", isAuth, updatePlaylistValidator, validate, updatePlaylist); 
+// Delete a playlist
+router.delete(
+  "/:playlistId",
+  authenticateUser,
+  playlistIdValidator,
+  validate,
+  deletePlaylist
+);
 
-router.get("/:playlistId", isAuth, getPlaylistById)
+// Add a song to a playlist
+router.post(
+  "/:playlistId/song",
+  authenticateUser,
+  addSongToPlaylistValidator,
+  validate,
+  addSongToPlaylist
+);
 
-router.post("/:playlistId/song", isAuth, addSongToPlaylistValidator, validate, addSongToPlaylist);
-
-router.delete("/:playlistId/song/:songId", isAuth, removeSongFromPlaylistValidator, validate, removeSongFromPlaylist);
+// Remove a song from a playlist
+router.delete(
+  "/:playlistId/song/:songId",
+  authenticateUser,
+  removeSongFromPlaylistValidator,
+  validate,
+  removeSongFromPlaylist
+);
 
 export default router;

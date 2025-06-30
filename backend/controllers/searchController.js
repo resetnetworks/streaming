@@ -12,18 +12,32 @@ export const unifiedSearch = async (req, res) => {
   const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
   if (!q) throw new BadRequestError("Query parameter 'q' is required.");
 
+  // Escape special characters for regex
   const escapeRegex = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(escapeRegex(q), "i");
 
-  // You can adjust these limits
+  // Limit results per type
   const artistLimit = 3;
   const songLimit = 5;
   const albumLimit = 3;
 
   const [artists, songs, albums] = await Promise.all([
     Artist.find({ name: regex }).limit(artistLimit).lean(),
-    Song.find({ title: regex }).limit(songLimit).lean(),
-    Album.find({ title: regex }).limit(albumLimit).lean(),
+
+    Song.find({ title: regex })
+      .limit(songLimit)
+      .populate({ path: "artist", select: "name slug" })
+      .populate({
+        path: "album",
+        select: "title slug",
+        populate: { path: "artist", select: "name slug" },
+      })
+      .lean(),
+
+    Album.find({ title: regex })
+      .limit(albumLimit)
+      .populate({ path: "artist", select: "name slug" })
+      .lean(),
   ]);
 
   res.status(StatusCodes.OK).json({
@@ -35,7 +49,6 @@ export const unifiedSearch = async (req, res) => {
     },
   });
 };
-
 
 // @desc Search songs by title with pagination
 // @route GET /api/search/songs?q=term&page=1&limit=10

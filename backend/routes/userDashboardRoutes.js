@@ -4,13 +4,25 @@ import {
   getUserSubscriptions,
   cancelArtistSubscription,
 } from "../controllers/userDashboardController.js";
-import { isAuth } from "../middleware/isAuth.js";
+import { authenticateUser } from "../middleware/authenticate.js";
+import { artistIdValidator } from "../validators/artistValidators.js";
+import validate from "../middleware/validate.js";
 
 const router = express.Router();
 
-// ✅ User Dashboard Routes
-router.get("/purchases", isAuth, getUserPurchases);
-router.get("/subscriptions", isAuth, getUserSubscriptions);
-router.delete("/subscriptions/:artistId", isAuth, cancelArtistSubscription);
+// 🧾 User Purchase History
+router.get("/purchases", authenticateUser, getUserPurchases);
+
+// 📅 Active Subscriptions
+router.get("/subscriptions", authenticateUser, getUserSubscriptions);
+
+// ❌ Cancel Subscription to Artist
+router.delete(
+  "/subscriptions/:artistId",
+  authenticateUser,
+  artistIdValidator,
+  validate,
+  cancelArtistSubscription
+);
 
 export default router;

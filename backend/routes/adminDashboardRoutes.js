@@ -6,15 +6,14 @@ import {
   getSubscriberCount,
   getArtistRevenueSummary,
 } from "../controllers/adminDashboardController.js";
-import { isAuth } from "../middleware/isAuth.js";
-
+import { authenticateUser } from "../middleware/authenticate.js"
 const router = express.Router();
 
 // All routes use isAuth to protect access
-router.get("/transactions", isAuth, getAllTransactionsByArtist);
-router.get("/purchased-songs/:artistId", isAuth, getPurchasedSongsByArtist);
-router.get("/purchased-albums/:artistId", isAuth, getPurchasedAlbumsByArtist);
-router.get("/subscriber-count/:artistId", isAuth, getSubscriberCount);
-router.get("/revenue-summary/:artistId", isAuth, getArtistRevenueSummary);
+router.get("/transactions", authenticateUser, getAllTransactionsByArtist);
+router.get("/purchased-songs/:artistId", authenticateUser, getPurchasedSongsByArtist);
+router.get("/purchased-albums/:artistId", authenticateUser, getPurchasedAlbumsByArtist);
+router.get("/subscriber-count/:artistId", authenticateUser, getSubscriberCount);
+router.get("/revenue-summary/:artistId", authenticateUser, getArtistRevenueSummary);
 
 export default router;

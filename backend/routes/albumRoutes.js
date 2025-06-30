@@ -1,5 +1,5 @@
 import express from "express";
-import { isAuth } from "../middleware/isAuth.js";
+import { authenticateUser } from "../middleware/authenticate.js";
 import {
   createAlbum,
   getAllAlbums,
@@ -7,7 +7,7 @@ import {
   getAlbumById,
   updateAlbum,
   getAlbumsByArtist,
-  getAllAlbumsWithoutpagination
+  getAllAlbumsWithoutpagination,
 } from "../controllers/albumController.js";
 import { singleImageUpload } from "../middleware/uploadMiddleware.js";
 import {
@@ -22,7 +22,7 @@ const router = express.Router();
 // Create a new album
 router.post(
   "/",
-  isAuth,
+  authenticateUser,
   singleImageUpload,
   createAlbumValidator,
   validate,
@@ -32,7 +32,7 @@ router.post(
 // Update an existing album
 router.put(
   "/:id",
-  isAuth,
+  authenticateUser,
   singleImageUpload,
   updateAlbumValidator,
   validate,
@@ -42,26 +42,29 @@ router.put(
 // Delete an album
 router.delete(
   "/:id",
-  isAuth,
+  authenticateUser,
   albumIdValidator,
   validate,
   deleteAlbum
 );
 
-// Get all albums
-router.get("/", isAuth, getAllAlbums);
+// Get all albums (paginated)
+router.get("/", authenticateUser, getAllAlbums);
+
+// Get all albums (non-paginated)
+router.get("/findAlbums", authenticateUser, getAllAlbumsWithoutpagination);
+
+// Get albums by artist
+router.get("/artist/:artistId", authenticateUser, getAlbumsByArtist);
 
 // Get album by ID
 router.get(
   "/:id",
-  isAuth,
+  authenticateUser,
   albumIdValidator,
   validate,
   getAlbumById
 );
 
-router.get("/findAlbums", isAuth, getAllAlbumsWithoutpagination);
+export default router
 
-router.get("/artist/:artistId", isAuth, getAlbumsByArtist);
-
-export default router;
