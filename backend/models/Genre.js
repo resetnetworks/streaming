@@ -15,7 +15,6 @@ const GenreSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Genre name is required"],
-      unique: true,
       trim: true,
       minlength: [2, "Genre name must be at least 2 characters"],
       maxlength: [50, "Genre name must be at most 50 characters"],
@@ -23,7 +22,6 @@ const GenreSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
       match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],

@@ -12,6 +12,17 @@ const songSchema = new mongoose.Schema(
       required: [true, "Song title is required"],
       trim: true,
     },
+      slug: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+      match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],
+    },
+    duration: {
+      type: Number,
+      required: true
+    },
     artist: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Artist",
