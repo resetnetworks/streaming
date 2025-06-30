@@ -29,11 +29,6 @@ const AdminAlbumCard = ({ album, onDelete, onUpdate }) => {
           </div>
           <h3 className="text-lg font-semibold flex-1">
             {album.title}
-            {album.isPremium && (
-              <span className="ml-2 text-yellow-400 text-sm">
-                Premium
-              </span>
-            )}
           </h3>
         </div>
 
@@ -61,6 +56,7 @@ const AdminAlbumCard = ({ album, onDelete, onUpdate }) => {
           <span>{album.accessType}</span>
         </div>
 
+<div className='flex justify-between'><p>{album.artist?.name}</p>
         <div className="flex justify-end space-x-2">
           <button 
             onClick={() => onUpdate(album)}
@@ -74,6 +70,7 @@ const AdminAlbumCard = ({ album, onDelete, onUpdate }) => {
           >
             <FaTrash className="mr-1" /> Delete
           </button>
+        </div>
         </div>
       </div>
     </div>
