@@ -80,7 +80,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     formData.append("subscriptionPrice", form.subscriptionPrice);
     formData.append("location", form.location);
     if (image) {
-      formData.append("image", image);
+      formData.append("coverImage", image);
     }
 
     try {
