@@ -18,6 +18,13 @@ import {
 
 import * as Pages from "./routes/LazyRoutes";
 
+// 🟦 Stripe
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+// ⚠️ Use your actual publishable key here (from .env or directly)
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY); // or process.env.STRIPE_PUBLISHABLE_KEY
+
 function App() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -35,7 +42,7 @@ function App() {
   if (initialLoad) return <Loader />;
 
   return (
-    <>
+    <Elements stripe={stripePromise}>
       <BrowserRouter>
         <Suspense fallback={<Loader />}>
           <Routes>
@@ -188,7 +195,7 @@ function App() {
               }
             />
 
-            <Route path="/help" element={<Pages.Help/>}/>
+            <Route path="/help" element={<Pages.Help />} />
 
             {/* Fallback */}
             <Route
@@ -202,7 +209,7 @@ function App() {
       </BrowserRouter>
 
       <Toaster richColors position="top-center" />
-    </>
+    </Elements>
   );
 }
 
