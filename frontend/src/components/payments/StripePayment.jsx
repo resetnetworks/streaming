@@ -128,6 +128,9 @@ const StripePayment = ({ type, id, amount, onSuccess, onClose }) => {
         if (!res || !res.clientSecret) {
           throw new Error('Invalid response from server');
         }
+
+        // Optional: mark that payment is in progress
+        sessionStorage.setItem('paymentInProgress', 'true');
       } catch (err) {
         toast.error('Failed to initiate payment');
         console.error('Payment initiation error:', err);
@@ -137,6 +140,7 @@ const StripePayment = ({ type, id, amount, onSuccess, onClose }) => {
     initiate();
     return () => {
       dispatch(resetPaymentState());
+      sessionStorage.removeItem('paymentInProgress');
     };
   }, [dispatch, type, id, amount]);
 
@@ -173,6 +177,7 @@ const StripePayment = ({ type, id, amount, onSuccess, onClose }) => {
               },
             },
           }}
+          key={clientSecret} // ✅ Ensures remounting on new clientSecret to avoid mutation error
         >
           <CheckoutForm
             type={type}
