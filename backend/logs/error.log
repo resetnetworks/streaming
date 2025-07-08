@@ -1,3 +1,25 @@
 2025-06-30T10:21:11.208Z [ERROR]: NotFoundError: Artist not found
     at getAlbumsByArtist (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/albumController.js:182:11)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:12:57.193Z [ERROR]: BadRequestError: Incorrect password
+    at loginUser (file:///Users/resetstudio02/Documents/streaming/backend/controllers/userControllers.js:69:11) 
+2025-07-07T09:26:49.749Z [ERROR]: ValidationError: Artist validation failed: bio: Path `bio` (`back
+Ushara&#x27;s work blends classical training with innovative exploration of the Church Organ to achieve avant-garde compositions inspired by Pauline Olivero&#x27;s deep listening practices. Her work explores unique intonations and microtonal effects in an unconventional manner to journey through otherworldly textures and sonic landscapes.
+
+
+Ushara&#x27;s early years were spent immersed in the study of classical piano and opera, laying the groundwork for her deep passion and exploration of music. Guided by a spirit of relentless curiosity, explored through her radio show Twilight Zone (on Rough Radio), Ushara found inspiration in the world of experimental compositions, where she began to carve out her own unique sonic identity. 
+Mentored by Raphael Henard and deeply inspired by his works, she experiments within the intersection of live coding and manipulation of live instrumentation. Her practice traversed into the realm of modular compositions before finding solstice with the extraordinary power of which the Organ possesses inspired by composers such as Maxime Denuc, Kali Malone and Claire M Singer.`) is longer than the maximum allowed length (500).
+    at Document.invalidate (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-07T09:27:08.089Z [ERROR]: ValidationError: Artist validation failed: bio: Path `bio` (`back
+Ushara&#x27;s work blends classical training with innovative exploration of the Church Organ to achieve avant-garde compositions inspired by Pauline Olivero&#x27;s deep listening practices. Her work explores unique intonations and microtonal effects in an unconventional manner to journey through otherworldly textures and sonic landscapes.
+
+
+Ushara&#x27;s early years were spent immersed in the study of classical piano and opera, laying the groundwork for her deep passion and exploration of music. Guided by a spirit of relentless curiosity, explored through her radio show Twilight Zone (on Rough Radio), Ushara found inspiration in the world of experimental compositions, where she began to carve out her own unique sonic identity. 
+Mentored by Raphael Henard and deeply inspired by his works, she experiments within the intersection of live coding and manipulation of live instrumentation. Her practice traversed into the realm of modular compositions before finding solstice with the extraordinary power of which the Organ possesses inspired by composers such as Maxime Denuc, Kali Malone and Claire M Singer.`) is longer than the maximum allowed length (500).
+    at Document.invalidate (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
