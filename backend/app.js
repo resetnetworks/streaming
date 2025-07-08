@@ -59,7 +59,7 @@ app.use(cors({
 }));
 app.set('trust proxy', 1);
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
-app.use("/api/webhooks", webhookRoutes); // Before JSON parsing if needed
+app.use("/api/webhooks", express.raw({ type: "application/json" }), webhookRoutes); // Before JSON parsing if needed
 app.use(cookieParser());
 app.use(express.json());
 app.use(helmet.contentSecurityPolicy({
