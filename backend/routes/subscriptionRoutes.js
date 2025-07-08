@@ -10,8 +10,6 @@ const router = express.Router();
 router.post(
   "/artist/:artistId",
   authenticateUser,
-  artistIdValidator,
-  validate,
   initiateArtistSubscription
 );
 

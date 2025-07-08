@@ -20,8 +20,12 @@ export const markTransactionPaid = async ({ gateway, paymentId, paymentIntentId,
 // ✅ Update user after payment
 export const updateUserAfterPurchase = async (transaction, paymentId) => {
   const user = await User.findById(transaction.userId);
-  if (!user) return;
+  if (!user) {
+    console.warn("❌ User not found for transaction:", transaction._id);
+    return;
+  }
 
+  // 💰 Add to user's purchase history
   user.purchaseHistory.push({
     itemType: transaction.itemType,
     itemId: transaction.itemId,
@@ -29,31 +33,49 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
     paymentId,
   });
 
-  if (transaction.itemType === "song") {
-    user.purchasedSongs.push(transaction.itemId);
-  } else if (transaction.itemType === "album") {
-    user.purchasedAlbums.push(transaction.itemId);
-  } else if (transaction.itemType === "artist-subscription") {
-    const existing = await Subscription.findOne({
-      userId: transaction.userId,
-      artistId: transaction.artistId,
-      status: "active",
-      validUntil: { $gte: new Date() },
-    });
+  // 🛒 Handle specific item types
+  switch (transaction.itemType) {
+    case "song":
+      user.purchasedSongs = user.purchasedSongs || [];
+      user.purchasedSongs.push(transaction.itemId);
+      break;
 
-    if (existing) {
-      console.log("🟡 Subscription already active. Skipping creation.");
-    } else {
-      await Subscription.create({
+    case "album":
+      user.purchasedAlbums = user.purchasedAlbums || [];
+      user.purchasedAlbums.push(transaction.itemId);
+      break;
+
+    case "artist-subscription": {
+      const activeSub = await Subscription.findOne({
         userId: transaction.userId,
         artistId: transaction.artistId,
         status: "active",
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        validUntil: { $gte: new Date() },
       });
-      console.log("✅ New subscription created successfully.");
+
+      if (activeSub) {
+        console.log("🟡 Existing active subscription found. Skipping.");
+      } else {
+        await Subscription.create({
+          userId: transaction.userId,
+          artistId: transaction.artistId,
+          status: "active",
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          gateway: transaction.gateway,
+          externalSubscriptionId:
+            transaction.paymentIntentId || transaction.razorpayOrderId || "unknown",
+        });
+        console.log("✅ New subscription created for artist:", transaction.artistId);
+      }
+      break;
     }
+
+    default:
+      console.warn("⚠️ Unknown itemType:", transaction.itemType);
   }
 
   await user.save();
+  console.log("✅ User updated:", user._id);
   return true;
 };
+

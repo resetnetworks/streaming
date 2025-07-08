@@ -414,3 +414,118 @@
 2025-07-04T08:35:21.215Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
     at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:40:32.574Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:40:39.647Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:40:40.666Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:40:41.789Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:42:00.684Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:42:01.648Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:42:02.393Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:42:02.915Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:42:03.306Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:42:46.407Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:43:52.695Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T06:48:09.541Z [WARN]: 🔍 404 Not Found - GET /api/subscriptions 
+2025-07-07T06:52:29.452Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:53:09.038Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:53:09.980Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:54:33.947Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:54:35.206Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:56:00.237Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T09:56:01.442Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:06:12.783Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:06:13.766Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:07:15.497Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:07:16.376Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:07:16.811Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:07:17.224Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-07T10:07:44.550Z [WARN]: Validation failed: {"0":{"message":"Valid email is required"}}
+2025-07-08T05:58:09.688Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-08T05:58:24.868Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-08T05:59:36.707Z [ERROR]: ReferenceError: user is not defined
+    at canStreamSong (file:///Users/resetstudios03/Desktop/streaming/backend/helpers/accessControl.js:12:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:16:19) 
+2025-07-08T06:01:31.963Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-08T06:01:34.137Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/streamController.js:17:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-08T06:06:47.192Z [ERROR]: ValidationError: Subscription validation failed: externalSubscriptionId: Path `externalSubscriptionId` is required., gateway: Path `gateway` is required.
+    at Document.invalidate (/Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-08T06:12:39.681Z [ERROR]: ValidationError: Subscription validation failed: externalSubscriptionId: Path `externalSubscriptionId` is required., gateway: Path `gateway` is required.
+    at Document.invalidate (/Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-08T06:18:14.490Z [ERROR]: ValidationError: Subscription validation failed: externalSubscriptionId: Path `externalSubscriptionId` is required., gateway: Path `gateway` is required.
+    at Document.invalidate (/Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-08T06:24:17.597Z [ERROR]: ValidationError: Subscription validation failed: externalSubscriptionId: Path `externalSubscriptionId` is required., gateway: Path `gateway` is required.
+    at Document.invalidate (/Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-08T06:28:53.787Z [ERROR]: ValidationError: Subscription validation failed: externalSubscriptionId: Path `externalSubscriptionId` is required., gateway: Path `gateway` is required.
+    at Document.invalidate (/Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
