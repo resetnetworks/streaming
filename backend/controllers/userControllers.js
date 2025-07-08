@@ -5,6 +5,7 @@ import { sendMail } from "../utils/sendResetPassMail.js";
 import crypto from "crypto";
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestError, UnauthorizedError, } from "../errors/index.js";
+import { shapeUserResponse } from "../dto/user.dto.js";
 
 
 // ===================================================================
@@ -15,33 +16,32 @@ import { BadRequestError, UnauthorizedError, } from "../errors/index.js";
 export const registerUser = async (req, res) => {
   const { name, email, password, dob } = req.body;
 
-  // Check if user already exists
-  const existingUser = await User.findOne({ email });
+  // 1. Check if user already exists
+  const existingUser = await User.findOne({ email }).lean();
   if (existingUser) {
     throw new BadRequestError("User already exists");
   }
 
-  // Hash the password
+  // 2. Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create new user
-  const user = await User.create({
+  // 3. Create new user
+  const createdUser = await User.create({
     name,
     email,
     dob,
     password: hashedPassword,
   });
 
-  // Generate auth token and set cookie
-  generateToken(user._id, res);
+  // 4. Generate token and set cookie
+  generateToken(createdUser._id, res);
 
-  // Exclude password from returned user object
-  const userSafe = user.toObject();
-  delete userSafe.password;
+  // 5. Prepare safe user response
+  const shapedUser = shapeUserResponse(createdUser.toObject());
 
-  // Send success response
+  // 6. Send response
   res.status(StatusCodes.CREATED).json({
-    user: userSafe,
+    user: shapedUser,
     message: "User registered",
   });
 };
@@ -56,31 +56,32 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Find user by email and include password explicitly
+  // 1. Find user by email and include password
   const user = await User.findOne({ email }).select("+password");
 
   if (!user) {
     throw new BadRequestError("No user exists with this email");
   }
 
-  // Compare entered password with hashed password
+  // 2. Compare entered password with hashed password
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new BadRequestError("Incorrect password");
   }
 
-  // Generate auth token and set it in cookies
+  // 3. Generate token and set it in cookie
   generateToken(user._id, res);
 
-  // Exclude password from user object before sending response
-  const userSafe = user.toObject();
-  delete userSafe.password;
+  // 4. Shape safe user object
+  const shapedUser = shapeUserResponse(user.toObject());
 
+  // 5. Send response
   res.status(StatusCodes.OK).json({
-    user: userSafe,
+    user: shapedUser,
     message: "User logged in successfully",
   });
 };
+
 
 
 // ===================================================================
@@ -89,14 +90,26 @@ export const loginUser = async (req, res) => {
 // @access  Private
 // ===================================================================
 export const myProfile = async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
+  if (!req.user || !req.user._id) {
+    throw new UnauthorizedError("User authentication failed");
+  }
+
+  const user = await User.findById(req.user._id)
+    .select("-password")
+    .lean();
 
   if (!user) {
     throw new NotFoundError("User not found");
   }
 
-  res.status(StatusCodes.OK).json(user);
+  const shaped = shapeUserResponse(user);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    user: shaped,
+  });
 };
+
 
 // ===================================================================
 // @desc    Logout user by clearing auth token cookie
