@@ -1,3 +1,70 @@
 2025-06-30T10:21:11.208Z [ERROR]: NotFoundError: Artist not found
     at getAlbumsByArtist (file:///Users/resetstudios03/Desktop/streaming/backend/controllers/albumController.js:182:11)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-04T06:18:45.323Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:32:25.597Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:32:25.598Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:34:48.435Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:34:48.438Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:42:39.017Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:42:39.019Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:45:49.720Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:45:55.736Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:46:25.365Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:46:25.367Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:57:15.271Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T06:57:15.272Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:20:13.463Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:20:13.466Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:36:15.040Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:36:15.051Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:42:15.978Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:42:15.979Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:46:22.085Z [WARN]: Validation failed: {"0":{"message":"Artist ID is required"}}
+2025-07-04T07:46:22.088Z [WARN]: Validation failed: {"0":{"message":"Artist ID is required"}}
+2025-07-04T07:46:48.866Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:46:48.870Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:55:09.201Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:55:09.202Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T07:56:23.391Z [WARN]: 🔍 404 Not Found - POST /api/users/login/subscriptions/artist/68622ca4f0d021278c0ee51a 
+2025-07-04T07:56:43.614Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-04T08:07:28.150Z [WARN]: 🔍 404 Not Found - GET /api/artist/68622ca4f0d021278c0ee51a 
+2025-07-07T05:49:53.742Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-07T05:49:53.745Z [WARN]: Validation failed: {"0":{"message":"Invalid artist ID"}}
+2025-07-07T07:49:50.675Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T07:49:50.760Z [WARN]: 🔍 404 Not Found - GET /favicon.ico 
+2025-07-07T07:50:10.406Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:02:41.869Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:02:41.953Z [WARN]: 🔍 404 Not Found - GET /favicon.ico 
+2025-07-07T08:23:25.222Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:28.251Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:33.014Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:36.490Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:37.649Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:38.472Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:45.602Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T08:23:47.956Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-07T09:12:57.193Z [ERROR]: BadRequestError: Incorrect password
+    at loginUser (file:///Users/resetstudio02/Documents/streaming/backend/controllers/userControllers.js:69:11) 
+2025-07-07T09:26:49.749Z [ERROR]: ValidationError: Artist validation failed: bio: Path `bio` (`back
+Ushara&#x27;s work blends classical training with innovative exploration of the Church Organ to achieve avant-garde compositions inspired by Pauline Olivero&#x27;s deep listening practices. Her work explores unique intonations and microtonal effects in an unconventional manner to journey through otherworldly textures and sonic landscapes.
+
+
+Ushara&#x27;s early years were spent immersed in the study of classical piano and opera, laying the groundwork for her deep passion and exploration of music. Guided by a spirit of relentless curiosity, explored through her radio show Twilight Zone (on Rough Radio), Ushara found inspiration in the world of experimental compositions, where she began to carve out her own unique sonic identity. 
+Mentored by Raphael Henard and deeply inspired by his works, she experiments within the intersection of live coding and manipulation of live instrumentation. Her practice traversed into the realm of modular compositions before finding solstice with the extraordinary power of which the Organ possesses inspired by composers such as Maxime Denuc, Kali Malone and Claire M Singer.`) is longer than the maximum allowed length (500).
+    at Document.invalidate (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-07T09:27:08.089Z [ERROR]: ValidationError: Artist validation failed: bio: Path `bio` (`back
+Ushara&#x27;s work blends classical training with innovative exploration of the Church Organ to achieve avant-garde compositions inspired by Pauline Olivero&#x27;s deep listening practices. Her work explores unique intonations and microtonal effects in an unconventional manner to journey through otherworldly textures and sonic landscapes.
+
+
+Ushara&#x27;s early years were spent immersed in the study of classical piano and opera, laying the groundwork for her deep passion and exploration of music. Guided by a spirit of relentless curiosity, explored through her radio show Twilight Zone (on Rough Radio), Ushara found inspiration in the world of experimental compositions, where she began to carve out her own unique sonic identity. 
+Mentored by Raphael Henard and deeply inspired by his works, she experiments within the intersection of live coding and manipulation of live instrumentation. Her practice traversed into the realm of modular compositions before finding solstice with the extraordinary power of which the Organ possesses inspired by composers such as Maxime Denuc, Kali Malone and Claire M Singer.`) is longer than the maximum allowed length (500).
+    at Document.invalidate (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3343:32)
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/document.js:3104:17
+    at /Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11) 
+2025-07-08T05:59:06.649Z [WARN]: 🔍 404 Not Found - GET /api/webhooks/stripe 
+2025-07-08T05:59:06.757Z [WARN]: 🔍 404 Not Found - GET /favicon.ico 
