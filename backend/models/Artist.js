@@ -26,7 +26,6 @@ const artistSchema = new mongoose.Schema(
       default: "",
       trim: true,
       minlength: 2,
-      
     },
     bio: {
       type: String,
@@ -45,6 +44,11 @@ const artistSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    stripePriceId: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -59,6 +63,7 @@ const artistSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
+
 
 // 🔁 Auto-generate unique slug before validation
 artistSchema.pre("validate", function (next) {

@@ -39,29 +39,7 @@ export const initiateArtistSubscription = async (req, res) => {
     throw new BadRequestError("Artist subscription price is invalid.");
   }
 
-  let paymentIntentId = null;
-  let razorpayOrderId = null;
-  let clientSecret = null;
-
-  // 5. Call utility to create gateway payment session
-  if (gateway === "stripe") {
-    const stripeRes = await createStripePaymentIntent(amount, userId, {
-      itemType: "artist-subscription",
-      itemId: artistId,
-    });
-
-    paymentIntentId = stripeRes.id;
-    clientSecret = stripeRes.client_secret;
-  } else {
-    const razorpayRes = await createRazorpayOrder(amount, userId, {
-      itemType: "artist-subscription",
-      itemId: artistId,
-    });
-
-    razorpayOrderId = razorpayRes.id;
-  }
-
-  // 6. Save pending transaction
+  // 5. Create empty transaction first
   const transaction = await Transaction.create({
     userId,
     itemType: "artist-subscription",
@@ -71,17 +49,44 @@ export const initiateArtistSubscription = async (req, res) => {
     currency: "INR",
     status: "pending",
     gateway,
-    paymentIntentId,
-    razorpayOrderId,
   });
 
-  // 7. Respond with appropriate fields
+  // 6. Call utility to create gateway session with transactionId
+  let paymentIntentId = null;
+  let razorpayOrderId = null;
+  let clientSecret = null;
+
+  if (gateway === "stripe") {
+    const stripeRes = await createStripePaymentIntent(amount, userId, {
+      itemType: "artist-subscription",
+      itemId: artistId,
+      transactionId: transaction._id.toString(), // ✅ very important!
+    });
+
+    paymentIntentId = stripeRes.id;
+    clientSecret = stripeRes.client_secret;
+    transaction.paymentIntentId = paymentIntentId;
+  } else {
+    const razorpayRes = await createRazorpayOrder(amount, userId, {
+      itemType: "artist-subscription",
+      itemId: artistId,
+      transactionId: transaction._id.toString(), // ✅ very important!
+    });
+
+    razorpayOrderId = razorpayRes.id;
+    transaction.razorpayOrderId = razorpayOrderId;
+  }
+
+  // 7. Save updated transaction
+  await transaction.save();
+
+  // 8. Respond
   return res.status(StatusCodes.CREATED).json({
     success: true,
     transactionId: transaction._id,
     gateway,
     ...(gateway === "stripe"
       ? { clientSecret }
-      : { razorpayOrderId: razorpayOrderId }),
+      : { razorpayOrderId }),
   });
 };
