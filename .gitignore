@@ -1,3 +1,4 @@
 /backend/.env.DS_Store
 /backend/.env
+/backend/.cloudfront-private.pem
 /frontend/.env

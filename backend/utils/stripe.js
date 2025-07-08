@@ -2,16 +2,39 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 /**
- * Creates a Stripe PaymentIntent with optional metadata.
- * @param {number} amount - in INR (e.g., 199).
- * @param {string} userId - MongoDB ObjectId.
- * @param {object} metadata - Optional: { itemType, itemId }.
+ * 🔁 Create a recurring Stripe price for an artist subscription
+ * @param {string} artistName - The name of the artist
+ * @param {number} priceInRupees - e.g., 149
+ * @returns {string} stripePriceId
+ */
+export const createArtistStripeSubscriptionPrice = async (artistName, priceInRupees) => {
+  // 1. Create Stripe Product
+  const product = await stripe.products.create({
+    name: `Subscription for ${artistName}`,
+  });
+
+  // 2. Create recurring monthly Price
+  const price = await stripe.prices.create({
+    unit_amount: priceInRupees * 100, // Amount in paisa
+    currency: "inr",
+    recurring: { interval: "month" },
+    product: product.id,
+  });
+
+  return price.id; // ✅ Save this to artist.stripePriceId
+};
+
+/**
+ * 💰 Creates a Stripe PaymentIntent with optional metadata.
+ * @param {number} amount - in INR (e.g., 199)
+ * @param {string} userId - MongoDB ObjectId
+ * @param {object} metadata - Optional: { itemType, itemId, transactionId }
  * @returns Stripe PaymentIntent
  */
 export const createStripePaymentIntent = async (amount, userId, metadata = {}) => {
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amount * 100,
-    currency: "inr", // ✅ Lowercase is required
+    currency: "inr",
     description: "Artist Subscription Payment",
     statement_descriptor: "Streamify Music",
     shipping: {
@@ -34,4 +57,3 @@ export const createStripePaymentIntent = async (amount, userId, metadata = {}) =
 
   return paymentIntent;
 };
-
