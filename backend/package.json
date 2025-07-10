@@ -14,6 +14,7 @@
   "dependencies": {
     "@aws-sdk/client-mediaconvert": "^3.817.0",
     "@aws-sdk/client-s3": "^3.837.0",
+    "@aws-sdk/cloudfront-signer": "^3.821.0",
     "@aws-sdk/credential-provider-node": "^3.817.0",
     "@aws-sdk/lib-storage": "^3.817.0",
     "@aws-sdk/s3-request-presigner": "^3.837.0",

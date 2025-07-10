@@ -1,7 +1,8 @@
 // controllers/streamController.js
 
 import { Song } from "../models/Song.js";
-import { getSignedUrl } from "../utils/s3.js";
+// import { getSignedUrl } from "../utils/s3.js";
+import { getSignedCloudFrontUrl as getSignedUrl} from "../utils/cloudfront.js";
 import { canStreamSong } from "../helpers/accessControl.js";
 import { UnauthorizedError, NotFoundError } from "../errors/index.js";
 import { Album } from "../models/Album.js";
@@ -16,11 +17,17 @@ export const streamSong = async (req, res) => {
   if (!allowed) throw new UnauthorizedError("You do not have access to stream this song.");
 
   const song = await Song.findById(songId);
-  if (!song) throw new NotFoundError("Song not found");
+  if (!song || !song.audioKey) throw new NotFoundError("Song not found or missing audioKey");
 
-  const signedUrl = await getSignedUrl(song.audioKey); // audioKey = S3 key
+  console.log(song.audioKey); // Debugging line
+  
+  const fileName = `${song.audioKey}.m3u8`; // ✅ only file name
+  const signedUrl = await getSignedUrl(song.audioKey); // ✅ pass folder + file name separately
+  console.log("Generated signed URL:", signedUrl); // Debugging line
+
   res.json({ url: signedUrl });
 };
+
 
 
 // controllers/streamController.js

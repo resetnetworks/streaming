@@ -10,7 +10,7 @@ const s3 = new S3Client({
 });
 
 export const getSignedUrl = async (key) => {
-  const bucket = process.env.AWS_S3_BUCKET_NAME;
+  const bucket = process.env.AWS_S3_BUCKET;
   const command = new GetObjectCommand({
     Bucket: bucket,
     Key: key,

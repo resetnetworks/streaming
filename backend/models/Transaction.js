@@ -11,7 +11,12 @@ const transactionSchema = new mongoose.Schema({
   status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
   paymentIntentId: String, // Stripe
   razorpayOrderId: String, // Razorpay
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  stripeSubscriptionId: {
+  type: String,
+  default: null,
+},
+
 });
 
 export const Transaction = mongoose.model("Transaction", transactionSchema);

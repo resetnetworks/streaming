@@ -7,6 +7,9 @@ import { NotFoundError, BadRequestError, UnauthorizedError } from '../errors/ind
 import { isAdmin } from "../utils/authHelper.js";
 import { StatusCodes } from 'http-status-codes';
 // import { UnauthorizedError } from "../errors/unauthorized.js";
+import { shapeArtistResponse } from "../dto/artist.dto.js";
+import { log } from "console";
+import { createArtistStripeSubscriptionPrice } from "../utils/stripe.js";
 
 
 
@@ -16,24 +19,25 @@ import { StatusCodes } from 'http-status-codes';
 // @access  Admin
 // ===================================================================
 export const createArtist = async (req, res) => {
-  // Check if user is admin
+  // 🔒 Admin check
   if (!isAdmin(req.user)) {
-    throw new UnauthorizedError('Access denied. Admins only.');;
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
   const { name, bio, location, subscriptionPrice } = req.body;
 
-  // Basic validation
+  // 🛡️ Basic validation
   if (!name) {
-    throw new BadRequestError('Artist name is required.');
+    throw new BadRequestError("Artist name is required.");
   }
 
-  // Handle optional image upload
+  // ☁️ Optional image upload
   const imageFile = req.files?.coverImage?.[0];
-  const imageUrl = imageFile ? await uploadToS3(imageFile, 'artists') : '';
+  const imageUrl = imageFile ? await uploadToS3(imageFile, "artists") : "";
 
-  // Create new artist document
-  const newArtist = await Artist.create({
+
+  // 🎨 Create artist
+  const artist = await Artist.create({
     name,
     bio,
     subscriptionPrice,
@@ -41,9 +45,19 @@ export const createArtist = async (req, res) => {
     image: imageUrl,
     createdBy: req.user._id,
   });
+   if (artist.subscriptionPrice && artist.subscriptionPrice > 0) {
+  const priceId = await createArtistStripeSubscriptionPrice(artist.name, artist.subscriptionPrice);
+  artist.stripePriceId = priceId;
+  await artist.save();
 
-  res.status(StatusCodes.CREATED).json({ success: true, artist: newArtist });
+  // ✂️ Shape response
+  const shaped = await shapeArtistResponse(artist.toObject())
+  console.log("Created artist:", shaped); // Debugging line
+  
+
+  res.status(StatusCodes.CREATED).json({ success: true, artist: shaped });
 };
+}
 
 
 // ===================================================================
@@ -51,40 +65,45 @@ export const createArtist = async (req, res) => {
 // @route   PATCH /api/artists/:id
 // @access  Admin
 // ===================================================================
+
 export const updateArtist = async (req, res) => {
   if (!isAdmin(req.user)) {
-    throw new UnauthorizedError('Access denied. Admins only.');
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
   const { id } = req.params;
 
-  // Validate MongoDB ObjectId
+  // Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new BadRequestError('Invalid artist ID.');
+    throw new BadRequestError("Invalid artist ID.");
   }
 
   const artist = await Artist.findById(id);
   if (!artist) {
-    throw new NotFoundError('Artist not found.');
+    throw new NotFoundError("Artist not found.");
   }
 
   const { name, bio, location, subscriptionPrice } = req.body;
 
-  // Update only the provided fields
+  // Update only if fields are provided
   if (name) artist.name = name;
   if (bio) artist.bio = bio;
-  if (location) artist.location = location
-  if (subscriptionPrice !== undefined) artist.subscriptionPrice = subscriptionPrice;
+  if (location) artist.location = location;
+  if (subscriptionPrice !== undefined) {
+    artist.subscriptionPrice = subscriptionPrice;
+  }
 
   // Optional image replacement
   const imageFile = req.files?.image?.[0];
   if (imageFile) {
-    artist.image = await uploadToS3(imageFile, 'artists');
+    artist.image = await uploadToS3(imageFile, "artists");
   }
 
   await artist.save();
 
-  res.status(StatusCodes.OK).json({ success: true, artist });
+  const shaped = await shapeArtistResponse(artist.toObject());
+
+  res.status(StatusCodes.OK).json({ success: true, artist: shaped });
 };
 
 
@@ -130,14 +149,15 @@ export const getAllArtists = async (req, res) => {
   const limit = parseInt(req.query.limit) > 0 ? parseInt(req.query.limit) : 10;
   const skip = (page - 1) * limit;
 
-  const query = {};
-
   const [artists, total] = await Promise.all([
-    Artist.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
-    Artist.countDocuments(query),
+    Artist.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(), // ✅ use lean for performance
+    Artist.countDocuments({}),
   ]);
 
-  // Add songCount and albumCount to each artist
   const enrichedArtists = await Promise.all(
     artists.map(async (artist) => {
       const [songCount, albumCount] = await Promise.all([
@@ -145,11 +165,11 @@ export const getAllArtists = async (req, res) => {
         Album.countDocuments({ artist: artist._id }),
       ]);
 
-      return {
-        ...artist.toObject(),
+      return shapeArtistResponse({
+        ...artist,
         songCount,
         albumCount,
-      };
+      });
     })
   );
 
@@ -171,9 +191,8 @@ export const getAllArtists = async (req, res) => {
 // @access  Public or Admin (based on need)
 // ===================================================================
 export const getAllArtistsWithoutPagination = async (req, res) => {
-  const artists = await Artist.find().sort({ createdAt: -1 });
+  const artists = await Artist.find().sort({ createdAt: -1 }).lean();
 
-  // Enrich with song & album counts
   const enrichedArtists = await Promise.all(
     artists.map(async (artist) => {
       const [songCount, albumCount] = await Promise.all([
@@ -181,11 +200,11 @@ export const getAllArtistsWithoutPagination = async (req, res) => {
         Album.countDocuments({ artist: artist._id }),
       ]);
 
-      return {
-        ...artist.toObject(),
+      return shapeArtistResponse({
+        ...artist,
         songCount,
         albumCount,
-      };
+      });
     })
   );
 
@@ -205,16 +224,27 @@ export const getAllArtistsWithoutPagination = async (req, res) => {
 export const getArtistById = async (req, res) => {
   const identifier = req.params.id;
 
-  // Determine query type (ObjectId or slug)
+  // Determine whether identifier is a Mongo ObjectId or a slug
   const query = mongoose.Types.ObjectId.isValid(identifier)
     ? { _id: identifier }
     : { slug: identifier };
 
-  // Find artist
-  const artist = await Artist.findOne(query);
+  const artist = await Artist.findOne(query).lean();
   if (!artist) {
-    throw new NotFoundError('Artist not found');
+    throw new NotFoundError("Artist not found");
   }
 
-  res.status(StatusCodes.OK).json({ success: true, artist });
+  // Optional: Enrich with counts
+  const [songCount, albumCount] = await Promise.all([
+    Song.countDocuments({ artist: artist._id }),
+    Album.countDocuments({ artist: artist._id }),
+  ]);
+
+  const shaped = await shapeArtistResponse({
+    ...artist,
+    songCount,
+    albumCount,
+  });
+
+  res.status(StatusCodes.OK).json({ success: true, artist: shaped });
 };

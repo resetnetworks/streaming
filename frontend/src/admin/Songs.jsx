@@ -25,6 +25,7 @@ const Songs = () => {
   const albums = useSelector(selectAllAlbums);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSong, setEditingSong] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -42,22 +43,24 @@ const Songs = () => {
     }
   };
 
-  const handleUpdate = async (songId, formData) => {
-    try {
-      await dispatch(updateSong({ id: songId, formData })).unwrap();
-      toast.success('Song updated successfully');
-    } catch (error) {
-      toast.error(error?.message || 'Failed to update song');
-    }
+  const handleEdit = (song) => {
+    setEditingSong(song);
+    setIsModalOpen(true);
   };
 
-  const handleAddSong = async (formData) => {
+  const handleAddOrUpdateSong = async (formData) => {
     try {
-      await dispatch(createSong(formData)).unwrap();
-      toast.success('Song created successfully');
+      if (editingSong) {
+        await dispatch(updateSong({ id: editingSong._id, formData })).unwrap();
+        toast.success('Song updated successfully');
+      } else {
+        await dispatch(createSong(formData)).unwrap();
+        toast.success('Song created successfully');
+      }
       setIsModalOpen(false);
+      setEditingSong(null);
     } catch (error) {
-      toast.error(error?.message || 'Failed to create song');
+      toast.error(error?.message || 'Failed to save song');
     }
   };
 
@@ -87,7 +90,10 @@ const Songs = () => {
           </div>
 
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setEditingSong(null); // For add new
+              setIsModalOpen(true);
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
           >
             <FaPlus className="mr-2" /> Add Song
@@ -108,7 +114,7 @@ const Songs = () => {
               key={song._id}
               song={song}
               onDelete={handleDelete}
-              onUpdate={handleUpdate}
+              onEdit={handleEdit}
             />
           ))}
         </div>
@@ -116,10 +122,14 @@ const Songs = () => {
 
       <SongFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddSong}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingSong(null);
+        }}
+        onSubmit={handleAddOrUpdateSong}
         artists={artists}
         initialAlbums={albums}
+        songToEdit={editingSong}
       />
     </div>
   );

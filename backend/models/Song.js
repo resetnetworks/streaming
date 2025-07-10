@@ -98,4 +98,7 @@ songSchema.index({ genre: 1 });
 songSchema.index({ title: 1 });
 songSchema.index({ slug: 1 });
 
+
+
+
 export const Song = mongoose.models.Song || mongoose.model("Song", songSchema);
