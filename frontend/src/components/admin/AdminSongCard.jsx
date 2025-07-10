@@ -18,6 +18,7 @@ const AdminSongCard = ({ song, onDelete, onEdit }) => {
 
   return (
     <div className="bg-gray-800 rounded-md overflow-hidden shadow-md border border-gray-700 text-sm w-full mx-auto">
+      
       {/* Cover */}
       <div className="h-36 bg-gray-700 relative">
         {song.coverImage ? (
