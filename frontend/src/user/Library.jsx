@@ -32,8 +32,8 @@ const Library = () => {
     dispatch(fetchAllSongs({ type: "library", page, limit: 20 })).then((res) => {
       if (res.payload?.songs) {
         setLibrarySongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+          const seen = new Set(prev.map((s) => s.id));
+          const newSongs = res.payload.songs.filter((s) => !seen.has(s.id));
           return [...prev, ...newSongs];
         });
       }
@@ -102,12 +102,12 @@ const Library = () => {
               librarySongs.map((song, idx) => (
                 <RecentPlays
                   ref={idx === librarySongs.length - 1 ? lastSongRef : null}
-                  key={song._id}
+                  key={song.id}
                   title={song.title}
                   singer={song.singer}
                   image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song._id)}
-                  isSelected={selectedSong === song._id}
+                  onPlay={() => handlePlaySong(song.id)}
+                  isSelected={selectedSong === song.id}
                 />
               ))
             )}
@@ -151,14 +151,14 @@ const Library = () => {
                   >
                     {column.map((song) => (
                       <SongList
-                        key={song._id}
-                        songId={song._id}
+                        key={song.id}
+                        songId={song.id}
                         img={song.coverImage || "/images/placeholder.png"}
                         songName={song.title}
                         singerName={song.singer}
                         seekTime={formatDuration(song.duration)}
-                        onPlay={() => handlePlaySong(song._id)}
-                        isSelected={selectedSong === song._id}
+                        onPlay={() => handlePlaySong(song.id)}
+                        isSelected={selectedSong === song.id}
                       />
                     ))}
                   </div>
