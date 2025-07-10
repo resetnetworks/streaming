@@ -102,7 +102,7 @@ const schema = new mongoose.Schema({
     {
       itemType: {
         type: String,
-        enum: ["song", "album"],
+        enum: ['song', 'album', 'subscription', 'artist-subscription'],
         required: true,
       },
       itemId: {

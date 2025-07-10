@@ -62,26 +62,26 @@ const Player = () => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
-  const currentSong = selectedSong && songs.length 
-    ? songs.find((s) => s.id === selectedSong) 
-    : null;
+  const currentSong = selectedSong || null;
 
-  const currentIndex = currentSong
-    ? songs.findIndex((s) => s.id === selectedSong)
-    : -1;
+const currentIndex = currentSong
+  ? songs.findIndex((s) => s._id === currentSong._id)
+  : -1;
 
-  const nextSongs =
-    currentIndex !== -1 
-      ? songs.slice(currentIndex, currentIndex + 4) 
-      : songs.slice(0, 4);
+const nextSongs =
+  currentIndex !== -1
+    ? songs.slice(currentIndex + 1, currentIndex + 5)
+    : songs.slice(0, 4);
 
-  const isLiked = useSelector(selectIsSongLiked(currentSong?.id));
+
+  const isLiked = useSelector(selectIsSongLiked(currentSong?._id));
+
 
   // Fetch stream URL when song changes
   useEffect(() => {
-    if (selectedSong && !streamUrls[selectedSong]) {
-      dispatch(fetchStreamUrl(selectedSong));
-    }
+    if (selectedSong && !streamUrls[selectedSong._id]) {
+  dispatch(fetchStreamUrl(selectedSong._id));
+}
   }, [selectedSong, streamUrls, dispatch]);
 
   // Initialize with first song if none selected
@@ -94,7 +94,7 @@ const Player = () => {
   // Main HLS player initialization - FIXED VERSION
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !currentSong || !streamUrls[selectedSong]) return;
+    if (!video || !currentSong || !streamUrls[selectedSong._id]) return;
 
     let hls;
     const initPlayer = async () => {
@@ -112,7 +112,7 @@ const Player = () => {
           hlsRef.current = null;
         }
 
-        const streamUrl = streamUrls[selectedSong];
+        const streamUrl = streamUrls[selectedSong._id];
         const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
 
         if (Hls.isSupported()) {
@@ -208,7 +208,7 @@ const Player = () => {
         video.onloadedmetadata = null;
       }
     };
-  }, [selectedSong, streamUrls, isPlaying]);
+  }, [selectedSong, streamUrls]);
 
   // Volume control
   useEffect(() => {
@@ -255,7 +255,7 @@ const Player = () => {
   const handleNext = () => {
     if (!currentSong || songs.length === 0) return;
     const nextIndex = (currentIndex + 1) % songs.length;
-    dispatch(setSelectedSong(songs[nextIndex].id));
+    dispatch(setSelectedSong(songs[nextIndex]));
     dispatch(play());
   };
 
@@ -285,7 +285,7 @@ const Player = () => {
   };
 
   const handleLikeToggle = () => {
-    if (currentSong?.id) dispatch(toggleLikeSong(currentSong.id));
+    if (currentSong?._id) dispatch(toggleLikeSong(currentSong._id));
   };
 
   if (!currentSong || songs.length === 0) {
@@ -425,12 +425,12 @@ const Player = () => {
               <div className="space-y-3">
                 {nextSongs.map((song) => (
                   <div
-                    key={song.id}
+                    key={song._id}
                     className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
                       song.id === selectedSong ? "bg-blue-800/40" : ""
                     }`}
                     onClick={() => {
-                      dispatch(setSelectedSong(song.id));
+                      dispatch(setSelectedSong(song));
                       dispatch(play());
                     }}
                   >

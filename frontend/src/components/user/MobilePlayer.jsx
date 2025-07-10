@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAllSongs } from "../../features/songs/songSelectors.js";
+import { selectAllSongs, selectSelectedSong } from "../../features/songs/songSelectors.js";
 import {
   setSelectedSong,
   play,
@@ -10,11 +10,15 @@ import {
   setDuration,
   setVolume,
 } from "../../features/playback/playerSlice.js";
+import { fetchStreamUrl } from "../../features/stream/streamSlice";
+import { toggleLikeSong } from "../../features/auth/authSlice";
+import { selectIsSongLiked } from "../../features/auth/authSelectors";
 import { FaPlay, FaPause } from "react-icons/fa";
 import { RiVolumeUpFill, RiVolumeMuteFill } from "react-icons/ri";
 import { IoIosArrowDown, IoIosInfinite, IoMdShuffle } from "react-icons/io";
-import { CiHeart } from "react-icons/ci";
+import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { RiSkipLeftFill, RiSkipRightFill } from "react-icons/ri";
+import { toast } from "sonner";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60) || 0;
@@ -24,95 +28,196 @@ const formatTime = (seconds) => {
 
 const MobilePlayer = () => {
   const dispatch = useDispatch();
-
   const songs = useSelector(selectAllSongs);
-  const selectedSongId = useSelector((state) => state.player.selectedSong);
+  const selectedSong = useSelector(selectSelectedSong);
   const isPlaying = useSelector((state) => state.player.isPlaying);
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
+  const streamUrls = useSelector((state) => state.stream.urls);
+  const streamLoading = useSelector((state) => state.stream.loading);
 
-  const currentSong = songs.find((s) => s._id === selectedSongId) || songs[0];
-  const currentIndex = songs.findIndex((s) => s._id === selectedSongId);
-  const nextSongs = songs.slice(currentIndex, currentIndex + 3);
+  const currentSong = selectedSong && songs.length 
+    ? songs.find((s) => s.id === selectedSong) 
+    : null;
+
+  const currentIndex = currentSong
+    ? songs.findIndex((s) => s.id === selectedSong)
+    : -1;
+
+  const nextSongs = currentIndex !== -1 
+    ? songs.slice(currentIndex, currentIndex + 3) 
+    : songs.slice(0, 3);
+
+  // ✅ Memoized selector to track like status
+  const isLiked = useSelector(
+    useMemo(() => selectIsSongLiked(currentSong?.id), [currentSong?.id])
+  );
 
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
+  const [playbackError, setPlaybackError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const audioRef = useRef(null);
+  const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
+  // Fetch stream URL when song changes
   useEffect(() => {
-    if (!audioRef.current) return;
-
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
+    if (selectedSong && !streamUrls[selectedSong]) {
+      dispatch(fetchStreamUrl(selectedSong));
     }
+  }, [selectedSong, streamUrls, dispatch]);
 
-    if (!currentSong?.audio?.url) return;
+  useEffect(() => {
+    if (!selectedSong && songs.length > 0) {
+      dispatch(setSelectedSong(songs[0].id));
+    }
+  }, [selectedSong, songs, dispatch]);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hlsRef.current = hls;
-      hls.loadSource(currentSong.audio.url);
-      hls.attachMedia(audioRef.current);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (isPlaying) {
-          audioRef.current.play();
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !currentSong || !streamUrls[selectedSong]) return;
+
+    let hls;
+    const initPlayer = async () => {
+      try {
+        setIsLoading(true);
+        setPlaybackError(null);
+
+        dispatch(setCurrentTime(0));
+        dispatch(setDuration(0));
+
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+          hlsRef.current = null;
         }
-      });
-    } else if (audioRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-      audioRef.current.src = currentSong.audio.url;
-      if (isPlaying) {
-        audioRef.current.play();
+
+        const streamUrl = streamUrls[selectedSong];
+        const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
+
+        if (Hls.isSupported()) {
+          hls = new Hls({
+            maxBufferLength: 30,
+            maxMaxBufferLength: 600,
+            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferHole: 0.5,
+            enableWorker: true,
+          });
+
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              console.error("HLS Error:", data);
+              setPlaybackError(`Playback Error: ${data.type}`);
+              hls.destroy();
+              if (currentSong.audioUrl) {
+                video.src = currentSong.audioUrl;
+                video.load();
+              }
+            }
+          });
+
+          hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+            hls.loadSource(mediaUrl);
+          });
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.currentTime = 0;
+            dispatch(setCurrentTime(0));
+            if (isPlaying) {
+              video.play().catch((err) => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
+
+          hls.attachMedia(video);
+          hlsRef.current = hls;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = mediaUrl;
+          video.addEventListener("loadedmetadata", () => {
+            dispatch(setDuration(video.duration));
+            if (isPlaying) {
+              video.play().catch((err) => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
+        }
+
+        video.onloadedmetadata = () => {
+          const safeDuration = isNaN(video.duration) ? currentSong.duration || 0 : video.duration;
+          dispatch(setDuration(safeDuration));
+        };
+
+        video.ontimeupdate = () => {
+          if (!isNaN(video.currentTime)) {
+            dispatch(setCurrentTime(video.currentTime));
+
+            const remainingTime = (video.duration || 0) - video.currentTime;
+
+            if (remainingTime <= 0.5 && video.duration > 1 && !isLooping) {
+              video.ontimeupdate = null;
+              handleNext();
+            }
+          }
+        };
+
+        video.onended = () => {
+          if (!isLooping) handleNext();
+        };
+      } catch (err) {
+        setPlaybackError(err.message);
+      } finally {
+        setIsLoading(false);
       }
-    }
-
-    dispatch(setCurrentTime(0));
-    dispatch(setDuration(0));
-  }, [currentSong, dispatch, isPlaying]);
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.play();
-    } else {
-      audioRef.current.pause();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const onLoadedMetadata = () => dispatch(setDuration(audio.duration));
-    const onTimeUpdate = () => dispatch(setCurrentTime(audio.currentTime));
-    const onEnded = () => {
-      if (!isLooping) handleNext();
     };
 
-    audio.addEventListener("loadedmetadata", onLoadedMetadata);
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("ended", onEnded);
+    initPlayer();
 
     return () => {
-      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-      audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("ended", onEnded);
+      if (hls) hls.destroy();
+      const video = videoRef.current;
+      if (video) {
+        video.ontimeupdate = null;
+        video.onended = null;
+        video.onloadedmetadata = null;
+      }
     };
-  }, [dispatch, currentSong, isLooping]);
+  }, [selectedSong, streamUrls, isLooping]);
 
-  const handleTogglePlay = () => {
-    isPlaying ? dispatch(pause()) : dispatch(play());
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (playbackError) {
+      toast.error(playbackError);
+    }
+  }, [playbackError]);
+
+  const handleTogglePlay = async () => {
+    const video = videoRef.current;
+    if (!video || !currentSong) return;
+
+    try {
+      if (isPlaying) {
+        await video.pause();
+        dispatch(pause());
+      } else {
+        await video.play();
+        dispatch(play());
+      }
+    } catch (err) {
+      setPlaybackError(err.message);
+    }
   };
 
   const handleToggleMute = () => {
@@ -126,31 +231,49 @@ const MobilePlayer = () => {
   };
 
   const handleNext = () => {
-    if (!songs.length) return;
+    if (!currentSong || songs.length === 0) return;
     const nextIndex = (currentIndex + 1) % songs.length;
-    dispatch(setSelectedSong(songs[nextIndex]._id));
+    dispatch(setSelectedSong(songs[nextIndex].id));
     dispatch(play());
   };
 
   const handlePrev = () => {
-    if (!songs.length) return;
-    const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-    dispatch(setSelectedSong(songs[prevIndex]._id));
-    dispatch(play());
-  };
-
-  const handleSeekChange = (newSeek) => {
-    dispatch(setCurrentTime(newSeek));
-    if (audioRef.current) {
-      audioRef.current.currentTime = newSeek;
+    if (!currentSong || songs.length === 0) return;
+    if (currentTime > 3) {
+      handleSeekChange(0);
+    } else {
+      const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+      dispatch(setSelectedSong(songs[prevIndex].id));
+      dispatch(play());
     }
   };
 
-  if (!currentSong) return null;
+  const handleSeekChange = (val) => {
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = val;
+      dispatch(setCurrentTime(val));
+    }
+  };
+
+  const handleLikeToggle = () => {
+    if (!currentSong?.id) return;
+    dispatch(toggleLikeSong(currentSong.id));
+    toast.success(isLiked ? "Removed from Liked Songs" : "Added to Liked Songs");
+  };
+
+  if (!currentSong || songs.length === 0) return null;
 
   return (
     <>
-      <audio ref={audioRef} style={{ display: "none" }} muted={isMuted} />
+      <video
+        ref={videoRef}
+        style={{ display: "none" }}
+        muted={isMuted}
+        preload="auto"
+        playsInline
+        crossOrigin="anonymous"
+      />
 
       {/* Mini Player */}
       <div
@@ -166,7 +289,7 @@ const MobilePlayer = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <img
-                src={currentSong?.thumbnail?.url}
+                src={currentSong?.coverImage}
                 className="w-12 h-12 rounded-md shadow-[0_0_5px_1px_#3b82f6]"
                 alt="Album cover"
               />
@@ -188,7 +311,9 @@ const MobilePlayer = () => {
                   handleTogglePlay();
                 }}
               >
-                {isPlaying ? (
+                {isLoading ? (
+                  <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : isPlaying ? (
                   <FaPause className="text-sm" />
                 ) : (
                   <FaPlay className="text-sm" />
@@ -219,7 +344,7 @@ const MobilePlayer = () => {
         </div>
 
         <img
-          src={currentSong?.thumbnail?.url}
+          src={currentSong?.coverImage}
           className="w-64 h-64 object-contain rounded-lg shadow-lg mt-6 mb-8"
           alt="Album cover"
         />
@@ -231,7 +356,13 @@ const MobilePlayer = () => {
           >
             {currentSong?.title} - {currentSong?.singer}
           </marquee>
-          <CiHeart className="text-xl cursor-pointer" />
+         <button onClick={handleLikeToggle}>
+        {isLiked ? (
+          <BsHeartFill className="text-xl text-red-500" />
+        ) : (
+          <BsHeart className="text-xl text-gray-400" />
+        )}
+      </button>
         </div>
 
         <div className="w-full mt-4">
@@ -272,7 +403,9 @@ const MobilePlayer = () => {
               className="play-pause-button-mobile flex justify-center items-center gap-2"
               onClick={handleTogglePlay}
             >
-              {isPlaying ? (
+              {isLoading ? (
+                <div className="spinner h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : isPlaying ? (
                 <FaPause className="text-lg" />
               ) : (
                 <FaPlay className="text-lg" />

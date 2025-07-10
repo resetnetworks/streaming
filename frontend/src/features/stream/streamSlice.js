@@ -48,5 +48,10 @@ const streamSlice = createSlice({
   },
 });
 
+// Selectors
+export const selectStreamUrl = (state, songId) => state.stream.urls[songId];
+export const selectStreamLoading = (state) => state.stream.loading;
+export const selectStreamError = (state) => state.stream.error;
+
 export const { clearStreamUrls } = streamSlice.actions;
 export default streamSlice.reducer;

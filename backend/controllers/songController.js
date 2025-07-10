@@ -241,10 +241,18 @@ export const getAllSongs = async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(50, parseInt(req.query.limit) || 20);
   const skip = (page - 1) * limit;
+
   const type = req.query.type || "all";
   const artistId = req.query.artistId || null;
 
-  let query = {};
+  // ✅ Base query: Exclude songs that are part of any album
+  let query = {
+    $or: [
+      { album: { $exists: false } },
+      { album: null }
+    ]
+  };
+
   let sortOption = { createdAt: -1 };
 
   switch (type) {
@@ -252,10 +260,12 @@ export const getAllSongs = async (req, res) => {
       sortOption = { createdAt: -1 };
       break;
     case "top":
-      sortOption = { playCount: -1 }; // Optional if `playCount` exists
+      sortOption = { playCount: -1 }; // Optional, only if playCount exists
       break;
     case "similar":
-      if (!artistId) throw new BadRequestError("artistId is required for similar songs");
+      if (!artistId) {
+        throw new BadRequestError("artistId is required for similar songs");
+      }
       query.artist = artistId;
       break;
   }
@@ -286,6 +296,7 @@ export const getAllSongs = async (req, res) => {
     songs: shapedSongs,
   });
 };
+
 
 
 

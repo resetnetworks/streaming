@@ -166,8 +166,8 @@ const Home = () => {
                   price={song.accessType === 'purchase-only' ? `$${song.price}` : 'Subs..'}
                   singer={song.singer}
                   image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song.id)}
-                  isSelected={selectedSong === song.id}
+                  onPlay={() => handlePlaySong(song)}
+                  isSelected={selectedSong === song}
                 />
               ))
             )}

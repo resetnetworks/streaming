@@ -28,35 +28,11 @@ const playerPersistConfig = {
 // Current version of your store
 const CURRENT_STORE_VERSION = 1;
 
-// Custom storage that clears songs on refresh
-const customStorage = {
-  ...storage,
-  getItem: async (key) => {
-    const value = await storage.getItem(key);
-    
-    // Clear songs data if this is a root storage request
-    if (key === 'root') {
-      try {
-        const parsed = JSON.parse(value || '{}');
-        if (parsed.songs) {
-          delete parsed.songs;
-          await storage.setItem(key, JSON.stringify(parsed));
-          toast.info('Refreshing song data...');
-        }
-      } catch (e) {
-        console.error('Storage parse error:', e);
-      }
-    }
-    
-    return value;
-  },
-};
-
 // Root persist config
 const rootPersistConfig = {
   key: 'root',
   version: CURRENT_STORE_VERSION,
-  storage: customStorage, // Using our custom storage
+  storage, // ✅ Using default storage instead of custom logic
   whitelist: [], // No longer persisting songs here
   blacklist: ['player', 'auth', 'songs'], // Explicitly exclude songs
   stateReconciler: autoMergeLevel2,
@@ -71,7 +47,7 @@ const rootPersistConfig = {
   },
 };
 
-// Separate persist config for songs (if you want to persist temporarily)
+// Separate persist config for songs (persist only needed data)
 const songsPersistConfig = {
   key: 'songs',
   storage,
@@ -82,7 +58,7 @@ const songsPersistConfig = {
 // Combine reducers
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
-  songs: persistReducer(songsPersistConfig, songReducer), // Persist separately
+  songs: persistReducer(songsPersistConfig, songReducer),
   player: persistReducer(playerPersistConfig, playerReducer),
   artists: artistsReducer,
   albums: albumsReducer,
@@ -113,12 +89,3 @@ export const persistor = persistStore(store, null, (error) => {
     console.error('Persistor error:', error);
   }
 });
-
-// Add window listener to clear songs on refresh
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    // Clear songs from storage while keeping other data
-    storage.removeItem('persist:songs')
-      .catch(e => console.error('Failed to clear songs:', e));
-  });
-}
