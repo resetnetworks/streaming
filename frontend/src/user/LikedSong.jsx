@@ -143,11 +143,11 @@ const handleToggleLike = async (songId) => {
                       ? lastSongElementRef
                       : null
                   }
-                  key={song._id}
+                  key={song.id}
                   className="flex items-center justify-between bg-white/10 rounded-xl shadow-lg p-4 hover:bg-white/20 transition relative my-2 mx-0 group"
                 >
                   <SongList
-                    songId={song._id}
+                    songId={song.id}
                     img={
                       song.coverImage ||
                       song.album?.coverImage ||
@@ -156,13 +156,13 @@ const handleToggleLike = async (songId) => {
                     songName={song.title}
                     singerName={song.artist?.name || song.singer}
                     seekTime={formatDuration(song.duration)}
-                    onPlay={() => handlePlaySong(song._id)}
-                    isSelected={selectedSong === song._id}
+                    onPlay={() => handlePlaySong(song.id)}
+                    isSelected={selectedSong === song.id}
                     isPlaying={
-                      selectedSong === song._id &&
+                      selectedSong === song.id &&
                       playerStatus === "playing"
                     }
-                    onLikeToggle={() => handleToggleLike(song._id)}
+                    onLikeToggle={() => handleToggleLike(song.id)}
                   />
                 </div>
               ))}
