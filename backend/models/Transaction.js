@@ -9,9 +9,9 @@ const transactionSchema = new mongoose.Schema({
   amount: Number,
   currency: String,
   status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
-  paymentIntentId: String, // Stripe
-  razorpayOrderId: String, // Razorpay
-  createdAt: { type: Date, default: Date.now }
-});
-
-export const Transaction = mongoose.model("Transaction", transactionSchema);
+  paymentIntentId: String,         // Stripe
+  razorpayOrderId: String,         // Razorpay
+  stripeSubscriptionId: String,    // For Stripe recurring subs
+  metadata: { type: Object, default: {} }, // ✅ Flexible key-value storage
+}, { timestamps: true }); // ✅ adds createdAt & updatedAt
+export const Transaction =  mongoose.model("Transaction", transactionSchema);
