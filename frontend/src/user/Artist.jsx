@@ -24,6 +24,8 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import StripePayment from "../components/payments/StripePayment";
 import { toast } from "sonner";
+import SaveCardModal from "../components/payments/saveCardModal";
+
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -61,6 +63,9 @@ const Artist = () => {
   const [albumsStatus, setAlbumsStatus] = useState("idle");
   const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
   const [showAllSongs, setShowAllSongs] = useState(false);
+
+  const [showSaveCardModal, setShowSaveCardModal] = useState(false);
+
 
   // Refs
   const songsObserverRef = useRef();
@@ -175,7 +180,8 @@ const Artist = () => {
     }
   } else {
     // No confirmation for subscribing, just open the payment modal
-    setShowPaymentModal(true);
+    setShowSaveCardModal(true); // New state variable for card-saving modal
+
   }
 };
 
@@ -363,8 +369,8 @@ const Artist = () => {
             <>
               {songListView.map((song) => (
                 <SongList
-                  key={song.id}
-                  songId={song.id}
+                  key={song._id}
+                  songId={song._id}
                   img={
                     song.coverImage
                       ? song.coverImage
@@ -479,7 +485,7 @@ const Artist = () => {
             : artistSongs.map((song, idx) => (
                 <RecentPlays
                   ref={idx === artistSongs.length - 1 ? songsLastRef : null}
-                  key={song.id}
+                  key={song._id}
                   title={song.title}
                   singer={song.singer}
                   image={
@@ -487,8 +493,8 @@ const Artist = () => {
                       ? song.coverImage
                       : renderCoverImage(null, song.title, "w-full h-40")
                   }
-                  onPlay={() => handlePlaySong(song.id)}
-                  isSelected={selectedSong === song.id}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
                 />
               ))}
         </div>
@@ -555,6 +561,29 @@ const Artist = () => {
             </div>
           </div>
         )}
+        {showSaveCardModal && (
+  <SaveCardModal
+    artistId={artist?._id}
+    onCardSaved={() => {
+      setShowSaveCardModal(false);
+      setIsSubscribed(true);
+      toast.success(`✅ Subscribed to ${artist?.name}`);
+
+      // Persist in localStorage
+      let subscribedArtists = [];
+      try {
+        const raw = localStorage.getItem("subscribedArtists");
+        subscribedArtists = raw ? JSON.parse(raw) : [];
+      } catch {}
+      if (!subscribedArtists.includes(artistId)) {
+        subscribedArtists.push(artistId);
+        localStorage.setItem("subscribedArtists", JSON.stringify(subscribedArtists));
+      }
+    }}
+    onClose={() => setShowSaveCardModal(false)}
+  />
+)}
+
       </SkeletonTheme>
     </UserLayout>
   );

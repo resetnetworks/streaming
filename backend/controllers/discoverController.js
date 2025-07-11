@@ -42,7 +42,8 @@ export const getRandomArtistWithSongs = async (req, res) => {
     artist: {
       _id: artist._id,
       name: artist.name,
-      slug: artist.slug
+      slug: artist.slug,
+      image: artist.image,
     },
     songs,
     pagination: {

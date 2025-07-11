@@ -86,6 +86,8 @@ const schema = new mongoose.Schema({
       trim: true,
     },
   ],
+  stripeCustomerId: { type: String },
+
   purchasedSongs: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -102,7 +104,7 @@ const schema = new mongoose.Schema({
     {
       itemType: {
         type: String,
-        enum: ["song", "album"],
+        enum: ["song", "album","artist-subscription"],
         required: true,
       },
       itemId: {
@@ -123,6 +125,7 @@ const schema = new mongoose.Schema({
         default: Date.now,
       },
     },
+    
   ],
 }, { timestamps: true });
 

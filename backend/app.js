@@ -19,7 +19,6 @@ import songRoutes from "./routes/songRoutes.js";
 import albumRoutes from "./routes/albumRoutes.js";
 import artistRoutes from "./routes/artistRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
-import webhookRoutes from "./routes/webhookRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import genreRoutes from "./routes/genreRoutes.js";
@@ -29,6 +28,7 @@ import userDashboardRoutes from "./routes/userDashboardRoutes.js";
 import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 import discoverRoutes from "./routes/discoverRoutes.js";
 import streamRoutes from "./routes/streamRoutes.js";
+import { stripeWebhook } from './controllers/webhookController.js';
 
 // Middleware
 import passport from "./middleware/passport.js";
@@ -59,7 +59,7 @@ app.use(cors({
 }));
 app.set('trust proxy', 1);
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
-app.use("/api/webhooks", express.raw({ type: "application/json" }), webhookRoutes); // Before JSON parsing if needed
+app.use("/api/webhooks/stripe",express.raw({ type: "application/json" }), stripeWebhook); // Before JSON parsing if needed
 app.use(cookieParser());
 app.use(express.json());
 app.use(helmet.contentSecurityPolicy({
