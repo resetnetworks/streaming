@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaPlus, FaSearch } from 'react-icons/fa';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
 import AdminAlbumCard from '../components/admin/AdminAlbumCard';
 import AlbumFormModal from '../components/admin/AlbumFormModal';
+
 import {
   fetchAllAlbums,
   createAlbum,
@@ -11,12 +15,14 @@ import {
   setEditingAlbum,
   clearEditingAlbum,
 } from '../features/albums/albumsSlice';
+
 import {
   selectAllAlbums,
   selectAlbumsLoading,
   selectAlbumsError,
   selectEditingAlbum,
 } from '../features/albums/albumsSelector';
+
 import { selectFullArtistList } from '../features/artists/artistsSelectors';
 import { toast } from 'sonner';
 
@@ -48,7 +54,7 @@ const Album = () => {
       setIsModalOpen(false);
       dispatch(clearEditingAlbum());
     } catch (err) {
-      toast.error(err || 'Failed to save album');
+      toast.error(err?.message || 'Failed to save album');
     }
   };
 
@@ -64,7 +70,7 @@ const Album = () => {
       await dispatch(deleteAlbumById(albumId)).unwrap();
       toast.success("Album deleted successfully");
     } catch (err) {
-      toast.error(err || "Failed to delete album");
+      toast.error(err?.message || "Failed to delete album");
     }
   };
 
@@ -80,6 +86,7 @@ const Album = () => {
 
   return (
     <div className="p-6">
+      {/* Top Bar */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-white">Albums</h2>
 
@@ -109,11 +116,23 @@ const Album = () => {
         </div>
       </div>
 
-      {loading && <p className="text-gray-300">Loading albums...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
-
-      {filteredAlbums.length === 0 ? (
-        <div className="text-center text-gray-400 py-10">No albums found.</div>
+      {/* Loading Skeleton */}
+      {loading ? (
+        <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, index) => (
+              <div key={index}>
+                <Skeleton height={200} />
+              </div>
+            ))}
+          </div>
+        </SkeletonTheme>
+      ) : error ? (
+        <p className="text-red-500 text-center mb-4">Error: {error}</p>
+      ) : filteredAlbums.length === 0 ? (
+        <div className="text-center text-gray-400 py-10">
+          No albums found. Click "Add Album" to create one.
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredAlbums.map((album) => (
@@ -127,6 +146,7 @@ const Album = () => {
         </div>
       )}
 
+      {/* Modal */}
       <AlbumFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

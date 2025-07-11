@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaUserAlt, FaSearch } from 'react-icons/fa';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
 import AdminDataTable from "../components/admin/AdminDataTable";
 import CreateArtistModal from '../components/admin/CreateArtistModal';
+
 import {
   fetchAllArtistsNoPagination,
   deleteArtist
 } from '../features/artists/artistsSlice';
+
 import {
   selectFullArtistList,
   selectArtistLoading,
-  selectArtistError,
+  selectArtistError
 } from '../features/artists/artistsSelectors';
 
 const Artists = () => {
@@ -18,16 +23,18 @@ const Artists = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editArtist, setEditArtist] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const hasFetchedRef = useRef(false);
 
   const artists = useSelector(selectFullArtistList);
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
 
   useEffect(() => {
-    if (artists.length === 0) {
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       dispatch(fetchAllArtistsNoPagination());
     }
-  }, [dispatch, artists.length]);
+  }, [dispatch]);
 
   const columns = ['ID', 'Name', 'Songs', 'Albums', 'Actions'];
 
@@ -60,12 +67,10 @@ const Artists = () => {
 
   return (
     <div className="p-6">
-      {/* Top bar: Title, Search, Add Button */}
+      {/* Top bar always visible */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        {/* Title */}
         <h2 className="text-2xl font-bold text-white">Artists</h2>
 
-        {/* Search bar */}
         <div className="relative w-full md:w-80">
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
@@ -77,7 +82,6 @@ const Artists = () => {
           />
         </div>
 
-        {/* Add Artist Button */}
         <button
           onClick={() => {
             setEditArtist(null);
@@ -89,18 +93,33 @@ const Artists = () => {
         </button>
       </div>
 
-      {/* Data Table */}
-      <AdminDataTable
-        title=""
-        columns={columns}
-        data={formattedArtists}
-        loading={loading}
-        error={error}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {/* Main Section */}
+      {loading ? (
+        <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+          <div className="space-y-4">
+            <Skeleton height={60} count={5} />
+          </div>
+        </SkeletonTheme>
+      ) : error ? (
+        <div className="text-red-400 text-sm text-center mb-4">
+          Error: {error}
+        </div>
+      ) : formattedArtists.length === 0 ? (
+        <div className="text-center py-10 text-gray-400">
+          No artists found. Click "Add Artist" to create one.
+        </div>
+      ) : (
+        <AdminDataTable
+          title=""
+          columns={columns}
+          data={formattedArtists}
+          loading={false}
+          error={null}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
-      {/* Modal */}
       <CreateArtistModal
         isOpen={isModalOpen}
         onClose={() => {

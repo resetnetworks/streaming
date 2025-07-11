@@ -201,13 +201,14 @@ const Home = () => {
                   key={album._id} 
                   ref={idx === allAlbums.length - 1 ? albumsLastRef : null}
                 >
-                  <AlbumCard
-                    tag={`#${album.title || 'music'}`}
-                    artists={album.artist?.name || "Various Artists"}
-                    image={album.cover || "/images/placeholder.png"}
-                    price={`$${album.price}` || "subs.."}
-                    onClick={() => navigate(`/album/${album._id}`)}
-                  />
+                 <AlbumCard
+  tag={`#${album.title || 'music'}`}
+  artists={album.artist?.name || "Various Artists"}
+  image={album.coverImage || "/images/placeholder.png"}
+  price={album.price === 0 ? "subs.." : `$${album.price}`}
+  onClick={() => navigate(`/album/${album.slug}`)}
+/>
+
                 </div>
               ))
             )}
@@ -219,7 +220,7 @@ const Home = () => {
               <div className="flex md:gap-2 gap-4 items-center">
                 <img
                   src={
-                    randomArtist.image ||
+                    randomArtist?.image ||
                     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqfAcDALkSsCqPtfyFv69i8j0k_ZXVBM-Juw&s"
                   }
                   alt={randomArtist.name}
@@ -228,7 +229,7 @@ const Home = () => {
                 <div>
                   <h2 className="text-blue-700 text-base leading-none">similar to</h2>
                   <p
-                    onClick={() => navigate(`/artist/${randomArtist._id}`)}
+                    onClick={() => navigate(`/artist/${randomArtist.slug}`)}
                     className="text-lg leading-none text-white hover:underline cursor-pointer"
                   >
                     {randomArtist.name}

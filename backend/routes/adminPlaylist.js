@@ -8,7 +8,7 @@ import {
   removeSongFromPlaylist,
   getAllPlaylists,
 } from "../controllers/adminPlaylistController.js";
-import { isAuth } from "../middleware/isAuth.js";
+import { authenticateUser } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
@@ -16,13 +16,13 @@ const router = express.Router();
 router.get("/", getAllPlaylists);
 
 // Protected routes — require authentication
-router.post("/", isAuth, createPlaylist);
+router.post("/", authenticateUser, createPlaylist)
 
 router.route("/:playlistId")
-  .patch(isAuth, updatePlaylist)
-  .delete(isAuth, deletePlaylist);
+  .patch(authenticateUser, updatePlaylist)
+  .delete(authenticateUser, deletePlaylist);
 
-router.post("/:playlistId/songs", isAuth, addSongToPlaylist);
-router.delete("/:playlistId/songs/:songId", isAuth, removeSongFromPlaylist);
+router.post("/:playlistId/songs", authenticateUser, addSongToPlaylist);
+router.delete("/:playlistId/songs/:songId", authenticateUser, removeSongFromPlaylist);
 
 export default router;

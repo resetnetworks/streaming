@@ -11,9 +11,11 @@ const SongFormModal = ({
   onSubmit,
   artists = [],
   initialAlbums = [],
+  songToEdit = null,
 }) => {
   const dispatch = useDispatch();
   const [albums, setAlbums] = useState(initialAlbums);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [newSong, setNewSong] = useState({
     title: '',
@@ -46,6 +48,39 @@ const SongFormModal = ({
   const filteredAlbums = albums.filter((album) =>
     album.title.toLowerCase().includes(searchTermAlbum.toLowerCase())
   );
+
+  useEffect(() => {
+    if (songToEdit) {
+      setIsEditMode(true);
+      setNewSong({
+        title: songToEdit.title,
+        artist: songToEdit.artist?.name || '',
+        artistId: songToEdit.artist?._id || '',
+        album: songToEdit.album?.title || '',
+        albumId: songToEdit.album?._id || '',
+        duration: songToEdit.duration || 0,
+        coverImage: songToEdit.coverImage || null,
+        audioFile: songToEdit.audioFile || null,
+        genre: Array.isArray(songToEdit.genre) ? songToEdit.genre.join(', ') : songToEdit.genre || '',
+        price: songToEdit.price || '',
+        accessType: songToEdit.accessType || 'subscription',
+        releaseDate: songToEdit.releaseDate || new Date().toISOString().split('T')[0],
+      });
+      setSearchTermArtist(songToEdit.artist?.name || '');
+      setSearchTermAlbum(songToEdit.album?.title || '');
+      
+      // Load albums for the artist if editing
+      if (songToEdit.artist?._id) {
+        dispatch(getAlbumsByArtist({ artistId: songToEdit.artist._id, limit: 100 }))
+          .unwrap()
+          .then((result) => {
+            setAlbums(result.albums);
+          });
+      }
+    } else {
+      setIsEditMode(false);
+    }
+  }, [songToEdit, dispatch]);
 
   useEffect(() => {
     if (newSong.artistId) {
@@ -119,8 +154,15 @@ const SongFormModal = ({
 
     const { title, artistId, audioFile, accessType, price } = newSong;
 
-    if (!title || !artistId || !audioFile) {
-      toast.error('Title, artist, and audio file are required');
+    if (!title || !artistId) {
+      toast.error('Title and artist are required');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Only require audio file for new songs
+    if (!isEditMode && !audioFile) {
+      toast.error('Audio file is required');
       setIsSubmitting(false);
       return;
     }
@@ -152,6 +194,7 @@ const SongFormModal = ({
 
     try {
       await onSubmit(formData);
+      onClose();
     } finally {
       setIsSubmitting(false);
     }
@@ -190,7 +233,8 @@ const SongFormModal = ({
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold flex items-center text-blue-400">
-            <FaMusic className="mr-2" /> Add New Song
+            <FaMusic className="mr-2" /> 
+            {isEditMode ? 'Edit Song' : 'Add New Song'}
           </h3>
           <button
             onClick={onClose}
@@ -202,7 +246,6 @@ const SongFormModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-
           {/* Title */}
           <div className="col-span-2">
             <label className="text-gray-300">Title*</label>
@@ -339,16 +382,29 @@ const SongFormModal = ({
               onClick={() => !isSubmitting && coverImageRef.current.click()}
             >
               {newSong.coverImage ? (
-                <div className="flex flex-col items-center">
-                  <img
-                    src={URL.createObjectURL(newSong.coverImage)}
-                    alt="Preview"
-                    className="h-32 w-32 object-cover rounded mb-2"
-                  />
-                  <span className="text-sm text-gray-400">
-                    {newSong.coverImage.name}
-                  </span>
-                </div>
+                typeof newSong.coverImage === 'string' ? (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={newSong.coverImage}
+                      alt="Preview"
+                      className="h-32 w-32 object-cover rounded mb-2"
+                    />
+                    <span className="text-sm text-gray-400">
+                      Current cover image
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={URL.createObjectURL(newSong.coverImage)}
+                      alt="Preview"
+                      className="h-32 w-32 object-cover rounded mb-2"
+                    />
+                    <span className="text-sm text-gray-400">
+                      {newSong.coverImage.name}
+                    </span>
+                  </div>
+                )
               ) : (
                 <>
                   <FaCloudUploadAlt className="text-3xl text-gray-400 mx-auto mb-2" />
@@ -368,18 +424,29 @@ const SongFormModal = ({
 
           {/* Audio Upload */}
           <div className="col-span-2">
-            <label className="text-gray-300">Audio File*</label>
+            <label className="text-gray-300">
+              Audio File{!isEditMode && '*'}
+            </label>
             <div
               className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500"
               onClick={() => !isSubmitting && audioFileRef.current.click()}
             >
               {newSong.audioFile ? (
-                <div className="flex flex-col items-center">
-                  <MdAudiotrack className="text-3xl text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-400">
-                    {newSong.audioFile.name}
-                  </span>
-                </div>
+                typeof newSong.audioFile === 'string' ? (
+                  <div className="flex flex-col items-center">
+                    <MdAudiotrack className="text-3xl text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-400">
+                      Current audio file
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <MdAudiotrack className="text-3xl text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-400">
+                      {newSong.audioFile.name}
+                    </span>
+                  </div>
+                )
               ) : (
                 <>
                   <MdAudiotrack className="text-3xl text-gray-400 mx-auto mb-2" />
@@ -404,7 +471,9 @@ const SongFormModal = ({
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Add Song'}
+              {isSubmitting 
+                ? (isEditMode ? 'Updating...' : 'Saving...') 
+                : (isEditMode ? 'Update Song' : 'Add Song')}
             </button>
           </div>
         </form>
