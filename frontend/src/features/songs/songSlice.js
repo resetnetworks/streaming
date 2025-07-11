@@ -1,3 +1,4 @@
+// src/features/songs/songSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utills/axiosInstance.js';
 
@@ -49,7 +50,6 @@ export const fetchAllSongs = createAsyncThunk(
   }
 );
 
-// ✅ Updated fetchLikedSongs using new GET endpoint
 export const fetchLikedSongs = createAsyncThunk(
   'songs/fetchLikedSongs',
   async ({ page = 1, limit = 20 }, thunkAPI) => {
@@ -127,6 +127,11 @@ const songSlice = createSlice({
     },
     clearLikedSongs: (state) => {
       state.likedSongs = initialState.likedSongs;
+    },
+    removeSongFromLiked: (state, action) => {
+      const songId = action.payload;
+      state.likedSongs.songs = state.likedSongs.songs.filter((s) => s._id !== songId);
+      state.likedSongs.total -= 1;
     },
   },
   extraReducers: (builder) => {
@@ -211,5 +216,5 @@ const songSlice = createSlice({
   },
 });
 
-export const { clearSongMessage, clearLikedSongs } = songSlice.actions;
+export const { clearSongMessage, clearLikedSongs, removeSongFromLiked } = songSlice.actions;
 export default songSlice.reducer;
