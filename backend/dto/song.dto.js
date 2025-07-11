@@ -1,6 +1,6 @@
 export const shapeSongResponse = (song, hasAccess, signedUrl = null) => {
   return {
-    id: song._id,
+    _id: song._id,
     title: song.title,
     duration: song.duration,
     genre: song.genre,
