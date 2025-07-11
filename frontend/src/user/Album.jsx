@@ -100,8 +100,8 @@ export default function Album() {
                                     songName={song.title}
                                     singerName={song.singer}
                                     seekTime={formatDuration(song.duration)}
-                                    onPlay={() => handlePlaySong(song._id)}
-                                    isSelected={selectedSong === song._id}
+                                    onPlay={() => handlePlaySong(song)}
+                                    isSelected={selectedSong === song}
                                 />
                             </div>
                         ))

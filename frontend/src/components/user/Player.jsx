@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+
+import { fetchStreamUrl } from "../../features/stream/streamSlice";
 import {
   selectAllSongs,
   selectSelectedSong,
-} from "../../features/songs/songSelectors.js";
+} from "../../features/songs/songSelectors";
 import {
   setSelectedSong,
   play,
@@ -29,6 +31,7 @@ import { IoIosMore } from "react-icons/io";
 import { FaPlay, FaPause } from "react-icons/fa";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { LuDna } from "react-icons/lu";
+import { toast } from "sonner";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60) || 0;
@@ -36,139 +39,164 @@ const formatTime = (seconds) => {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
-import { toast } from "sonner";
-const handleFeatureSoon = ()=>{
-  toast.success("this feature will available soon")
-}
+const handleFeatureSoon = () => {
+  toast.success("This feature will be available soon");
+};
 
 const Player = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
-  const selectedSong = useSelector(selectSelectedSong);
+  const selectedSongId = useSelector(selectSelectedSong);
+  const selectedSong = songs.find((s) => s._id === selectedSongId);
   const isPlaying = useSelector((state) => state.player.isPlaying);
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
+  const streamUrls = useSelector((state) => state.stream.urls);
 
   const [open, setOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
+  const [playbackError, setPlaybackError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
-  const currentSong =
-    selectedSong && songs.length
-      ? songs.find((s) => s._id === selectedSong)
-      : null;
-
-  const currentIndex = currentSong
-    ? songs.findIndex((s) => s._id === selectedSong)
+  const currentIndex = selectedSong
+    ? songs.findIndex((s) => s._id === selectedSong._id)
     : -1;
 
   const nextSongs =
     currentIndex !== -1
-      ? songs.slice(currentIndex, currentIndex + 4)
+      ? songs.slice(currentIndex + 1, currentIndex + 5)
       : songs.slice(0, 4);
 
-  const isLiked = useSelector(selectIsSongLiked(currentSong?._id));
+  const isLiked = useSelector(selectIsSongLiked(selectedSong?._id));
 
+  // Fetch stream URL when song changes
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !currentSong || !currentSong.hlsUrl) return;
-
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
+    if (selectedSong && !streamUrls?.[selectedSong._id]) {
+      dispatch(fetchStreamUrl(selectedSong._id));
     }
+  }, [selectedSong, streamUrls, dispatch]);
 
-    const handleCanPlay = async () => {
-      dispatch(setCurrentTime(0));
-      dispatch(setDuration(video.duration || currentSong?.duration || 0));
-      if (isPlaying) {
-        try {
-          await video.play();
-        } catch (err) {
-          console.warn("Playback error on canplay:", err);
+  // Initialize with first song if none selected
+  useEffect(() => {
+    if (!selectedSong && songs.length > 0) {
+      dispatch(setSelectedSong(songs[0]._id));
+    }
+  }, [selectedSong, songs, dispatch]);
+
+  // Main HLS player init
+  useEffect(() => {
+    if (!selectedSong) return;
+    const video = videoRef.current;
+
+    const initPlayer = async () => {
+      try {
+        setIsLoading(true);
+        setPlaybackError(null);
+
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+          hlsRef.current = null;
         }
+
+        const mediaUrl = `${selectedSong.hlsUrl}?nocache=${Date.now()}`;
+
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              setPlaybackError(`HLS Error: ${data.type}`);
+              hls.destroy();
+              video.src = selectedSong.audioUrl;
+              video.load();
+            }
+          });
+
+          hls.loadSource(mediaUrl);
+          hls.attachMedia(video);
+          hlsRef.current = hls;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = mediaUrl;
+        }
+
+        video.onloadedmetadata = () => {
+          dispatch(setDuration(video.duration || selectedSong.duration || 0));
+          if (!isNaN(video.duration)) {
+            video.currentTime = currentTime;
+          }
+        };
+      } catch (err) {
+        setPlaybackError(err.message);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    video.addEventListener("canplay", handleCanPlay);
+    initPlayer();
+  }, [selectedSong]);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hlsRef.current = hls;
-      hls.loadSource(currentSong.hlsUrl);
-      hls.attachMedia(video);
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = currentSong.hlsUrl;
-    }
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !selectedSong) return;
 
-    return () => {
-      video.removeEventListener("canplay", handleCanPlay);
+    video.volume = isMuted ? 0 : volume;
+
+    const onTimeUpdate = () => {
+      dispatch(setCurrentTime(video.currentTime || 0));
+      if (video.duration - video.currentTime <= 0.5 && video.duration > 1) {
+        handleNext();
+      }
     };
-  }, [currentSong, dispatch]);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const onEnded = () => {
+      handleNext();
+    };
 
-    if (isPlaying) {
-      const playAudio = async () => {
-        try {
-          if (video.readyState >= 3) {
-            await video.play();
-          } else {
-            const onCanPlay = async () => {
-              try {
-                await video.play();
-              } catch (err) {
-                console.warn("Playback error during delayed play:", err);
-              }
-              video.removeEventListener("canplay", onCanPlay);
-            };
-            video.addEventListener("canplay", onCanPlay);
-          }
-        } catch (err) {
-          console.warn("Playback error on isPlaying change:", err);
-        }
-      };
-
-      playAudio();
-    } else {
-      video.pause();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !currentSong) return;
-
-    const onLoadedMetadata = () =>
-      dispatch(setDuration(video.duration || currentSong?.duration || 0));
-    const onTimeUpdate = () => dispatch(setCurrentTime(video.currentTime || 0));
-    const onEnded = () => handleNext();
-
-    video.addEventListener("loadedmetadata", onLoadedMetadata);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("ended", onEnded);
 
     return () => {
-      video.removeEventListener("loadedmetadata", onLoadedMetadata);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("ended", onEnded);
     };
-  }, [dispatch, currentSong]);
+  }, [dispatch, selectedSong, isMuted, volume]);
 
-  const handleTogglePlay = () => {
-    dispatch(isPlaying ? pause() : play());
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !selectedSong || !isPlaying) return;
+
+    const tryPlay = async () => {
+      try {
+        await video.play();
+      } catch (err) {
+        setPlaybackError("Autoplay blocked. Tap play to continue.");
+        dispatch(pause());
+      }
+    };
+
+    tryPlay();
+  }, [selectedSong, isPlaying]);
+
+  const handleTogglePlay = async () => {
+    if (isLoading) return;
+    const video = videoRef.current;
+    if (!video || !selectedSong) return;
+
+    try {
+      if (isPlaying) {
+        await video.pause();
+        dispatch(pause());
+      } else {
+        await video.play();
+        dispatch(play());
+      }
+    } catch (err) {
+      setPlaybackError(err.message);
+    }
   };
 
   const handleToggleMute = () => {
@@ -182,39 +210,39 @@ const Player = () => {
   };
 
   const handleNext = () => {
-    if (!currentSong || songs.length === 0) return;
+    if (!selectedSong || songs.length === 0) return;
     const nextIndex = (currentIndex + 1) % songs.length;
     dispatch(setSelectedSong(songs[nextIndex]._id));
     dispatch(play());
   };
 
   const handlePrev = () => {
-    if (!currentSong || songs.length === 0) return;
-    const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-    dispatch(setSelectedSong(songs[prevIndex]._id));
-    dispatch(play());
+    if (!selectedSong || songs.length === 0) return;
+    if (currentTime > 3) {
+      handleSeekChange(0);
+    } else {
+      const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+      dispatch(setSelectedSong(songs[prevIndex]._id));
+      dispatch(play());
+    }
   };
 
-  const handleSeekChange = (newSeek) => {
-    dispatch(setCurrentTime(newSeek));
-    if (videoRef.current) {
-      videoRef.current.currentTime = newSeek;
-    }
+  const handleSeekChange = (val) => {
+    dispatch(setCurrentTime(val));
+    if (videoRef.current) videoRef.current.currentTime = val;
   };
 
   const handleVolumeChange = (e) => {
     const vol = parseInt(e.target.value) / 100;
     dispatch(setVolume(vol));
-    if (isMuted) setIsMuted(false);
+    if (isMuted && vol > 0) setIsMuted(false);
   };
 
   const handleLikeToggle = () => {
-    if (currentSong?._id) {
-      dispatch(toggleLikeSong(currentSong._id));
-    }
+    if (selectedSong?._id) dispatch(toggleLikeSong(selectedSong._id));
   };
 
-  if (!currentSong) {
+  if (!selectedSong || songs.length === 0) {
     return (
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="ml-3">
@@ -229,53 +257,62 @@ const Player = () => {
   };
 
   return (
-      <div className="player-wrapper shadow-[-10px_-10px_80px_rgba(0,153,255,0.4)] shadow-[#0e52ff3b]">
-      {currentSong?.audioUrl && currentSong.audioUrl.trim().length > 0 && (
-        <video
-          ref={videoRef}
-          style={{ display: "none" }}
-          muted={isMuted}
-          preload="auto"
-          playsInline
-          crossOrigin="anonymous"
-        />
+    <div className="player-wrapper">
+      {playbackError && (
+        <div className="absolute top-0 left-0 right-0 bg-red-500 text-white text-xs p-1 text-center">
+          Error: {playbackError}
+        </div>
       )}
+
+      <video
+        ref={videoRef}
+        style={{ display: "none" }}
+        muted={isMuted}
+        preload="auto"
+        playsInline
+        crossOrigin="anonymous"
+      />
 
       <div className="player-card w-[15.25rem] py-4 px-4 flex flex-col items-center">
         <div className="w-full aspect-square overflow-hidden rounded-md">
           <img
-            src={currentSong?.coverImage}
+            src={selectedSong?.coverImage || "/images/placeholder.png"}
             className="w-full h-full object-cover"
             alt=""
           />
         </div>
 
-        <p className="text-lg mt-2">{currentSong?.title}</p>
-        <span className="text-sm text-gray-500">{currentSong?.singer}</span>
+        <p className="text-lg mt-2">{selectedSong?.title}</p>
+        <span className="text-sm text-gray-500">{selectedSong?.singer}</span>
 
         <div className="w-full mt-4">
           <input
             type="range"
             min="0"
-            max={duration}
+            max={duration || 100}
             value={currentTime}
             onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
             className="track-progress w-full h-1 appearance-none rounded"
           />
           <div className="flex justify-between text-xs text-gray-300 mt-1 px-[2px]">
             <span>{formatTime(currentTime)}</span>
-            <span>{formatDuration(currentSong?.duration)}</span>
+            <span>{formatDuration(duration || selectedSong?.duration)}</span>
           </div>
         </div>
 
         <div className="w-full flex justify-between mt-4">
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button flex justify-center items-center gap-2" onClick={handleFeatureSoon}>
+            <button
+              className="player-button flex justify-center items-center gap-2"
+              onClick={handleFeatureSoon}
+            >
               <LuDna className="text-blue-500 text-sm" /> lossless
             </button>
           </div>
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button" onClick={handleFeatureSoon}>reset master</button>
+            <button className="player-button" onClick={handleFeatureSoon}>
+              reset master
+            </button>
           </div>
         </div>
 
@@ -296,8 +333,11 @@ const Player = () => {
             <button
               className="play-pause-button flex justify-center items-center gap-2"
               onClick={handleTogglePlay}
+              disabled={isLoading}
             >
-              {isPlaying ? (
+              {isLoading ? (
+                <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : isPlaying ? (
                 <FaPause className="text-sm" />
               ) : (
                 <FaPlay className="text-sm" />
@@ -308,7 +348,7 @@ const Player = () => {
             className="text-md text-white cursor-pointer"
             onClick={handleNext}
           />
-          <IoIosMore className="text-md text-white" onClick={handleFeatureSoon}/>
+          <IoIosMore className="text-md text-white" onClick={handleFeatureSoon} />
         </div>
 
         <div className="player-gradiant-line mt-4"></div>
@@ -352,7 +392,7 @@ const Player = () => {
                   <div
                     key={song._id}
                     className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
-                      song._id === selectedSong ? "bg-blue-800/40" : ""
+                      song._id === selectedSong?._id ? "bg-blue-800/40" : ""
                     }`}
                     onClick={() => {
                       dispatch(setSelectedSong(song._id));
@@ -389,8 +429,3 @@ const Player = () => {
 };
 
 export default Player;
-
-
-
-
-
