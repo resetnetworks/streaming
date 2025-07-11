@@ -1,5 +1,5 @@
 import express from "express";
-import { isAuth } from "../middleware/isAuth.js";
+import { authenticateUser } from "../middleware/authenticate.js";
 import {
   createSong,
   updateSong,
@@ -10,31 +10,34 @@ import {
   getSongsByGenre,
   getSongsByAlbum,
   getSongsByArtist,
-  getLikedSongs
+  getLikedSongs,
 } from "../controllers/songController.js";
-import {songUpload} from "../middleware/uploadMiddleware.js";
+import { songUpload } from "../middleware/uploadMiddleware.js";
 import {
   createSongValidator,
   updateSongValidator,
-  songIdValidator
+  songIdValidator,
 } from "../validators/songValidators.js";
 import validate from "../middleware/validate.js";
 
 const router = express.Router();
 
-// Use songUpload middleware before createSong and updateSong to handle files
-router.get("/liked", isAuth, getLikedSongs);
-router.post("/",isAuth, songUpload, createSongValidator, validate, createSong);
-router.put("/:id",isAuth, songUpload, updateSongValidator, validate, updateSong);
+// Like-related
+router.get("/liked", authenticateUser, getLikedSongs);
 
-router.delete("/:id",isAuth, songIdValidator, validate, deleteSong);
-router.get("/",isAuth, getAllSongs);
-router.get("/matching-genre",isAuth, getSongsMatchingUserGenres);
-router.get("/:id",isAuth, getSongById);
-router.get("/genre/:genre", isAuth, getSongsByGenre);
-router.get("/album/:albumId", isAuth, getSongsByAlbum);
-router.get("/artist/:artistId", isAuth, getSongsByArtist);
-// router.get("/likedliked", ()=>{console.log("Hello")}, isAuth, getLikedSongs);
+// Genre-matching for user
+router.get("/matching-genre", authenticateUser, getSongsMatchingUserGenres);
 
+// CRUD + browse
+router.get("/", authenticateUser, getAllSongs);
+router.get("/:id", authenticateUser, songIdValidator, validate, getSongById);
+router.post("/", authenticateUser, songUpload, createSongValidator, validate, createSong);
+router.put("/:id", authenticateUser, songUpload, updateSongValidator, validate, updateSong);
+router.delete("/:id", authenticateUser, songIdValidator, validate, deleteSong);
+
+// Filtering routes
+router.get("/genre/:genre", authenticateUser, getSongsByGenre);
+router.get("/album/:albumId", authenticateUser, getSongsByAlbum);
+router.get("/artist/:artistId", authenticateUser, getSongsByArtist);
 
 export default router;

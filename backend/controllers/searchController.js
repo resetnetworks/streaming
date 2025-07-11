@@ -2,6 +2,10 @@ import {Artist} from "../models/Artist.js";
 import {Song} from "../models/Song.js";
 import {Album} from "../models/Album.js";
 import { StatusCodes } from "http-status-codes";
+import { shapeSongResponse } from "../dto/song.dto.js";
+import { shapeArtistResponse } from "../dto/artist.dto.js";
+import { shapeAlbumResponse} from "../dto/album.dto.js";
+import  { hasAccessToSong } from "../utils/accessControl.js";
 
 /**
  * Unified search across artists, songs, and albums.
@@ -12,26 +16,49 @@ export const unifiedSearch = async (req, res) => {
   const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
   if (!q) throw new BadRequestError("Query parameter 'q' is required.");
 
-  const escapeRegex = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Escape special regex characters
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(escapeRegex(q), "i");
 
-  // You can adjust these limits
   const artistLimit = 3;
   const songLimit = 5;
   const albumLimit = 3;
 
   const [artists, songs, albums] = await Promise.all([
     Artist.find({ name: regex }).limit(artistLimit).lean(),
-    Song.find({ title: regex }).limit(songLimit).lean(),
-    Album.find({ title: regex }).limit(albumLimit).lean(),
+    Song.find({ title: regex })
+      .limit(songLimit)
+      .populate("artist", "name slug")
+      .populate({
+        path: "album",
+        select: "title slug",
+        populate: { path: "artist", select: "name slug" },
+      })
+      .lean(),
+    Album.find({ title: regex })
+      .limit(albumLimit)
+      .populate("artist", "name slug")
+      .lean(),
   ]);
 
+  
+const [shapedArtists, shapedSongs, shapedAlbums] = await Promise.all([
+  Promise.all(artists.map(shapeArtistResponse)),
+  Promise.all(songs.map(shapeSongResponse)),
+  Promise.all(albums.map(shapeAlbumResponse)),
+]);
+
+  
+  console.log(shapedArtists, shapedSongs, shapedAlbums);
+  
+
   res.status(StatusCodes.OK).json({
+    success: true,
     query: q,
     results: {
-      artists,
-      songs,
-      albums,
+      artists: shapedArtists,
+      songs: shapedSongs,
+      albums: shapedAlbums,
     },
   });
 };
@@ -48,20 +75,35 @@ export const searchSongs = async (req, res) => {
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
   const skip = (page - 1) * limit;
 
-  const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i");
+  const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
   const [songs, total] = await Promise.all([
-    Song.find({ title: regex }).skip(skip).limit(limit).lean(),
+    Song.find({ title: regex })
+      .skip(skip)
+      .limit(limit)
+      .populate("artist", "name slug")
+      .populate("album", "title slug")
+      .lean(),
     Song.countDocuments({ title: regex }),
   ]);
 
+  const shapedSongs = await Promise.all(
+    songs.map(async (song) => {
+      const hasAccess = await hasAccessToSong(req.user, song);
+      return shapeSongResponse(song, hasAccess);
+    })
+  );
+
   res.status(StatusCodes.OK).json({
-    results: songs,
+    success: true,
+    query: q,
+    results: shapedSongs,
     total,
     page,
     pages: Math.ceil(total / limit),
   });
 };
+
 
 
 // @desc Search artists by name with pagination
@@ -74,6 +116,7 @@ export const searchArtists = async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
   const skip = (page - 1) * limit;
+
   const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
   const [artists, total] = await Promise.all([
@@ -81,13 +124,19 @@ export const searchArtists = async (req, res) => {
     Artist.countDocuments({ name: regex }),
   ]);
 
+  const shapedArtists = await Promise.all(
+    artists.map(async (artist) => await shapeArtistResponse(artist))
+  );
+
   res.status(StatusCodes.OK).json({
-    results: artists,
+    success: true,
+    query: q,
+    results: shapedArtists,
     total,
     page,
     pages: Math.ceil(total / limit),
   });
-};
+}
 
 
 
@@ -101,17 +150,28 @@ export const searchAlbums = async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
   const skip = (page - 1) * limit;
+
   const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
   const [albums, total] = await Promise.all([
-    Album.find({ title: regex }).skip(skip).limit(limit).lean(),
+    Album.find({ title: regex })
+      .populate("artist", "name slug")
+      .populate("songs", "title duration coverImage")
+      .skip(skip)
+      .limit(limit)
+      .lean(),
     Album.countDocuments({ title: regex }),
   ]);
 
+  const shapedAlbums = albums.map((album) => shapeAlbumCard(album));
+
   res.status(StatusCodes.OK).json({
-    results: albums,
+    success: true,
+    query: q,
+    results: shapedAlbums,
     total,
     page,
     pages: Math.ceil(total / limit),
   });
 };
+

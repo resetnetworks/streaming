@@ -1,6 +1,8 @@
 import express from "express";
-import { isAuth } from "../middleware/isAuth.js";
 import passport from "../middleware/passport.js";
+import { authenticateUser } from "../middleware/authenticate.js";
+import validate from "../middleware/validate.js";
+
 import {
   registerUser,
   loginUser,
@@ -15,7 +17,6 @@ import {
   appleCallback,
 } from "../controllers/userControllers.js";
 
-import validate from "../middleware/validate.js";
 import {
   registerValidation,
   loginValidation,
@@ -26,19 +27,40 @@ import {
 
 const router = express.Router();
 
-// User Login Routes 
+// 🧾 Auth & Profile
 router.post("/register", registerValidation, validate, registerUser);
 router.post("/login", loginValidation, validate, loginUser);
-router.get("/me", isAuth, myProfile);
-router.post("/logout", isAuth, logoutUser);
-router.put("/likedsong/:id", isAuth, likeSongValidation, validate, likeSong);
-router.put("/update-genres", isAuth, validate, updatePreferredGenres);
+router.get("/me", authenticateUser, myProfile);
+router.post("/logout", authenticateUser, logoutUser);
 
-// forgot password
+// 💖 Like Song
+router.put(
+  "/likedsong/:id",
+  authenticateUser,
+  likeSongValidation,
+  validate,
+  likeSong
+);
+
+// 🎵 Update Preferred Genres
+router.put(
+  "/update-genres",
+  authenticateUser,
+  updateGenresValidation,
+  validate,
+  updatePreferredGenres
+);
+
+// 🔐 Forgot / Reset Password
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPasswordValidation, resetPassword);
+router.post(
+  "/reset-password/:token",
+  resetPasswordValidation,
+  validate,
+  resetPassword
+);
 
-// login with google
+// 🌐 Google OAuth
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -49,28 +71,23 @@ router.get(
   googleAuthCallback
 );
 
-// Facebook OAuth login route
+// 🌐 Facebook OAuth
 router.get(
   "/facebook",
   passport.authenticate("facebook", { scope: ["email"] })
 );
-
-// Facebook OAuth callback URL (Facebook redirects here after login)
 router.get(
   "/facebook/callback",
   passport.authenticate("facebook", { session: false, failureRedirect: "/login" }),
   facebookAuthCallback
 );
 
-
-// Apple OAuth callback URL (Apple redirects here after login)
+// 🍎 Apple OAuth
 router.get("/apple", passport.authenticate("apple"));
-
 router.post(
   "/apple/callback",
   passport.authenticate("apple", { session: false, failureRedirect: "/login" }),
   appleCallback
 );
-
 
 export default router;

@@ -17,7 +17,6 @@ const albumSchema = new mongoose.Schema(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
       match: [/^[a-z0-9-]+$/, "Slug must be lowercase and URL-friendly"],

@@ -6,6 +6,8 @@ import { StatusCodes } from 'http-status-codes';
 import { isAdmin } from "../utils/authHelper.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
 import { Artist  } from "../models/Artist.js";
+import { shapeAlbumResponse } from "../dto/album.dto.js";
+import { hasAccessToSong } from "../utils/accessControl.js"; 
 
 
 // Album Controllers
@@ -14,30 +16,36 @@ import { Artist  } from "../models/Artist.js";
 // - Handles optional file upload to S3 for cover image
 // - Accepts basic album info and genre as comma-separated string
 export const createAlbum = async (req, res) => {
+  // 🔒 Admin check
   if (!isAdmin(req.user)) {
     throw new UnauthorizedError("Access denied. Admins only.");
   }
 
+  // 📥 Extract data
   const { title, description, artist, releaseDate, price, accessType, genre } = req.body;
 
+  // ✅ Required validation
   if (!title || !artist || !releaseDate) {
     throw new BadRequestError("Title, artist, and release date are required.");
   }
 
+  // 💰 Validate price if purchase-only
   if (accessType === "purchase-only" && (!price || price <= 0)) {
     throw new BadRequestError("Purchase-only albums must have a valid price.");
   }
 
+  // ☁️ Handle cover image upload
   const coverImageFile = req.files?.coverImage?.[0];
   const coverImageUrl = coverImageFile
     ? await uploadToS3(coverImageFile, "covers")
     : "";
 
-  let processedGenre = genre;
-  if (typeof processedGenre === "string") {
-    processedGenre = processedGenre.split(",").map((g) => g.trim());
-  }
+  // 🎵 Normalize genre field
+  const processedGenre = typeof genre === "string"
+    ? genre.split(",").map((g) => g.trim())
+    : genre;
 
+  // 📦 Create album
   const newAlbum = await Album.create({
     title,
     description,
@@ -49,9 +57,10 @@ export const createAlbum = async (req, res) => {
     genre: processedGenre,
   });
 
-  res.status(StatusCodes.CREATED).json({ success: true, album: newAlbum });
+  // 🎯 Return shaped response
+  const shaped = shapeAlbumResponse(newAlbum);
+  res.status(StatusCodes.CREATED).json({ success: true, album: shaped });
 };
-
 
 // Get a paginated list of all albums
 // - Supports `page` and `limit` query parameters
@@ -61,19 +70,24 @@ export const getAllAlbums = async (req, res) => {
   const limit = Math.max(1, parseInt(req.query.limit) || 10);
   const skip = (page - 1) * limit;
 
+  // 📦 Fetch albums with populated fields and lean objects
   const [albums, total] = await Promise.all([
     Album.find()
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('songs', 'title duration coverImage')
-      .populate('artist', 'name slug'),
+      .populate("songs", "title duration coverImage")
+      .populate("artist", "name slug")
+      .lean(),
     Album.countDocuments()
   ]);
 
+  // 🧠 Transform using DTO
+  const shapedAlbums = albums.map(shapeAlbumResponse);
+
   res.status(StatusCodes.OK).json({
     success: true,
-    albums,
+    albums: shapedAlbums,
     pagination: {
       total,
       page,
@@ -115,18 +129,37 @@ export const deleteAlbum = async (req, res) => {
 // - Populates associated songs with selected fields
 export const getAlbumById = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
 
-  const isObjectId = mongoose.Types.ObjectId.isValid(id);
+  const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id };
 
-  const album = isObjectId
-    ? await Album.findById(id).populate('songs', 'title duration coverImage audioUrl')
-    : await Album.findOne({ slug: id }).populate('songs', 'title duration coverImage audioUrl');
+  const album = await Album.findOne(query)
+    .populate("songs", "title duration coverImage audioUrl accessType price artist")
+    .populate("artist", "name slug")
+    .lean();
 
   if (!album) {
-    throw new NotFoundError('Album not found');
+    throw new NotFoundError("Album not found");
   }
 
-  res.status(StatusCodes.OK).json({ success: true, album });
+  // Access control: hide audioUrl if not authorized
+  const shapedSongs = await Promise.all(
+    (album.songs || []).map(async (song) => {
+      const hasAccess = await hasAccessToSong(user, song);
+      return {
+        _id: song._id,
+        title: song.title,
+        duration: song.duration,
+        coverImage: song.coverImage,
+        audioUrl: hasAccess ? song.audioUrl : null,
+      };
+    })
+  );
+
+  // Return shaped album
+  const shapedAlbum = shapeAlbumResponse({ ...album, songs: shapedSongs });
+
+  res.status(StatusCodes.OK).json({ success: true, album: shapedAlbum });
 };
 
 
@@ -134,69 +167,93 @@ export const getAlbumById = async (req, res) => {
 // - Handles optional file upload for new cover image
 // - Allows partial updates for album fields
 export const updateAlbum = async (req, res) => {
+  // Only admins allowed
   if (!isAdmin(req.user)) {
-    throw new UnauthorizedError('Access denied. Admins only.');
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
   const album = await Album.findById(req.params.id);
   if (!album) {
-    throw new NotFoundError('Album not found');
+    throw new NotFoundError("Album not found");
   }
 
-  const { title, description, artist, releaseDate, price, isPremium } = req.body;
+  const {
+    title,
+    description,
+    artist,
+    releaseDate,
+    price,
+    accessType,
+    genre,
+  } = req.body;
 
+  // Validation for price based on accessType
+  if (accessType === "purchase-only") {
+    if (!price || price <= 0) {
+      throw new BadRequestError("Purchase-only albums must have a valid price.");
+    }
+    album.accessType = "purchase-only";
+    album.price = price;
+  } else if (accessType === "subscription") {
+    album.accessType = "subscription";
+    album.price = 0;
+  }
+
+  // Optional updates
   if (title) album.title = title;
   if (description) album.description = description;
   if (artist) album.artist = artist;
   if (releaseDate) album.releaseDate = releaseDate;
-  if (price) album.price = price;
-  if (typeof isPremium === 'boolean' || isPremium === 'true' || isPremium === 'false') {
-    album.isPremium = isPremium === 'true' || isPremium === true;
+
+  if (typeof genre === "string") {
+    album.genre = genre.split(",").map((g) => g.trim());
   }
 
   const coverImageFile = req.files?.coverImage?.[0];
   if (coverImageFile) {
-    album.coverImage = await uploadToS3(coverImageFile, 'covers');
+    album.coverImage = await uploadToS3(coverImageFile, "covers");
   }
 
   await album.save();
 
-  res.status(StatusCodes.OK).json({ success: true, album });
+  res.status(StatusCodes.OK).json({
+    success: true,
+    album: shapeAlbumResponse(album.toObject()),
+  });
 };
 
 
 // Get all albums for a specific artist
 // Get albums for an artist by ID or slug with pagination
 export const getAlbumsByArtist = async (req, res) => {
-  const identifier = req.params.artistId;
+  const { artistId } = req.params;
 
-  // Validate and resolve artist (by ID or slug)
-  let artist;
-  if (mongoose.Types.ObjectId.isValid(identifier)) {
-    artist = await Artist.findById(identifier);
-  } else {
-    artist = await Artist.findOne({ slug: identifier });
-  }
+  // 🔍 Resolve artist by ID or slug
+  const artist = mongoose.Types.ObjectId.isValid(artistId)
+    ? await Artist.findById(artistId).lean()
+    : await Artist.findOne({ slug: artistId }).lean();
 
   if (!artist) {
-    throw new NotFoundError('Artist not found');
+    throw new NotFoundError("Artist not found");
   }
 
-  // Pagination params
-  const page = parseInt(req.query.page, 10) > 0 ? parseInt(req.query.page, 10) : 1;
-  const limit = parseInt(req.query.limit, 10) > 0 ? parseInt(req.query.limit, 10) : 10;
+  // 📄 Pagination
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 10);
   const skip = (page - 1) * limit;
 
-  // Fetch albums + total count in parallel
   const [albums, total] = await Promise.all([
     Album.find({ artist: artist._id })
-      .select('_id slug title coverImage releaseDate')
       .sort({ releaseDate: -1 })
       .skip(skip)
       .limit(limit)
+      .select("title slug coverImage releaseDate accessType price")
       .lean(),
-    Album.countDocuments({ artist: artist._id })
+    Album.countDocuments({ artist: artist._id }),
   ]);
+
+  // 🧠 Shape albums for frontend
+  const shapedAlbums = albums.map(shapeAlbumResponse);
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -207,13 +264,13 @@ export const getAlbumsByArtist = async (req, res) => {
       image: artist.image,
       subscriptionPrice: artist.subscriptionPrice,
     },
-    albums,
+    albums: shapedAlbums,
     pagination: {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   });
 };
 
@@ -225,13 +282,16 @@ export const getAlbumsByArtist = async (req, res) => {
 export const getAllAlbumsWithoutpagination = async (req, res) => {
   const albums = await Album.find()
     .sort({ createdAt: -1 })
-    .populate('songs', 'title duration coverImage')
-    .populate('artist', 'name slug');
+    .populate("songs", "title duration coverImage")
+    .populate("artist", "name slug")
+    .lean();
+
+  const shapedAlbums = albums.map(shapeAlbumWithSongs);
 
   res.status(StatusCodes.OK).json({
     success: true,
-    albums,
-    total: albums.length
+    albums: shapedAlbums,
+    total: shapedAlbums.length,
   });
 };
 

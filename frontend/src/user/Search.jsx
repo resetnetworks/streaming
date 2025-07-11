@@ -90,7 +90,7 @@ const Search = () => {
                 <RecentPlays
                   key={song._id}
                   title={song.title}
-                  singer={song.artist?.name || "Unknown Artist"}
+                  singer={song.artist.name || "Unknown Artist"}
                   image={song.coverImage || "/images/placeholder.png"}
                   onPlay={() => handlePlaySong(song._id)}
                   isSelected={selectedSong === song._id}
@@ -130,7 +130,7 @@ const Search = () => {
                       title={artist.name}
                       singer="Artist"
                       image={artist.image || "/images/placeholder.png"}
-                      onPlay={() => navigate(`/artist/${artist._id}`)}
+                      onPlay={() => navigate(`/artist/${artist.slug}`)}
                     />
                   ))}
                 </div>
@@ -152,6 +152,7 @@ const Search = () => {
                     />
                   ))}
                 </div>
+                {console.log(results.albums)}
               </>
             )}
 
