@@ -70,8 +70,8 @@ const Home = () => {
     dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {
       if (res.payload?.songs) {
         setRecentSongs((prev) => {
-          const seen = new Set(prev.map((s) => s.id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s.id));
+          const seen = new Set(prev.map((s) => s._id));
+          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
           return [...prev, ...newSongs];
         });
       }
@@ -82,8 +82,8 @@ const Home = () => {
     dispatch(fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })).then((res) => {
       if (res.payload?.songs) {
         setTopSongs((prev) => {
-          const seen = new Set(prev.map((s) => s.id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s.id));
+          const seen = new Set(prev.map((s) => s._id));
+          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
           return [...prev, ...newSongs];
         });
       }
@@ -161,13 +161,13 @@ const Home = () => {
               recentSongs.map((song, idx) => (
                 <RecentPlays
                   ref={idx === recentSongs.length - 1 ? recentLastRef : null}
-                  key={song.id}
+                  key={song._id}
                   title={song.title}
                   price={song.accessType === 'purchase-only' ? `$${song.price}` : 'Subs..'}
                   singer={song.singer}
                   image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song.id)}
-                  isSelected={selectedSong === song.id}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
                 />
               ))
             )}
@@ -220,7 +220,7 @@ const Home = () => {
               <div className="flex md:gap-2 gap-4 items-center">
                 <img
                   src={
-                    randomArtist?.image ||
+                    randomArtist.image ||
                     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqfAcDALkSsCqPtfyFv69i8j0k_ZXVBM-Juw&s"
                   }
                   alt={randomArtist.name}
@@ -330,14 +330,14 @@ const Home = () => {
                   >
                     {column.map((song) => (
                       <SongList
-                        key={song.id}
-                        songId={song.id}
+                        key={song._id}
+                        songId={song._id}
                         img={song.coverImage || "/images/placeholder.png"}
                         songName={song.title}
                         singerName={song.singer}
                         seekTime={formatDuration(song.duration)}
-                        onPlay={() => handlePlaySong(song.id)}
-                        isSelected={selectedSong === song.id}
+                        onPlay={() => handlePlaySong(song._id)}
+                        isSelected={selectedSong === song._id}
                       />
                     ))}
                   </div>
