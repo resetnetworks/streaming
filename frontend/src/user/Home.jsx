@@ -166,8 +166,8 @@ const Home = () => {
                   price={song.accessType === 'purchase-only' ? `$${song.price}` : 'Subs..'}
                   singer={song.singer}
                   image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song._id)}
-                  isSelected={selectedSong === song._id}
+                  onPlay={() => handlePlaySong(song)}
+                  isSelected={selectedSong === song}
                 />
               ))
             )}
@@ -254,8 +254,8 @@ const Home = () => {
                       title={song.title}
                       singer={song.singer}
                       image={song.coverImage || "/images/placeholder.png"}
-                      onPlay={() => handlePlaySong(song._id)}
-                      isSelected={selectedSong === song._id}
+                      onPlay={() => handlePlaySong(song)}
+                      isSelected={selectedSong === song}
                     />
                   ))}
                 </div>
@@ -331,13 +331,13 @@ const Home = () => {
                     {column.map((song) => (
                       <SongList
                         key={song._id}
-                        songId={song._id}
+                        songId={song}
                         img={song.coverImage || "/images/placeholder.png"}
                         songName={song.title}
                         singerName={song.singer}
                         seekTime={formatDuration(song.duration)}
-                        onPlay={() => handlePlaySong(song._id)}
-                        isSelected={selectedSong === song._id}
+                        onPlay={() => handlePlaySong(song)}
+                        isSelected={selectedSong === song}
                       />
                     ))}
                   </div>
