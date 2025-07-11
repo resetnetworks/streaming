@@ -1,12 +1,10 @@
-import express from "express";
-import { stripeWebhook, razorpayWebhook } from "../webhooks/webhookController.js";
+// import express from "express";
+// import { stripeWebhook, razorpayWebhook } from "../controllers/webhookController";
 
-const router = express.Router();
+// const router = express.Router();
 
-// ⚠️ Stripe requires raw body for signature verification
-router.post("/stripe", express.raw({ type: "application/json" }), stripeWebhook);
+// // ⚠️ Stripe requires raw body for signature verification
+// router.post("/stripe", express.raw({ type: "application/json" }), stripeWebhook);
 
-// ✅ Razorpay works with parsed JSON
-router.post("/razorpay", express.json(), razorpayWebhook);
 
-export default router;
+// export default router;

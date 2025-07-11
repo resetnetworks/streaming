@@ -9,6 +9,7 @@ import { StatusCodes } from 'http-status-codes';
 // import { UnauthorizedError } from "../errors/unauthorized.js";
 import { shapeArtistResponse } from "../dto/artist.dto.js";
 import { log } from "console";
+import { createArtistStripeSubscriptionPrice } from "../utils/stripe.js";
 
 
 
@@ -34,8 +35,9 @@ export const createArtist = async (req, res) => {
   const imageFile = req.files?.coverImage?.[0];
   const imageUrl = imageFile ? await uploadToS3(imageFile, "artists") : "";
 
+
   // 🎨 Create artist
-  const newArtist = await Artist.create({
+  const artist = await Artist.create({
     name,
     bio,
     subscriptionPrice,
@@ -43,14 +45,19 @@ export const createArtist = async (req, res) => {
     image: imageUrl,
     createdBy: req.user._id,
   });
+   if (artist.subscriptionPrice && artist.subscriptionPrice > 0) {
+  const priceId = await createArtistStripeSubscriptionPrice(artist.name, artist.subscriptionPrice);
+  artist.stripePriceId = priceId;
+  await artist.save();
 
   // ✂️ Shape response
-  const shaped = await shapeArtistResponse(newArtist.toObject())
+  const shaped = await shapeArtistResponse(artist.toObject())
   console.log("Created artist:", shaped); // Debugging line
   
 
   res.status(StatusCodes.CREATED).json({ success: true, artist: shaped });
 };
+}
 
 
 // ===================================================================

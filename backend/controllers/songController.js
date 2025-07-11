@@ -11,6 +11,7 @@ import { StatusCodes } from 'http-status-codes';
 import { isAdmin } from "../utils/authHelper.js";
 import { log } from "console";
 import { shapeSongResponse } from "../dto/song.dto.js";
+import { streamSong } from "./streamController.js";
 
 
 
@@ -296,6 +297,8 @@ export const getAllSongs = async (req, res) => {
 // ===================================================================
 export const getSongById = async (req, res) => {
   const { id } = req.params;
+  console.log("hello");
+  
 
   // Validate ID type
   const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
@@ -314,6 +317,8 @@ export const getSongById = async (req, res) => {
 
   const shaped = shapeSongResponse(song, hasAccess);
 
+   console.log(song);
+   
   res.status(StatusCodes.OK).json({ success: true, song: shaped });
 };
 

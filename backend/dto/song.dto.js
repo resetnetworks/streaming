@@ -13,5 +13,6 @@ export const shapeSongResponse = (song, hasAccess, signedUrl = null) => {
     album: song.album || null,
     slug: song.slug,
     audioUrl: hasAccess ? signedUrl : null, // ✅ Only signed URL if access is allowed
+    
   };
 };

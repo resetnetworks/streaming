@@ -166,8 +166,8 @@ const Home = () => {
                   price={song.accessType === 'purchase-only' ? `$${song.price}` : 'Subs..'}
                   singer={song.singer}
                   image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song)}
-                  isSelected={selectedSong === song}
+                  onPlay={() => handlePlaySong(song._id)}
+                  isSelected={selectedSong === song._id}
                 />
               ))
             )}
@@ -220,7 +220,7 @@ const Home = () => {
               <div className="flex md:gap-2 gap-4 items-center">
                 <img
                   src={
-                    randomArtist.image ||
+                    randomArtist?.image ||
                     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqfAcDALkSsCqPtfyFv69i8j0k_ZXVBM-Juw&s"
                   }
                   alt={randomArtist.name}
@@ -254,8 +254,8 @@ const Home = () => {
                       title={song.title}
                       singer={song.singer}
                       image={song.coverImage || "/images/placeholder.png"}
-                      onPlay={() => handlePlaySong(song)}
-                      isSelected={selectedSong === song}
+                      onPlay={() => handlePlaySong(song._id)}
+                      isSelected={selectedSong === song._id}
                     />
                   ))}
                 </div>
@@ -336,8 +336,8 @@ const Home = () => {
                         songName={song.title}
                         singerName={song.singer}
                         seekTime={formatDuration(song.duration)}
-                        onPlay={() => handlePlaySong(song)}
-                        isSelected={selectedSong === song}
+                        onPlay={() => handlePlaySong(song._id)}
+                        isSelected={selectedSong === song._id}
                       />
                     ))}
                   </div>
