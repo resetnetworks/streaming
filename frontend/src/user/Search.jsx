@@ -92,8 +92,8 @@ const Search = () => {
                   title={song.title}
                   singer={song.artist.name || "Unknown Artist"}
                   image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song._id)}
-                  isSelected={selectedSong === song._id}
+                  onPlay={() => handlePlaySong(song)}
+                  isSelected={selectedSong?._id === song._id}
                 />
               ))}
             </div>
@@ -111,8 +111,8 @@ const Search = () => {
                       title={song.title}
                       singer={song.artist?.name || "Unknown"}
                       image={song.coverImage || "/images/placeholder.png"}
-                      onPlay={() => handlePlaySong(song._id)}
-                      isSelected={selectedSong === song._id}
+                      onPlay={() => handlePlaySong(song)}
+                      isSelected={selectedSong?._id === song._id}
                     />
                   ))}
                 </div>

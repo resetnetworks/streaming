@@ -1,4 +1,3 @@
-// src/app/store.js
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore } from 'redux-persist';
@@ -10,23 +9,22 @@ import playerReducer from '../features/playback/playerSlice';
 import artistsReducer from "../features/artists/artistsSlice";
 import albumsReducer from "../features/albums/albumsSlice";
 import searchReducer from "../features/search/searchSlice";
-import paymentReducer from  "../features/payments/paymentSlice";
-import streamReducer from "../features/stream/streamSlice"; // ✅ Import this
+import paymentReducer from "../features/payments/paymentSlice";
+import streamReducer from "../features/stream/streamSlice";
 
-
-// ✅ Persist config for player slice (only persist volume)
+// ✅ Persist config for player slice (now includes selectedSong)
 const playerPersistConfig = {
   key: 'player',
   storage,
-  whitelist: ['volume'],
-  stateReconciler: autoMergeLevel2
+  whitelist: ['volume', 'selectedSong'], // ✅ Add selectedSong
+  stateReconciler: autoMergeLevel2,
 };
 
 // ✅ Root persist config (persist songs only)
 const rootPersistConfig = {
   key: 'root',
   storage,
-  whitelist: ['songs'], // persist only songs
+  whitelist: ['songs'], // ✅ only songs
   blacklist: ['player'], // player is handled separately
 };
 
@@ -34,7 +32,7 @@ const rootPersistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   songs: songReducer,
-  player: persistReducer(playerPersistConfig, playerReducer),
+  player: persistReducer(playerPersistConfig, playerReducer), // wrapped separately
   artists: artistsReducer,
   albums: albumsReducer,
   search: searchReducer,

@@ -7,9 +7,10 @@ import { toggleLikeSong } from "../../features/auth/authSlice";
 import { selectIsSongLiked } from "../../features/auth/authSelectors";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
-const handleFeatureSoon = ()=>{
-  toast.success("this feature will available soon")
-}
+
+const handleFeatureSoon = () => {
+  toast.success("This feature will be available soon");
+};
 
 const SongList = ({
   img,
@@ -29,7 +30,6 @@ const SongList = ({
     }
   };
 
-  // ✅ Debounced like toggle
   const debouncedLikeToggle = useCallback(
     debounce(async (songId, wasLiked) => {
       try {
@@ -44,14 +44,14 @@ const SongList = ({
       } catch (err) {
         toast.error("Something went wrong");
       }
-    }, 500), // 500ms debounce
-    []
+    }, 500),
+    [dispatch]
   );
 
   const handleToggleLike = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    debouncedLikeToggle(songId, isLiked);
+    debouncedLikeToggle(songId, isLiked); // ✅ fixed here
   };
 
   return (
@@ -112,7 +112,10 @@ const SongList = ({
           )}
         </button>
 
-        <FiMoreHorizontal className="action-button text-white text-lg hover:cursor-pointer" onClick={handleFeatureSoon}/>
+        <FiMoreHorizontal
+          className="action-button text-white text-lg hover:cursor-pointer"
+          onClick={handleFeatureSoon}
+        />
       </div>
     </div>
   );

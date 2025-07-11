@@ -379,8 +379,8 @@ const Artist = () => {
                   songName={song.title}
                   singerName={song.singer}
                   seekTime={formatDuration(song.duration)}
-                  onPlay={() => handlePlaySong(song.id)}
-                  isSelected={selectedSong === song.id}
+                  onPlay={() => handlePlaySong(song)}
+                  isSelected={selectedSong?._id === song._id}
                 />
               ))}
               {songsStatus === "loading" &&
@@ -493,8 +493,8 @@ const Artist = () => {
                       ? song.coverImage
                       : renderCoverImage(null, song.title, "w-full h-40")
                   }
-                  onPlay={() => handlePlaySong(song._id)}
-                  isSelected={selectedSong === song._id}
+                  onPlay={() => handlePlaySong(song)}
+                  isSelected={selectedSong?._id === song._id}
                 />
               ))}
         </div>

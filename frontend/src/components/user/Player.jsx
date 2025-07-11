@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
-
 import { fetchStreamUrl } from "../../features/stream/streamSlice";
 import {
   selectAllSongs,
@@ -15,11 +14,10 @@ import {
   setCurrentTime,
   setDuration,
   setVolume,
-} from "../../features/playback/playerSlice.js";
-import { toggleLikeSong } from "../../features/auth/authSlice.js";
-import { selectIsSongLiked } from "../../features/auth/authSelectors.js";
-import { formatDuration } from "../../utills/helperFunctions.js";
-
+} from "../../features/playback/playerSlice";
+import { toggleLikeSong } from "../../features/auth/authSlice";
+import { selectIsSongLiked } from "../../features/auth/authSelectors";
+import { formatDuration } from "../../utills/helperFunctions";
 import {
   RiSkipLeftFill,
   RiSkipRightFill,
@@ -46,13 +44,14 @@ const handleFeatureSoon = () => {
 const Player = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
-  const selectedSongId = useSelector(selectSelectedSong);
-  const selectedSong = songs.find((s) => s._id === selectedSongId);
+  const selectedSong = useSelector(selectSelectedSong);
   const isPlaying = useSelector((state) => state.player.isPlaying);
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
   const streamUrls = useSelector((state) => state.stream.urls);
+  const streamLoading = useSelector((state) => state.stream.loading);
+  const streamError = useSelector((state) => state.stream.error);
 
   const [open, setOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -63,72 +62,134 @@ const Player = () => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
-  const currentIndex = selectedSong
-    ? songs.findIndex((s) => s._id === selectedSong._id)
-    : -1;
+  const currentSong = selectedSong || null;
 
-  const nextSongs =
-    currentIndex !== -1
-      ? songs.slice(currentIndex + 1, currentIndex + 5)
-      : songs.slice(0, 4);
+const currentIndex = currentSong
+  ? songs.findIndex((s) => s._id === currentSong._id)
+  : -1;
 
-  const isLiked = useSelector(selectIsSongLiked(selectedSong?._id));
+const nextSongs =
+  currentIndex !== -1
+    ? songs.slice(currentIndex + 1, currentIndex + 5)
+    : songs.slice(0, 4);
+
+
+  const isLiked = useSelector(selectIsSongLiked(currentSong?._id));
+
 
   // Fetch stream URL when song changes
   useEffect(() => {
-    if (selectedSong && !streamUrls?.[selectedSong._id]) {
-      dispatch(fetchStreamUrl(selectedSong._id));
-    }
+    if (selectedSong && !streamUrls[selectedSong._id]) {
+  dispatch(fetchStreamUrl(selectedSong._id));
+}
   }, [selectedSong, streamUrls, dispatch]);
 
   // Initialize with first song if none selected
   useEffect(() => {
     if (!selectedSong && songs.length > 0) {
-      dispatch(setSelectedSong(songs[0]._id));
+      dispatch(setSelectedSong(songs[0].id));
     }
   }, [selectedSong, songs, dispatch]);
 
-  // Main HLS player init
+  // Main HLS player initialization - FIXED VERSION
   useEffect(() => {
-    if (!selectedSong) return;
     const video = videoRef.current;
+    if (!video || !currentSong || !streamUrls[selectedSong._id]) return;
 
+    let hls;
     const initPlayer = async () => {
       try {
         setIsLoading(true);
         setPlaybackError(null);
 
+        // Reset player state
+        dispatch(setCurrentTime(0));
+        dispatch(setDuration(0));
+
+        // Clean up previous HLS instance
         if (hlsRef.current) {
           hlsRef.current.destroy();
           hlsRef.current = null;
         }
 
-        const mediaUrl = `${selectedSong.hlsUrl}?nocache=${Date.now()}`;
+        const streamUrl = streamUrls[selectedSong._id];
+        const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
 
         if (Hls.isSupported()) {
-          const hls = new Hls();
+          hls = new Hls({
+            maxBufferLength: 30,
+            maxMaxBufferLength: 600,
+            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferHole: 0.5,
+            enableWorker: true
+          });
+
           hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
-              setPlaybackError(`HLS Error: ${data.type}`);
+              console.error('HLS Error:', data);
+              setPlaybackError(`Playback Error: ${data.type}`);
               hls.destroy();
-              video.src = selectedSong.audioUrl;
-              video.load();
+              if (currentSong.audioUrl) {
+                video.src = currentSong.audioUrl;
+                video.load();
+              }
             }
           });
 
-          hls.loadSource(mediaUrl);
+          hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+            hls.loadSource(mediaUrl);
+          });
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.currentTime = 0;
+            dispatch(setCurrentTime(0));
+            if (isPlaying) {
+              video.play().catch(err => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
+
           hls.attachMedia(video);
           hlsRef.current = hls;
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = mediaUrl;
+          video.addEventListener('loadedmetadata', () => {
+            dispatch(setDuration(video.duration));
+            if (isPlaying) {
+              video.play().catch(err => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
         }
 
         video.onloadedmetadata = () => {
-          dispatch(setDuration(video.duration || selectedSong.duration || 0));
-          if (!isNaN(video.duration)) {
-            video.currentTime = currentTime;
-          }
+          const safeDuration = isNaN(video.duration) ? currentSong.duration || 0 : video.duration;
+          dispatch(setDuration(safeDuration));
         };
+
+      video.ontimeupdate = () => {
+  if (!isNaN(video.currentTime)) {
+    dispatch(setCurrentTime(video.currentTime));
+
+    const remainingTime = (video.duration || 0) - video.currentTime;
+
+    // Auto trigger next song 0.5s before end
+    if (remainingTime <= 0.5 && video.duration > 1) {
+      video.ontimeupdate = null; // prevent multiple triggers
+      handleNext();
+    }
+  }
+};
+
+
+        video.onended = () => {
+          handleNext();
+        };
+
       } catch (err) {
         setPlaybackError(err.message);
       } finally {
@@ -137,54 +198,36 @@ const Player = () => {
     };
 
     initPlayer();
-  }, [selectedSong]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !selectedSong) return;
-
-    video.volume = isMuted ? 0 : volume;
-
-    const onTimeUpdate = () => {
-      dispatch(setCurrentTime(video.currentTime || 0));
-      if (video.duration - video.currentTime <= 0.5 && video.duration > 1) {
-        handleNext();
-      }
-    };
-
-    const onEnded = () => {
-      handleNext();
-    };
-
-    video.addEventListener("timeupdate", onTimeUpdate);
-    video.addEventListener("ended", onEnded);
 
     return () => {
-      video.removeEventListener("timeupdate", onTimeUpdate);
-      video.removeEventListener("ended", onEnded);
-    };
-  }, [dispatch, selectedSong, isMuted, volume]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !selectedSong || !isPlaying) return;
-
-    const tryPlay = async () => {
-      try {
-        await video.play();
-      } catch (err) {
-        setPlaybackError("Autoplay blocked. Tap play to continue.");
-        dispatch(pause());
+      if (hls) hls.destroy();
+      const video = videoRef.current;
+      if (video) {
+        video.ontimeupdate = null;
+        video.onended = null;
+        video.onloadedmetadata = null;
       }
     };
+  }, [selectedSong, streamUrls]);
 
-    tryPlay();
-  }, [selectedSong, isPlaying]);
+  // Volume control
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  // Error handling
+  useEffect(() => {
+    if (playbackError) {
+      toast.error(playbackError);
+    }
+  }, [playbackError]);
 
   const handleTogglePlay = async () => {
-    if (isLoading) return;
     const video = videoRef.current;
-    if (!video || !selectedSong) return;
+    if (!video || !currentSong) return;
 
     try {
       if (isPlaying) {
@@ -210,26 +253,29 @@ const Player = () => {
   };
 
   const handleNext = () => {
-    if (!selectedSong || songs.length === 0) return;
+    if (!currentSong || songs.length === 0) return;
     const nextIndex = (currentIndex + 1) % songs.length;
-    dispatch(setSelectedSong(songs[nextIndex]._id));
+    dispatch(setSelectedSong(songs[nextIndex]));
     dispatch(play());
   };
 
   const handlePrev = () => {
-    if (!selectedSong || songs.length === 0) return;
+    if (!currentSong || songs.length === 0) return;
     if (currentTime > 3) {
       handleSeekChange(0);
     } else {
       const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-      dispatch(setSelectedSong(songs[prevIndex]._id));
+      dispatch(setSelectedSong(songs[prevIndex].id));
       dispatch(play());
     }
   };
 
   const handleSeekChange = (val) => {
-    dispatch(setCurrentTime(val));
-    if (videoRef.current) videoRef.current.currentTime = val;
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = val;
+      dispatch(setCurrentTime(val));
+    }
   };
 
   const handleVolumeChange = (e) => {
@@ -239,10 +285,10 @@ const Player = () => {
   };
 
   const handleLikeToggle = () => {
-    if (selectedSong?._id) dispatch(toggleLikeSong(selectedSong._id));
+    if (currentSong?._id) dispatch(toggleLikeSong(currentSong._id));
   };
 
-  if (!selectedSong || songs.length === 0) {
+  if (!currentSong || songs.length === 0) {
     return (
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="ml-3">
@@ -258,12 +304,6 @@ const Player = () => {
 
   return (
     <div className="player-wrapper">
-      {playbackError && (
-        <div className="absolute top-0 left-0 right-0 bg-red-500 text-white text-xs p-1 text-center">
-          Error: {playbackError}
-        </div>
-      )}
-
       <video
         ref={videoRef}
         style={{ display: "none" }}
@@ -276,14 +316,14 @@ const Player = () => {
       <div className="player-card w-[15.25rem] py-4 px-4 flex flex-col items-center">
         <div className="w-full aspect-square overflow-hidden rounded-md">
           <img
-            src={selectedSong?.coverImage || "/images/placeholder.png"}
+            src={currentSong?.coverImage}
             className="w-full h-full object-cover"
             alt=""
           />
         </div>
 
-        <p className="text-lg mt-2">{selectedSong?.title}</p>
-        <span className="text-sm text-gray-500">{selectedSong?.singer}</span>
+        <p className="text-lg mt-2">{currentSong?.title}</p>
+        <span className="text-sm text-gray-500">{currentSong?.singer}</span>
 
         <div className="w-full mt-4">
           <input
@@ -296,23 +336,18 @@ const Player = () => {
           />
           <div className="flex justify-between text-xs text-gray-300 mt-1 px-[2px]">
             <span>{formatTime(currentTime)}</span>
-            <span>{formatDuration(duration || selectedSong?.duration)}</span>
+            <span>{formatDuration(duration || currentSong?.duration)}</span>
           </div>
         </div>
 
         <div className="w-full flex justify-between mt-4">
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button
-              className="player-button flex justify-center items-center gap-2"
-              onClick={handleFeatureSoon}
-            >
+            <button className="player-button flex justify-center items-center gap-2" onClick={handleFeatureSoon}>
               <LuDna className="text-blue-500 text-sm" /> lossless
             </button>
           </div>
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button" onClick={handleFeatureSoon}>
-              reset master
-            </button>
+            <button className="player-button" onClick={handleFeatureSoon}>reset master</button>
           </div>
         </div>
 
@@ -348,7 +383,7 @@ const Player = () => {
             className="text-md text-white cursor-pointer"
             onClick={handleNext}
           />
-          <IoIosMore className="text-md text-white" onClick={handleFeatureSoon} />
+          <IoIosMore className="text-md text-white" onClick={handleFeatureSoon}/>
         </div>
 
         <div className="player-gradiant-line mt-4"></div>
@@ -392,10 +427,10 @@ const Player = () => {
                   <div
                     key={song._id}
                     className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
-                      song._id === selectedSong?._id ? "bg-blue-800/40" : ""
+                      song.id === selectedSong ? "bg-blue-800/40" : ""
                     }`}
                     onClick={() => {
-                      dispatch(setSelectedSong(song._id));
+                      dispatch(setSelectedSong(song));
                       dispatch(play());
                     }}
                   >
