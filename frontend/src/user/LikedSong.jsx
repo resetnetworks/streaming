@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchLikedSongs,
   clearLikedSongs,
+  removeSongFromLiked,
 } from "../features/songs/songSlice";
 import {
   selectLikedSongs,
@@ -25,12 +26,12 @@ const LikedSongs = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [localSongs, setLocalSongs] = useState([]);
   const limit = 20;
+
   const songs = useSelector(selectLikedSongs);
   const total = useSelector(selectLikedSongsTotal);
   const page = useSelector(selectLikedSongsPage);
   const pages = useSelector(selectLikedSongsPages);
   const status = useSelector(selectSongsStatus);
-
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const playerStatus = useSelector((state) => state.player.status);
 
@@ -82,12 +83,13 @@ const LikedSongs = () => {
     }
   };
 
-const handleToggleLike = async (songId) => {
-  await dispatch(toggleLikeSong(songId));
-  dispatch(clearLikedSongs());
-  dispatch(fetchLikedSongs({ page: 1, limit }));
-};
-
+  const handleToggleLike = async (songId) => {
+    const result = await dispatch(toggleLikeSong(songId));
+    if (result.meta.requestStatus === "fulfilled") {
+      dispatch(removeSongFromLiked(songId)); // update Redux
+      setLocalSongs((prev) => prev.filter((song) => song._id !== songId)); // update local state
+    }
+  };
 
   const hasMore = page < pages && localSongs.length < total;
 
@@ -143,11 +145,11 @@ const handleToggleLike = async (songId) => {
                       ? lastSongElementRef
                       : null
                   }
-                  key={song.id}
+                  key={song._id}
                   className="flex items-center justify-between bg-white/10 rounded-xl shadow-lg p-4 hover:bg-white/20 transition relative my-2 mx-0 group"
                 >
                   <SongList
-                    songId={song.id}
+                    songId={song._id}
                     img={
                       song.coverImage ||
                       song.album?.coverImage ||
@@ -156,13 +158,13 @@ const handleToggleLike = async (songId) => {
                     songName={song.title}
                     singerName={song.artist?.name || song.singer}
                     seekTime={formatDuration(song.duration)}
-                    onPlay={() => handlePlaySong(song.id)}
-                    isSelected={selectedSong === song.id}
+                    onPlay={() => handlePlaySong(song._id)}
+                    isSelected={selectedSong === song._id}
                     isPlaying={
-                      selectedSong === song.id &&
+                      selectedSong === song._id &&
                       playerStatus === "playing"
                     }
-                    onLikeToggle={() => handleToggleLike(song.id)}
+                    onLikeToggle={() => handleToggleLike(song._id)}
                   />
                 </div>
               ))}
