@@ -24,7 +24,7 @@ const playerPersistConfig = {
 const rootPersistConfig = {
   key: 'root',
   storage,
-  whitelist: ['songs'], // ✅ only songs
+  whitelist: ['songs','auth'], // ✅ only songs
   blacklist: ['player'], // player is handled separately
 };
 
