@@ -1,6 +1,6 @@
 // src/features/stream/streamSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "../../utills/axiosInstance"
+import axios from "../../utills/axiosInstance";
 
 export const fetchStreamUrl = createAsyncThunk(
   "stream/fetchStreamUrl",
@@ -9,15 +9,23 @@ export const fetchStreamUrl = createAsyncThunk(
       const res = await axios.get(`/stream/song/${songId}`);
       return { songId, url: res.data.url };
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch streaming URL");
+      const status = err.response?.status;
+      const message = err.response?.data?.message || "Failed to fetch streaming URL";
+
+      // Handle 403 separately for UI feedback
+      if (status === 403) {
+        return rejectWithValue({ songId, message: "You need to purchase this song to play it." });
+      }
+
+      return rejectWithValue({ songId, message });
     }
   }
 );
 
 const initialState = {
-  urls: {}, // { songId: signedUrl }
+  urls: {},              // { songId: signedUrl }
   loading: false,
-  error: null,
+  error: null,           // { songId, message } OR null
 };
 
 const streamSlice = createSlice({
@@ -40,9 +48,11 @@ const streamSlice = createSlice({
         const { songId, url } = action.payload;
         state.urls[songId] = url;
         state.loading = false;
+        state.error = null;
       })
       .addCase(fetchStreamUrl.rejected, (state, action) => {
-        state.error = action.payload;
+        const { songId, message } = action.payload || {};
+        state.error = { songId, message: message || "Stream access denied" };
         state.loading = false;
       });
   },
