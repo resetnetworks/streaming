@@ -9,7 +9,7 @@ export const canStreamSong = async (userId, songId) => {
   
   const song = await Song.findById(songId).lean();
   if (!song) return false;
-  return true;
+  
 
   if (song.accessType === "free") return true;
   if(userId === "685e6f35c3a194bdd0638bf2") return true; 

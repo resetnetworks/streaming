@@ -6,6 +6,8 @@ import {
   markTransactionPaid,
   updateUserAfterPurchase,
 } from "../services/paymentService.js";
+import { WebhookEventLog } from "../models/WebhookEventLog.js";
+
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -25,6 +27,20 @@ export const stripeWebhook = async (req, res) => {
 
   const eventType = event.type;
   const data = event.data.object;
+
+  // 🧠 Check if this event has already been processed
+const existingLog = await WebhookEventLog.findOne({ eventId: event.id });
+if (existingLog) {
+  console.warn(`⚠️ Duplicate event ${event.id} ignored`);
+  return res.status(200).json({ received: true, duplicate: true });
+}
+
+// ✅ First time we're seeing this event → save it
+await WebhookEventLog.create({
+  eventId: event.id,
+  type: event.type,
+});
+
 
   console.log(`📥 Stripe event received: ${eventType}`);
 

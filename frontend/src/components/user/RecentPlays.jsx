@@ -44,7 +44,7 @@ const RecentPlays = React.forwardRef(
             <span className="text-blue-500 text-xs truncate">{singer}</span>
           </div>
           {price && (
-            <p className="text-blue-500 text-xs font-semibold">{price}</p>
+            <p className="text-blue-500 text-xs font-semibold">{`${price}`}</p>
           )}
         </div>
       </div>
