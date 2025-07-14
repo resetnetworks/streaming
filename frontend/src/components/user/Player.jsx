@@ -52,15 +52,18 @@ const Player = () => {
   const streamUrls = useSelector((state) => state.stream.urls);
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
+  
 
   const [open, setOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [playbackError, setPlaybackError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  
 
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  
 
   const currentSong = selectedSong || null;
 
@@ -226,16 +229,25 @@ const Player = () => {
   // }, [playbackError]);
 
   // Show 403 error toast if current song can't be streamed
-  useEffect(() => {
-    if (
-      streamError && // If there's any error
-      selectedSong && // If a song is selected
-      streamError.songId === selectedSong._id // And the error belongs to that song
-    ) {
-      toast.warning(streamError.message); // Show the toast
-      setPlaybackError(streamError.message); // Prevent play/pause interaction
-    }
-  }, [streamError, selectedSong]);
+useEffect(() => {
+  if (
+    streamError &&
+    selectedSong &&
+    streamError.songId === selectedSong._id
+  ) {
+    const toastId = `stream-error-${selectedSong._id}`;
+
+    // This will ensure the toast shows only once for a specific song
+    toast.warning(streamError.message, {
+      id: toastId, // Sonner will auto-prevent duplicates by this ID
+      duration: 5000,
+    });
+
+    setPlaybackError(streamError.message);
+  }
+}, [streamError?.songId]);
+
+
 
   const handleTogglePlay = async () => {
     const video = videoRef.current;
@@ -451,7 +463,7 @@ const Player = () => {
                   <div
                     key={song._id}
                     className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
-                      song.id === selectedSong ? "bg-blue-800/40" : ""
+                      song._id === selectedSong ? "bg-blue-800/40" : ""
                     }`}
                     onClick={() => {
                       dispatch(setSelectedSong(song));

@@ -22,7 +22,6 @@ import { fetchSongsByArtist } from "../features/songs/songSlice";
 import { selectSongsByArtist } from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import StripePayment from "../components/payments/StripePayment";
 import { toast } from "sonner";
 import SaveCardModal from "../components/payments/saveCardModal";
 
@@ -509,58 +508,6 @@ const Artist = () => {
           getArtistColor={getArtistColor}
         />
 
-        {/* Stripe Payment Modal */}
-        {showPaymentModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white">
-                  Subscribe to {artist?.name}
-                </h3>
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <StripePayment
-                type="artist"
-                id={artist?._id}
-                amount={subscriptionPrice}
-                onSuccess={() => {
-                  // Handle successful subscription
-                  setIsSubscribed(true);
-                  setShowPaymentModal(false);
-                  toast.success(`Successfully subscribed to ${artist?.name}!`);
-
-                  // Update local storage
-                  let subscribedArtists = [];
-                  try {
-                    const raw = localStorage.getItem("subscribedArtists");
-                    subscribedArtists = raw ? JSON.parse(raw) : [];
-                  } catch (err) {
-                    console.error("Failed to parse subscribedArtists:", err);
-                    subscribedArtists = [];
-                  }
-
-                  subscribedArtists.push(artistId);
-                  localStorage.setItem(
-                    "subscribedArtists",
-                    JSON.stringify(subscribedArtists)
-                  );
-                }}
-                onClose={() => setShowPaymentModal(false)}
-              />
-
-              <p className="text-gray-400 text-sm mt-4">
-                You'll be charged ${subscriptionPrice.toFixed(2)} monthly until
-                you cancel.
-              </p>
-            </div>
-          </div>
-        )}
         {showSaveCardModal && (
   <SaveCardModal
     artistId={artist?._id}

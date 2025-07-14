@@ -42,7 +42,6 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
     return;
   }
 
-  // 💰 Prevent duplicate entries in purchase history (optional safety)
   const alreadyInHistory = user.purchaseHistory.some(
     (p) =>
       p.itemType === transaction.itemType &&
@@ -58,7 +57,6 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
     });
   }
 
-  // 🛒 Handle specific item types
   switch (transaction.itemType) {
     case "song":
       user.purchasedSongs = user.purchasedSongs || [];
@@ -75,49 +73,44 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
       break;
 
     case "artist-subscription": {
-      const activeSub = await Subscription.findOne({
-        userId: transaction.userId,
-        artistId: transaction.artistId,
-        status: "active",
-        validUntil: { $gte: new Date() },
-      });
+      let validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // default: +30 days
+      const fallbackExternalId =
+        transaction.stripeSubscriptionId ||
+        transaction.paymentIntentId ||
+        transaction.razorpayOrderId ||
+        "unknown";
 
-      if (activeSub) {
-        console.log("🟡 Existing active subscription found. Skipping.");
-      } else {
-        let validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // default: +30 days
-        const fallbackExternalId =
-          transaction.stripeSubscriptionId ||
-          transaction.paymentIntentId ||
-          transaction.razorpayOrderId ||
-          "unknown";
-
-        // 🧠 Try getting real billing period from Stripe
-        if (transaction.stripeSubscriptionId) {
-          try {
-            const stripe = new (await import("stripe")).default(process.env.STRIPE_SECRET_KEY);
-            const stripeSub = await stripe.subscriptions.retrieve(transaction.stripeSubscriptionId);
-            if (stripeSub?.current_period_end) {
-              validUntil = new Date(stripeSub.current_period_end * 1000);
-            }
-          } catch (err) {
-            console.warn("⚠️ Failed to fetch Stripe period:", err.message);
+      // 🧠 Try getting real billing period from Stripe
+      if (transaction.stripeSubscriptionId) {
+        try {
+          const stripe = new (await import("stripe")).default(process.env.STRIPE_SECRET_KEY);
+          const stripeSub = await stripe.subscriptions.retrieve(transaction.stripeSubscriptionId);
+          if (stripeSub?.current_period_end) {
+            validUntil = new Date(stripeSub.current_period_end * 1000);
           }
+        } catch (err) {
+          console.warn("⚠️ Failed to fetch Stripe period:", err.message);
         }
+      }
 
-        await Subscription.create({
-          userId: transaction.userId,
-          artistId: transaction.artistId,
+      // ✅ Upsert subscription (avoid duplicate key error)
+      await Subscription.findOneAndUpdate(
+        { userId: transaction.userId, artistId: transaction.artistId },
+        {
           status: "active",
           validUntil,
           gateway: transaction.gateway,
           externalSubscriptionId: fallbackExternalId,
-          transactionId: transaction._id, // 🔗 Link to transaction
-        });
+          transactionId: transaction._id,
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        }
+      );
 
-        console.log("✅ New subscription created for artist:", transaction.artistId);
-      }
-
+      console.log("✅ Subscription created or updated for artist:", transaction.artistId);
       break;
     }
 

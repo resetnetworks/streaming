@@ -18,8 +18,25 @@ export const initiateArtistSubscription = async (req, res) => {
     return res.status(400).json({ message: 'Invalid gateway' });
   }
 
-  const user = await User.findById(userId);
-  const artist = await Artist.findById(artistId);
+  // ✅ Check if subscription is already in process or active
+// const existingActiveSub = await Subscription.findOne({
+//   userId,
+//   artistId,
+//   status: "active",
+//   validUntil: { $gt: new Date() }, // still valid
+// });
+
+// if (existingActiveSub) {
+//   return res.status(400).json({ message: 'Subscription already active.' });
+// }
+
+  // const user = await User.findById(userId);
+  // const artist = await Artist.findById(artistId);
+
+  const [user, artist] = await Promise.all([
+    User.findById(userId),
+    Artist.findById(artistId)
+  ]);
 
   if (!user || !artist) {
     return res.status(404).json({ message: 'User or artist not found' });
@@ -98,6 +115,7 @@ await stripe.customers.update(customerId, {
     stripeSubscriptionId: subscription.id,
   });
 
+
 let clientSecret = null;
 if (subscription.latest_invoice && !subscription.latest_invoice.payment_intent) {
   // Set payment method on the invoice if missing
@@ -148,7 +166,7 @@ export const cancelArtistSubscription = async (req, res) => {
   }
 
   sub.status = "cancelled";
-  sub.validUntil = new Date(); // immediately invalid
+  // sub.validUntil = new Date(); // immediately invalid
   await sub.save();
 
   // Optional: cancel from Stripe if using recurring
