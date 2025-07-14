@@ -9,7 +9,7 @@ import playerReducer from '../features/playback/playerSlice';
 import artistsReducer from "../features/artists/artistsSlice";
 import albumsReducer from "../features/albums/albumsSlice";
 import searchReducer from "../features/search/searchSlice";
-import paymentReducer from "../features/payments/paymentSlice";
+import paymentReducer from "../features/payments/userPaymentSlice";
 import streamReducer from "../features/stream/streamSlice";
 
 // ✅ Persist config for player slice (now includes selectedSong)
@@ -36,7 +36,7 @@ const rootReducer = combineReducers({
   artists: artistsReducer,
   albums: albumsReducer,
   search: searchReducer,
-  payment: paymentReducer,
+  userDashboard: paymentReducer,
   stream: streamReducer,
 });
 

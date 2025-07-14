@@ -4,12 +4,19 @@ import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight } from "react-icons/lu";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import OneTimePurchaseModal from "../components/payments/OneTimePaymentModal";
 
 // Redux actions
 import { fetchAllSongs } from "../features/songs/songSlice";
-import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
+import {
+  fetchAllArtists,
+  fetchRandomArtistWithSongs,
+} from "../features/artists/artistsSlice";
 import { fetchAllAlbums } from "../features/albums/albumsSlice";
-import { selectRandomArtist, selectRandomArtistSongs } from "../features/artists/artistsSelectors";
+import {
+  selectRandomArtist,
+  selectRandomArtistSongs,
+} from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 
 // Components
@@ -31,7 +38,9 @@ const Home = () => {
   const songsStatus = useSelector((state) => state.songs.status);
   const songsTotalPages = useSelector((state) => state.songs.totalPages);
   const albumsStatus = useSelector((state) => state.albums.loading);
-  const albumsTotalPages = useSelector((state) => state.albums.pagination.totalPages);
+  const albumsTotalPages = useSelector(
+    (state) => state.albums.pagination.totalPages
+  );
   const allAlbums = useSelector((state) => state.albums.allAlbums);
   const randomArtist = useSelector(selectRandomArtist);
   const similarSongs = useSelector(selectRandomArtistSongs);
@@ -43,6 +52,9 @@ const Home = () => {
   const [albumsPage, setAlbumsPage] = useState(1);
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseItem, setPurchaseItem] = useState(null); // holds song or album object
+  const [purchaseType, setPurchaseType] = useState(null); // 'song' or 'album'
 
   // Refs
   const observerRefs = {
@@ -63,31 +75,44 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchAllArtists());
     dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
-    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
-  }, [dispatch, similarPage, albumsPage]);
+  }, [dispatch, similarPage]);
 
   useEffect(() => {
-    dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {
-      if (res.payload?.songs) {
-        setRecentSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
-      }
-    });
+    if (allAlbums.length === 0) {
+      dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
+    }
+  }, [dispatch, albumsPage]);
+
+  useEffect(() => {
+    if (recentSongs.length === 0) {
+      dispatch(
+        fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })
+      ).then((res) => {
+        if (res.payload?.songs) {
+          setRecentSongs((prev) => {
+            const seen = new Set(prev.map((s) => s._id));
+            const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+            return [...prev, ...newSongs];
+          });
+        }
+      });
+    }
   }, [dispatch, recentPage]);
 
   useEffect(() => {
-    dispatch(fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })).then((res) => {
-      if (res.payload?.songs) {
-        setTopSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
-      }
-    });
+    if (topSongs.length === 0) {
+      dispatch(
+        fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })
+      ).then((res) => {
+        if (res.payload?.songs) {
+          setTopSongs((prev) => {
+            const seen = new Set(prev.map((s) => s._id));
+            const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+            return [...prev, ...newSongs];
+          });
+        }
+      });
+    }
   }, [dispatch, topPicksPage]);
 
   // Handlers
@@ -102,6 +127,12 @@ const Home = () => {
     dispatch(play());
   };
 
+  const handlePurchaseClick = (item, type) => {
+    setPurchaseItem(item);
+    setPurchaseType(type); // 'song' or 'album'
+    setShowPurchaseModal(true);
+  };
+
   // Create chunks for top songs grid
   const chunkSize = 5;
   const songColumns = [];
@@ -110,7 +141,13 @@ const Home = () => {
   }
 
   // Observer callback factory
-  const createObserverRef = (key, pageState, setPageState, totalPages, status) =>
+  const createObserverRef = (
+    key,
+    pageState,
+    setPageState,
+    totalPages,
+    status
+  ) =>
     useCallback(
       (node) => {
         if (status === "loading") return;
@@ -125,16 +162,33 @@ const Home = () => {
       [status, pageState, totalPages]
     );
 
-  const recentLastRef = createObserverRef("recent", recentPage, setRecentPage, songsTotalPages, songsStatus);
-  const topPicksLastRef = createObserverRef("topPicks", topPicksPage, setTopPicksPage, songsTotalPages, songsStatus);
-  const albumsLastRef = createObserverRef("albums", albumsPage, setAlbumsPage, albumsTotalPages, albumsStatus);
+  const recentLastRef = createObserverRef(
+    "recent",
+    recentPage,
+    setRecentPage,
+    songsTotalPages,
+    songsStatus
+  );
+  const topPicksLastRef = createObserverRef(
+    "topPicks",
+    topPicksPage,
+    setTopPicksPage,
+    songsTotalPages,
+    songsStatus
+  );
+  const albumsLastRef = createObserverRef(
+    "albums",
+    albumsPage,
+    setAlbumsPage,
+    albumsTotalPages,
+    albumsStatus
+  );
 
   return (
     <UserLayout>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
-
           {/* Recent Played Section */}
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">new tracks</h2>
@@ -147,35 +201,46 @@ const Home = () => {
             ref={scrollRefs.recent}
             className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
           >
-            {songsStatus === "loading" && recentSongs.length === 0 ? (
-              [...Array(10)].map((_, idx) => (
-                <div
-                  key={`recent-skeleton-${idx}`}
-                  className="w-[160px] flex flex-col gap-2 skeleton-wrapper"
-                >
-                  <Skeleton height={160} width={160} className="rounded-xl" />
-                  <Skeleton width={100} height={12} />
-                </div>
-              ))
-            ) : (
-              recentSongs.map((song, idx) => (
-                <RecentPlays
-                  ref={idx === recentSongs.length - 1 ? recentLastRef : null}
-                  key={song._id}
-                  title={song.title}
-                  price={song.accessType === 'purchase-only' ? `$${song.price}` : 'Subs..'}
-                  singer={song.singer}
-                  image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song)}
-                  isSelected={selectedSong?._id === song._id}
-                />
-              ))
-            )}
+            {songsStatus === "loading" && recentSongs.length === 0
+              ? [...Array(10)].map((_, idx) => (
+                  <div
+                    key={`recent-skeleton-${idx}`}
+                    className="w-[160px] flex flex-col gap-2 skeleton-wrapper"
+                  >
+                    <Skeleton height={160} width={160} className="rounded-xl" />
+                    <Skeleton width={100} height={12} />
+                  </div>
+                ))
+              : recentSongs.map((song, idx) => (
+                  <RecentPlays
+                    ref={idx === recentSongs.length - 1 ? recentLastRef : null}
+                    key={song._id}
+                    title={song.title}
+                    price={
+                      song.accessType === "purchase-only" ? (
+                        <button
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                          onClick={() => handlePurchaseClick(song, "song")}
+                        >
+                          Buy for ${song.price}
+                        </button>
+                      ) : (
+                        "Subs.."
+                      )
+                    }
+                    singer={song.singer}
+                    image={song.coverImage || "/images/placeholder.png"}
+                    onPlay={() => handlePlaySong(song)}
+                    isSelected={selectedSong?._id === song._id}
+                  />
+                ))}
           </div>
 
           {/* Albums Section */}
           <div className="w-full flex justify-between items-center">
-            <h2 className="md:text-xl text-lg font-semibold">new albums for you</h2>
+            <h2 className="md:text-xl text-lg font-semibold">
+              new albums for you
+            </h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
               onClick={() => handleScroll(scrollRefs.playlist)}
@@ -185,33 +250,41 @@ const Home = () => {
             ref={scrollRefs.playlist}
             className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
           >
-            {albumsStatus ? (
-              [...Array(7)].map((_, idx) => (
-                <div
-                  key={`playlist-skeleton-${idx}`}
-                  className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper"
-                >
-                  <Skeleton height={160} width={160} className="rounded-xl" />
-                  <Skeleton width={100} height={12} />
-                </div>
-              ))
-            ) : (
-              allAlbums.map((album, idx) => (
-                <div 
-                  key={album._id} 
-                  ref={idx === allAlbums.length - 1 ? albumsLastRef : null}
-                >
-                 <AlbumCard
-  tag={`#${album.title || 'music'}`}
-  artists={album.artist?.name || "Various Artists"}
-  image={album.coverImage || "/images/placeholder.png"}
-  price={album.price === 0 ? "subs.." : `$${album.price}`}
-  onClick={() => navigate(`/album/${album.slug}`)}
-/>
-
-                </div>
-              ))
-            )}
+            {albumsStatus
+              ? [...Array(7)].map((_, idx) => (
+                  <div
+                    key={`playlist-skeleton-${idx}`}
+                    className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper"
+                  >
+                    <Skeleton height={160} width={160} className="rounded-xl" />
+                    <Skeleton width={100} height={12} />
+                  </div>
+                ))
+              : allAlbums.map((album, idx) => (
+                  <div
+                    key={album._id}
+                    ref={idx === allAlbums.length - 1 ? albumsLastRef : null}
+                  >
+                    <AlbumCard
+                      tag={`#${album.title || "music"}`}
+                      artists={album.artist?.name || "Various Artists"}
+                      image={album.coverImage || "/images/placeholder.png"}
+                      price={
+                        album.price === 0 ? (
+                          "subs.."
+                        ) : (
+                          <button
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                            onClick={() => handlePurchaseClick(album, "album")}
+                          >
+                            Buy for ${album.price}
+                          </button>
+                        )
+                      }
+                      onClick={() => navigate(`/album/${album.slug}`)}
+                    />
+                  </div>
+                ))}
           </div>
 
           {/* Similar Artist Section */}
@@ -227,7 +300,9 @@ const Home = () => {
                   className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
                 />
                 <div>
-                  <h2 className="text-blue-700 text-base leading-none">similar to</h2>
+                  <h2 className="text-blue-700 text-base leading-none">
+                    similar to
+                  </h2>
                   <p
                     onClick={() => navigate(`/artist/${randomArtist.slug}`)}
                     className="text-lg leading-none text-white hover:underline cursor-pointer"
@@ -242,7 +317,9 @@ const Home = () => {
               </div>
 
               {similarSongs.length === 0 ? (
-                <p className="text-gray-400 italic">No songs available for this artist.</p>
+                <p className="text-gray-400 italic">
+                  No songs available for this artist.
+                </p>
               ) : (
                 <div
                   ref={scrollRefs.similar}
@@ -286,7 +363,9 @@ const Home = () => {
 
           {/* Top Picks Section */}
           <div className="w-full flex justify-between items-center">
-            <h2 className="md:text-xl text-lg font-semibold">all tracks for you</h2>
+            <h2 className="md:text-xl text-lg font-semibold">
+              all tracks for you
+            </h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
               onClick={() => handleScroll(scrollRefs.topPicks)}
@@ -297,55 +376,69 @@ const Home = () => {
             className="w-full overflow-x-auto no-scrollbar min-h-[280px]"
           >
             <div className="flex md:gap-8 gap-32">
-              {songsStatus === "loading" && topSongs.length === 0 ? (
-                [...Array(5)].map((_, idx) => (
-                  <div
-                    key={`top-picks-skeleton-${idx}`}
-                    className="flex flex-col gap-4 min-w-[400px]"
-                  >
-                    {[...Array(5)].map((__, i) => (
-                      <div
-                        key={`top-picks-item-${i}`}
-                        className="flex items-center gap-4 skeleton-wrapper"
-                      >
-                        <Skeleton
-                          height={50}
-                          width={50}
-                          className="rounded-full"
-                        />
-                        <div className="flex flex-col gap-1">
-                          <Skeleton width={120} height={14} />
-                          <Skeleton width={80} height={12} />
+              {songsStatus === "loading" && topSongs.length === 0
+                ? [...Array(5)].map((_, idx) => (
+                    <div
+                      key={`top-picks-skeleton-${idx}`}
+                      className="flex flex-col gap-4 min-w-[400px]"
+                    >
+                      {[...Array(5)].map((__, i) => (
+                        <div
+                          key={`top-picks-item-${i}`}
+                          className="flex items-center gap-4 skeleton-wrapper"
+                        >
+                          <Skeleton
+                            height={50}
+                            width={50}
+                            className="rounded-full"
+                          />
+                          <div className="flex flex-col gap-1">
+                            <Skeleton width={120} height={14} />
+                            <Skeleton width={80} height={12} />
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              ) : (
-                songColumns.map((column, columnIndex) => (
-                  <div
-                    key={`column-${columnIndex}`}
-                    ref={columnIndex === songColumns.length - 1 ? topPicksLastRef : null}
-                    className="flex flex-col gap-4 min-w-[400px]"
-                  >
-                    {column.map((song) => (
-                      <SongList
-                        key={song._id}
-                        songId={song._id}
-                        img={song.coverImage || "/images/placeholder.png"}
-                        songName={song.title}
-                        singerName={song.singer}
-                        seekTime={formatDuration(song.duration)}
-                        onPlay={() => handlePlaySong(song)}
-                        isSelected={selectedSong?._id === song._id}
-                      />
-                    ))}
-                  </div>
-                ))
-              )}
+                      ))}
+                    </div>
+                  ))
+                : songColumns.map((column, columnIndex) => (
+                    <div
+                      key={`column-${columnIndex}`}
+                      ref={
+                        columnIndex === songColumns.length - 1
+                          ? topPicksLastRef
+                          : null
+                      }
+                      className="flex flex-col gap-4 min-w-[400px]"
+                    >
+                      {column.map((song) => (
+                        <SongList
+                          key={song._id}
+                          songId={song._id}
+                          img={song.coverImage || "/images/placeholder.png"}
+                          songName={song.title}
+                          singerName={song.singer}
+                          seekTime={formatDuration(song.duration)}
+                          onPlay={() => handlePlaySong(song)}
+                          isSelected={selectedSong?._id === song._id}
+                        />
+                      ))}
+                    </div>
+                  ))}
             </div>
           </div>
         </div>
+        {showPurchaseModal && purchaseItem && (
+  <OneTimePurchaseModal
+    item={purchaseItem}
+    type={purchaseType} // 'song' or 'album'
+    onClose={() => {
+      setShowPurchaseModal(false);
+      setPurchaseItem(null);
+      setPurchaseType(null);
+    }}
+  />
+)}
+
       </SkeletonTheme>
     </UserLayout>
   );

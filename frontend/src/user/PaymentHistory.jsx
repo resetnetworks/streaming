@@ -1,13 +1,21 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from "react-redux";
-import { fetchUserPurchases } from "../features/payments/userPaymentSlice";
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  selectPurchaseHistory,
+  selectDashboardLoading,
+  selectDashboardError,
+} from '../features/payments/paymentSelectors';
+import { fetchUserPurchases } from '../features/payments/userPaymentSlice';
 import { fetchAllArtistsNoPagination } from '../features/artists/artistsSlice';
 import {
-  FiChevronDown, FiChevronUp, FiFilter, FiSearch,
-  FiCalendar, FiCheckCircle
+  FiChevronDown,
+  FiChevronUp,
+  FiFilter,
+  FiSearch,
+  FiCalendar,
+  FiCheckCircle,
 } from 'react-icons/fi';
 import UserHeader from '../components/user/UserHeader';
-
 
 const PaymentHistory = () => {
   const dispatch = useDispatch();
@@ -15,16 +23,18 @@ const PaymentHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
 
-  const { purchases, loading, error } = useSelector((state) => state.userDashboard);
-  const songs = useSelector((state) => state.songs.allSongs || []);
-  const albums = useSelector((state) => state.albums.allAlbums || []);
-  const artists = useSelector((state) => state.artists.allArtists || []);
+  const songs = useSelector((state) => state.songs.allSongs);
+  const albums = useSelector((state) => state.albums.allAlbums);
+  const artists = useSelector((state) => state.artists.allArtists);
+  const artistLoading = useSelector((state) => state.artists.loading);
 
-  const payments = purchases?.history || [];
+  const payments = useSelector(selectPurchaseHistory);
+  const loading = useSelector(selectDashboardLoading);
+  const error = useSelector(selectDashboardError);
 
   useEffect(() => {
     dispatch(fetchUserPurchases());
-    dispatch(fetchAllArtistsNoPagination())
+    dispatch(fetchAllArtistsNoPagination());
   }, [dispatch]);
 
   const toggleExpand = (id) => {
@@ -36,30 +46,34 @@ const PaymentHistory = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const resolveItemName = (payment) => {
-    if (payment.itemType === "song") {
-      return songs.find((s) => s._id === payment.itemId)?.title || "Unknown Song";
-    }
-    if (payment.itemType === "album") {
-      return albums.find((a) => a._id === payment.itemId)?.title || "Unknown Album";
-    }
-    if (payment.itemType === "artist-subscription") {
-      return artists.find((a) => a._id === payment.itemId)?.name || "Unknown Artist";
-    }
-    return "Unknown Item";
-  };
+  const resolveItemName = useCallback(
+    (payment) => {
+      if (payment.itemType === 'song') {
+        return songs?.find((s) => s._id === payment.itemId)?.title || 'Unknown Song';
+      }
+      if (payment.itemType === 'album') {
+        return albums?.find((a) => a._id === payment.itemId)?.title || 'Unknown Album';
+      }
+      if (payment.itemType === 'artist-subscription') {
+        return artists?.find((a) => a._id === payment.itemId)?.name || 'Unknown Artist';
+      }
+      return 'Unknown Item';
+    },
+    [songs, albums, artists]
+  );
 
-  const filteredPayments = payments.filter(payment => {
-    const itemName = resolveItemName(payment).toLowerCase();
-    const paymentId = payment.paymentId?.toLowerCase() || "";
-    const matchesSearch =
-      itemName.includes(searchTerm.toLowerCase()) ||
-      paymentId.includes(searchTerm.toLowerCase());
+  const filteredPayments = useMemo(() => {
+    return payments.filter((payment) => {
+      const name = resolveItemName(payment) || '';
+      const itemName = name.toLowerCase();
+      const paymentId = payment.paymentId?.toLowerCase() || '';
+      const matchesSearch =
+        itemName.includes(searchTerm.toLowerCase()) ||
+        paymentId.includes(searchTerm.toLowerCase());
 
-    return filter === 'all' && matchesSearch;
-  });
-
-
+      return filter === 'all' && matchesSearch;
+    });
+  }, [payments, resolveItemName, searchTerm, filter]);
 
   return (
     <div className="min-h-screen bg-image text-white">
@@ -68,6 +82,7 @@ const PaymentHistory = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Payment History</h1>
 
         <div className="bg-gray-800 rounded-xl shadow-sm p-6 mb-6 border border-gray-700">
+          {/* Search + Filter */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -94,7 +109,8 @@ const PaymentHistory = () => {
             </div>
           </div>
 
-          {loading ? (
+          {/* Payment States */}
+          {loading || artistLoading ? (
             <div className="text-center py-12">
               <p className="text-gray-400">Loading payment history...</p>
             </div>
@@ -132,9 +148,7 @@ const PaymentHistory = () => {
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <span className="font-semibold mr-4 text-white">
-                        ₹{payment.price}
-                      </span>
+                      <span className="font-semibold mr-4 text-white">₹{payment.price}</span>
                       {expandedPayment === payment._id ? (
                         <FiChevronUp className="text-gray-400" />
                       ) : (
@@ -143,6 +157,7 @@ const PaymentHistory = () => {
                     </div>
                   </div>
 
+                  {/* Expandable Details */}
                   {expandedPayment === payment._id && (
                     <div className="border-t border-gray-700 p-4 bg-gray-750">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

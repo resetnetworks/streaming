@@ -18,8 +18,8 @@ export const canStreamSong = async (userId, songId) => {
     const subscription = await Subscription.findOne({
       userId,
       artistId: song.artist?._id || song.artist, // 🔥 fix here
-      status: "active",
-      validUntil: { $gt: new Date() },
+      status: { $in: ["active", "cancelled"] }, // ✅ Allow cancelled too
+      validUntil: { $gt: new Date() }, // ✅ Still within access period
     });
 
     if (subscription) return true;

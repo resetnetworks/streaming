@@ -1,3 +1,7 @@
+// authSelectors.js
+import { createSelector } from "@reduxjs/toolkit";
+
+// Basic selectors
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectAuthStatus = (state) => state.auth.status;
 export const selectAuthError = (state) => state.auth.error;
@@ -7,6 +11,14 @@ export const selectUserRole = (state) => state.auth.user?.role || null;
 export const selectPreferredGenres = (state) =>
   state.auth.user?.preferredGenres || [];
 
-// ✅ NEW: Stable selector for liked song IDs
-export const selectLikedSongIds = (state) =>
-  state.auth.user?.likedsong || []; // You may rename to 'likedSongs' for clarity
+// ❗ Memoized liked song IDs (return same reference unless changed)
+export const selectLikedSongIds = createSelector(
+  [selectCurrentUser],
+  (user) => user?.likedsong || [] // Only returns a new array if user.likedsong actually changed
+);
+
+// ✅ Factory selector to check if a song is liked
+export const selectIsSongLiked = (songId) =>
+  createSelector([selectLikedSongIds], (likedIds) =>
+    likedIds.includes(songId)
+  );

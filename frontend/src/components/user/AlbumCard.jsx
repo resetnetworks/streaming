@@ -6,10 +6,10 @@ const AlbumCard = ({
   artists = "Julian Gomez, Noah Rosa and more",
   image = Img,
   onClick,
-  price
+  price,
 }) => {
   return (
-    <div 
+    <div
       className="md:w-56 w-32 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative"
       onClick={onClick}
     >
@@ -33,7 +33,11 @@ const AlbumCard = ({
 
       <div className="w-full flex justify-between bg-gray-800/40 md:p-4 p-3">
         <p className="text-xs text-white text-wrap">{artists}</p>
-        <p className="text-xs text-white text-wrap">{price}</p>
+        {price && (
+          <div className="text-blue-500 text-xs font-semibold">
+            {typeof price === "string" ? price : price}
+          </div>
+        )}
       </div>
     </div>
   );
