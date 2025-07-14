@@ -63,10 +63,17 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchAllArtists());
     dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
-    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
-  }, [dispatch, similarPage, albumsPage]);
+  }, [dispatch, similarPage]);
 
   useEffect(() => {
+  if (allAlbums.length === 0) {
+    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
+  }
+}, [dispatch, albumsPage]);
+
+
+useEffect(() => {
+  if (recentSongs.length === 0) {
     dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {
       if (res.payload?.songs) {
         setRecentSongs((prev) => {
@@ -76,9 +83,12 @@ const Home = () => {
         });
       }
     });
-  }, [dispatch, recentPage]);
+  }
+}, [dispatch, recentPage]);
 
-  useEffect(() => {
+
+useEffect(() => {
+  if (topSongs.length === 0) {
     dispatch(fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })).then((res) => {
       if (res.payload?.songs) {
         setTopSongs((prev) => {
@@ -88,7 +98,9 @@ const Home = () => {
         });
       }
     });
-  }, [dispatch, topPicksPage]);
+  }
+}, [dispatch, topPicksPage]);
+
 
   // Handlers
   const handleScroll = (ref) => {

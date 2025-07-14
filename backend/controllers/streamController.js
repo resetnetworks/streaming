@@ -1,14 +1,10 @@
-// controllers/streamController.js
-
 import { Song } from "../models/Song.js";
-// import { getSignedUrl } from "../utils/s3.js";
-import { getSignedCloudFrontUrl as getSignedUrl} from "../utils/cloudfront.js";
-import { canStreamSong } from "../helpers/accessControl.js";
-import { UnauthorizedError, NotFoundError } from "../errors/index.js";
 import { Album } from "../models/Album.js";
-import { canStreamAlbum } from "../helpers/accessControl.js";
+import { getSignedCloudFrontUrl as getSignedUrl } from "../utils/cloudfront.js";
+import { canStreamSong, canStreamAlbum } from "../helpers/accessControl.js";
+import { UnauthorizedError, NotFoundError } from "../errors/index.js";
 
-
+// ✅ Stream a single song
 export const streamSong = async (req, res) => {
   const { id: songId } = req.params;
   const userId = req.user._id;
@@ -16,23 +12,14 @@ export const streamSong = async (req, res) => {
   const allowed = await canStreamSong(userId, songId);
   if (!allowed) throw new UnauthorizedError("You do not have access to stream this song.");
 
-  const song = await Song.findById(songId);
-  if (!song || !song.audioKey) throw new NotFoundError("Song not found or missing audioKey");
+  const song = await Song.findById(songId).lean();
+  if (!song || !song.audioKey) throw new NotFoundError("Song not found or missing audio key.");
 
-  console.log(song.audioKey); // Debugging line
-  
-  const fileName = `${song.audioKey}.m3u8`; // ✅ only file name
-  const signedUrl = await getSignedUrl(song.audioKey); // ✅ pass folder + file name separately
-  console.log("Generated signed URL:", signedUrl); // Debugging line
-
+  const signedUrl = await getSignedUrl(song.audioKey); // e.g., songs-hls/{key}.m3u8
   res.json({ url: signedUrl });
 };
 
-
-
-// controllers/streamController.js
-
-
+// ✅ Stream all songs in an album
 export const streamAlbum = async (req, res) => {
   const { id: albumId } = req.params;
   const userId = req.user._id;
@@ -40,10 +27,9 @@ export const streamAlbum = async (req, res) => {
   const allowed = await canStreamAlbum(userId, albumId);
   if (!allowed) throw new UnauthorizedError("You do not have access to stream this album.");
 
-  const album = await Album.findById(albumId).populate("songs");
-  if (!album) throw new NotFoundError("Album not found");
+  const album = await Album.findById(albumId).populate("songs").lean();
+  if (!album || !album.songs?.length) throw new NotFoundError("Album not found or has no songs.");
 
-  // Generate signed URLs for each song in album
   const urls = await Promise.all(
     album.songs.map((song) => getSignedUrl(song.audioKey))
   );
