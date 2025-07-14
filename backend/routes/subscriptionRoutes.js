@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticateUser } from "../middleware/authenticate.js";
-import { initiateArtistSubscription } from "../controllers/subscriptionController.js";
+import { initiateArtistSubscription, cancelArtistSubscription } from "../controllers/subscriptionController.js";
 import { artistIdValidator } from "../validators/artistValidators.js";
 import validate from "../middleware/validate.js";
 import { createSetupIntent } from "../controllers/subscriptionController.js";
@@ -14,5 +14,9 @@ router.post(
   initiateArtistSubscription
 );
 router.post("/setup-intent", authenticateUser, createSetupIntent);
+
+// routes/userRoutes.js
+router.delete("/artist/:artistId", authenticateUser, cancelArtistSubscription);
+
 
 export default router;
