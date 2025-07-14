@@ -4,7 +4,7 @@ import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleLikeSong } from "../../features/auth/authSlice";
-import { selectIsSongLiked } from "../../features/auth/authSelectors";
+import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
 
@@ -22,7 +22,10 @@ const SongList = ({
   songId,
 }) => {
   const dispatch = useDispatch();
-  const isLiked = useSelector(selectIsSongLiked(songId));
+
+  // ✅ Get the liked song IDs just once
+  const likedSongIds = useSelector(selectLikedSongIds);
+  const isLiked = likedSongIds.includes(songId);
 
   const handleClick = (e) => {
     if (!e.target.closest(".action-button")) {
@@ -51,7 +54,7 @@ const SongList = ({
   const handleToggleLike = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    debouncedLikeToggle(songId, isLiked); // ✅ fixed here
+    debouncedLikeToggle(songId, isLiked);
   };
 
   return (

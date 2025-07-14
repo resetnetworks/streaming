@@ -1,8 +1,7 @@
-// src/features/songs/songSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utills/axiosInstance.js';
 
-// Thunks
+// Create Song
 export const createSong = createAsyncThunk('songs/create', async (formData, thunkAPI) => {
   try {
     const res = await axios.post('/songs', formData, {
@@ -14,6 +13,7 @@ export const createSong = createAsyncThunk('songs/create', async (formData, thun
   }
 });
 
+// Update Song
 export const updateSong = createAsyncThunk('songs/update', async ({ id, formData }, thunkAPI) => {
   try {
     const res = await axios.put(`/songs/${id}`, formData, {
@@ -25,6 +25,7 @@ export const updateSong = createAsyncThunk('songs/update', async ({ id, formData
   }
 });
 
+// Delete Song
 export const deleteSong = createAsyncThunk('songs/delete', async (id, thunkAPI) => {
   try {
     await axios.delete(`/songs/${id}`);
@@ -34,6 +35,7 @@ export const deleteSong = createAsyncThunk('songs/delete', async (id, thunkAPI) 
   }
 });
 
+// Fetch All Songs
 export const fetchAllSongs = createAsyncThunk(
   'songs/fetchAll',
   async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
@@ -50,6 +52,7 @@ export const fetchAllSongs = createAsyncThunk(
   }
 );
 
+// Fetch Liked Songs
 export const fetchLikedSongs = createAsyncThunk(
   'songs/fetchLikedSongs',
   async ({ page = 1, limit = 20 }, thunkAPI) => {
@@ -71,6 +74,7 @@ export const fetchLikedSongs = createAsyncThunk(
   }
 );
 
+// Fetch Songs by Album
 export const fetchSongsByAlbum = createAsyncThunk(
   'albums/fetchSongsByAlbum',
   async (albumId) => {
@@ -79,6 +83,7 @@ export const fetchSongsByAlbum = createAsyncThunk(
   }
 );
 
+// Fetch Songs by Artist
 export const fetchSongsByArtist = createAsyncThunk(
   'songs/fetchSongsByArtist',
   async ({ artistId, page = 1, limit = 20 }, thunkAPI) => {
@@ -93,7 +98,9 @@ export const fetchSongsByArtist = createAsyncThunk(
         artist: res.data.artist,
       };
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching songs by artist failed');
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || 'Fetching songs by artist failed'
+      );
     }
   }
 );
@@ -117,6 +124,7 @@ const initialState = {
   currentPage: 1,
 };
 
+// Slice
 const songSlice = createSlice({
   name: 'songs',
   initialState,
@@ -216,5 +224,6 @@ const songSlice = createSlice({
   },
 });
 
+// Exports
 export const { clearSongMessage, clearLikedSongs, removeSongFromLiked } = songSlice.actions;
 export default songSlice.reducer;

@@ -16,7 +16,7 @@ import {
   setVolume,
 } from "../../features/playback/playerSlice";
 import { toggleLikeSong } from "../../features/auth/authSlice";
-import { selectIsSongLiked } from "../../features/auth/authSelectors";
+import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { formatDuration } from "../../utills/helperFunctions";
 import {
   RiSkipLeftFill,
@@ -26,7 +26,7 @@ import {
 } from "react-icons/ri";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { IoIosMore } from "react-icons/io";
-import { FaPlay, FaPause } from "react-icons/fa";
+import { FaPlay, FaPause, FaLock } from "react-icons/fa";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { LuDna } from "react-icons/lu";
 import { toast } from "sonner";
@@ -52,36 +52,39 @@ const Player = () => {
   const streamUrls = useSelector((state) => state.stream.urls);
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
+  
 
   const [open, setOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [playbackError, setPlaybackError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  
 
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  
 
   const currentSong = selectedSong || null;
 
-const currentIndex = currentSong
-  ? songs.findIndex((s) => s._id === currentSong._id)
-  : -1;
+  const currentIndex = currentSong
+    ? songs.findIndex((s) => s._id === currentSong._id)
+    : -1;
 
-const nextSongs =
-  currentIndex !== -1
-    ? songs.slice(currentIndex + 1, currentIndex + 5)
-    : songs.slice(0, 4);
+  const nextSongs =
+    currentIndex !== -1
+      ? songs.slice(currentIndex + 1, currentIndex + 5)
+      : songs.slice(0, 4);
 
-
-  const isLiked = useSelector(selectIsSongLiked(currentSong?._id));
-
+  // NEW (✅)
+  const likedSongIds = useSelector(selectLikedSongIds);
+  const isLiked = currentSong ? likedSongIds.includes(currentSong._id) : false;
 
   // Fetch stream URL when song changes
   useEffect(() => {
     if (selectedSong && !streamUrls[selectedSong._id]) {
-  dispatch(fetchStreamUrl(selectedSong._id));
-}
+      dispatch(fetchStreamUrl(selectedSong._id));
+    }
   }, [selectedSong, streamUrls, dispatch]);
 
   // Initialize with first song if none selected
@@ -121,12 +124,12 @@ const nextSongs =
             maxMaxBufferLength: 600,
             maxBufferSize: 60 * 1000 * 1000,
             maxBufferHole: 0.5,
-            enableWorker: true
+            enableWorker: true,
           });
 
           hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
-              console.error('HLS Error:', data);
+              console.error("HLS Error:", data);
               setPlaybackError(`Playback Error: ${data.type}`);
               hls.destroy();
               if (currentSong.audioUrl) {
@@ -144,7 +147,7 @@ const nextSongs =
             video.currentTime = 0;
             dispatch(setCurrentTime(0));
             if (isPlaying) {
-              video.play().catch(err => {
+              video.play().catch((err) => {
                 setPlaybackError("Autoplay blocked. Tap play to continue.");
                 dispatch(pause());
               });
@@ -155,10 +158,10 @@ const nextSongs =
           hlsRef.current = hls;
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = mediaUrl;
-          video.addEventListener('loadedmetadata', () => {
+          video.addEventListener("loadedmetadata", () => {
             dispatch(setDuration(video.duration));
             if (isPlaying) {
-              video.play().catch(err => {
+              video.play().catch((err) => {
                 setPlaybackError("Autoplay blocked. Tap play to continue.");
                 dispatch(pause());
               });
@@ -167,29 +170,29 @@ const nextSongs =
         }
 
         video.onloadedmetadata = () => {
-          const safeDuration = isNaN(video.duration) ? currentSong.duration || 0 : video.duration;
+          const safeDuration = isNaN(video.duration)
+            ? currentSong.duration || 0
+            : video.duration;
           dispatch(setDuration(safeDuration));
         };
 
-      video.ontimeupdate = () => {
-  if (!isNaN(video.currentTime)) {
-    dispatch(setCurrentTime(video.currentTime));
+        video.ontimeupdate = () => {
+          if (!isNaN(video.currentTime)) {
+            dispatch(setCurrentTime(video.currentTime));
 
-    const remainingTime = (video.duration || 0) - video.currentTime;
+            const remainingTime = (video.duration || 0) - video.currentTime;
 
-    // Auto trigger next song 0.5s before end
-    if (remainingTime <= 0.5 && video.duration > 1) {
-      video.ontimeupdate = null; // prevent multiple triggers
-      handleNext();
-    }
-  }
-};
-
+            // Auto trigger next song 0.5s before end
+            if (remainingTime <= 0.5 && video.duration > 1) {
+              video.ontimeupdate = null; // prevent multiple triggers
+              handleNext();
+            }
+          }
+        };
 
         video.onended = () => {
           handleNext();
         };
-
       } catch (err) {
         setPlaybackError(err.message);
       } finally {
@@ -219,11 +222,32 @@ const nextSongs =
   }, [volume, isMuted]);
 
   // Error handling
-  useEffect(() => {
-    if (playbackError) {
-      toast.error(playbackError);
-    }
-  }, [playbackError]);
+  // useEffect(() => {
+  //   if (playbackError) {
+  //     toast.error(playbackError);
+  //   }
+  // }, [playbackError]);
+
+  // Show 403 error toast if current song can't be streamed
+useEffect(() => {
+  if (
+    streamError &&
+    selectedSong &&
+    streamError.songId === selectedSong._id
+  ) {
+    const toastId = `stream-error-${selectedSong._id}`;
+
+    // This will ensure the toast shows only once for a specific song
+    toast.warning(streamError.message, {
+      id: toastId, // Sonner will auto-prevent duplicates by this ID
+      duration: 5000,
+    });
+
+    setPlaybackError(streamError.message);
+  }
+}, [streamError?.songId]);
+
+
 
   const handleTogglePlay = async () => {
     const video = videoRef.current;
@@ -299,7 +323,9 @@ const nextSongs =
   }
 
   const trackStyle = {
-    background: `linear-gradient(to right, #007aff ${volume * 100}%, #ffffff22 ${volume * 100}%)`,
+    background: `linear-gradient(to right, #007aff ${
+      volume * 100
+    }%, #ffffff22 ${volume * 100}%)`,
   };
 
   return (
@@ -342,12 +368,17 @@ const nextSongs =
 
         <div className="w-full flex justify-between mt-4">
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button flex justify-center items-center gap-2" onClick={handleFeatureSoon}>
+            <button
+              className="player-button flex justify-center items-center gap-2"
+              onClick={handleFeatureSoon}
+            >
               <LuDna className="text-blue-500 text-sm" /> lossless
             </button>
           </div>
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button" onClick={handleFeatureSoon}>reset master</button>
+            <button className="player-button" onClick={handleFeatureSoon}>
+              reset master
+            </button>
           </div>
         </div>
 
@@ -368,9 +399,11 @@ const nextSongs =
             <button
               className="play-pause-button flex justify-center items-center gap-2"
               onClick={handleTogglePlay}
-              disabled={isLoading}
+              disabled={isLoading || streamError?.songId === currentSong?._id}
             >
-              {isLoading ? (
+              {streamError?.songId === currentSong?._id ? (
+                <FaLock className="text-sm text-white" />
+              ) : isLoading ? (
                 <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : isPlaying ? (
                 <FaPause className="text-sm" />
@@ -383,7 +416,10 @@ const nextSongs =
             className="text-md text-white cursor-pointer"
             onClick={handleNext}
           />
-          <IoIosMore className="text-md text-white" onClick={handleFeatureSoon}/>
+          <IoIosMore
+            className="text-md text-white"
+            onClick={handleFeatureSoon}
+          />
         </div>
 
         <div className="player-gradiant-line mt-4"></div>
@@ -427,7 +463,7 @@ const nextSongs =
                   <div
                     key={song._id}
                     className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
-                      song.id === selectedSong ? "bg-blue-800/40" : ""
+                      song._id === selectedSong ? "bg-blue-800/40" : ""
                     }`}
                     onClick={() => {
                       dispatch(setSelectedSong(song));

@@ -21,26 +21,35 @@ const Artists = () => {
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
   const pagination = useSelector(selectArtistPagination);
+  const [initialFetchDone, setInitialFetchDone] = React.useState(false);
 
-  useEffect(() => {
+
+useEffect(() => {
+  if (!initialFetchDone && pagination.page === 1) {
     dispatch(fetchAllArtists({ page: pagination.page, limit: pagination.limit }));
-  }, [dispatch, pagination.page]);
+    setInitialFetchDone(true);
+  }
+}, [dispatch, initialFetchDone, pagination.page, pagination.limit]);
+
 
   const handleArtistClick = (slug) => {
     navigate(`/artist/${slug}`);
   };
 
-  const handlePrevPage = () => {
-    if (pagination.page > 1) {
-      dispatch(fetchAllArtists({ page: pagination.page - 1, limit: pagination.limit }));
-    }
-  };
+const handlePrevPage = () => {
+  if (pagination.page > 1) {
+    const newPage = pagination.page - 1;
+    dispatch(fetchAllArtists({ page: newPage, limit: pagination.limit }));
+  }
+};
 
-  const handleNextPage = () => {
-    if (pagination.page < pagination.totalPages) {
-      dispatch(fetchAllArtists({ page: pagination.page + 1, limit: pagination.limit }));
-    }
-  };
+const handleNextPage = () => {
+  if (pagination.page < pagination.totalPages) {
+    const newPage = pagination.page + 1;
+    dispatch(fetchAllArtists({ page: newPage, limit: pagination.limit }));
+  }
+};
+
 
   return (
     <UserLayout>

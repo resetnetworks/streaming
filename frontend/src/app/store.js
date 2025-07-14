@@ -9,7 +9,7 @@ import playerReducer from '../features/playback/playerSlice';
 import artistsReducer from "../features/artists/artistsSlice";
 import albumsReducer from "../features/albums/albumsSlice";
 import searchReducer from "../features/search/searchSlice";
-import paymentReducer from "../features/payments/paymentSlice";
+import paymentReducer from "../features/payments/userPaymentSlice";
 import streamReducer from "../features/stream/streamSlice";
 
 // ✅ Persist config for player slice (now includes selectedSong)
@@ -24,7 +24,7 @@ const playerPersistConfig = {
 const rootPersistConfig = {
   key: 'root',
   storage,
-  whitelist: ['songs'], // ✅ only songs
+  whitelist: ['songs','auth'], // ✅ only songs
   blacklist: ['player'], // player is handled separately
 };
 
