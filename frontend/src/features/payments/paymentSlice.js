@@ -2,23 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../utills/axiosInstance';
 
-// 🎯 1. Artist Subscription Payment (Stripe only)
-export const initiateArtistPayment = createAsyncThunk(
-  'payment/initiateArtistPayment',
-  async ({ artistId }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(`/subscriptions/artist/${artistId}`, {
-        gateway: 'stripe',
-      });
-      return response.data;
-    } catch (error) {
-      console.log(error.response?.data?.message || 'Artist subscription failed');
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// 🎯 2. Song/Album Purchase (Stripe)
+// 🎯 Song/Album Purchase (Stripe)
 export const initiateStripeItemPayment = createAsyncThunk(
   'payment/initiateStripeItemPayment',
   async ({ itemType, itemId, amount }, { rejectWithValue }) => {
@@ -28,9 +12,40 @@ export const initiateStripeItemPayment = createAsyncThunk(
         itemId,
         amount,
       });
-      return response.data;
+      return response.data; // { clientSecret }
     } catch (error) {
       console.log(error.response?.data?.message || 'Item payment failed');
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🎯 Artist Subscription Setup Intent (Stripe)
+export const initiateStripeSetupIntent = createAsyncThunk(
+  'payment/initiateStripeSetupIntent',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/subscriptions/setup-intent`);
+      return response.data; // { clientSecret }
+    } catch (error) {
+      console.log(error.response?.data?.message || 'Setup intent failed');
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🎯 Artist Subscription Payment with Payment Method (Stripe)
+export const confirmArtistStripeSubscription = createAsyncThunk(
+  'payment/confirmArtistStripeSubscription',
+  async ({ artistId, paymentMethodId }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/subscriptions/artist/${artistId}`, {
+        gateway: 'stripe',
+        paymentMethodId,
+      });
+      return response.data; // { clientSecret (optional), transactionId }
+    } catch (error) {
+      console.log(error.response?.data?.message || 'Artist subscription failed');
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -41,44 +56,28 @@ const paymentSlice = createSlice({
   initialState: {
     loading: false,
     error: null,
-    transactionId: null,
-    gateway: null,
     clientSecret: null,
+    gateway: null,
     razorpayOrderId: null,
+    transactionId: null,
   },
   reducers: {
     resetPaymentState: (state) => {
       state.loading = false;
       state.error = null;
-      state.transactionId = null;
-      state.gateway = null;
       state.clientSecret = null;
+      state.gateway = null;
       state.razorpayOrderId = null;
+      state.transactionId = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // 🔁 Artist
-      .addCase(initiateArtistPayment.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(initiateArtistPayment.fulfilled, (state, action) => {
-        state.loading = false;
-        state.transactionId = action.payload.transactionId;
-        state.gateway = action.payload.gateway;
-        state.clientSecret = action.payload.clientSecret || null;
-        state.razorpayOrderId = action.payload.razorpayOrderId || null;
-      })
-      .addCase(initiateArtistPayment.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // 🔁 Song/Album
+      // 🎵 Item Payment
       .addCase(initiateStripeItemPayment.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.clientSecret = null;
       })
       .addCase(initiateStripeItemPayment.fulfilled, (state, action) => {
         state.loading = false;
@@ -88,6 +87,40 @@ const paymentSlice = createSlice({
       .addCase(initiateStripeItemPayment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.clientSecret = null;
+      })
+
+      // 💳 Setup Intent
+      .addCase(initiateStripeSetupIntent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.clientSecret = null;
+      })
+      .addCase(initiateStripeSetupIntent.fulfilled, (state, action) => {
+        state.loading = false;
+        state.clientSecret = action.payload.clientSecret;
+      })
+      .addCase(initiateStripeSetupIntent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.clientSecret = null;
+      })
+
+      // ✅ Confirm Subscription
+      .addCase(confirmArtistStripeSubscription.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.transactionId = null;
+      })
+      .addCase(confirmArtistStripeSubscription.fulfilled, (state, action) => {
+        state.loading = false;
+        state.transactionId = action.payload.transactionId || null;
+        state.clientSecret = action.payload.clientSecret || null;
+      })
+      .addCase(confirmArtistStripeSubscription.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.transactionId = null;
       });
   },
 });

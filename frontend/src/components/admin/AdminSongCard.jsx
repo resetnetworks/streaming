@@ -14,7 +14,6 @@ const AdminSongCard = ({ song, onDelete, onEdit }) => {
       onDelete(song._id);
     }
   };
-  console.log(song);
   
 
   return (
