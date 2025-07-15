@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAllSongs } from "../../features/songs/songSelectors.js";
+import { fetchStreamUrl } from "../../features/stream/streamSlice";
+import { selectAllSongs, selectSelectedSong } from "../../features/songs/songSelectors";
 import {
   setSelectedSong,
   play,
@@ -9,12 +10,15 @@ import {
   setCurrentTime,
   setDuration,
   setVolume,
-} from "../../features/playback/playerSlice.js";
-import { FaPlay, FaPause } from "react-icons/fa";
-import { RiVolumeUpFill, RiVolumeMuteFill } from "react-icons/ri";
+} from "../../features/playback/playerSlice";
+import { toggleLikeSong } from "../../features/auth/authSlice";
+import { selectLikedSongIds } from "../../features/auth/authSelectors";
+import { formatDuration } from "../../utills/helperFunctions";
+import { FaPlay, FaPause, FaLock } from "react-icons/fa";
+import { RiVolumeUpFill, RiVolumeMuteFill, RiSkipLeftFill, RiSkipRightFill } from "react-icons/ri";
 import { IoIosArrowDown, IoIosInfinite, IoMdShuffle } from "react-icons/io";
-import { CiHeart } from "react-icons/ci";
-import { RiSkipLeftFill, RiSkipRightFill } from "react-icons/ri";
+import { BsHeart, BsHeartFill } from "react-icons/bs";
+import { toast } from "sonner";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60) || 0;
@@ -22,97 +26,207 @@ const formatTime = (seconds) => {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
+const handleFeatureSoon = () => {
+  toast.success("This feature will be available soon");
+};
+
 const MobilePlayer = () => {
   const dispatch = useDispatch();
-
   const songs = useSelector(selectAllSongs);
-  const selectedSongId = useSelector((state) => state.player.selectedSong);
+  const selectedSong = useSelector(selectSelectedSong);
   const isPlaying = useSelector((state) => state.player.isPlaying);
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
-
-  const currentSong = songs.find((s) => s._id === selectedSongId) || songs[0];
-  const currentIndex = songs.findIndex((s) => s._id === selectedSongId);
-  const nextSongs = songs.slice(currentIndex, currentIndex + 3);
+  const streamUrls = useSelector((state) => state.stream.urls);
+  const streamLoading = useSelector((state) => state.stream.loading);
+  const streamError = useSelector((state) => state.stream.error);
+  
+  const likedSongIds = useSelector(selectLikedSongIds);
+  const isLiked = selectedSong ? likedSongIds.includes(selectedSong._id) : false;
 
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
+  const [playbackError, setPlaybackError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const audioRef = useRef(null);
+  const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
+  const currentSong = selectedSong || songs[0] || null;
+  const currentIndex = currentSong ? songs.findIndex((s) => s._id === currentSong._id) : -1;
+  const nextSongs = currentIndex !== -1 ? songs.slice(currentIndex + 1, currentIndex + 4) : songs.slice(0, 3);
+
+  // Fetch stream URL when song changes
   useEffect(() => {
-    if (!audioRef.current) return;
-
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
+    if (selectedSong && !streamUrls[selectedSong._id]) {
+      dispatch(fetchStreamUrl(selectedSong._id));
     }
+  }, [selectedSong, streamUrls, dispatch]);
 
-    if (!currentSong?.audio?.url) return;
+  // Initialize with first song if none selected
+  useEffect(() => {
+    if (!selectedSong && songs.length > 0) {
+      dispatch(setSelectedSong(songs[0]));
+    }
+  }, [selectedSong, songs, dispatch]);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hlsRef.current = hls;
-      hls.loadSource(currentSong.audio.url);
-      hls.attachMedia(audioRef.current);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (isPlaying) {
-          audioRef.current.play();
+  // Main HLS player initialization
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !currentSong || !streamUrls[selectedSong?._id]) return;
+
+    let hls;
+    const initPlayer = async () => {
+      try {
+        setIsLoading(true);
+        setPlaybackError(null);
+
+        // Reset player state
+        dispatch(setCurrentTime(0));
+        dispatch(setDuration(0));
+
+        // Clean up previous HLS instance
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+          hlsRef.current = null;
         }
-      });
-    } else if (audioRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-      audioRef.current.src = currentSong.audio.url;
-      if (isPlaying) {
-        audioRef.current.play();
+
+        const streamUrl = streamUrls[selectedSong._id];
+        const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
+
+        if (Hls.isSupported()) {
+          hls = new Hls({
+            maxBufferLength: 30,
+            maxMaxBufferLength: 600,
+            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferHole: 0.5,
+            enableWorker: true,
+          });
+
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            if (data.fatal) {
+              console.error("HLS Error:", data);
+              setPlaybackError(`Playback Error: ${data.type}`);
+              hls.destroy();
+              if (currentSong.audioUrl) {
+                video.src = currentSong.audioUrl;
+                video.load();
+              }
+            }
+          });
+
+          hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+            hls.loadSource(mediaUrl);
+          });
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.currentTime = 0;
+            dispatch(setCurrentTime(0));
+            if (isPlaying) {
+              video.play().catch((err) => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
+
+          hls.attachMedia(video);
+          hlsRef.current = hls;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = mediaUrl;
+          video.addEventListener("loadedmetadata", () => {
+            dispatch(setDuration(video.duration));
+            if (isPlaying) {
+              video.play().catch((err) => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
+        }
+
+        video.onloadedmetadata = () => {
+          const safeDuration = isNaN(video.duration)
+            ? currentSong.duration || 0
+            : video.duration;
+          dispatch(setDuration(safeDuration));
+        };
+
+        video.ontimeupdate = () => {
+          if (!isNaN(video.currentTime)) {
+            dispatch(setCurrentTime(video.currentTime));
+
+            const remainingTime = (video.duration || 0) - video.currentTime;
+
+            // Auto trigger next song 0.5s before end
+            if (remainingTime <= 0.5 && video.duration > 1 && !isLooping) {
+              video.ontimeupdate = null; // prevent multiple triggers
+              handleNext();
+            }
+          }
+        };
+
+        video.onended = () => {
+          if (!isLooping) handleNext();
+        };
+      } catch (err) {
+        setPlaybackError(err.message);
+      } finally {
+        setIsLoading(false);
       }
-    }
-
-    dispatch(setCurrentTime(0));
-    dispatch(setDuration(0));
-  }, [currentSong, dispatch, isPlaying]);
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.play();
-    } else {
-      audioRef.current.pause();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const onLoadedMetadata = () => dispatch(setDuration(audio.duration));
-    const onTimeUpdate = () => dispatch(setCurrentTime(audio.currentTime));
-    const onEnded = () => {
-      if (!isLooping) handleNext();
     };
 
-    audio.addEventListener("loadedmetadata", onLoadedMetadata);
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("ended", onEnded);
+    initPlayer();
 
     return () => {
-      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-      audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("ended", onEnded);
+      if (hls) hls.destroy();
+      const video = videoRef.current;
+      if (video) {
+        video.ontimeupdate = null;
+        video.onended = null;
+        video.onloadedmetadata = null;
+      }
     };
-  }, [dispatch, currentSong, isLooping]);
+  }, [selectedSong, streamUrls, isLooping]);
 
-  const handleTogglePlay = () => {
-    isPlaying ? dispatch(pause()) : dispatch(play());
+  // Volume control
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+
+  // Show 403 error toast if current song can't be streamed
+  useEffect(() => {
+    if (streamError && selectedSong && streamError.songId === selectedSong._id) {
+      const toastId = `stream-error-${selectedSong._id}`;
+      toast.warning(streamError.message, {
+        id: toastId,
+        duration: 5000,
+      });
+      setPlaybackError(streamError.message);
+    }
+  }, [streamError?.songId]);
+
+  const handleTogglePlay = async () => {
+    const video = videoRef.current;
+    if (!video || !currentSong) return;
+
+    try {
+      if (isPlaying) {
+        await video.pause();
+        dispatch(pause());
+      } else {
+        await video.play();
+        dispatch(play());
+      }
+    } catch (err) {
+      setPlaybackError(err.message);
+    }
   };
 
   const handleToggleMute = () => {
@@ -126,31 +240,55 @@ const MobilePlayer = () => {
   };
 
   const handleNext = () => {
-    if (!songs.length) return;
+    if (!currentSong || songs.length === 0) return;
     const nextIndex = (currentIndex + 1) % songs.length;
-    dispatch(setSelectedSong(songs[nextIndex]._id));
+    dispatch(setSelectedSong(songs[nextIndex]));
     dispatch(play());
   };
 
   const handlePrev = () => {
-    if (!songs.length) return;
-    const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-    dispatch(setSelectedSong(songs[prevIndex]._id));
-    dispatch(play());
-  };
-
-  const handleSeekChange = (newSeek) => {
-    dispatch(setCurrentTime(newSeek));
-    if (audioRef.current) {
-      audioRef.current.currentTime = newSeek;
+    if (!currentSong || songs.length === 0) return;
+    if (currentTime > 3) {
+      handleSeekChange(0);
+    } else {
+      const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+      dispatch(setSelectedSong(songs[prevIndex]));
+      dispatch(play());
     }
   };
 
-  if (!currentSong) return null;
+  const handleSeekChange = (val) => {
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = val;
+      dispatch(setCurrentTime(val));
+    }
+  };
+
+  const handleVolumeChange = (e) => {
+    const vol = parseInt(e.target.value) / 100;
+    dispatch(setVolume(vol));
+    if (isMuted && vol > 0) setIsMuted(false);
+  };
+
+  const handleLikeToggle = () => {
+    if (currentSong?._id) dispatch(toggleLikeSong(currentSong._id));
+  };
+
+  if (!currentSong || songs.length === 0) {
+    return null;
+  }
 
   return (
     <>
-      <audio ref={audioRef} style={{ display: "none" }} muted={isMuted} />
+      <video
+        ref={videoRef}
+        style={{ display: "none" }}
+        muted={isMuted}
+        preload="auto"
+        playsInline
+        crossOrigin="anonymous"
+      />
 
       {/* Mini Player */}
       <div
@@ -166,7 +304,7 @@ const MobilePlayer = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <img
-                src={currentSong?.thumbnail?.url}
+                src={currentSong?.coverImage}
                 className="w-12 h-12 rounded-md shadow-[0_0_5px_1px_#3b82f6]"
                 alt="Album cover"
               />
@@ -188,7 +326,11 @@ const MobilePlayer = () => {
                   handleTogglePlay();
                 }}
               >
-                {isPlaying ? (
+                {streamError?.songId === currentSong?._id ? (
+                  <FaLock className="text-sm text-white" />
+                ) : isLoading ? (
+                  <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : isPlaying ? (
                   <FaPause className="text-sm" />
                 ) : (
                   <FaPlay className="text-sm" />
@@ -219,19 +361,22 @@ const MobilePlayer = () => {
         </div>
 
         <img
-          src={currentSong?.thumbnail?.url}
+          src={currentSong?.coverImage}
           className="w-64 h-64 object-contain rounded-lg shadow-lg mt-6 mb-8"
           alt="Album cover"
         />
 
         <div className="w-full flex justify-between items-center">
-          <marquee
-            className="w-[90%] text-lg font-bold"
-            scrollamount="6"
-          >
+          <marquee className="w-[90%] text-lg font-bold" scrollamount="6">
             {currentSong?.title} - {currentSong?.singer}
           </marquee>
-          <CiHeart className="text-xl cursor-pointer" />
+          <button onClick={handleLikeToggle}>
+            {isLiked ? (
+              <BsHeartFill className="text-xl text-red-500" />
+            ) : (
+              <BsHeart className="text-xl text-gray-400" />
+            )}
+          </button>
         </div>
 
         <div className="w-full mt-4">
@@ -265,26 +410,62 @@ const MobilePlayer = () => {
         </div>
 
         <div className="w-full mt-4 flex justify-between items-center">
-          <IoMdShuffle className="text-3xl cursor-pointer" />
-          <RiSkipLeftFill className="text-3xl cursor-pointer" onClick={handlePrev} />
+          <IoMdShuffle 
+            className="text-3xl cursor-pointer" 
+            onClick={handleFeatureSoon}
+          />
+          <RiSkipLeftFill 
+            className="text-3xl cursor-pointer" 
+            onClick={handlePrev} 
+          />
           <div className="play-pause-wrapper-mobile shadow-[0_0_5px_1px_#3b82f6] flex justify-center items-center">
             <button
               className="play-pause-button-mobile flex justify-center items-center gap-2"
               onClick={handleTogglePlay}
             >
-              {isPlaying ? (
+              {streamError?.songId === currentSong?._id ? (
+                <FaLock className="text-lg text-white" />
+              ) : isLoading ? (
+                <div className="spinner h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : isPlaying ? (
                 <FaPause className="text-lg" />
               ) : (
                 <FaPlay className="text-lg" />
               )}
             </button>
           </div>
-          <RiSkipRightFill className="text-3xl cursor-pointer" onClick={handleNext} />
+          <RiSkipRightFill 
+            className="text-3xl cursor-pointer" 
+            onClick={handleNext} 
+          />
           <IoIosInfinite
             className={`text-3xl cursor-pointer ${
               isLooping ? "text-blue-500" : "text-gray-400"
             }`}
             onClick={() => setIsLooping(!isLooping)}
+          />
+        </div>
+
+        <div className="w-full mt-8 flex items-center gap-3">
+          <button onClick={handleToggleMute}>
+            {isMuted ? (
+              <RiVolumeMuteFill className="text-xl text-gray-400" />
+            ) : (
+              <RiVolumeUpFill className="text-xl" />
+            )}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={isMuted ? 0 : volume * 100}
+            onChange={handleVolumeChange}
+            className="flex-1 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            style={{
+              background: `linear-gradient(to right, #3b82f6 ${
+                volume * 100
+              }%, #d1d5db ${volume * 100}%)`,
+            }}
           />
         </div>
       </div>
