@@ -44,8 +44,10 @@ const RecentPlays = React.forwardRef(
             <span className="text-blue-500 text-xs truncate">{singer}</span>
           </div>
           {price && (
-            <p className="text-blue-500 text-xs font-semibold">{`${price}`}</p>
-          )}
+  <div className="text-blue-500 text-xs font-semibold">
+    {typeof price === "string" ? price : price}
+  </div>
+)}
         </div>
       </div>
     );

@@ -45,6 +45,10 @@ const songSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    albumOnly: {
+    type: Boolean,
+    default: false, 
+    },
     accessType: {
       type: String,
       enum: ["free", "subscription", "purchase-only"],

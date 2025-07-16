@@ -9,10 +9,10 @@ export const canStreamSong = async (userId, songId) => {
   
   const song = await Song.findById(songId).lean();
   if (!song) return false;
-  
+  console.log("DEBUG song:", song);
 
   if (song.accessType === "free") return true;
-  if(userId === "685e6f35c3a194bdd0638bf2") return true; 
+ 
 
   if (song.accessType === "subscription") {
     const subscription = await Subscription.findOne({
@@ -24,15 +24,41 @@ export const canStreamSong = async (userId, songId) => {
 
     if (subscription) return true;
   }
+  
+  
 
   if (song.accessType === "purchase-only") {
+    if(song.albumOnly){
+      const album = await Album.findOne({ songs: song._id }).populate("artist");
+      console.log("DEBUG album:", album);
+      
+      if (!album) return false;
+
+      // Check if user has purchased the album
+      const user = await User.findById(userId).lean();
+      if (!user) return false;
+      if (user.purchasedAlbums?.some(id => id.toString() === album._id.toString())) {
+        return true;
+      }
+
+      // // If not purchased, check subscription
+      // const subscription = await Subscription.findOne({
+      //   userId,
+      //   artistId: album.artist._id,
+      //   status: { $in: ["active", "cancelled"] },
+      //   validUntil: { $gt: new Date() },
+      // });
+
+      // return !!subscription;
+    }
+    else{
     const user = await User.findById(userId).lean();
     if (!user) return false;
-
     if (user.purchasedSongs?.some(id => id.toString() === song._id.toString())) {
       return true;
     }
   }
+}
 
   return false;
 };
