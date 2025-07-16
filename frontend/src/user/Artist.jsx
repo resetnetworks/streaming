@@ -525,34 +525,7 @@ const Artist = () => {
                 </button>
               </div>
 
-              <StripePayment
-                type="artist"
-                id={artist?._id}
-                amount={subscriptionPrice}
-                onSuccess={() => {
-                  // Handle successful subscription
-                  setIsSubscribed(true);
-                  setShowPaymentModal(false);
-                  toast.success(`Successfully subscribed to ${artist?.name}!`);
-
-                  // Update local storage
-                  let subscribedArtists = [];
-                  try {
-                    const raw = localStorage.getItem("subscribedArtists");
-                    subscribedArtists = raw ? JSON.parse(raw) : [];
-                  } catch (err) {
-                    console.error("Failed to parse subscribedArtists:", err);
-                    subscribedArtists = [];
-                  }
-
-                  subscribedArtists.push(artistId);
-                  localStorage.setItem(
-                    "subscribedArtists",
-                    JSON.stringify(subscribedArtists)
-                  );
-                }}
-                onClose={() => setShowPaymentModal(false)}
-              />
+            
 
               <p className="text-gray-400 text-sm mt-4">
                 You'll be charged ${subscriptionPrice.toFixed(2)} monthly until
