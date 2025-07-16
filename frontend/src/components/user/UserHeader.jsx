@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiChevronDown,
   FiChevronUp,
-  FiSettings,
   FiHelpCircle,
   FiClock,
   FiCreditCard,
@@ -12,18 +11,27 @@ import {
 } from "react-icons/fi";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { toast } from "sonner";
+
 import { selectCurrentUser } from "../../features/auth/authSelectors";
 import { logoutUser } from "../../features/auth/authSlice";
 import { getAvatarColor } from "../../utills/helperFunctions";
 
 const UserHeader = () => {
   const user = useSelector(selectCurrentUser);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [open, setOpen] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isHomePage = location.pathname === "/";
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
 
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
@@ -36,13 +44,9 @@ const UserHeader = () => {
     setOpen(false);
     await dispatch(logoutUser());
     toast.success("Logged out successfully");
-    navigate("/login");
   };
 
-  // Check which page is active
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
     <div className="w-full flex justify-between items-center px-4 py-4 relative">
@@ -60,7 +64,8 @@ const UserHeader = () => {
         </div>
       )}
 
-      {user.role === "admin" ? (
+      {/* Right Side - Avatar and Dropdown */}
+      {user?.role === "admin" ? (
         <div
           className="button-wrapper shadow-md shadow-gray-800"
           onClick={() => navigate("/admin")}
@@ -71,7 +76,7 @@ const UserHeader = () => {
         <div className="relative">
           <div
             className="flex items-center cursor-pointer"
-            onClick={() => setOpen(!open)}
+            onClick={() => setOpen((prev) => !prev)}
           >
             <div
               className={`md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs uppercase ${getAvatarColor(

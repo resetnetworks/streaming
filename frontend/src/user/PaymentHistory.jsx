@@ -6,7 +6,6 @@ import {
   selectDashboardError,
 } from '../features/payments/paymentSelectors';
 import { fetchUserPurchases } from '../features/payments/userPaymentSlice';
-import { fetchAllArtistsNoPagination } from '../features/artists/artistsSlice';
 import {
   FiChevronDown,
   FiChevronUp,
@@ -25,16 +24,12 @@ const PaymentHistory = () => {
 
   const songs = useSelector((state) => state.songs.allSongs);
   const albums = useSelector((state) => state.albums.allAlbums);
-  const artists = useSelector((state) => state.artists.allArtists);
-  const artistLoading = useSelector((state) => state.artists.loading);
-
   const payments = useSelector(selectPurchaseHistory);
   const loading = useSelector(selectDashboardLoading);
   const error = useSelector(selectDashboardError);
 
   useEffect(() => {
     dispatch(fetchUserPurchases());
-    dispatch(fetchAllArtistsNoPagination());
   }, [dispatch]);
 
   const toggleExpand = (id) => {
@@ -55,11 +50,11 @@ const PaymentHistory = () => {
         return albums?.find((a) => a._id === payment.itemId)?.title || 'Unknown Album';
       }
       if (payment.itemType === 'artist-subscription') {
-        return artists?.find((a) => a._id === payment.itemId)?.name || 'Unknown Artist';
+        return payment.artistName || 'Unknown Artist'; // ✅ Now directly available from backend
       }
       return 'Unknown Item';
     },
-    [songs, albums, artists]
+    [songs, albums]
   );
 
   const filteredPayments = useMemo(() => {
@@ -110,7 +105,7 @@ const PaymentHistory = () => {
           </div>
 
           {/* Payment States */}
-          {loading || artistLoading ? (
+          {loading ? (
             <div className="text-center py-12">
               <p className="text-gray-400">Loading payment history...</p>
             </div>
