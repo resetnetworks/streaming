@@ -159,8 +159,8 @@ const LikedSongs = () => {
                     songName={song.title}
                     singerName={song.artist?.name || song.singer}
                     seekTime={formatDuration(song.duration)}
-                    onPlay={() => handlePlaySong(song._id)}
-                    isSelected={selectedSong === song._id}
+                    onPlay={() => handlePlaySong(song)}
+                    isSelected={selectedSong?._id === song._id}
                     isPlaying={
                       selectedSong === song._id &&
                       playerStatus === "playing"
