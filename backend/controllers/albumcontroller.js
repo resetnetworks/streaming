@@ -252,8 +252,15 @@ export const getAlbumsByArtist = async (req, res) => {
     Album.countDocuments({ artist: artist._id }),
   ]);
 
-  // 🧠 Shape albums for frontend
-  const shapedAlbums = albums.map(shapeAlbumResponse);
+  // 🧠 Shape albums for frontend + inject artist info into each album
+  const shapedAlbums = albums.map((album) => ({
+    ...shapeAlbumResponse(album),
+    artist: {
+      name: artist.name,
+      slug: artist.slug,
+      image: artist.image,
+    },
+  }));
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -273,6 +280,7 @@ export const getAlbumsByArtist = async (req, res) => {
     },
   });
 };
+
 
 
 

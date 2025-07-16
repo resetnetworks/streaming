@@ -26,18 +26,6 @@ export const fetchUserSubscriptions = createAsyncThunk(
   }
 );
 
-export const cancelUserSubscription = createAsyncThunk(
-  "userDashboard/cancelUserSubscription",
-  async (artistId, { rejectWithValue }) => {
-    try {
-      const res = await axios.delete(`/user/dashboard/subscriptions/${artistId}`);
-      return { artistId, message: res.data.message };
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed to cancel subscription");
-    }
-  }
-);
-
 // ✅ Slice
 const userDashboardSlice = createSlice({
   name: "userDashboard",
@@ -82,22 +70,6 @@ const userDashboardSlice = createSlice({
         state.subscriptions = action.payload;
       })
       .addCase(fetchUserSubscriptions.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // Cancel Subscription
-      .addCase(cancelUserSubscription.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(cancelUserSubscription.fulfilled, (state, action) => {
-        state.loading = false;
-        state.subscriptions = state.subscriptions.filter(
-          (sub) => sub.artist._id !== action.payload.artistId
-        );
-      })
-      .addCase(cancelUserSubscription.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
