@@ -34,6 +34,7 @@ export const createSong = async (req, res) => {
     price,
     accessType,
     releaseDate,
+    albumOnly,
     album,
   } = req.body;
 
@@ -45,9 +46,15 @@ export const createSong = async (req, res) => {
     genre = genre.split(",").map((g) => g.trim());
   }
 
-  if (accessType === "purchase-only" && (!price || price <= 0)) {
+  if (accessType === "purchase-only" && (!price || price <= 0) && !albumOnly) {
     throw new BadRequestError("Purchase-only songs must have a valid price.");
   }
+
+  if (accessType === "purchase-only") {
+  if (albumOnly) {
+    price = 0; // or leave null, user can’t buy individually
+  } 
+}
 
   const coverImageFile = req.files?.coverImage?.[0];
   const audioFile = req.files?.audio?.[0];
@@ -73,6 +80,7 @@ export const createSong = async (req, res) => {
     price: accessType === "purchase-only" ? price : 0,
     releaseDate,
     coverImage: coverImageUrl,
+    albumOnly,
     audioUrl,
     audioKey,
   });
@@ -81,7 +89,7 @@ export const createSong = async (req, res) => {
     await Album.findByIdAndUpdate(album, {
       $push: { songs: newSong._id },
     });
-  }
+   }
 
   // Populate artist (for frontend display)
   const populated = await Song.findById(newSong._id)
