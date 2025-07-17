@@ -1393,3 +1393,618 @@
     at model.Query.exec (/Users/resetstudios03/Desktop/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
     at async canStreamSong (file:///Users/resetstudios03/Desktop/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T05:29:40.421Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:29:47.014Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:30:15.438Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:30:17.218Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:30:18.313Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:30:28.908Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:01.526Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:07.634Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:08.862Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:10.322Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:13.382Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:14.391Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:36:15.948Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:45:39.195Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:45:43.992Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:50:17.132Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T05:50:59.711Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:20:09.019Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:46:21.806Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:53:51.979Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:53:56.595Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:00.450Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:01.481Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:04.159Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:04.699Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:05.658Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:07.286Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:54:22.357Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T06:59:25.420Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:03:14.321Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:03:18.178Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:07:51.384Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:07:51.461Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:07:56.377Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:07:56.424Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:08:58.435Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:08:58.468Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:08.359Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:08.421Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:22.367Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:22.422Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:32.438Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:32.457Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:41.393Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:09:41.455Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:10:23.411Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:10:23.483Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:10:25.374Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:11:48.973Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:11:50.163Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:11:51.531Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:12:10.140Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:12:10.477Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:12:13.768Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:51:56.444Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:51:56.501Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:53:36.919Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:53:40.082Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:53:43.111Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:54:28.592Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:54:29.509Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:54:42.176Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:57:21.720Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T07:58:12.139Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:04.470Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:05.394Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:21.378Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:28.739Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:34.716Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:42.816Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:14:50.610Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:15:12.105Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:15:25.225Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:18:04.442Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:18:04.874Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:22:07.458Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:22:08.374Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:23:44.963Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:24:04.676Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:24:07.428Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:24:13.276Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:24:34.765Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:24:40.495Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:24:52.382Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:26:35.381Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:27:09.568Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:27:12.578Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:27:14.412Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:27:15.928Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:27:19.722Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:42:56.405Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:42:56.414Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:42:59.614Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:05.143Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:19.746Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:25.193Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:27.016Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:28.482Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:30.887Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:32.423Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:32.999Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T08:43:39.495Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:43:40.494Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:43:45.574Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:43:50.556Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:43:53.269Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:02.514Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:09.817Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:11.969Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:16.134Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:17.742Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:19.834Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:21.247Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:26.907Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:44:46.433Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:45:40.462Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:45:42.375Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:45:44.479Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:45:45.404Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:45:47.837Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:45:49.430Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:00.923Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:20.204Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:20.492Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:22.789Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:28.389Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:28.467Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:30.428Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:34.398Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:41.367Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:47.841Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:46:49.138Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:47:03.718Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:47:04.482Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:58:25.089Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T08:58:25.090Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:02:04.376Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:02:04.378Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:03:23.476Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:03:23.482Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:03:30.704Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:03:32.703Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:22:24.498Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:35.112Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:53.078Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:56.687Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:57.625Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:58.265Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:58.962Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:51:59.677Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T09:59:04.915Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T09:59:04.919Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T10:02:36.612Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T10:02:37.617Z [ERROR]: CastError: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Song"
+    at SchemaObjectId.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1255:12)
+    at SchemaType.castForQuery (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/schemaType.js:1673:17)
+    at cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/Users/resetstudio02/Documents/streaming/backend/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async canStreamSong (file:///Users/resetstudio02/Documents/streaming/backend/helpers/accessControl.js:10:16) 
+2025-07-17T10:02:55.459Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:02:57.014Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:02:57.813Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:02:58.888Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:00.212Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:04.495Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:06.689Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:07.213Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:10.035Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:10.799Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T10:03:11.431Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
