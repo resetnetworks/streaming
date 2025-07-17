@@ -216,7 +216,9 @@ const Home = () => {
                     key={song._id}
                     title={song.title}
                     price={
-                      song.accessType === "purchase-only" ? (
+                      song.price === 0 ? (
+                        "album"
+                      ) : song.accessType === "purchase-only" ? (
                         currentUser?.purchasedSongs?.includes(song._id) ? (
                           "Purchased"
                         ) : (
