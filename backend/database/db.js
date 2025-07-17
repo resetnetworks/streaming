@@ -10,8 +10,6 @@ const connectDb = async () => {
   while (retries < maxRetries) {
     try {
       const conn = await mongoose.connect(process.env.MONGO_URL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
         dbName: process.env.MONGO_DB_NAME || undefined, // optional
       });
 
