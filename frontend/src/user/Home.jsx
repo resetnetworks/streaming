@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight } from "react-icons/lu";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import OneTimePurchaseModal from "../components/payments/OneTimePaymentModal";
-
+import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 // Redux actions
 import { fetchAllSongs } from "../features/songs/songSlice";
 import {
@@ -37,6 +36,7 @@ const Home = () => {
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const songsStatus = useSelector((state) => state.songs.status);
   const songsTotalPages = useSelector((state) => state.songs.totalPages);
+  const currentUser = useSelector((state) => state.auth.user);
   const albumsStatus = useSelector((state) => state.albums.loading);
   const albumsTotalPages = useSelector(
     (state) => state.albums.pagination.totalPages
@@ -53,14 +53,18 @@ const Home = () => {
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [purchaseItem, setPurchaseItem] = useState(null); // holds song or album object
-  const [purchaseType, setPurchaseType] = useState(null); // 'song' or 'album'
+  const [purchaseItem, setPurchaseItem] = useState(null);
+  const [purchaseType, setPurchaseType] = useState(null);
+  const [loadingMore, setLoadingMore] = useState({
+    recent: false,
+    topPicks: false,
+    albums: false,
+  });
 
   // Refs
   const observerRefs = {
     recent: useRef(),
     topPicks: useRef(),
-    similar: useRef(),
     albums: useRef(),
   };
 
@@ -78,41 +82,37 @@ const Home = () => {
   }, [dispatch, similarPage]);
 
   useEffect(() => {
-    if (allAlbums.length === 0) {
-      dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
-    }
+    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
   }, [dispatch, albumsPage]);
 
   useEffect(() => {
-    if (recentSongs.length === 0) {
-      dispatch(
-        fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })
-      ).then((res) => {
-        if (res.payload?.songs) {
-          setRecentSongs((prev) => {
-            const seen = new Set(prev.map((s) => s._id));
-            const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-            return [...prev, ...newSongs];
-          });
-        }
-      });
-    }
+    dispatch(
+      fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })
+    ).then((res) => {
+      if (res.payload?.songs) {
+        setRecentSongs((prev) => {
+          const seen = new Set(prev.map((s) => s._id));
+          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+          return [...prev, ...newSongs];
+        });
+      }
+      setLoadingMore((prev) => ({ ...prev, recent: false }));
+    });
   }, [dispatch, recentPage]);
 
   useEffect(() => {
-    if (topSongs.length === 0) {
-      dispatch(
-        fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })
-      ).then((res) => {
-        if (res.payload?.songs) {
-          setTopSongs((prev) => {
-            const seen = new Set(prev.map((s) => s._id));
-            const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-            return [...prev, ...newSongs];
-          });
-        }
-      });
-    }
+    dispatch(
+      fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })
+    ).then((res) => {
+      if (res.payload?.songs) {
+        setTopSongs((prev) => {
+          const seen = new Set(prev.map((s) => s._id));
+          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+          return [...prev, ...newSongs];
+        });
+      }
+      setLoadingMore((prev) => ({ ...prev, topPicks: false }));
+    });
   }, [dispatch, topPicksPage]);
 
   // Handlers
@@ -129,7 +129,7 @@ const Home = () => {
 
   const handlePurchaseClick = (item, type) => {
     setPurchaseItem(item);
-    setPurchaseType(type); // 'song' or 'album'
+    setPurchaseType(type);
     setShowPurchaseModal(true);
   };
 
@@ -141,47 +141,46 @@ const Home = () => {
   }
 
   // Observer callback factory
-  const createObserverRef = (
-    key,
-    pageState,
-    setPageState,
-    totalPages,
-    status
-  ) =>
-    useCallback(
+  const createObserver = (key, pageState, setPageState, totalPages, status) => {
+    return useCallback(
       (node) => {
-        if (status === "loading") return;
+        if (status === "loading" || loadingMore[key] || !totalPages) return;
+
         if (observerRefs[key].current) observerRefs[key].current.disconnect();
+
         observerRefs[key].current = new IntersectionObserver((entries) => {
           if (entries[0].isIntersecting && pageState < totalPages) {
+            setLoadingMore((prev) => ({ ...prev, [key]: true }));
             setPageState((prev) => prev + 1);
           }
         });
+
         if (node) observerRefs[key].current.observe(node);
       },
-      [status, pageState, totalPages]
+      [status, pageState, totalPages, loadingMore[key]]
     );
+  };
 
-  const recentLastRef = createObserverRef(
+  const recentLastRef = createObserver(
     "recent",
     recentPage,
     setRecentPage,
     songsTotalPages,
     songsStatus
   );
-  const topPicksLastRef = createObserverRef(
+  const topPicksLastRef = createObserver(
     "topPicks",
     topPicksPage,
     setTopPicksPage,
     songsTotalPages,
     songsStatus
   );
-  const albumsLastRef = createObserverRef(
+  const albumsLastRef = createObserver(
     "albums",
     albumsPage,
     setAlbumsPage,
-    albumsTotalPages,
-    albumsStatus
+    albumsTotalPages || 1,
+    albumsStatus === "loading" ? "loading" : "idle"
   );
 
   return (
@@ -217,13 +216,19 @@ const Home = () => {
                     key={song._id}
                     title={song.title}
                     price={
-                      song.accessType === "purchase-only" ? (
-                        <button
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
-                          onClick={() => handlePurchaseClick(song, "song")}
-                        >
-                          Buy for ${song.price}
-                        </button>
+                      song.price === 0 ? (
+                        "album"
+                      ) : song.accessType === "purchase-only" ? (
+                        currentUser?.purchasedSongs?.includes(song._id) ? (
+                          "Purchased"
+                        ) : (
+                          <button
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                            onClick={() => handlePurchaseClick(song, "song")}
+                          >
+                            Buy for ₹{song.price}
+                          </button>
+                        )
                       ) : (
                         "Subs.."
                       )
@@ -234,6 +239,12 @@ const Home = () => {
                     isSelected={selectedSong?._id === song._id}
                   />
                 ))}
+            {loadingMore.recent && (
+              <div className="w-[160px] flex flex-col gap-2 skeleton-wrapper">
+                <Skeleton height={160} width={160} className="rounded-xl" />
+                <Skeleton width={100} height={12} />
+              </div>
+            )}
           </div>
 
           {/* Albums Section */}
@@ -250,7 +261,7 @@ const Home = () => {
             ref={scrollRefs.playlist}
             className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
           >
-            {albumsStatus
+            {albumsStatus && allAlbums.length === 0
               ? [...Array(7)].map((_, idx) => (
                   <div
                     key={`playlist-skeleton-${idx}`}
@@ -272,12 +283,16 @@ const Home = () => {
                       price={
                         album.price === 0 ? (
                           "subs.."
+                        ) : currentUser?.purchasedAlbums?.includes(
+                            album._id
+                          ) ? (
+                          "Purchased"
                         ) : (
                           <button
                             className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
                             onClick={() => handlePurchaseClick(album, "album")}
                           >
-                            Buy for ${album.price}
+                            Buy for ₹{album.price}
                           </button>
                         )
                       }
@@ -285,6 +300,12 @@ const Home = () => {
                     />
                   </div>
                 ))}
+            {loadingMore.albums && albumsPage < albumsTotalPages && (
+              <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
+                <Skeleton height={160} width={160} className="rounded-xl" />
+                <Skeleton width={100} height={12} />
+              </div>
+            )}
           </div>
 
           {/* Similar Artist Section */}
@@ -329,6 +350,22 @@ const Home = () => {
                     <RecentPlays
                       key={song._id}
                       title={song.title}
+                      price={
+                        song.accessType === "purchase-only" ? (
+                          currentUser?.purchasedSongs?.includes(song._id) ? (
+                            "Purchased"
+                          ) : (
+                            <button
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                              onClick={() => handlePurchaseClick(song, "song")}
+                            >
+                              Buy for ₹{song.price}
+                            </button>
+                          )
+                        ) : (
+                          "Subs.."
+                        )
+                      }
                       singer={song.singer}
                       image={song.coverImage || "/images/placeholder.png"}
                       onPlay={() => handlePlaySong(song)}
@@ -424,21 +461,41 @@ const Home = () => {
                       ))}
                     </div>
                   ))}
+              {loadingMore.topPicks && (
+                <div className="flex flex-col gap-4 min-w-[400px]">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={`loading-more-${i}`}
+                      className="flex items-center gap-4 skeleton-wrapper"
+                    >
+                      <Skeleton
+                        height={50}
+                        width={50}
+                        className="rounded-full"
+                      />
+                      <div className="flex flex-col gap-1">
+                        <Skeleton width={120} height={14} />
+                        <Skeleton width={80} height={12} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
         {showPurchaseModal && purchaseItem && (
-  <OneTimePurchaseModal
-    item={purchaseItem}
-    type={purchaseType} // 'song' or 'album'
-    onClose={() => {
-      setShowPurchaseModal(false);
-      setPurchaseItem(null);
-      setPurchaseType(null);
-    }}
-  />
-)}
-
+          <OneTimePaymentModal
+            itemType={purchaseType}
+            itemId={purchaseItem._id}
+            amount={purchaseItem.price}
+            onClose={() => {
+              setShowPurchaseModal(false);
+              setPurchaseItem(null);
+              setPurchaseType(null);
+            }}
+          />
+        )}
       </SkeletonTheme>
     </UserLayout>
   );

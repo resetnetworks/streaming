@@ -29,6 +29,7 @@ const SongFormModal = ({
     genre: '',
     price: '',
     accessType: 'subscription',
+    albumOnly: false,
     releaseDate: new Date().toISOString().split('T')[0],
   });
 
@@ -64,6 +65,7 @@ const SongFormModal = ({
         genre: Array.isArray(songToEdit.genre) ? songToEdit.genre.join(', ') : songToEdit.genre || '',
         price: songToEdit.price || '',
         accessType: songToEdit.accessType || 'subscription',
+        albumOnly: songToEdit.albumOnly || false,
         releaseDate: songToEdit.releaseDate || new Date().toISOString().split('T')[0],
       });
       setSearchTermArtist(songToEdit.artist?.name || '');
@@ -98,10 +100,10 @@ const SongFormModal = ({
   }, [newSong.artistId, dispatch]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setNewSong((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -152,7 +154,7 @@ const SongFormModal = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const { title, artistId, audioFile, accessType, price } = newSong;
+    const { title, artistId, audioFile, accessType, price, albumOnly } = newSong;
 
     if (!title || !artistId) {
       toast.error('Title and artist are required');
@@ -167,8 +169,9 @@ const SongFormModal = ({
       return;
     }
 
-    if (accessType === 'purchase-only' && (!price || parseFloat(price) <= 0)) {
-      toast.error('Purchase-only songs must have a valid price');
+    // Validation for purchase-only songs
+    if (accessType === 'purchase-only' && !albumOnly && (!price || parseFloat(price) <= 0)) {
+      toast.error('Purchase-only songs must have a valid price (unless album-only)');
       setIsSubmitting(false);
       return;
     }
@@ -180,8 +183,17 @@ const SongFormModal = ({
     formData.append('duration', newSong.duration);
     formData.append('releaseDate', newSong.releaseDate);
     formData.append('accessType', newSong.accessType);
+    formData.append('albumOnly', newSong.albumOnly);
+    
+    // FIXED: Always append price for purchase-only songs
     if (newSong.accessType === 'purchase-only') {
-      formData.append('price', parseFloat(newSong.price));
+      if (newSong.albumOnly) {
+        // For album-only songs, set price to 0
+        formData.append('price', 0);
+      } else {
+        // For single purchase songs, use the entered price
+        formData.append('price', parseFloat(newSong.price) || 0);
+      }
     }
 
     const genres = newSong.genre
@@ -214,6 +226,7 @@ const SongFormModal = ({
         genre: '',
         price: '',
         accessType: 'subscription',
+        albumOnly: false,
         releaseDate: new Date().toISOString().split('T')[0],
       });
       setSearchTermArtist('');
@@ -334,10 +347,26 @@ const SongFormModal = ({
             </select>
           </div>
 
-          {/* Price (Only for purchase-only) */}
+          {/* Album Only Checkbox (Only for purchase-only) */}
           {newSong.accessType === 'purchase-only' && (
             <div className="col-span-1">
-              <label className="text-gray-300">Price</label>
+              <label className="text-gray-300 flex items-center">
+                <input
+                  type="checkbox"
+                  name="albumOnly"
+                  checked={newSong.albumOnly}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Album Only (cannot be purchased individually)
+              </label>
+            </div>
+          )}
+
+          {/* Price (Only for purchase-only and not albumOnly) */}
+          {newSong.accessType === 'purchase-only' && !newSong.albumOnly && (
+            <div className="col-span-1">
+              <label className="text-gray-300">Price*</label>
               <input
                 type="number"
                 name="price"
@@ -346,6 +375,7 @@ const SongFormModal = ({
                 className="w-full bg-gray-700 text-white px-4 py-2 rounded"
                 step="0.01"
                 min="0"
+                required
               />
             </div>
           )}

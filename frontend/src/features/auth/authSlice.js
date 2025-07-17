@@ -5,10 +5,28 @@ import { toast } from "sonner";
 // --- Helpers ---
 const storeAuthToLocal = (user) => {
   if (!user) return;
-  const { _id, name, email, role, profileImage } = user;
+
+  const {
+    _id,
+    name,
+    email,
+    profileImage,
+    purchasedSongs = [],
+    purchasedAlbums = [],
+    likedsong = [],
+  } = user;
+
   localStorage.setItem(
     "user",
-    JSON.stringify({ _id, name, email, role, profileImage })
+    JSON.stringify({
+      _id,
+      name,
+      email,
+      profileImage,
+      purchasedSongs,
+      purchasedAlbums,
+      likedsong,
+    })
   );
 };
 
@@ -27,7 +45,6 @@ const getInitialUser = () => {
 };
 
 // --- Thunks ---
-
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (userData, thunkAPI) => {
@@ -49,6 +66,7 @@ export const loginUser = createAsyncThunk(
   async (userData, thunkAPI) => {
     try {
       const res = await axios.post("/users/login", userData);
+      localStorage.setItem("token", res.data.token);
       storeAuthToLocal(res.data.user);
       return res.data.user;
     } catch (err) {
@@ -114,7 +132,6 @@ export const toggleLikeSong = createAsyncThunk(
 );
 
 // --- Initial State ---
-
 const initialUser = getInitialUser();
 
 const authSlice = createSlice({
@@ -130,6 +147,22 @@ const authSlice = createSlice({
     clearMessage: (state) => {
       state.message = null;
       state.error = null;
+    },
+    addPurchase: (state, action) => {
+      const { itemType, itemId } = action.payload;
+      if (!state.user) return;
+
+      if (itemType === "song") {
+        if (!state.user.purchasedSongs.includes(itemId)) {
+          state.user.purchasedSongs.push(itemId);
+        }
+      } else if (itemType === "album") {
+        if (!state.user.purchasedAlbums.includes(itemId)) {
+          state.user.purchasedAlbums.push(itemId);
+        }
+      }
+
+      storeAuthToLocal(state.user);
     },
   },
   extraReducers: (builder) => {
@@ -147,7 +180,13 @@ const authSlice = createSlice({
         state.message = "Logged in successfully";
       })
       .addCase(getMyProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
+        const user = action.payload;
+        state.user = {
+          ...user,
+          purchasedSongs: user.purchasedSongs || [],
+          purchasedAlbums: user.purchasedAlbums || [],
+          likedsong: user.likedsong || [],
+        };
         state.isAuthenticated = true;
         state.status = "succeeded";
       })
@@ -208,5 +247,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearMessage } = authSlice.actions;
+export const { clearMessage, addPurchase } = authSlice.actions;
 export default authSlice.reducer;

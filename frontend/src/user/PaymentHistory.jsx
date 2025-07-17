@@ -6,7 +6,6 @@ import {
   selectDashboardError,
 } from '../features/payments/paymentSelectors';
 import { fetchUserPurchases } from '../features/payments/userPaymentSlice';
-import { fetchAllArtistsNoPagination } from '../features/artists/artistsSlice';
 import {
   FiChevronDown,
   FiChevronUp,
@@ -19,164 +18,171 @@ import UserHeader from '../components/user/UserHeader';
 
 const PaymentHistory = () => {
   const dispatch = useDispatch();
-  const [expandedPayment, setExpandedPayment] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [expanded, setExpanded] = useState(null);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
-  const songs = useSelector((state) => state.songs.allSongs);
-  const albums = useSelector((state) => state.albums.allAlbums);
-  const artists = useSelector((state) => state.artists.allArtists);
-  const artistLoading = useSelector((state) => state.artists.loading);
-
-  const payments = useSelector(selectPurchaseHistory);
+  const songs = useSelector(state => state.songs.allSongs);
+  const albums = useSelector(state => state.albums.allAlbums);
+  const history = useSelector(selectPurchaseHistory);
   const loading = useSelector(selectDashboardLoading);
   const error = useSelector(selectDashboardError);
 
   useEffect(() => {
     dispatch(fetchUserPurchases());
-    dispatch(fetchAllArtistsNoPagination());
   }, [dispatch]);
 
-  const toggleExpand = (id) => {
-    setExpandedPayment(expandedPayment === id ? null : id);
-  };
+  const toggle = (id) => setExpanded(expanded === id ? null : id);
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
 
-  const resolveItemName = useCallback(
-    (payment) => {
-      if (payment.itemType === 'song') {
-        return songs?.find((s) => s._id === payment.itemId)?.title || 'Unknown Song';
-      }
-      if (payment.itemType === 'album') {
-        return albums?.find((a) => a._id === payment.itemId)?.title || 'Unknown Album';
-      }
-      if (payment.itemType === 'artist-subscription') {
-        return artists?.find((a) => a._id === payment.itemId)?.name || 'Unknown Artist';
-      }
-      return 'Unknown Item';
+  const resolveName = useCallback(
+    (p) => {
+      if (p.itemType === 'song')
+        return songs?.find((s) => s._id === p.itemId)?.title || 'Song';
+      if (p.itemType === 'album')
+        return albums?.find((a) => a._id === p.itemId)?.title || 'Album';
+      return p.artistName || 'Artist';
     },
-    [songs, albums, artists]
+    [songs, albums]
   );
 
-  const filteredPayments = useMemo(() => {
-    return payments.filter((payment) => {
-      const name = resolveItemName(payment) || '';
-      const itemName = name.toLowerCase();
-      const paymentId = payment.paymentId?.toLowerCase() || '';
-      const matchesSearch =
-        itemName.includes(searchTerm.toLowerCase()) ||
-        paymentId.includes(searchTerm.toLowerCase());
+const filtered = useMemo(() => {
+  const sorted = [...history].sort(
+    (a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt)
+  );
 
-      return filter === 'all' && matchesSearch;
-    });
-  }, [payments, resolveItemName, searchTerm, filter]);
+  return sorted.filter((p) => {
+    const name = resolveName(p).toLowerCase();
+    const q = search.toLowerCase();
+
+    const matchSearch =
+      name.includes(q) || p.paymentId.toLowerCase().includes(q);
+
+    const matchType =
+      typeFilter === 'all'
+        ? true
+        : typeFilter === 'subscription'
+        ? p.itemType === 'artist-subscription'
+        : p.itemType === typeFilter;
+
+    return matchSearch && matchType;
+  });
+}, [history, resolveName, search, typeFilter]);
+
 
   return (
-    <div className="min-h-screen bg-image text-white">
+    <div className="min-h-screen bg-slate-900 text-slate-100">
       <UserHeader />
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Payment History</h1>
 
-        <div className="bg-gray-800 rounded-xl shadow-sm p-6 mb-6 border border-gray-700">
-          {/* Search + Filter */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Payment History</h1>
+
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+          {/* Search / Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiSearch className="text-gray-500" />
-              </div>
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
                 placeholder="Search payments..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <FiFilter className="text-gray-400" />
+            <div className="flex items-center gap-2">
+              <FiFilter className="text-slate-400" />
               <select
-                className="border border-gray-700 rounded-lg px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Types</option>
+                <option value="song">Songs</option>
+                <option value="album">Albums</option>
+                <option value="subscription">Subscriptions</option>
               </select>
             </div>
           </div>
 
-          {/* Payment States */}
-          {loading || artistLoading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400">Loading payment history...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-500">{error}</p>
-            </div>
-          ) : filteredPayments.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400">No payments found matching your criteria</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredPayments.map((payment) => (
+          {/* States */}
+          {loading && (
+            <p className="text-center py-12 text-slate-400">Loading…</p>
+          )}
+          {error && (
+            <p className="text-center py-12 text-red-400">{error}</p>
+          )}
+          {!loading && !error && filtered.length === 0 && (
+            <p className="text-center py-12 text-slate-400">
+              No payments found
+            </p>
+          )}
+
+          {/* List */}
+          {!loading && !error && filtered.length > 0 && (
+            <div className="space-y-3">
+              {filtered.map((p) => (
                 <div
-                  key={payment._id}
-                  className="border border-gray-700 rounded-xl overflow-hidden bg-gray-800 hover:bg-gray-750 transition-colors"
+                  key={p._id}
+                  className="border border-slate-700 rounded-lg bg-slate-800/70 hover:bg-slate-700/70 transition"
                 >
-                  <div
-                    className="p-4 flex items-center justify-between cursor-pointer transition-colors"
-                    onClick={() => toggleExpand(payment._id)}
+                  <button
+                    className="w-full flex items-center justify-between p-4 text-left"
+                    onClick={() => toggle(p._id)}
                   >
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-900/30 text-green-400 mr-4">
-                        <FiCheckCircle className="text-lg" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-9 h-9 rounded-full bg-blue-900/40 flex items-center justify-center">
+                        <FiCheckCircle className="text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-white">
-                          {resolveItemName(payment)}
-                        </h3>
-                        <div className="flex items-center text-sm text-gray-400 mt-1">
-                          <FiCalendar className="mr-1" />
-                          <span className="mr-3">{formatDate(payment.purchasedAt)}</span>
-                        </div>
+                        <p className="font-medium text-sm">
+                          {resolveName(p)}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          <FiCalendar className="inline mr-1" />
+                          {formatDate(p.purchasedAt)}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="font-semibold mr-4 text-white">₹{payment.price}</span>
-                      {expandedPayment === payment._id ? (
-                        <FiChevronUp className="text-gray-400" />
+
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-sm">
+                        ₹{p.price}
+                      </span>
+                      {expanded === p._id ? (
+                        <FiChevronUp className="text-slate-400" />
                       ) : (
-                        <FiChevronDown className="text-gray-400" />
+                        <FiChevronDown className="text-slate-400" />
                       )}
                     </div>
-                  </div>
+                  </button>
 
-                  {/* Expandable Details */}
-                  {expandedPayment === payment._id && (
-                    <div className="border-t border-gray-700 p-4 bg-gray-750">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-400 mb-1">Payment ID</h4>
-                          <p className="text-white">{payment.paymentId}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-400 mb-1">Item Type</h4>
-                          <p className="text-white capitalize">{payment.itemType}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-400 mb-1">Item Name</h4>
-                          <p className="text-white">{resolveItemName(payment)}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-400 mb-1">Amount</h4>
-                          <p className="font-medium text-white">₹{payment.price}</p>
-                        </div>
+                  {expanded === p._id && (
+                    <div className="border-t border-slate-700 px-4 pb-4 pt-3 text-xs grid grid-cols-2 gap-x-6 gap-y-3">
+                      <div>
+                        <span className="text-slate-400">Payment ID</span>
+                        <p className="text-slate-200">{p.paymentId}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Type</span>
+                        <p className="capitalize text-slate-200">
+                          {p.itemType.replace('-', ' ')}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Item</span>
+                        <p className="text-slate-200">{resolveName(p)}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Amount</span>
+                        <p className="text-slate-200">₹{p.price}</p>
                       </div>
                     </div>
                   )}
@@ -185,7 +191,7 @@ const PaymentHistory = () => {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

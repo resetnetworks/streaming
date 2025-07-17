@@ -26,11 +26,19 @@ export const getUserPurchases = async (req, res) => {
   const user = await User.findById(userId)
     .populate({
       path: "purchasedSongs",
-      select: "title audioUrl coverUrl artist",
+      select: "title audioUrl coverUrl artist duration",
+      populate: {
+        path: "artist",
+        select: "name",
+      },
     })
     .populate({
       path: "purchasedAlbums",
-      select: "title coverUrl artist",
+      select: "title coverUrl artist slug",
+      populate: {
+        path: "artist",
+        select: "name",
+      },
     })
     .lean();
 
@@ -38,13 +46,44 @@ export const getUserPurchases = async (req, res) => {
     throw new NotFoundError("User not found");
   }
 
+  let updatedHistory = user.purchaseHistory || [];
+
+  // ✅ Extract artist IDs from history
+  const artistSubs = updatedHistory.filter(
+    (h) => h.itemType === 'artist-subscription'
+  );
+
+  const artistIds = artistSubs.map((h) => h.itemId);
+
+  // ✅ Fetch artist names
+  const artists = await Artist.find({ _id: { $in: artistIds } })
+    .select('name')
+    .lean();
+
+  const artistMap = {};
+  for (const a of artists) {
+    artistMap[a._id.toString()] = a.name;
+  }
+
+  // ✅ Inject artist name into matching history entries
+  updatedHistory = updatedHistory.map((entry) => {
+    if (entry.itemType === 'artist-subscription') {
+      return {
+        ...entry,
+        artistName: artistMap[entry.itemId] || 'Unknown Artist',
+      };
+    }
+    return entry;
+  });
+
   return res.status(StatusCodes.OK).json({
     success: true,
     songs: user.purchasedSongs || [],
     albums: user.purchasedAlbums || [],
-    history: user.purchaseHistory || [],
+    history: updatedHistory,
   });
 };
+
 
 
 
@@ -70,7 +109,7 @@ export const getUserSubscriptions = async (req, res) => {
   // 2. Fetch artist info for each subscription
   const artistIds = subscriptions.map((sub) => sub.artistId);
   const artists = await Artist.find({ _id: { $in: artistIds } })
-    .select("name image genre")
+    .select("name image genre slug")
     .lean();
 
   // 3. Merge artist info with subscription data

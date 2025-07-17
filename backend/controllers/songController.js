@@ -34,6 +34,7 @@ export const createSong = async (req, res) => {
     price,
     accessType,
     releaseDate,
+    albumOnly,
     album,
   } = req.body;
 
@@ -45,8 +46,30 @@ export const createSong = async (req, res) => {
     genre = genre.split(",").map((g) => g.trim());
   }
 
-  if (accessType === "purchase-only" && (!price || price <= 0)) {
+  // Convert string values to proper types
+  if (typeof albumOnly === "string") {
+    albumOnly = albumOnly === "true";
+  }
+
+  if (typeof price === "string") {
+    price = parseFloat(price);
+  }
+
+  // Validation for purchase-only songs
+  if (accessType === "purchase-only" && !albumOnly && (!price || price <= 0)) {
     throw new BadRequestError("Purchase-only songs must have a valid price.");
+  }
+
+  // Set final price based on access type and album-only status
+  let finalPrice = 0;
+  if (accessType === "purchase-only") {
+    if (albumOnly) {
+      finalPrice = 0; // Album-only songs can't be purchased individually
+    } else {
+      finalPrice = price; // Use the provided price for individual purchase
+    }
+  } else {
+    finalPrice = 0; // Subscription songs are free
   }
 
   const coverImageFile = req.files?.coverImage?.[0];
@@ -70,9 +93,10 @@ export const createSong = async (req, res) => {
     genre,
     duration,
     accessType: accessType || "subscription",
-    price: accessType === "purchase-only" ? price : 0,
+    price: finalPrice, // Use the calculated final price
     releaseDate,
     coverImage: coverImageUrl,
+    albumOnly: albumOnly || false,
     audioUrl,
     audioKey,
   });
@@ -81,7 +105,7 @@ export const createSong = async (req, res) => {
     await Album.findByIdAndUpdate(album, {
       $push: { songs: newSong._id },
     });
-  }
+   }
 
   // Populate artist (for frontend display)
   const populated = await Song.findById(newSong._id)
@@ -96,6 +120,8 @@ export const createSong = async (req, res) => {
     song: response,
   });
 };
+
+
 
 
 
