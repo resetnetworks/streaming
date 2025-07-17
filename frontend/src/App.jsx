@@ -125,7 +125,7 @@ function App() {
               }
             />
             <Route
-              path="/library"
+              path="/purchases"
               element={
                 <RedirectedProtectedRoute
                   isAuthenticated={isAuthenticated}

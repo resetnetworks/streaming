@@ -11,9 +11,9 @@ const AlbumCard = ({
   return (
     <div
       className="md:w-56 w-32 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative"
-      onClick={onClick}
     >
-      <div className="relative">
+      <div className="relative"
+      onClick={onClick}>
         <img
           src={image}
           alt="Electronic Music"

@@ -1,14 +1,17 @@
 import { Album } from "../models/Album.js";
 import { Song } from "../models/Song.js";
-import { BadRequestError, UnauthorizedError,NotFoundError} from "../errors/index.js";
+import {
+  BadRequestError,
+  UnauthorizedError,
+  NotFoundError,
+} from "../errors/index.js";
 import mongoose from "mongoose";
-import { StatusCodes } from 'http-status-codes';
+import { StatusCodes } from "http-status-codes";
 import { isAdmin } from "../utils/authHelper.js";
 import { uploadToS3 } from "../utils/s3Uploader.js";
-import { Artist  } from "../models/Artist.js";
+import { Artist } from "../models/Artist.js";
 import { shapeAlbumResponse } from "../dto/album.dto.js";
-import { hasAccessToSong } from "../utils/accessControl.js"; 
-
+import { hasAccessToSong } from "../utils/accessControl.js";
 
 // Album Controllers
 
@@ -22,7 +25,8 @@ export const createAlbum = async (req, res) => {
   }
 
   // 📥 Extract data
-  const { title, description, artist, releaseDate, price, accessType, genre } = req.body;
+  const { title, description, artist, releaseDate, price, accessType, genre } =
+    req.body;
 
   // ✅ Required validation
   if (!title || !artist || !releaseDate) {
@@ -41,9 +45,8 @@ export const createAlbum = async (req, res) => {
     : "";
 
   // 🎵 Normalize genre field
-  const processedGenre = typeof genre === "string"
-    ? genre.split(",").map((g) => g.trim())
-    : genre;
+  const processedGenre =
+    typeof genre === "string" ? genre.split(",").map((g) => g.trim()) : genre;
 
   // 📦 Create album
   const newAlbum = await Album.create({
@@ -79,7 +82,7 @@ export const getAllAlbums = async (req, res) => {
       .populate("songs", "title duration coverImage")
       .populate("artist", "name slug")
       .lean(),
-    Album.countDocuments()
+    Album.countDocuments(),
   ]);
 
   // 🧠 Transform using DTO
@@ -92,8 +95,8 @@ export const getAllAlbums = async (req, res) => {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   });
 };
 
@@ -101,28 +104,27 @@ export const getAllAlbums = async (req, res) => {
 // - Also unlinks album reference from associated songs
 export const deleteAlbum = async (req, res) => {
   if (!isAdmin(req.user)) {
-    throw new UnauthorizedError('Access denied. Admins only.');
+    throw new UnauthorizedError("Access denied. Admins only.");
   }
 
   const album = await Album.findById(req.params.id);
   if (!album) {
-    throw new NotFoundError('Album not found');
+    throw new NotFoundError("Album not found");
   }
 
   // Optional: Remove album reference from songs
   await Song.updateMany(
     { _id: { $in: album.songs } },
-    { $unset: { album: '' } }
+    { $unset: { album: "" } }
   );
 
   await album.deleteOne();
 
   res.status(StatusCodes.OK).json({
     success: true,
-    message: 'Album deleted successfully',
+    message: "Album deleted successfully",
   });
 };
-
 
 // Get a single album by ID or slug
 // - Dynamically detects whether the param is an ObjectId or slug
@@ -131,10 +133,15 @@ export const getAlbumById = async (req, res) => {
   const { id } = req.params;
   const user = req.user;
 
-  const query = mongoose.Types.ObjectId.isValid(id) ? { _id: id } : { slug: id };
+  const query = mongoose.Types.ObjectId.isValid(id)
+    ? { _id: id }
+    : { slug: id };
 
   const album = await Album.findOne(query)
-    .populate("songs", "title duration coverImage audioUrl accessType price artist")
+    .populate(
+      "songs",
+      "title duration coverImage audioUrl accessType price artist"
+    )
     .populate("artist", "name slug")
     .lean();
 
@@ -162,7 +169,6 @@ export const getAlbumById = async (req, res) => {
   res.status(StatusCodes.OK).json({ success: true, album: shapedAlbum });
 };
 
-
 // Update an existing album (Admin only)
 // - Handles optional file upload for new cover image
 // - Allows partial updates for album fields
@@ -177,20 +183,15 @@ export const updateAlbum = async (req, res) => {
     throw new NotFoundError("Album not found");
   }
 
-  const {
-    title,
-    description,
-    artist,
-    releaseDate,
-    price,
-    accessType,
-    genre,
-  } = req.body;
+  const { title, description, artist, releaseDate, price, accessType, genre } =
+    req.body;
 
   // Validation for price based on accessType
   if (accessType === "purchase-only") {
     if (!price || price <= 0) {
-      throw new BadRequestError("Purchase-only albums must have a valid price.");
+      throw new BadRequestError(
+        "Purchase-only albums must have a valid price."
+      );
     }
     album.accessType = "purchase-only";
     album.price = price;
@@ -222,7 +223,6 @@ export const updateAlbum = async (req, res) => {
   });
 };
 
-
 // Get all albums for a specific artist
 // Get albums for an artist by ID or slug with pagination
 export const getAlbumsByArtist = async (req, res) => {
@@ -252,8 +252,15 @@ export const getAlbumsByArtist = async (req, res) => {
     Album.countDocuments({ artist: artist._id }),
   ]);
 
-  // 🧠 Shape albums for frontend
-  const shapedAlbums = albums.map(shapeAlbumResponse);
+  // 🧠 Shape albums for frontend + inject artist info into each album
+  const shapedAlbums = albums.map((album) => ({
+    ...shapeAlbumResponse(album),
+    artist: {
+      name: artist.name,
+      slug: artist.slug,
+      image: artist.image,
+    },
+  }));
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -274,10 +281,7 @@ export const getAlbumsByArtist = async (req, res) => {
   });
 };
 
-
-
 // Get All Album Without Pagination
-
 
 export const getAllAlbumsWithoutpagination = async (req, res) => {
   const albums = await Album.find()
@@ -294,5 +298,3 @@ export const getAllAlbumsWithoutpagination = async (req, res) => {
     total: shapedAlbums.length,
   });
 };
-
-

@@ -6,6 +6,7 @@ import { FaRegUser } from "react-icons/fa";
 import MobileNavBar from "./MobileNavBar";
 import MobilePlayer from "./MobilePlayer";
 import { FiSearch, FiMusic, FiPlusCircle, FiHeart } from "react-icons/fi";
+import { FaShoppingCart } from "react-icons/fa";
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
@@ -15,7 +16,7 @@ const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/" },
   { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "search", icon: <FiSearch />, path: "/search" },
-  { name: "library", icon: <FiMusic />, path: "/library" },
+  { name: "purchases", icon: <FaShoppingCart />, path: "/purchases" },
   { name: "liked songs", icon: <FiHeart />, path: "/liked-songs" },
 ];
 

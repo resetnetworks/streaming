@@ -10,13 +10,14 @@ import artistsReducer from "../features/artists/artistsSlice";
 import albumsReducer from "../features/albums/albumsSlice";
 import searchReducer from "../features/search/searchSlice";
 import paymentReducer from "../features/payments/userPaymentSlice";
+import payment from "../features/payments/paymentSlice"
 import streamReducer from "../features/stream/streamSlice";
 
 // ✅ Persist config for player slice (now includes selectedSong)
 const playerPersistConfig = {
   key: 'player',
   storage,
-  whitelist: ['volume', 'selectedSong'], // ✅ Add selectedSong
+  whitelist: ['volume', 'selectedSong', 'currentTime', 'isPlaying'], // ✅ Add selectedSong
   stateReconciler: autoMergeLevel2,
 };
 
@@ -38,6 +39,7 @@ const rootReducer = combineReducers({
   search: searchReducer,
   userDashboard: paymentReducer,
   stream: streamReducer,
+  payment: payment,
 });
 
 // ✅ Wrap with persist

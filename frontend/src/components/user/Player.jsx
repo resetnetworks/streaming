@@ -143,16 +143,16 @@ const Player = () => {
             hls.loadSource(mediaUrl);
           });
 
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.currentTime = 0;
-            dispatch(setCurrentTime(0));
-            if (isPlaying) {
-              video.play().catch((err) => {
-                setPlaybackError("Autoplay blocked. Tap play to continue.");
-                dispatch(pause());
-              });
-            }
-          });
+         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+  video.currentTime = currentTime || 0; // ✅ restore last time
+  if (isPlaying) {
+    video.play().catch((err) => {
+      setPlaybackError("Autoplay blocked. Tap play to continue.");
+      dispatch(pause());
+    });
+  }
+});
+
 
           hls.attachMedia(video);
           hlsRef.current = hls;
@@ -221,14 +221,6 @@ const Player = () => {
     }
   }, [volume, isMuted]);
 
-  // Error handling
-  // useEffect(() => {
-  //   if (playbackError) {
-  //     toast.error(playbackError);
-  //   }
-  // }, [playbackError]);
-
-  // Show 403 error toast if current song can't be streamed
 useEffect(() => {
   if (
     streamError &&
@@ -240,7 +232,7 @@ useEffect(() => {
     // This will ensure the toast shows only once for a specific song
     toast.warning(streamError.message, {
       id: toastId, // Sonner will auto-prevent duplicates by this ID
-      duration: 5000,
+      duration: 2000,
     });
 
     setPlaybackError(streamError.message);
