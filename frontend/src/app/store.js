@@ -17,7 +17,7 @@ import streamReducer from "../features/stream/streamSlice";
 const playerPersistConfig = {
   key: 'player',
   storage,
-  whitelist: ['volume', 'selectedSong'], // ✅ Add selectedSong
+  whitelist: ['volume', 'selectedSong', 'currentTime', 'isPlaying'], // ✅ Add selectedSong
   stateReconciler: autoMergeLevel2,
 };
 

@@ -6,6 +6,7 @@ export const fetchStreamUrl = createAsyncThunk(
   "stream/fetchStreamUrl",
   async (songId, { getState, rejectWithValue }) => {
     const { fetchedIds } = getState().stream;
+    const selectedSong = getState().player.selectedSong;
 
     if (fetchedIds.includes(songId)) {
       return rejectWithValue({ songId, message: "Already fetched" });
@@ -16,19 +17,40 @@ export const fetchStreamUrl = createAsyncThunk(
       return { songId, url: res.data.url };
     } catch (err) {
       const status = err.response?.status;
-      const message = err.response?.data?.message || "Failed to fetch streaming URL";
+      const defaultMessage = err.response?.data?.message || "Failed to fetch streaming URL";
 
-      if (status === 403) {
-        return rejectWithValue({
-          songId,
-          message: "You need to purchase this song to play it.",
-        });
-      }
+if (status === 403) {
+  const selectedSong = getState().player.selectedSong;
 
-      return rejectWithValue({ songId, message });
+  const artistName = selectedSong?.artist?.name || "this artist";
+  const albumTitle = selectedSong?.album?.title || "this album";
+
+  let message = "Access denied. Unlock to continue.";
+
+  if (selectedSong?.accessType === "subscription") {
+    message = `Subscribe to ${artistName} to play this song.`;
+  } else if (
+    selectedSong?.accessType === "purchase-only" &&
+    selectedSong?.album?.isPremium
+  ) {
+    message = `Purchase the album "${albumTitle}" to play this song.`;
+  } else {
+    message = "You need to purchase this song to play it.";
+  }
+
+  return rejectWithValue({
+    songId,
+    message,
+  });
+}
+
+
+
+      return rejectWithValue({ songId, message: defaultMessage });
     }
   }
 );
+
 
 // 🎧 Album Stream Thunk
 export const fetchAlbumStreamUrls = createAsyncThunk(
