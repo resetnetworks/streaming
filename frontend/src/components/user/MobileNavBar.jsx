@@ -8,13 +8,14 @@ import {
   RxHeart,
   RxPlus,
 } from "react-icons/rx";
+import { FaShoppingCart } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
 
 const menuItems = [
   { name: "Home", icon: <RxDashboard size={24} />, path: "/" },
   { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "Search", icon: <RxMagnifyingGlass size={24} />, path: "/search" },
-  { name: "Library", icon: <FiMusic size={24} />, path: "/library" },
+  { name: "purchases", icon: <FaShoppingCart size={20} />, path: "/purchases" },
   { name: "Liked", icon: <RxHeart size={24} />, path: "/liked-songs" },
 ];
 
