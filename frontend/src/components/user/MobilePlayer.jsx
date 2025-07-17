@@ -123,15 +123,15 @@ const MobilePlayer = () => {
           });
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.currentTime = 0;
-            dispatch(setCurrentTime(0));
-            if (isPlaying) {
-              video.play().catch((err) => {
-                setPlaybackError("Autoplay blocked. Tap play to continue.");
-                dispatch(pause());
-              });
-            }
-          });
+  video.currentTime = currentTime || 0; // ✅ restore last time
+  if (isPlaying) {
+    video.play().catch((err) => {
+      setPlaybackError("Autoplay blocked. Tap play to continue.");
+      dispatch(pause());
+    });
+  }
+});
+
 
           hls.attachMedia(video);
           hlsRef.current = hls;

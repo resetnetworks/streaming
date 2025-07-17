@@ -8,7 +8,8 @@ import {
   updateAlbum,
   getAlbumsByArtist,
   getAllAlbumsWithoutpagination,
-} from "../controllers/albumcontroller.js";
+} 
+from "../controllers/albumController.js";
 import { singleImageUpload } from "../middleware/uploadMiddleware.js";
 import {
   createAlbumValidator,

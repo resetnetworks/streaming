@@ -185,9 +185,15 @@ const SongFormModal = ({
     formData.append('accessType', newSong.accessType);
     formData.append('albumOnly', newSong.albumOnly);
     
-    // Only append price if not albumOnly
-    if (newSong.accessType === 'purchase-only' && !newSong.albumOnly) {
-      formData.append('price', parseFloat(newSong.price));
+    // FIXED: Always append price for purchase-only songs
+    if (newSong.accessType === 'purchase-only') {
+      if (newSong.albumOnly) {
+        // For album-only songs, set price to 0
+        formData.append('price', 0);
+      } else {
+        // For single purchase songs, use the entered price
+        formData.append('price', parseFloat(newSong.price) || 0);
+      }
     }
 
     const genres = newSong.genre

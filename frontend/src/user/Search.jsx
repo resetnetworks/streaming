@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
+import AlbumCard from "../components/user/AlbumCard";
+import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 import {
   fetchUnifiedSearchResults,
   clearSearchResults,
@@ -16,10 +18,16 @@ const Search = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  
+  // Purchase modal state
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseItem, setPurchaseItem] = useState(null);
+  const [purchaseType, setPurchaseType] = useState(null);
 
   const { results, loading, error } = useSelector((state) => state.search);
   const trendingSongs = useSelector((state) => state.songs.songs);
   const selectedSong = useSelector((state) => state.player.selectedSong);
+  const currentUser = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     dispatch(fetchAllSongs());
@@ -38,9 +46,55 @@ const Search = () => {
     dispatch(play());
   };
 
+  const handlePurchaseClick = (item, type) => {
+    setPurchaseItem(item);
+    setPurchaseType(type);
+    setShowPurchaseModal(true);
+  };
+
   const getRandomItems = (arr, count) => {
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
+  };
+
+  // Function to get price component for songs
+  const getSongPriceComponent = (song) => {
+    if (song.price === 0) {
+      return "album";
+    } else if (song.accessType === "purchase-only") {
+      if (currentUser?.purchasedSongs?.includes(song._id)) {
+        return "Purchased";
+      } else {
+        return (
+          <button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+            onClick={() => handlePurchaseClick(song, "song")}
+          >
+            Buy for ${song.price}
+          </button>
+        );
+      }
+    } else {
+      return "Subs..";
+    }
+  };
+
+  // Function to get price component for albums
+  const getAlbumPriceComponent = (album) => {
+    if (album.price === 0) {
+      return "subs..";
+    } else if (currentUser?.purchasedAlbums?.includes(album._id)) {
+      return "Purchased";
+    } else {
+      return (
+        <button
+          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+          onClick={() => handlePurchaseClick(album, "album")}
+        >
+          Buy for ${album.price}
+        </button>
+      );
+    }
   };
 
   return (
@@ -90,7 +144,8 @@ const Search = () => {
                 <RecentPlays
                   key={song._id}
                   title={song.title}
-                  singer={song.artist.name || "Unknown Artist"}
+                  price={getSongPriceComponent(song)}
+                  singer={song.artist?.name || "Unknown Artist"}
                   image={song.coverImage || "/images/placeholder.png"}
                   onPlay={() => handlePlaySong(song)}
                   isSelected={selectedSong?._id === song._id}
@@ -109,6 +164,7 @@ const Search = () => {
                     <RecentPlays
                       key={song._id}
                       title={song.title}
+                      price={getSongPriceComponent(song)}
                       singer={song.artist?.name || "Unknown"}
                       image={song.coverImage || "/images/placeholder.png"}
                       onPlay={() => handlePlaySong(song)}
@@ -128,6 +184,7 @@ const Search = () => {
                     <RecentPlays
                       key={artist._id}
                       title={artist.name}
+                      price="Artist"
                       singer="Artist"
                       image={artist.image || "/images/placeholder.png"}
                       onPlay={() => navigate(`/artist/${artist.slug}`)}
@@ -143,16 +200,17 @@ const Search = () => {
                 <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Albums</h2>
                 <div className="flex flex-wrap gap-6">
                   {results.albums.map((album) => (
-                    <RecentPlays
-                      key={album._id}
-                      title={album.title}
-                      singer={album.artist?.name || "Album"}
-                      image={album.coverImage || "/images/placeholder.png"}
-                      onPlay={() => navigate(`/album/${album._id}`)}
-                    />
+                    <div key={album._id}>
+                      <AlbumCard
+                        tag={`#${album.title || "music"}`}
+                        artists={album.artist?.name || "Various Artists"}
+                        image={album.coverImage || "/images/placeholder.png"}
+                        price={getAlbumPriceComponent(album)}
+                        onClick={() => navigate(`/album/${album.slug}`)}
+                      />
+                    </div>
                   ))}
                 </div>
-                {console.log(results.albums)}
               </>
             )}
 
@@ -165,6 +223,20 @@ const Search = () => {
           </>
         )}
       </div>
+
+      {/* Purchase Modal */}
+      {showPurchaseModal && purchaseItem && (
+        <OneTimePaymentModal
+          itemType={purchaseType}
+          itemId={purchaseItem._id}
+          amount={purchaseItem.price}
+          onClose={() => {
+            setShowPurchaseModal(false);
+            setPurchaseItem(null);
+            setPurchaseType(null);
+          }}
+        />
+      )}
     </UserLayout>
   );
 };
