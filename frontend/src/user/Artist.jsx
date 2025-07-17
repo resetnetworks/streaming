@@ -13,6 +13,9 @@ import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 import { getAlbumsByArtist } from "../features/albums/albumsSlice";
 import ArtistAboutSection from "../components/user/ArtistAboutSection";
+import AlbumCard from "../components/user/AlbumCard";
+import axiosInstance from "../utills/axiosInstance";
+import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 import {
   selectArtistAlbums,
   selectArtistAlbumPagination,
@@ -25,16 +28,20 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
 import SaveCardModal from "../components/payments/saveCardModal";
 
-
 const Artist = () => {
   const { artistId } = useParams();
   const dispatch = useDispatch();
   const recentScrollRef = useRef(null);
   const singlesScrollRef = useRef(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseItem, setPurchaseItem] = useState(null);
+  const [purchaseType, setPurchaseType] = useState(null);
+
   const navigate = useNavigate();
 
   // Selectors with proper memoization
   const selectedSong = useSelector((state) => state.player.selectedSong);
+  const currentUser = useSelector((state) => state.auth.user);
   const artist = useSelector(selectSelectedArtist);
   const artistAlbums = useSelector(selectArtistAlbums);
   const artistAlbumPagination = useSelector(selectArtistAlbumPagination);
@@ -64,7 +71,6 @@ const Artist = () => {
   const [showAllSongs, setShowAllSongs] = useState(false);
 
   const [showSaveCardModal, setShowSaveCardModal] = useState(false);
-
 
   // Refs
   const songsObserverRef = useRef();
@@ -153,37 +159,45 @@ const Artist = () => {
   };
 
   // Subscription handler
- const handleSubscribe = async () => {
-  if (isSubscribed) {
-    const confirmUnsub = window.confirm(
-      `Are you sure you want to unsubscribe from ${artist?.name}?`
-    );
-    if (!confirmUnsub) return;
-
-    setSubscriptionLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const subscribedArtists = JSON.parse(
-        localStorage.getItem("subscribedArtists") || []
-      );
-      const updated = subscribedArtists.filter((id) => id !== artistId);
-      localStorage.setItem("subscribedArtists", JSON.stringify(updated));
-      setIsSubscribed(false);
-      toast.success(`Unsubscribed from ${artist?.name}`);
-    } catch (error) {
-      toast.error("Failed to unsubscribe");
-      console.error("Unsubscription error:", error);
-    } finally {
-      setSubscriptionLoading(false);
+  const handleSubscribe = async () => {
+    if (!artist?._id) {
+      toast.error("Artist info not loaded.");
+      return;
     }
-  } else {
-    // No confirmation for subscribing, just open the payment modal
-    setShowSaveCardModal(true); // New state variable for card-saving modal
 
-  }
-};
+    if (isSubscribed) {
+      const confirmUnsub = window.confirm(
+        `Are you sure you want to unsubscribe from ${artist.name}?`
+      );
+      if (!confirmUnsub) return;
 
+      setSubscriptionLoading(true);
+      try {
+        await axiosInstance.delete(`/subscriptions/artist/${artist._id}`); // ✅ use correct _id
+
+        const subscribedArtists = JSON.parse(
+          localStorage.getItem("subscribedArtists") || "[]"
+        );
+        const updated = subscribedArtists.filter((id) => id !== artist._id);
+        localStorage.setItem("subscribedArtists", JSON.stringify(updated));
+        setIsSubscribed(false);
+        toast.success(`Unsubscribed from ${artist.name}`);
+      } catch (error) {
+        toast.error("Failed to unsubscribe");
+        console.error("Unsubscription error:", error);
+      } finally {
+        setSubscriptionLoading(false);
+      }
+    } else {
+      setShowSaveCardModal(true); // subscription flow
+    }
+  };
+
+  const handlePurchaseClick = (item, type) => {
+    setPurchaseItem(item);
+    setPurchaseType(type);
+    setShowPurchaseModal(true);
+  };
 
   // Intersection observers
   const songsLastRef = useCallback(
@@ -310,21 +324,19 @@ const Artist = () => {
                     <button
                       onClick={handleSubscribe}
                       disabled={subscriptionLoading}
-                      className={`px-4 py-1 rounded-full text-sm font-medium transition-all ${
-                        isSubscribed
-                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
-                      } ${
-                        subscriptionLoading
-                          ? "opacity-70 cursor-not-allowed"
-                          : ""
-                      }`}
+                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
+    ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
+    ${
+      isSubscribed
+        ? "bg-red-600 text-white hover:bg-red-700"
+        : "bg-blue-600 text-white hover:bg-blue-700"
+    }`}
                     >
                       {subscriptionLoading
                         ? "Processing..."
                         : isSubscribed
-                        ? "Subscribed ✓"
-                        : "Subscribe"}
+                        ? "Cancel Subscription"
+                        : `Subscribe ₹${subscriptionPrice.toFixed(2)}/mo`}
                     </button>
                   </div>
                 </div>
@@ -402,65 +414,75 @@ const Artist = () => {
         </div>
 
         {/* Albums Carousel */}
-        <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
-          <h2>Albums</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">
-              Page {artistAlbumPagination.page} of{" "}
-              {artistAlbumPagination.totalPages}
-            </span>
-            <LuSquareChevronRight
-              className="text-white cursor-pointer hover:text-blue-800 text-2xl"
-              onClick={() => handleScroll(recentScrollRef)}
-            />
-          </div>
+        {/* Albums Carousel */}
+<div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
+  <h2>Albums</h2>
+  <div className="flex items-center gap-2">
+    <span className="text-sm text-gray-400">
+      Page {artistAlbumPagination.page} of {artistAlbumPagination.totalPages}
+    </span>
+    <LuSquareChevronRight
+      className="text-white cursor-pointer hover:text-blue-800 text-2xl"
+      onClick={() => handleScroll(recentScrollRef)}
+    />
+  </div>
+</div>
+
+{/* Scrollable Album Row */}
+<div className="px-6 py-2">
+  <div
+    ref={recentScrollRef}
+    className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
+  >
+    {albumsStatus === "loading" && artistAlbums.length === 0 ? (
+      [...Array(5)].map((_, idx) => (
+        <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
+          <Skeleton height={160} width={160} className="rounded-xl" />
+          <Skeleton width={120} height={16} className="mt-2" />
         </div>
-        <div
-          ref={recentScrollRef}
-          className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
-        >
-          {albumsStatus === "loading" && artistAlbums.length === 0 ? (
-            [...Array(5)].map((_, idx) => (
-              <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
-                <Skeleton height={160} width={160} className="rounded-xl" />
-                <Skeleton width={120} height={16} className="mt-2" />
-              </div>
-            ))
-          ) : artistAlbums.length > 0 ? (
-            <>
-              {artistAlbums.map((album, idx) => (
-                <div
-                  key={album._id}
-                  onClick={() => navigate(`/album/${album._id}`)}
-                  className="cursor-pointer min-w-[160px]"
+      ))
+    ) : artistAlbums.length > 0 ? (
+      <>
+        {artistAlbums.map((album, idx) => (
+          <AlbumCard
+            key={album._id}
+            tag={`#${album.title || "music"}`}
+            artists={album.artist?.name || "Various Artists"}
+            image={album.coverImage || "/images/placeholder.png"}
+            price={
+              album.price === 0 ? (
+                "subs.."
+              ) : currentUser?.purchasedAlbums?.includes(album._id) ? (
+                "Purchased"
+              ) : (
+                <button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                  onClick={() => handlePurchaseClick(album, "album")}
                 >
-                  <RecentPlays
-                    ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
-                    title={album.title}
-                    singer={artistInfo?.name || artist?.name}
-                    image={
-                      album.coverImage
-                        ? album.coverImage
-                        : renderCoverImage(null, album.title, "w-full h-40")
-                    }
-                    price={album.price}
-                    isSelected={false}
-                  />
-                </div>
-              ))}
-              {albumsStatus === "loading" &&
-                hasMoreAlbums &&
-                [...Array(2)].map((_, idx) => (
-                  <div key={`album-loading-${idx}`} className="min-w-[160px]">
-                    <Skeleton height={160} width={160} className="rounded-xl" />
-                    <Skeleton width={120} height={16} className="mt-2" />
-                  </div>
-                ))}
-            </>
-          ) : (
-            <p className="text-white text-sm">No albums found.</p>
-          )}
-        </div>
+                  Buy for ${album.price}
+                </button>
+              )
+            }
+            onClick={() => navigate(`/album/${album.slug}`)}
+          />
+        ))}
+
+        {/* Show loading skeletons while fetching more */}
+        {albumsStatus === "loading" &&
+          hasMoreAlbums &&
+          [...Array(2)].map((_, idx) => (
+            <div key={`album-loading-${idx}`} className="min-w-[160px]">
+              <Skeleton height={160} width={160} className="rounded-xl" />
+              <Skeleton width={120} height={16} className="mt-2" />
+            </div>
+          ))}
+      </>
+    ) : (
+      <p className="text-white text-sm">No albums found.</p>
+    )}
+  </div>
+</div>
+
 
         {/* Singles Carousel */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
@@ -494,6 +516,22 @@ const Artist = () => {
                   }
                   onPlay={() => handlePlaySong(song)}
                   isSelected={selectedSong?._id === song._id}
+                  price={
+                    song.accessType === "purchase-only" ? (
+                      currentUser?.purchasedSongs?.includes(song._id) ? (
+                        "Purchased"
+                      ) : (
+                        <button
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                          onClick={() => handlePurchaseClick(song, "song")}
+                        >
+                          Buy for ${song.price}
+                        </button>
+                      )
+                    ) : (
+                      "Subs.."
+                    )
+                  }
                 />
               ))}
         </div>
@@ -509,28 +547,43 @@ const Artist = () => {
         />
 
         {showSaveCardModal && (
-  <SaveCardModal
-    artistId={artist?._id}
-    onCardSaved={() => {
-      setShowSaveCardModal(false);
-      setIsSubscribed(true);
-      toast.success(`✅ Subscribed to ${artist?.name}`);
+          <SaveCardModal
+            artistId={artist?._id}
+            onCardSaved={() => {
+              setShowSaveCardModal(false);
+              setIsSubscribed(true);
+              toast.success(`Subscribed to ${artist?.name}`);
 
-      // Persist in localStorage
-      let subscribedArtists = [];
-      try {
-        const raw = localStorage.getItem("subscribedArtists");
-        subscribedArtists = raw ? JSON.parse(raw) : [];
-      } catch {}
-      if (!subscribedArtists.includes(artistId)) {
-        subscribedArtists.push(artistId);
-        localStorage.setItem("subscribedArtists", JSON.stringify(subscribedArtists));
-      }
-    }}
-    onClose={() => setShowSaveCardModal(false)}
-  />
-)}
+              // Persist in localStorage
+              let subscribedArtists = [];
+              try {
+                const raw = localStorage.getItem("subscribedArtists");
+                subscribedArtists = raw ? JSON.parse(raw) : [];
+              } catch {}
+              if (!subscribedArtists.includes(artistId)) {
+                subscribedArtists.push(artistId);
+                localStorage.setItem(
+                  "subscribedArtists",
+                  JSON.stringify(subscribedArtists)
+                );
+              }
+            }}
+            onClose={() => setShowSaveCardModal(false)}
+          />
+        )}
 
+        {showPurchaseModal && purchaseItem && (
+          <OneTimePaymentModal
+            itemType={purchaseType}
+            itemId={purchaseItem._id}
+            amount={purchaseItem.price}
+            onClose={() => {
+              setShowPurchaseModal(false);
+              setPurchaseItem(null);
+              setPurchaseType(null);
+            }}
+          />
+        )}
       </SkeletonTheme>
     </UserLayout>
   );

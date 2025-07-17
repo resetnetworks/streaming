@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight } from "react-icons/lu";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import OneTimePurchaseModal from "../components/payments/OneTimePaymentModal";
-
+import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 // Redux actions
 import { fetchAllSongs } from "../features/songs/songSlice";
 import {
@@ -59,7 +58,7 @@ const Home = () => {
   const [loadingMore, setLoadingMore] = useState({
     recent: false,
     topPicks: false,
-    albums: false
+    albums: false,
   });
 
   // Refs
@@ -97,7 +96,7 @@ const Home = () => {
           return [...prev, ...newSongs];
         });
       }
-      setLoadingMore(prev => ({...prev, recent: false}));
+      setLoadingMore((prev) => ({ ...prev, recent: false }));
     });
   }, [dispatch, recentPage]);
 
@@ -112,7 +111,7 @@ const Home = () => {
           return [...prev, ...newSongs];
         });
       }
-      setLoadingMore(prev => ({...prev, topPicks: false}));
+      setLoadingMore((prev) => ({ ...prev, topPicks: false }));
     });
   }, [dispatch, topPicksPage]);
 
@@ -143,25 +142,24 @@ const Home = () => {
 
   // Observer callback factory
   const createObserver = (key, pageState, setPageState, totalPages, status) => {
-  return useCallback(
-    (node) => {
-      if (status === "loading" || loadingMore[key] || !totalPages) return;
+    return useCallback(
+      (node) => {
+        if (status === "loading" || loadingMore[key] || !totalPages) return;
 
-      if (observerRefs[key].current) observerRefs[key].current.disconnect();
+        if (observerRefs[key].current) observerRefs[key].current.disconnect();
 
-      observerRefs[key].current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && pageState < totalPages) {
-          setLoadingMore((prev) => ({ ...prev, [key]: true }));
-          setPageState((prev) => prev + 1);
-        }
-      });
+        observerRefs[key].current = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && pageState < totalPages) {
+            setLoadingMore((prev) => ({ ...prev, [key]: true }));
+            setPageState((prev) => prev + 1);
+          }
+        });
 
-      if (node) observerRefs[key].current.observe(node);
-    },
-    [status, pageState, totalPages, loadingMore[key]]
-  );
-};
-
+        if (node) observerRefs[key].current.observe(node);
+      },
+      [status, pageState, totalPages, loadingMore[key]]
+    );
+  };
 
   const recentLastRef = createObserver(
     "recent",
@@ -177,14 +175,13 @@ const Home = () => {
     songsTotalPages,
     songsStatus
   );
-const albumsLastRef = createObserver(
-  "albums",
-  albumsPage,
-  setAlbumsPage,
-  albumsTotalPages || 1,
-  albumsStatus === "loading" ? "loading" : "idle"
-);
-
+  const albumsLastRef = createObserver(
+    "albums",
+    albumsPage,
+    setAlbumsPage,
+    albumsTotalPages || 1,
+    albumsStatus === "loading" ? "loading" : "idle"
+  );
 
   return (
     <UserLayout>
@@ -284,7 +281,9 @@ const albumsLastRef = createObserver(
                       price={
                         album.price === 0 ? (
                           "subs.."
-                        ) : currentUser?.purchasedAlbums?.includes(album._id) ? (
+                        ) : currentUser?.purchasedAlbums?.includes(
+                            album._id
+                          ) ? (
                           "Purchased"
                         ) : (
                           <button
@@ -299,13 +298,12 @@ const albumsLastRef = createObserver(
                     />
                   </div>
                 ))}
-           {loadingMore.albums && albumsPage < albumsTotalPages && (
-  <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
-    <Skeleton height={160} width={160} className="rounded-xl" />
-    <Skeleton width={100} height={12} />
-  </div>
-)}
-
+            {loadingMore.albums && albumsPage < albumsTotalPages && (
+              <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
+                <Skeleton height={160} width={160} className="rounded-xl" />
+                <Skeleton width={100} height={12} />
+              </div>
+            )}
           </div>
 
           {/* Similar Artist Section */}
@@ -350,6 +348,22 @@ const albumsLastRef = createObserver(
                     <RecentPlays
                       key={song._id}
                       title={song.title}
+                      price={
+                        song.accessType === "purchase-only" ? (
+                          currentUser?.purchasedSongs?.includes(song._id) ? (
+                            "Purchased"
+                          ) : (
+                            <button
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                              onClick={() => handlePurchaseClick(song, "song")}
+                            >
+                              Buy for ${song.price}
+                            </button>
+                          )
+                        ) : (
+                          "Subs.."
+                        )
+                      }
                       singer={song.singer}
                       image={song.coverImage || "/images/placeholder.png"}
                       onPlay={() => handlePlaySong(song)}
@@ -469,7 +483,7 @@ const albumsLastRef = createObserver(
           </div>
         </div>
         {showPurchaseModal && purchaseItem && (
-          <OneTimePurchaseModal
+          <OneTimePaymentModal
             itemType={purchaseType}
             itemId={purchaseItem._id}
             amount={purchaseItem.price}

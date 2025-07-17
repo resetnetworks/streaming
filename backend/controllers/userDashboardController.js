@@ -26,7 +26,7 @@ export const getUserPurchases = async (req, res) => {
   const user = await User.findById(userId)
     .populate({
       path: "purchasedSongs",
-      select: "title audioUrl coverUrl artist",
+      select: "title audioUrl coverUrl artist duration",
       populate: {
         path: "artist",
         select: "name",
@@ -34,7 +34,7 @@ export const getUserPurchases = async (req, res) => {
     })
     .populate({
       path: "purchasedAlbums",
-      select: "title coverUrl artist",
+      select: "title coverUrl artist slug",
       populate: {
         path: "artist",
         select: "name",

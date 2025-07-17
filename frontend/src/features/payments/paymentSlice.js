@@ -20,6 +20,8 @@ export const initiateStripeItemPayment = createAsyncThunk(
   }
 );
 
+// new change
+
 // 🎯 Artist Subscription Setup Intent (Stripe)
 export const initiateStripeSetupIntent = createAsyncThunk(
   'payment/initiateStripeSetupIntent',
@@ -51,6 +53,20 @@ export const confirmArtistStripeSubscription = createAsyncThunk(
   }
 );
 
+// ❌ Cancel Artist Subscription (DELETE)
+export const cancelArtistSubscription = createAsyncThunk(
+  'payment/cancelArtistSubscription',
+  async (artistId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.delete(`/subscriptions/artist/${artistId}`);
+      return response.data; // { success: true, message: "Subscription cancelled." }
+    } catch (error) {
+      console.log(error.response?.data?.message || 'Cancellation failed');
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const paymentSlice = createSlice({
   name: 'payment',
   initialState: {
@@ -60,6 +76,7 @@ const paymentSlice = createSlice({
     gateway: null,
     razorpayOrderId: null,
     transactionId: null,
+    cancelMessage: null,
   },
   reducers: {
     resetPaymentState: (state) => {
@@ -69,6 +86,7 @@ const paymentSlice = createSlice({
       state.gateway = null;
       state.razorpayOrderId = null;
       state.transactionId = null;
+      state.cancelMessage = null;
     },
   },
   extraReducers: (builder) => {
@@ -121,6 +139,22 @@ const paymentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.transactionId = null;
+      })
+
+      // ❌ Cancel Subscription
+      .addCase(cancelArtistSubscription.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.cancelMessage = null;
+      })
+      .addCase(cancelArtistSubscription.fulfilled, (state, action) => {
+        state.loading = false;
+        state.cancelMessage = action.payload.message || 'Subscription cancelled';
+      })
+      .addCase(cancelArtistSubscription.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.cancelMessage = null;
       });
   },
 });
