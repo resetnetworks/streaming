@@ -226,7 +226,7 @@ const Home = () => {
                             className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
                             onClick={() => handlePurchaseClick(song, "song")}
                           >
-                            Buy for ${song.price}
+                            Buy for ₹{song.price}
                           </button>
                         )
                       ) : (
@@ -292,7 +292,7 @@ const Home = () => {
                             className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
                             onClick={() => handlePurchaseClick(album, "album")}
                           >
-                            Buy for ${album.price}
+                            Buy for ₹{album.price}
                           </button>
                         )
                       }
@@ -359,7 +359,7 @@ const Home = () => {
                               className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
                               onClick={() => handlePurchaseClick(song, "song")}
                             >
-                              Buy for ${song.price}
+                              Buy for ₹{song.price}
                             </button>
                           )
                         ) : (

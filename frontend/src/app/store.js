@@ -12,6 +12,7 @@ import searchReducer from "../features/search/searchSlice";
 import paymentReducer from "../features/payments/userPaymentSlice";
 import payment from "../features/payments/paymentSlice"
 import streamReducer from "../features/stream/streamSlice";
+import adminPaymentReducer from "../features/payments/adminPaymentSlice"
 
 // ✅ Persist config for player slice (now includes selectedSong)
 const playerPersistConfig = {
@@ -40,6 +41,7 @@ const rootReducer = combineReducers({
   userDashboard: paymentReducer,
   stream: streamReducer,
   payment: payment,
+  artistDashboard: adminPaymentReducer,
 });
 
 // ✅ Wrap with persist

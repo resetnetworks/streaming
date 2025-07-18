@@ -33,6 +33,7 @@ const storeAuthToLocal = (user) => {
 const clearAuthFromLocal = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
+  localStorage.removeItem("subscribedArtists");
 };
 
 const getInitialUser = () => {

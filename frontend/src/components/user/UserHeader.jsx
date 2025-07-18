@@ -100,18 +100,6 @@ const UserHeader = () => {
               <ul className="py-2 text-sm text-gray-400">
                 <li
                   className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                    isActive("/manage-subscriptions") ? "text-blue-500" : ""
-                  }`}
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/manage-subscriptions");
-                  }}
-                >
-                  <FiCreditCard />
-                  Manage Subscription
-                </li>
-                <li
-                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
                     isActive("/payment-history") ? "text-blue-500" : ""
                   }`}
                   onClick={() => {
