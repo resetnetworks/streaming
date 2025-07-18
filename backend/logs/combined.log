@@ -1116,3 +1116,72 @@
 2025-07-14T14:28:22.637Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
     at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:28:14.367Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:28:16.770Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:28:19.129Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:28:22.249Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:28:24.101Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:35:34.555Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:38:32.039Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:42:07.748Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:42:09.416Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:42:39.188Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:43:05.611Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:43:07.707Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:44:52.132Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:02.956Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:08.904Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:10.789Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:13.984Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:19.924Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:26.174Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:31.821Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:46:34.422Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:54:00.117Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-17T15:54:11.883Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///C:/Users/Mr.%20Sadre/Desktop/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
