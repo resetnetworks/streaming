@@ -1,4 +1,16 @@
-const AdminDataTable = ({ title, columns, data, addButton, loading, error, onEdit, onDelete }) => {
+import { FaMoneyBillWave, FaEdit, FaTrash } from 'react-icons/fa';
+
+const AdminDataTable = ({ 
+  title, 
+  columns, 
+  data, 
+  addButton, 
+  loading, 
+  error, 
+  onEdit, 
+  onDelete,
+  onViewPayments 
+}) => {
   return (
     <div className="bg-gray-800 rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
@@ -7,7 +19,7 @@ const AdminDataTable = ({ title, columns, data, addButton, loading, error, onEdi
       </div>
 
       {loading ? (
-        <div className="text-gray-300 text-center py-6">NoLoading</div>
+        <div className="text-gray-300 text-center py-6">Loading...</div>
       ) : error ? (
         <div className="text-red-400 text-center py-6">{error}</div>
       ) : data.length === 0 ? (
@@ -29,7 +41,7 @@ const AdminDataTable = ({ title, columns, data, addButton, loading, error, onEdi
             </thead>
             <tbody className="divide-y divide-gray-700">
               {data.map((row, rowIndex) => (
-                <tr key={rowIndex}>
+                <tr key={rowIndex} className="hover:bg-gray-700/50">
                   {columns.slice(0, -1).map((col, colIndex) => (
                     <td
                       key={colIndex}
@@ -39,18 +51,38 @@ const AdminDataTable = ({ title, columns, data, addButton, loading, error, onEdi
                     </td>
                   ))}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    <button
-                      className="text-blue-500 hover:text-blue-400 mr-3"
-                      onClick={() => onEdit?.(row.artistObj || row)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-400"
-                      onClick={() => onDelete?.(row)}
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center space-x-3">
+                      {onEdit && (
+                        <button
+                          className="text-blue-500 hover:text-blue-400 flex items-center"
+                          onClick={() => onEdit(row.artistObj || row)}
+                          title="Edit"
+                        >
+                          <FaEdit className="mr-1" />
+                          <span className="hidden md:inline">Edit</span>
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          className="text-red-500 hover:text-red-400 flex items-center"
+                          onClick={() => onDelete(row)}
+                          title="Delete"
+                        >
+                          <FaTrash className="mr-1" />
+                          <span className="hidden md:inline">Delete</span>
+                        </button>
+                      )}
+                      {onViewPayments && (
+                        <button
+                          className="text-green-500 hover:text-green-400 flex items-center"
+                          onClick={() => onViewPayments(row._id)}
+                          title="View Payments"
+                        >
+                          <FaMoneyBillWave className="mr-1" />
+                          <span className="hidden md:inline">Payments</span>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -3,7 +3,7 @@ import { RiPlayFill } from "react-icons/ri";
 
 const RecentPlays = React.forwardRef(
   ({ title, singer, image, price = 0, onPlay, isSelected }, ref) => {
-    const truncatedTitle = title.length > 10 ? title.slice(0, 15) + "..." : title;
+    const truncatedTitle = title.length > 10 ? title.slice(0, 10) + ".." : title;
 
     const handleClick = () => {
       if (onPlay) onPlay(); // Only trigger if onPlay is provided
@@ -38,7 +38,7 @@ const RecentPlays = React.forwardRef(
 
         <div className="flex justify-between sm:items-center mt-2 sm:flex-row flex-col">
           <div className="leading-none">
-            <p className="md:text-base text-sm font-medium text-white truncate">
+            <p className="md:text-sm text-xs font-medium text-white truncate">
               {truncatedTitle}
             </p>
             <span className="text-blue-500 text-xs truncate">{singer}</span>
