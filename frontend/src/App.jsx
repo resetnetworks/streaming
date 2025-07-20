@@ -125,6 +125,17 @@ function App() {
               }
             />
             <Route
+              path="/admin/payments/:artistId"
+              element={
+                <AdminRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Pages.ArtistPayments />
+                </AdminRoute>
+              }
+            />
+            <Route
               path="/purchases"
               element={
                 <RedirectedProtectedRoute
@@ -154,17 +165,6 @@ function App() {
                   user={user}
                 >
                   <Pages.PaymentHistory />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/manage-subscriptions"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.ManageSubscriptions />
                 </RedirectedProtectedRoute>
               }
             />

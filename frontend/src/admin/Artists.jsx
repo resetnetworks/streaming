@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { FaUserAlt, FaSearch } from 'react-icons/fa';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
@@ -20,6 +21,7 @@ import {
 
 const Artists = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editArtist, setEditArtist] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,6 +65,10 @@ const Artists = () => {
         dispatch(fetchAllArtistsNoPagination());
       });
     }
+  };
+
+  const handleViewPayments = (artistId) => {
+    navigate(`/admin/payments/${artistId}`);
   };
 
   return (
@@ -117,6 +123,7 @@ const Artists = () => {
           error={null}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onViewPayments={handleViewPayments}
         />
       )}
 
