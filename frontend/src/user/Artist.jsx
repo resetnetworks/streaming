@@ -27,6 +27,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
 import SaveCardModal from "../components/payments/saveCardModal";
+import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice"; // 👈 NEW
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -36,10 +37,9 @@ const Artist = () => {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchaseItem, setPurchaseItem] = useState(null);
   const [purchaseType, setPurchaseType] = useState(null);
-
   const navigate = useNavigate();
 
-  // Selectors with proper memoization
+  // Selectors
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
   const artist = useSelector(selectSelectedArtist);
@@ -51,32 +51,32 @@ const Artist = () => {
     shallowEqual
   );
 
-  // Local state for subscription and payment
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  // ✅ NEW: Get subscriptions from Redux
+  const userSubscriptions = useSelector(
+    (state) => state.userDashboard.subscriptions || []
+  );
+
+  const isSubscribed = userSubscriptions.some((sub) => sub.artist.slug === artistId);
+
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showSaveCardModal, setShowSaveCardModal] = useState(false);
 
-  // Destructure with default values
   const {
     songs: artistSongs = [],
     pages: totalPages = 1,
     status: songsStatus = "idle",
   } = artistSongsData || {};
 
-  // Local state
   const [songsPage, setSongsPage] = useState(1);
   const [albumsPage, setAlbumsPage] = useState(1);
   const [albumsStatus, setAlbumsStatus] = useState("idle");
   const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
   const [showAllSongs, setShowAllSongs] = useState(false);
 
-  const [showSaveCardModal, setShowSaveCardModal] = useState(false);
-
-  // Refs
   const songsObserverRef = useRef();
   const albumsObserverRef = useRef();
 
-  // Generate color from artist name
   const getArtistColor = (name) => {
     if (!name) return "bg-blue-600";
     const colors = [
@@ -90,40 +90,26 @@ const Artist = () => {
       "bg-teal-600",
       "bg-indigo-600",
     ];
-    const hash = name
-      .split("")
-      .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+    const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
     return colors[hash % colors.length];
   };
 
-  // Initial data fetch
   useEffect(() => {
     if (artistId) {
       dispatch(fetchArtistById(artistId));
-      fetchAlbums(1); // Initial fetch for first page
+      dispatch(fetchUserSubscriptions()); // 👈 Fetch subscriptions
+      dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 }));
       dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
-
-      // Check subscription status (mock implementation)
-      const subscribedArtists =
-        JSON.parse(localStorage.getItem("subscribedArtists")) || [];
-      setIsSubscribed(subscribedArtists.includes(artistId));
     }
   }, [dispatch, artistId]);
 
-  // Fetch albums function
   const fetchAlbums = async (page) => {
     if (albumsStatus === "loading") return;
-
     setAlbumsStatus("loading");
     try {
       await dispatch(
-        getAlbumsByArtist({
-          artistId,
-          page,
-          limit: 10,
-        })
+        getAlbumsByArtist({ artistId, page, limit: 10 })
       ).unwrap();
-
       if (page >= artistAlbumPagination.totalPages) {
         setHasMoreAlbums(false);
       }
@@ -134,23 +120,20 @@ const Artist = () => {
     }
   };
 
-  // Load more albums when page changes
   useEffect(() => {
     if (albumsPage > 1 && hasMoreAlbums) {
       fetchAlbums(albumsPage);
     }
-  }, [albumsPage]);
+  }, [albumsPage, hasMoreAlbums]);
 
-  // Pagination for songs
   useEffect(() => {
     if (artistId && songsPage > 1) {
       dispatch(fetchSongsByArtist({ artistId, page: songsPage, limit: 10 }));
     }
   }, [dispatch, artistId, songsPage]);
 
-  // Handlers
-  const handlePlaySong = (songId) => {
-    dispatch(setSelectedSong(songId));
+  const handlePlaySong = (song) => {
+    dispatch(setSelectedSong(song));
     dispatch(play());
   };
 
@@ -158,7 +141,6 @@ const Artist = () => {
     ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
   };
 
-  // Subscription handler
   const handleSubscribe = async () => {
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
@@ -173,23 +155,17 @@ const Artist = () => {
 
       setSubscriptionLoading(true);
       try {
-        await axiosInstance.delete(`/subscriptions/artist/${artist._id}`); // ✅ use correct _id
-
-        const subscribedArtists = JSON.parse(
-          localStorage.getItem("subscribedArtists") || "[]"
-        );
-        const updated = subscribedArtists.filter((id) => id !== artist._id);
-        localStorage.setItem("subscribedArtists", JSON.stringify(updated));
-        setIsSubscribed(false);
+        await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
+        dispatch(fetchUserSubscriptions()); // 👈 Refresh Redux state
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         toast.error("Failed to unsubscribe");
-        console.error("Unsubscription error:", error);
+        console.error(error);
       } finally {
         setSubscriptionLoading(false);
       }
     } else {
-      setShowSaveCardModal(true); // subscription flow
+      setShowSaveCardModal(true);
     }
   };
 
@@ -199,21 +175,15 @@ const Artist = () => {
     setShowPurchaseModal(true);
   };
 
-  // Intersection observers
   const songsLastRef = useCallback(
     (node) => {
       if (songsStatus === "loading") return;
-
-      if (songsObserverRef.current) {
-        songsObserverRef.current.disconnect();
-      }
-
+      if (songsObserverRef.current) songsObserverRef.current.disconnect();
       songsObserverRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && songsPage < totalPages) {
           setSongsPage((prev) => prev + 1);
         }
       });
-
       if (node) songsObserverRef.current.observe(node);
     },
     [songsStatus, songsPage, totalPages]
@@ -222,68 +192,50 @@ const Artist = () => {
   const albumsLastRef = useCallback(
     (node) => {
       if (albumsStatus === "loading" || !hasMoreAlbums) return;
-
-      if (albumsObserverRef.current) {
-        albumsObserverRef.current.disconnect();
-      }
-
+      if (albumsObserverRef.current) albumsObserverRef.current.disconnect();
       albumsObserverRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMoreAlbums) {
           setAlbumsPage((prev) => prev + 1);
         }
       });
-
       if (node) albumsObserverRef.current.observe(node);
     },
     [albumsStatus, hasMoreAlbums]
   );
 
-  // Derived values
   const songListView = showAllSongs ? artistSongs : artistSongs.slice(0, 5);
   const subscriptionPrice = artist?.subscriptionPrice || 4.99;
   const artistColor = getArtistColor(artist?.name);
 
-  // Render artist image or fallback
-  const renderArtistImage = (imageUrl, name, size = "w-20 h-20") => {
-    if (imageUrl) {
-      return (
-        <img
-          src={imageUrl}
-          alt={name || "Artist"}
-          className={`${size} rounded-full object-cover border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
-        />
-      );
-    }
-
-    return (
+  const renderArtistImage = (imageUrl, name, size = "w-20 h-20") =>
+    imageUrl ? (
+      <img
+        src={imageUrl}
+        alt={name || "Artist"}
+        className={`${size} rounded-full object-cover border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
+      />
+    ) : (
       <div
         className={`${size} ${artistColor} rounded-full flex items-center justify-center text-white font-bold text-xl border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
       >
         {name ? name.charAt(0).toUpperCase() : "A"}
       </div>
     );
-  };
 
-  // Render cover image or fallback
-  const renderCoverImage = (imageUrl, title, size = "w-full h-full") => {
-    if (imageUrl) {
-      return (
-        <img
-          src={imageUrl}
-          alt={title || "Cover"}
-          className={`${size} object-cover`}
-        />
-      );
-    }
-
-    return (
+  const renderCoverImage = (imageUrl, title, size = "w-full h-full") =>
+    imageUrl ? (
+      <img
+        src={imageUrl}
+        alt={title || "Cover"}
+        className={`${size} object-cover`}
+      />
+    ) : (
       <div
         className={`${size} ${artistColor} flex items-center justify-center text-white font-bold text-2xl`}
       >
         {title ? title.charAt(0).toUpperCase() : "C"}
       </div>
     );
-  };
 
   return (
     <UserLayout>
@@ -325,12 +277,12 @@ const Artist = () => {
                       onClick={handleSubscribe}
                       disabled={subscriptionLoading}
                       className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
-    ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
-    ${
-      isSubscribed
-        ? "bg-red-600 text-white hover:bg-red-700"
-        : "bg-blue-600 text-white hover:bg-blue-700"
-    }`}
+                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
+                        ${
+                          isSubscribed
+                            ? "bg-red-600 text-white hover:bg-red-700"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
                     >
                       {subscriptionLoading
                         ? "Processing..."
@@ -349,7 +301,7 @@ const Artist = () => {
           )}
         </div>
 
-        {/* All Songs (vertical list) */}
+        {/* All Songs */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
           {artistSongs.length > 5 && (
@@ -413,78 +365,72 @@ const Artist = () => {
           )}
         </div>
 
-        {/* Albums Carousel */}
-        {/* Albums Carousel */}
-<div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
-  <h2>Albums</h2>
-  <div className="flex items-center gap-2">
-    <span className="text-sm text-gray-400">
-      Page {artistAlbumPagination.page} of {artistAlbumPagination.totalPages}
-    </span>
-    <LuSquareChevronRight
-      className="text-white cursor-pointer hover:text-blue-800 text-2xl"
-      onClick={() => handleScroll(recentScrollRef)}
-    />
-  </div>
-</div>
-
-{/* Scrollable Album Row */}
-<div className="px-6 py-2">
-  <div
-    ref={recentScrollRef}
-    className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
-  >
-    {albumsStatus === "loading" && artistAlbums.length === 0 ? (
-      [...Array(5)].map((_, idx) => (
-        <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
-          <Skeleton height={160} width={160} className="rounded-xl" />
-          <Skeleton width={120} height={16} className="mt-2" />
+        {/* Albums */}
+        <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
+          <h2>Albums</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">
+              Page {artistAlbumPagination.page} of {artistAlbumPagination.totalPages}
+            </span>
+            <LuSquareChevronRight
+              className="text-white cursor-pointer hover:text-blue-800 text-2xl"
+              onClick={() => handleScroll(recentScrollRef)}
+            />
+          </div>
         </div>
-      ))
-    ) : artistAlbums.length > 0 ? (
-      <>
-        {artistAlbums.map((album, idx) => (
-          <AlbumCard
-            key={album._id}
-            tag={`#${album.title || "music"}`}
-            artists={album.artist?.name || "Various Artists"}
-            image={album.coverImage || "/images/placeholder.png"}
-            price={
-              album.price === 0 ? (
-                "subs.."
-              ) : currentUser?.purchasedAlbums?.includes(album._id) ? (
-                "Purchased"
-              ) : (
-                <button
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
-                  onClick={() => handlePurchaseClick(album, "album")}
-                >
-                  Buy for ${album.price}
-                </button>
-              )
-            }
-            onClick={() => navigate(`/album/${album.slug}`)}
-          />
-        ))}
+        <div className="px-6 py-2">
+          <div
+            ref={recentScrollRef}
+            className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
+          >
+            {albumsStatus === "loading" && artistAlbums.length === 0 ? (
+              [...Array(5)].map((_, idx) => (
+                <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
+                  <Skeleton height={160} width={160} className="rounded-xl" />
+                  <Skeleton width={120} height={16} className="mt-2" />
+                </div>
+              ))
+            ) : artistAlbums.length > 0 ? (
+              <>
+                {artistAlbums.map((album) => (
+                  <AlbumCard
+                    key={album._id}
+                    tag={`#${album.title || "music"}`}
+                    artists={album.artist?.name || "Various Artists"}
+                    image={album.coverImage || "/images/placeholder.png"}
+                    price={
+                      album.price === 0 ? (
+                        "subs.."
+                      ) : currentUser?.purchasedAlbums?.includes(album._id) ? (
+                        "Purchased"
+                      ) : (
+                        <button
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                          onClick={() => handlePurchaseClick(album, "album")}
+                        >
+                          Buy for ${album.price}
+                        </button>
+                      )
+                    }
+                    onClick={() => navigate(`/album/${album.slug}`)}
+                  />
+                ))}
+                {albumsStatus === "loading" &&
+                  hasMoreAlbums &&
+                  [...Array(2)].map((_, idx) => (
+                    <div key={`album-loading-${idx}`} className="min-w-[160px]">
+                      <Skeleton height={160} width={160} className="rounded-xl" />
+                      <Skeleton width={120} height={16} className="mt-2" />
+                    </div>
+                  ))}
+              </>
+            ) : (
+              <p className="text-white text-sm">No albums found.</p>
+            )}
+          </div>
+        </div>
 
-        {/* Show loading skeletons while fetching more */}
-        {albumsStatus === "loading" &&
-          hasMoreAlbums &&
-          [...Array(2)].map((_, idx) => (
-            <div key={`album-loading-${idx}`} className="min-w-[160px]">
-              <Skeleton height={160} width={160} className="rounded-xl" />
-              <Skeleton width={120} height={16} className="mt-2" />
-            </div>
-          ))}
-      </>
-    ) : (
-      <p className="text-white text-sm">No albums found.</p>
-    )}
-  </div>
-</div>
-
-
-        {/* Singles Carousel */}
+        {/* Singles */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Singles</h2>
           <LuSquareChevronRight
@@ -551,22 +497,8 @@ const Artist = () => {
             artistId={artist?._id}
             onCardSaved={() => {
               setShowSaveCardModal(false);
-              setIsSubscribed(true);
+              dispatch(fetchUserSubscriptions()); // 👈 Refresh
               toast.success(`Subscribed to ${artist?.name}`);
-
-              // Persist in localStorage
-              let subscribedArtists = [];
-              try {
-                const raw = localStorage.getItem("subscribedArtists");
-                subscribedArtists = raw ? JSON.parse(raw) : [];
-              } catch {}
-              if (!subscribedArtists.includes(artistId)) {
-                subscribedArtists.push(artistId);
-                localStorage.setItem(
-                  "subscribedArtists",
-                  JSON.stringify(subscribedArtists)
-                );
-              }
             }}
             onClose={() => setShowSaveCardModal(false)}
           />

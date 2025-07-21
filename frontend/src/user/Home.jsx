@@ -223,10 +223,10 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 mt-2 sm:mt-0 py-1 rounded"
                             onClick={() => handlePurchaseClick(song, "song")}
                           >
-                            Buy for ₹{song.price}
+                            ₹{song.price}
                           </button>
                         )
                       ) : (
@@ -289,10 +289,10 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded"
                             onClick={() => handlePurchaseClick(album, "album")}
                           >
-                            Buy for ₹{album.price}
+                            ₹{album.price}
                           </button>
                         )
                       }
