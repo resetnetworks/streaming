@@ -12,7 +12,7 @@ import {
 import {
   selectAllSongs,
   selectSongsStatus,
-} from '../features/songs/songselectors';
+} from '../features/songs/songSelectors';
 import { selectFullArtistList } from '../features/artists/artistsSelectors';
 import { selectAllAlbums } from '../features/albums/albumsSelector';
 import { toast } from 'sonner';

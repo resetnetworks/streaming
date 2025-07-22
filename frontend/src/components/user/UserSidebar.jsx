@@ -10,7 +10,7 @@ import { FaShoppingCart } from "react-icons/fa";
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
-import { selectAllSongs } from "../../features/songs/songselectors.js";  // Adjust path as needed
+import { selectAllSongs } from "../../features/songs/songSelectors.js";  // Adjust path as needed
 
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/" },
