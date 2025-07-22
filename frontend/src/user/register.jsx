@@ -102,7 +102,7 @@ const Register = () => {
       <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
       <div className="gradiant-line"></div>
 
-      <div className="text-white mt-auto mb-auto flex flex-col justify-around items-center">
+      <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center">
         <h1 className="text-4xl my-6">
           <span className="text-blue-700">sign up</span>, it's free
         </h1>

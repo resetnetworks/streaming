@@ -55,7 +55,7 @@ const Login = () => {
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <IconHeader />
 
-      <div className="text-white mt-auto mb-auto flex flex-col justify-around items-center">
+      <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center">
         <h1 className="text-4xl mb-6">
           <span className="text-blue-700">login</span> to reset
         </h1>
