@@ -1,5 +1,5 @@
 import { lazy } from "react";
-export const Register = lazy(() => import("../user/Register"));
+export const Register = lazy(() => import("../user/register"));
 export const Login = lazy(() => import("../user/Login"));
 export const ForgotPassword = lazy(() => import("../user/ForgotPassword"));
 export const ResetPassword = lazy(() => import("../user/ResetPassword"));
