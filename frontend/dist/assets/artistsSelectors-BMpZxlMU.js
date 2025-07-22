@@ -1,1 +1,0 @@
-const s=t=>t.artists.allArtists,r=t=>t.artists.fullArtistList,i=t=>t.artists.selectedArtist,a=t=>t.artists.loading,e=t=>t.artists.error,o=t=>t.artists.pagination,n=t=>t.artists.randomArtist,c=t=>t.artists.randomArtistSongs;export{c as a,s as b,a as c,e as d,o as e,i as f,r as g,n as s};
