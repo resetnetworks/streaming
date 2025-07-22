@@ -7,7 +7,7 @@ import {
   selectAllSongs,
   selectSongsStatus,
   selectTotalPages,
-} from "../features/songs/songSelectors";
+} from "../features/songs/songselectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";

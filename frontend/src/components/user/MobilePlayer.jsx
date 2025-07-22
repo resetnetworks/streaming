@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchStreamUrl } from "../../features/stream/streamSlice";
-import { selectAllSongs, selectSelectedSong } from "../../features/songs/songSelectors";
+import { selectAllSongs, selectSelectedSong } from "../../features/songs/songselectors";
 import {
   setSelectedSong,
   play,
