@@ -12,7 +12,7 @@ import {
   selectLikedSongsPages,
   selectLikedSongsTotal,
   selectSongsStatus,
-} from "../features/songs/songSelectors";
+} from "../features/songs/songselectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { toggleLikeSong } from "../features/auth/authSlice";
 import SongList from "../components/user/SongList";
