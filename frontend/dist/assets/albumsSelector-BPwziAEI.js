@@ -1,0 +1,1 @@
+const t=s=>s.albums.allAlbums,l=s=>s.albums.editingAlbum,a=s=>s.albums.loading,e=s=>s.albums.error,b=s=>s.albums.artistAlbums,n=s=>s.albums.albumDetails,i=s=>s.albums.pagination,m=s=>s.albums.artistAlbumPagination,u=s=>s.albums.artistInfo;export{m as a,u as b,n as c,a as d,t as e,e as f,l as g,i as h,b as s};
