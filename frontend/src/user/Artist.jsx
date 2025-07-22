@@ -22,7 +22,7 @@ import {
   selectArtistInfo,
 } from "../features/albums/albumsSelector";
 import { fetchSongsByArtist } from "../features/songs/songSlice";
-import { selectSongsByArtist } from "../features/songs/songselectors";
+import { selectSongsByArtist } from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";

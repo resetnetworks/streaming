@@ -6,7 +6,7 @@ import { fetchStreamUrl } from "../../features/stream/streamSlice";
 import {
   selectAllSongs,
   selectSelectedSong,
-} from "../../features/songs/songselectors";
+} from "../../features/songs/songSelectors";
 import {
   setSelectedSong,
   play,
