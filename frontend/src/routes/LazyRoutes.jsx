@@ -1,7 +1,7 @@
 import { lazy } from "react";
 
 //User pages routes
-export const Register = lazy(() => import("../user/Register"));
+export const Register = lazy(() => import("../Register"));
 export const Login = lazy(() => import("../user/Login"));
 export const ForgotPassword = lazy(() => import("../user/ForgotPassword"));
 export const ResetPassword = lazy(() => import("../user/ResetPassword"));

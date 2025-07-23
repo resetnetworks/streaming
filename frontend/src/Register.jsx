@@ -4,8 +4,8 @@ import { MdOutlineEmail } from "react-icons/md";
 import { TbLockPassword, TbUserSquareRounded } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FaChevronDown } from "react-icons/fa6";
-import { assets } from "../assets/assets";
-import { registerUser, getMyProfile } from "../features/auth/authSlice";
+import { assets } from "./assets/assets";
+import { registerUser, getMyProfile } from "./features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
