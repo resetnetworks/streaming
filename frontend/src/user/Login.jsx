@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";
 import { toast } from "sonner";
+import { Helmet } from "react-helmet";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,6 +53,12 @@ const Login = () => {
   };
 
   return (
+    <>
+    <Helmet>
+    <title>Login to RESET Music | Stream Ambient & Experimental Music</title>
+    <meta name="robots" content="index, follow" />
+    <meta name="description" content="Access your RESET account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
+    </Helmet>
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <IconHeader />
 
@@ -171,6 +178,7 @@ const Login = () => {
         </p>
       </div>
     </section>
+    </>
   );
 };
 

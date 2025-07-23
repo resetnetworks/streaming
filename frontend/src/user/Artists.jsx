@@ -12,6 +12,7 @@ import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { Helmet } from "react-helmet";
 
 const Artists = () => {
   const dispatch = useDispatch();
@@ -52,6 +53,12 @@ const handleNextPage = () => {
 
 
   return (
+    <>
+    <Helmet>
+      <title>Artists | RESET Music Streaming Platform</title>
+      <meta name="robots" content="index, follow" />
+    <meta name="description" content="Explore a diverse range of music artists on RESET. Discover and stream experimental, instrumental, and ambient music by talented creators from around the world." />
+    </Helmet>
     <UserLayout>
       <UserHeader />
       <div className="p-4 md:p-6 lg:p-8">
@@ -152,6 +159,7 @@ const handleNextPage = () => {
         )}
       </div>
     </UserLayout>
+    </>
   );
 };
 
