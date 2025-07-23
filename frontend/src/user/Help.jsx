@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import IconHeader from "../components/user/IconHeader";
+import { Helmet } from "react-helmet";
 
 const faqData = [
     {
@@ -129,6 +130,12 @@ function Help() {
     };
 
     return (
+        <>
+         <Helmet>
+            <title>Help & Support | RESET Music Streaming Platform</title>
+            <meta name="robots" content="index, follow" />
+            <meta name="description" content="Need help with RESET? Find answers to common questions, get support for streaming, subscriptions, and payments, or contact our team for assistance." />
+            </Helmet>
         <div className="flex flex-col min-h-screen bg-gray-900 px-2 md:px-4">
             {/* Header at the top */}
             <IconHeader />
@@ -191,6 +198,7 @@ function Help() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
 

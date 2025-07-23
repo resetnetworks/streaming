@@ -188,8 +188,9 @@ const Home = () => {
 
     <>
     <Helmet>
-      <title>Reset Music | Home</title>
-      <meta name="description" content="Listen to the latest songs and explore top playlists." />
+      <title>RESET MUSIC STREAMING PLATFORM</title>
+      <meta name="robots" content="index, follow" />
+    <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
     </Helmet>
     <UserLayout>
       <UserHeader />

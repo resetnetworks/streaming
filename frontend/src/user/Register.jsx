@@ -8,6 +8,7 @@ import { assets } from "../assets/assets";
 import { registerUser, getMyProfile } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Helmet } from "react-helmet";
 
 const monthMap = {
   January: "01",
@@ -98,6 +99,12 @@ const Register = () => {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>Register | RESET MUSIC STREAMING PLATFORM</title>
+      <meta name="robots" content="index, follow" />
+      <meta name="description" content="Create your RESET Music account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening." />
+    </Helmet>
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
       <div className="gradiant-line"></div>
@@ -285,6 +292,7 @@ const Register = () => {
         </p>
       </div>
     </section>
+    </>
   );
 };
 
