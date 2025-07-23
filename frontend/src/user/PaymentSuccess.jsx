@@ -155,7 +155,7 @@ export default function PaymentSuccess() {
               {type === 'artist' ? (
                 "Your subscription will automatically renew each month. You can cancel anytime."
               ) : (
-                "A receipt has been sent to your registered email address."
+                "Please keep a screenshot or note of this transaction for your records."
               )}
             </p>
           </div>
