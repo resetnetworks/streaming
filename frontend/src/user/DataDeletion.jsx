@@ -17,10 +17,10 @@ const DataDeletion = () => {
             <li>
               Send an email to{" "}
               <a
-                href="mailto:info@reset93.net?subject=Data Deletion Request"
+                href="mailto:contact@reset93.net?subject=Data Deletion Request"
                 className="text-blue-400 font-medium hover:underline"
               >
-                info@reset93.net
+                contact@reset93.net
               </a>{" "}
               with the subject line: <span className="italic">"Data Deletion Request"</span>.
             </li>
@@ -39,10 +39,10 @@ const DataDeletion = () => {
         <p className="text-sm text-gray-400 text-center mt-6">
           For additional support, contact us at{" "}
           <a
-            href="mailto:info@reset93.net?subject=Support Request"
+            href="mailto:contact@reset93.net?subject=Support Request"
             className="text-blue-400 hover:underline"
           >
-            info@reset93.net
+            contact@reset93.net
           </a>
           . Please note that you must send the request using your own registered email address.
         </p>
