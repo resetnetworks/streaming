@@ -11,7 +11,7 @@ const faqData = [
             },
             {
                 q: "I made a payment but didn't receive the song or subscription. What should I do?",
-                a: 'If you\'ve successfully completed a payment for a song or an artist subscription but haven\'t received access, please contact us immediately. Email us at <a href="mailto:info@reset93.net" class="text-blue-400 hover:underline">info@reset93.net</a> with the following:<br/><br/>- Your registered email or username<br/>- Payment proof (screenshot or transaction ID)<br/>- Name of the song or artist you paid for<br/><br/>We\'ll verify and resolve the issue as quickly as possible.'
+                a: 'If you\'ve successfully completed a payment for a song or an artist subscription but haven\'t received access, please contact us immediately. Email us at <a href="mailto:contact@reset93.net" class="text-blue-400 hover:underline">contact@reset93.net</a> with the following:<br/><br/>- Your registered email or username<br/>- Payment proof (screenshot or transaction ID)<br/>- Name of the song or artist you paid for<br/><br/>We\'ll verify and resolve the issue as quickly as possible.'
             }
         ]
     },
@@ -59,10 +59,10 @@ function Help() {
     <div>
       <h3 className="font-medium text-white">Email Support</h3>
       <a
-        href="mailto:info@reset93.net"
+        href="mailto:contact@reset93.net"
         className="text-blue-300 hover:text-blue-200 hover:underline transition-colors"
       >
-        info@reset93.net
+        contact@reset93.net
       </a>
     </div>
 

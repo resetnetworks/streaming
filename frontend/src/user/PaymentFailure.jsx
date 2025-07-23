@@ -85,7 +85,7 @@ export default function PaymentFailure() {
       `- Amount: ₹${amount || 'Unknown'}\n\n` +
       `Please assist with resolving this issue.`
     );
-    window.location.href = `mailto:info@reset93.net?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:contact@reset93.net?subject=${subject}&body=${body}`;
   };
 
   // Format long error messages
