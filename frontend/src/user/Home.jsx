@@ -24,6 +24,7 @@ import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
 import SongList from "../components/user/SongList";
+import { Helmet } from "react-helmet";
 
 // Utils
 import { formatDuration } from "../utills/helperFunctions";
@@ -184,6 +185,12 @@ const Home = () => {
   );
 
   return (
+
+    <>
+    <Helmet>
+      <title>Reset Music | Home</title>
+      <meta name="description" content="Listen to the latest songs and explore top playlists." />
+    </Helmet>
     <UserLayout>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
@@ -498,6 +505,7 @@ const Home = () => {
         )}
       </SkeletonTheme>
     </UserLayout>
+    </>
   );
 };
 
