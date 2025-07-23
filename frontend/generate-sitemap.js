@@ -17,6 +17,8 @@ const pages = [
   { url: '/register', changefreq: 'monthly', priority: 0.5 },
   { url: '/artists', changefreq: 'weekly', priority: 0.8 },
   { url: '/help', changefreq: 'weekly', priority: 0.8 },
+  { url: '/data-deletion', changefreq: 'weekly', priority: 0.8 },
+  { url: '/privacy-policy', changefreq: 'weekly', priority: 0.8 },
 ];
 
 (async () => {
