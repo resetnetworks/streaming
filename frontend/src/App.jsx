@@ -39,6 +39,33 @@ function App() {
     }
   }, [dispatch, isAuthenticated]);
 
+  // 🔐 Disable Right Click & Inspect Shortcut
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && e.key === "I") ||
+        (e.ctrlKey && e.shiftKey && e.key === "J") ||
+        (e.ctrlKey && e.key === "U") ||
+        (e.ctrlKey && e.shiftKey && e.key === "C")
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    const handleRightClick = (e) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("contextmenu", handleRightClick);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("contextmenu", handleRightClick);
+    };
+  }, []);
+
   if (initialLoad) return <Loader />;
 
   return (
@@ -49,11 +76,11 @@ function App() {
             {/* Public */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
-             <Route path="/help" element={<Pages.Help />} />
-             <Route path="/data-deletion" element={<Pages.DataDeletion />}/>
-             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />}/>
+            <Route path="/help" element={<Pages.Help />} />
+            <Route path="/data-deletion" element={<Pages.DataDeletion />} />
+            <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
 
-             {/* User Routes */}
+            {/* User Routes */}
             <Route
               path="/register"
               element={
@@ -62,8 +89,6 @@ function App() {
                 </PublicRoute>
               }
             />
-
-           
             <Route
               path="/login"
               element={
@@ -131,8 +156,6 @@ function App() {
                 </RedirectedProtectedRoute>
               }
             />
-
-           
             <Route
               path="/purchases"
               element={
@@ -195,16 +218,11 @@ function App() {
             <Route
               path="/admin/payments/:artistId"
               element={
-                <AdminRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
+                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
                   <Pages.ArtistPayments />
                 </AdminRoute>
               }
             />
-
-           
 
             {/* Fallback */}
             <Route
