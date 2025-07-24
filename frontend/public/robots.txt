@@ -3,4 +3,4 @@ Disallow: /admin/
 Disallow: /api/
 Allow: /
 
-Sitemap: https://resetmusic.com/sitemap.xml
+Sitemap: https://musicreset.com/sitemap.xml
