@@ -5,10 +5,11 @@ const PrivacyPolicy = () => {
   return (
     <>
     <Helmet>
-      <title>Privacy Policy | RESET MUSIC STREAMING PLATFORM</title>
-      <meta name="robots" content="index, follow" />
-<meta name="description" content="Learn how RESET Music collects, uses, and protects your personal data while you stream ambient, instrumental, and experimental music." />
-    </Helmet>
+  <title>Privacy Policy | musicreset</title>
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Learn how musicreset collects, uses, and protects your personal data while you stream ambient, instrumental, and experimental music." />
+</Helmet>
+
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center px-4">
       <div className="max-w-5xl w-full bg-gray-800 rounded-2xl shadow-lg p-8">
         <h1 className="text-3xl font-bold text-blue-400 mb-6 text-center">
