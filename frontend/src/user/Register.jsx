@@ -112,7 +112,7 @@ const Register = () => {
 
       <div className="text-white sm:mt-auto mt-0 mb-auto flex flex-col justify-around items-center">
         <h1 className="text-4xl my-6">
-          <span className="text-blue-700">sign up</span>, it's free
+          <span className="text-blue-700">sign up</span>, to musicreset
         </h1>
 
         <form
