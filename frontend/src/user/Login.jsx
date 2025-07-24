@@ -54,11 +54,12 @@ const Login = () => {
 
   return (
     <>
-    <Helmet>
-    <title>Login to RESET Music | Stream Ambient & Experimental Music</title>
-    <meta name="robots" content="index, follow" />
-    <meta name="description" content="Access your RESET account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
-    </Helmet>
+  <Helmet>
+  <title>Login to MusicReset | Stream Ambient & Experimental Music</title>
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Access your MusicReset account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
+</Helmet>
+
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <IconHeader />
 

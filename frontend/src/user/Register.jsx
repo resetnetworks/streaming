@@ -101,10 +101,11 @@ const Register = () => {
   return (
     <>
     <Helmet>
-      <title>Register | RESET MUSIC STREAMING PLATFORM</title>
-      <meta name="robots" content="index, follow" />
-      <meta name="description" content="Create your RESET Music account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening." />
-    </Helmet>
+  <title>Register | MusicReset Streaming Platform</title>
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Create your MusicReset account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening." />
+</Helmet>
+
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
       <div className="gradiant-line"></div>

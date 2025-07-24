@@ -188,7 +188,7 @@ const Home = () => {
 
     <>
     <Helmet>
-      <title>RESET MUSIC STREAMING PLATFORM</title>
+      <title>MUSICRESET - RESET MUSIC STREAMING PLATFORM</title>
       <meta name="robots" content="index, follow" />
     <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
     </Helmet>
