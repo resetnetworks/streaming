@@ -5,7 +5,7 @@ const DataDeletion = () => {
   return (
     <>
       <Helmet>
-        <title>Data Deletion | MUSICRESET</title>
+        <title>Data Deletion | MUSICRESET RESET MUSIC STREAMING PLATFORM</title>
         <meta name="robots" content="index, follow" />
         <meta
           name="description"
