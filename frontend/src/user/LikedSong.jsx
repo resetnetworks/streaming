@@ -16,7 +16,6 @@ import {
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { toggleLikeSong } from "../features/auth/authSlice";
 import SongList from "../components/user/SongList";
-import UserLayout from "../components/user/UserLayout";
 import { formatDuration } from "../utills/helperFunctions";
 import UserHeader from "../components/user/UserHeader";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";

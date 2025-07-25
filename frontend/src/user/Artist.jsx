@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
 import RecentPlays from "../components/user/RecentPlays";

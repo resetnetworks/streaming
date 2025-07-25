@@ -9,10 +9,8 @@ import {
   selectTotalPages,
 } from "../features/songs/songSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
-import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
 import RecentPlays from "../components/RecentPlays";
-import AlbumCard from "../components/AlbumCard";
 import SongList from "../components/SongList";
 import GenreCard from "../components/GenreCard";
 import { LuSquareChevronRight } from "react-icons/lu";

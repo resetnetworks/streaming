@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
 import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
