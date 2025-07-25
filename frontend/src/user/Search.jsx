@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";

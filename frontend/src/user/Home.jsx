@@ -19,7 +19,6 @@ import {
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 
 // Components
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
@@ -82,9 +81,13 @@ const Home = () => {
     dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
   }, [dispatch, similarPage]);
 
-  useEffect(() => {
-    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
-  }, [dispatch, albumsPage]);
+ useEffect(() => {
+  dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }))
+    .then(() => {
+      setLoadingMore((prev) => ({ ...prev, albums: false }));
+    });
+}, [dispatch, albumsPage]);
+
 
   useEffect(() => {
     dispatch(
@@ -180,7 +183,7 @@ const Home = () => {
     "albums",
     albumsPage,
     setAlbumsPage,
-    albumsTotalPages,
+    albumsTotalPages || 1,
     albumsStatus === "loading" ? "loading" : "idle"
   );
 
@@ -308,12 +311,13 @@ const Home = () => {
                     />
                   </div>
                 ))}
-            {loadingMore.albums && albumsPage < albumsTotalPages && (
-              <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
-                <Skeleton height={160} width={160} className="rounded-xl" />
-                <Skeleton width={100} height={12} />
-              </div>
-            )}
+            {loadingMore.albums && albumsPage < albumsTotalPages ? (
+  <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
+    <Skeleton height={160} width={160} className="rounded-xl" />
+    <Skeleton width={100} height={12} />
+  </div>
+) : null}
+
           </div>
 
           {/* Similar Artist Section */}
