@@ -189,7 +189,7 @@ const Browse = () => {
   const genreChunks = chunkGenres(genreData);
 
   return (
-    <UserLayout>
+    <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
@@ -412,7 +412,7 @@ const Browse = () => {
           </div>
         </div>
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 };
 

@@ -238,7 +238,7 @@ const Artist = () => {
     );
 
   return (
-    <UserLayout>
+    <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         {/* Hero Section */}
@@ -517,7 +517,7 @@ const Artist = () => {
           />
         )}
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 };
 

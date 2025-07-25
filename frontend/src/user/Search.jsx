@@ -98,7 +98,7 @@ const Search = () => {
   };
 
   return (
-    <UserLayout>
+    <>
       <UserHeader />
       <h1 className="text-xl text-center leading-none text-white">
         Search by artist, album, or song
@@ -237,7 +237,7 @@ const Search = () => {
           }}
         />
       )}
-    </UserLayout>
+    </>
   );
 };
 

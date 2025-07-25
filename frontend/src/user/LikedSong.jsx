@@ -95,7 +95,7 @@ const LikedSongs = () => {
   const hasMore = page < pages && localSongs.length < total;
 
   return (
-    <UserLayout>
+    <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen w-[96%] py-8 px-4">
@@ -185,7 +185,7 @@ const LikedSongs = () => {
           )}
         </div>
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 };
 
