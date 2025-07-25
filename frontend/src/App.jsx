@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
 import { getMyProfile } from "./features/auth/authSlice";
+import UserLayout from "./components/user/UserLayout";
 import {
   selectIsAuthenticated,
   selectAuthStatus,
@@ -123,6 +124,9 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* User Layout */}
+            <Route element={<UserLayout />}>
             <Route
               path="/"
               element={
@@ -179,17 +183,6 @@ function App() {
               }
             />
             <Route
-              path="/payment-history"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.PaymentHistory />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
               path="/album/:albumId"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
@@ -203,6 +196,20 @@ function App() {
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
                   <Pages.Search />
                 </ProtectedRoute>
+              }
+            />
+
+            </Route>
+
+             <Route
+              path="/payment-history"
+              element={
+                <RedirectedProtectedRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Pages.PaymentHistory />
+                </RedirectedProtectedRoute>
               }
             />
 

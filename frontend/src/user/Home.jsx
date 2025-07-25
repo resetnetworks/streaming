@@ -180,7 +180,7 @@ const Home = () => {
     "albums",
     albumsPage,
     setAlbumsPage,
-    albumsTotalPages || 1,
+    albumsTotalPages,
     albumsStatus === "loading" ? "loading" : "idle"
   );
 
@@ -192,7 +192,7 @@ const Home = () => {
       <meta name="robots" content="index, follow" />
     <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
     </Helmet>
-    <UserLayout>
+    
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
@@ -505,7 +505,7 @@ const Home = () => {
           />
         )}
       </SkeletonTheme>
-    </UserLayout>
+    
     </>
   );
 };

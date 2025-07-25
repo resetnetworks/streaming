@@ -96,7 +96,7 @@ export default function Album() {
   const artistColor = getArtistColor(artistName);
 
   return (
-    <UserLayout>
+   <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen text-white px-8 pt-10 pb-8">
@@ -242,6 +242,6 @@ export default function Album() {
           )}
         </div>
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 }
