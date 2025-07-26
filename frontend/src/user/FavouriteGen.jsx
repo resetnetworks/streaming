@@ -1,3 +1,4 @@
+// FavouriteGen.jsx
 import React, { useState, useEffect } from "react";
 import { IoMdCheckmark } from "react-icons/io";
 import IconHeader from "../components/user/IconHeader";
@@ -41,46 +42,44 @@ const FavouriteGen = () => {
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  
+
   const [selected, setSelected] = useState(user?.preferredGenres || []);
   const [loading, setLoading] = useState(false);
 
-  // Check if user just registered and ensure proper authentication
   useEffect(() => {
     const justRegistered = localStorage.getItem('justRegistered');
-    
-    // Debug logs to track what's happening
-    console.log("User in genre selection:", user);
-    console.log("Is authenticated:", isAuthenticated);
-    console.log("Just registered:", justRegistered);
-    console.log("User ID:", user?._id || user?.id);
-    
+    const registrationTime = localStorage.getItem('registrationTime');
+
+    // Check if registration was too long ago (more than 10 minutes)
+    if (registrationTime) {
+      const timeDiff = Date.now() - parseInt(registrationTime);
+      if (timeDiff > 10 * 60 * 1000) { // 10 minutes
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+      }
+    }
+
     if (!isAuthenticated) {
-      console.log("User not authenticated, redirecting to login");
       navigate("/login");
       return;
     }
 
-    // If user just registered but user data is not complete, fetch profile
     if (justRegistered && (!user || !user._id)) {
-      console.log("Just registered but user data incomplete, fetching profile");
       dispatch(getMyProfile()).catch((error) => {
-        console.error("Failed to get user profile:", error);
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
         navigate("/login");
       });
       return;
     }
-    
-    // If user didn't just register and already has genres, redirect to home
+
     if (!justRegistered && user?.preferredGenres?.length > 0) {
-      console.log("User already has genres, redirecting to home");
       navigate("/");
       return;
     }
 
-    // Set existing preferred genres if any
     if (user?.preferredGenres?.length > 0) {
-      console.log("Setting existing preferred genres:", user.preferredGenres);
       setSelected(user.preferredGenres);
     }
   }, [isAuthenticated, user, navigate, dispatch]);
@@ -99,29 +98,50 @@ const FavouriteGen = () => {
       return;
     }
 
+    // Check authentication before proceeding
+    if (!isAuthenticated) {
+      toast.error("Please login again to continue");
+      navigate("/login");
+      return;
+    }
+
     try {
       setLoading(true);
-      
-      console.log("Starting genre update process");
-      console.log("Current user before update:", user);
-      
-      // Update preferred genres
+
+      // Verify user is still authenticated by checking profile first
+      try {
+        await dispatch(getMyProfile()).unwrap();
+      } catch (profileError) {
+        // If profile fetch fails, likely token is invalid
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+        navigate("/login");
+        return;
+      }
+
+      // Now update preferred genres
       await dispatch(updatePreferredGenres(selected)).unwrap();
-      console.log("Genres updated successfully");
-      
-      // Refresh user profile to get updated data  
+
+      // Refresh user profile after successful update
       await dispatch(getMyProfile()).unwrap();
-      console.log("Profile refreshed after genre update");
-      
-      // Clear the registration flag
+
+      // Clean up localStorage
       localStorage.removeItem('justRegistered');
-      console.log("Registration flag cleared");
-      
+      localStorage.removeItem('registrationTime');
+
       toast.success("Genres saved successfully!");
       navigate("/", { replace: true });
     } catch (error) {
-      console.error("Error in handleSubmit:", error);
-      toast.error(error || "Failed to update genres");
+      // Handle specific token/auth errors
+      if (error?.includes?.('token') || error?.includes?.('expired') || error?.includes?.('Invalid')) {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+        navigate("/login");
+      } else {
+        toast.error(error || "Failed to update genres");
+      }
     } finally {
       setLoading(false);
     }

@@ -47,8 +47,6 @@ const UserHeader = () => {
   };
 
   const isActive = (path) => location.pathname === path;
-  console.log(user)
-
   return (
     <div className="w-full flex justify-between items-center px-4 py-4 relative">
       {isHomePage ? (

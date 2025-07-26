@@ -1,11 +1,11 @@
+// Register.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MdOutlineEmail } from "react-icons/md";
 import { TbLockPassword, TbUserSquareRounded } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { FaChevronDown } from "react-icons/fa6";
 import { assets } from "../assets/assets";
-import { registerUser } from "../features/auth/authSlice";
+import { registerUser, getMyProfile } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
@@ -13,7 +13,7 @@ import { Helmet } from "react-helmet";
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, isAuthenticated, user } = useSelector((state) => state.auth); // Add user to selector
+  const { status, isAuthenticated, user } = useSelector((state) => state.auth);
   const btnLoading = status === "loading";
 
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [formErrors, setFormErrors] = useState({});
-  const [justRegistered, setJustRegistered] = useState(false); // Track registration status
+  const [justRegistered, setJustRegistered] = useState(false);
 
   const [passwordCriteria, setPasswordCriteria] = useState({
     length: false,
@@ -31,21 +31,25 @@ const Register = () => {
     symbol: false,
   });
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !justRegistered) {
       navigate("/");
     }
   }, [isAuthenticated, navigate, justRegistered]);
 
-  // Handle post-registration redirect
   useEffect(() => {
     if (justRegistered && isAuthenticated && user) {
-      // Ensure user data is loaded before redirecting
-      localStorage.setItem('justRegistered', 'true');
-      toast.success("Registration successful! Please select your favorite genres.");
-      navigate("/genres");
-      setJustRegistered(false); // Reset flag
+      // Add a small delay to ensure token is properly set
+      const timer = setTimeout(() => {
+        localStorage.setItem('justRegistered', 'true');
+        // Also store a timestamp for token validation
+        localStorage.setItem('registrationTime', Date.now().toString());
+        toast.success("Registration successful! Please select your favorite genres.");
+        navigate("/genres");
+        setJustRegistered(false);
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [justRegistered, isAuthenticated, user, navigate]);
 
@@ -70,7 +74,7 @@ const Register = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validate();
     if (Object.keys(errors).length > 0) {
@@ -78,19 +82,18 @@ const Register = () => {
       return;
     }
 
-    // Clear any existing form errors
     setFormErrors({});
 
-    dispatch(registerUser({ email, password, name }))
-      .unwrap()
-      .then(() => {
-        // Set local flag to track successful registration
-        setJustRegistered(true);
-      })
-      .catch((err) => {
-        console.error("Registration error:", err);
-        toast.error(err || "Registration failed");
-      });
+    try {
+      await dispatch(registerUser({ email, password, name })).unwrap();
+      
+      // Fetch user profile immediately after registration to ensure user data is loaded
+      await dispatch(getMyProfile()).unwrap();
+      
+      setJustRegistered(true);
+    } catch (err) {
+      toast.error(err || "Registration failed");
+    }
   };
 
   const googleRegister = () => {
