@@ -19,7 +19,6 @@ import {
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 
 // Components
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
@@ -82,9 +81,13 @@ const Home = () => {
     dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
   }, [dispatch, similarPage]);
 
-  useEffect(() => {
-    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }));
-  }, [dispatch, albumsPage]);
+ useEffect(() => {
+  dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }))
+    .then(() => {
+      setLoadingMore((prev) => ({ ...prev, albums: false }));
+    });
+}, [dispatch, albumsPage]);
+
 
   useEffect(() => {
     dispatch(
@@ -188,11 +191,11 @@ const Home = () => {
 
     <>
     <Helmet>
-      <title>RESET MUSIC STREAMING PLATFORM</title>
+      <title>MUSICRESET - RESET MUSIC STREAMING PLATFORM</title>
       <meta name="robots" content="index, follow" />
     <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
     </Helmet>
-    <UserLayout>
+    
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
@@ -308,12 +311,13 @@ const Home = () => {
                     />
                   </div>
                 ))}
-            {loadingMore.albums && albumsPage < albumsTotalPages && (
-              <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
-                <Skeleton height={160} width={160} className="rounded-xl" />
-                <Skeleton width={100} height={12} />
-              </div>
-            )}
+            {loadingMore.albums && albumsPage < albumsTotalPages ? (
+  <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
+    <Skeleton height={160} width={160} className="rounded-xl" />
+    <Skeleton width={100} height={12} />
+  </div>
+) : null}
+
           </div>
 
           {/* Similar Artist Section */}
@@ -505,7 +509,7 @@ const Home = () => {
           />
         )}
       </SkeletonTheme>
-    </UserLayout>
+    
     </>
   );
 };

@@ -52,19 +52,21 @@ const Login = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/users/facebook`;
   };
 
+
   return (
     <>
-    <Helmet>
-    <title>Login to RESET Music | Stream Ambient & Experimental Music</title>
-    <meta name="robots" content="index, follow" />
-    <meta name="description" content="Access your RESET account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
-    </Helmet>
+  <Helmet>
+  <title>Login to MusicReset | Stream Ambient & Experimental Music</title>
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Access your MusicReset account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
+</Helmet>
+
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <IconHeader />
 
       <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center">
         <h1 className="text-4xl mb-6">
-          <span className="text-blue-700">login</span> to reset
+          <span className="text-blue-700">login</span> to musicreset
         </h1>
 
         <form

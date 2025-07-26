@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
 import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
@@ -96,7 +94,7 @@ export default function Album() {
   const artistColor = getArtistColor(artistName);
 
   return (
-    <UserLayout>
+   <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen text-white px-8 pt-10 pb-8">
@@ -242,6 +240,6 @@ export default function Album() {
           )}
         </div>
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 }

@@ -45,14 +45,45 @@ const FavouriteGen = () => {
   const [selected, setSelected] = useState(user?.preferredGenres || []);
   const [loading, setLoading] = useState(false);
 
-  // Redirect if not authenticated or already has genres
+  // Check if user just registered and ensure proper authentication
   useEffect(() => {
+    const justRegistered = localStorage.getItem('justRegistered');
+    
+    // Debug logs to track what's happening
+    console.log("User in genre selection:", user);
+    console.log("Is authenticated:", isAuthenticated);
+    console.log("Just registered:", justRegistered);
+    console.log("User ID:", user?._id || user?.id);
+    
     if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to login");
       navigate("/login");
-    } else if (user?.preferredGenres?.length > 0) {
-      navigate("/");
+      return;
     }
-  }, [isAuthenticated, user, navigate]);
+
+    // If user just registered but user data is not complete, fetch profile
+    if (justRegistered && (!user || !user._id)) {
+      console.log("Just registered but user data incomplete, fetching profile");
+      dispatch(getMyProfile()).catch((error) => {
+        console.error("Failed to get user profile:", error);
+        navigate("/login");
+      });
+      return;
+    }
+    
+    // If user didn't just register and already has genres, redirect to home
+    if (!justRegistered && user?.preferredGenres?.length > 0) {
+      console.log("User already has genres, redirecting to home");
+      navigate("/");
+      return;
+    }
+
+    // Set existing preferred genres if any
+    if (user?.preferredGenres?.length > 0) {
+      console.log("Setting existing preferred genres:", user.preferredGenres);
+      setSelected(user.preferredGenres);
+    }
+  }, [isAuthenticated, user, navigate, dispatch]);
 
   const handleSelection = (id) => {
     if (selected.includes(id)) {
@@ -70,11 +101,26 @@ const FavouriteGen = () => {
 
     try {
       setLoading(true);
+      
+      console.log("Starting genre update process");
+      console.log("Current user before update:", user);
+      
+      // Update preferred genres
       await dispatch(updatePreferredGenres(selected)).unwrap();
+      console.log("Genres updated successfully");
+      
+      // Refresh user profile to get updated data  
       await dispatch(getMyProfile()).unwrap();
+      console.log("Profile refreshed after genre update");
+      
+      // Clear the registration flag
+      localStorage.removeItem('justRegistered');
+      console.log("Registration flag cleared");
+      
       toast.success("Genres saved successfully!");
-      navigate("/", { replace: true }); // Use replace to prevent going back to genres page
+      navigate("/", { replace: true });
     } catch (error) {
+      console.error("Error in handleSubmit:", error);
       toast.error(error || "Failed to update genres");
     } finally {
       setLoading(false);

@@ -9,10 +9,8 @@ import {
   selectTotalPages,
 } from "../features/songs/songSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
-import UserLayout from "../components/UserLayout";
 import UserHeader from "../components/UserHeader";
 import RecentPlays from "../components/RecentPlays";
-import AlbumCard from "../components/AlbumCard";
 import SongList from "../components/SongList";
 import GenreCard from "../components/GenreCard";
 import { LuSquareChevronRight } from "react-icons/lu";
@@ -189,7 +187,7 @@ const Browse = () => {
   const genreChunks = chunkGenres(genreData);
 
   return (
-    <UserLayout>
+    <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
@@ -412,7 +410,7 @@ const Browse = () => {
           </div>
         </div>
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 };
 

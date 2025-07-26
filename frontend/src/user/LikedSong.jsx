@@ -16,7 +16,6 @@ import {
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { toggleLikeSong } from "../features/auth/authSlice";
 import SongList from "../components/user/SongList";
-import UserLayout from "../components/user/UserLayout";
 import { formatDuration } from "../utills/helperFunctions";
 import UserHeader from "../components/user/UserHeader";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
@@ -95,7 +94,7 @@ const LikedSongs = () => {
   const hasMore = page < pages && localSongs.length < total;
 
   return (
-    <UserLayout>
+    <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen w-[96%] py-8 px-4">
@@ -156,7 +155,7 @@ const LikedSongs = () => {
                       song.album?.coverImage ||
                       "/images/placeholder.png"
                     }
-                    songName={song.title}
+                    songName={song.title.length > 9 ? `${song.title.slice(0, 9)}` : song.title}
                     singerName={song.artist?.name || song.singer}
                     seekTime={formatDuration(song.duration)}
                     onPlay={() => handlePlaySong(song)}
@@ -185,7 +184,7 @@ const LikedSongs = () => {
           )}
         </div>
       </SkeletonTheme>
-    </UserLayout>
+    </>
   );
 };
 

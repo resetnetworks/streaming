@@ -8,7 +8,6 @@ import {
   selectArtistError,
   selectArtistPagination,
 } from "../features/artists/artistsSelectors";
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -59,7 +58,7 @@ const handleNextPage = () => {
       <meta name="robots" content="index, follow" />
     <meta name="description" content="Explore a diverse range of music artists on RESET. Discover and stream experimental, instrumental, and ambient music by talented creators from around the world." />
     </Helmet>
-    <UserLayout>
+   
       <UserHeader />
       <div className="p-4 md:p-6 lg:p-8">
         <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">Artists</h2>
@@ -158,7 +157,7 @@ const handleNextPage = () => {
           </>
         )}
       </div>
-    </UserLayout>
+  
     </>
   );
 };

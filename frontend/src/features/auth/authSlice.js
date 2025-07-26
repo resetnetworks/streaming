@@ -6,28 +6,52 @@ import { toast } from "sonner";
 const storeAuthToLocal = (user) => {
   if (!user) return;
 
+  // Get existing user data from localStorage
+  const existingUser = getInitialUser();
+
   const {
     _id,
+    id,
     name,
     email,
     profileImage,
     purchasedSongs = [],
     purchasedAlbums = [],
     likedsong = [],
+    role,
+    preferredGenres = [],
+    createdAt,
+    updatedAt,
+    playlist = [],
+    purchaseHistory = [],
+    ...otherFields
   } = user;
 
-  localStorage.setItem(
-    "user",
-    JSON.stringify({
-      _id,
-      name,
-      email,
-      profileImage,
-      purchasedSongs,
-      purchasedAlbums,
-      likedsong,
-    })
-  );
+  // Merge with existing data to preserve all fields
+  const userToStore = {
+    // Use existing data as fallback
+    ...existingUser,
+    // Override with new data
+    _id: _id || id || existingUser?._id,
+    id: id || _id || existingUser?.id,
+    name: name || existingUser?.name,
+    email: email || existingUser?.email,
+    profileImage: profileImage !== undefined ? profileImage : existingUser?.profileImage,
+    role: role || existingUser?.role,
+    preferredGenres: preferredGenres.length > 0 ? preferredGenres : existingUser?.preferredGenres || [],
+    createdAt: createdAt || existingUser?.createdAt,
+    updatedAt: updatedAt || existingUser?.updatedAt,
+    playlist: playlist.length > 0 ? playlist : existingUser?.playlist || [],
+    purchaseHistory: purchaseHistory.length > 0 ? purchaseHistory : existingUser?.purchaseHistory || [],
+    purchasedSongs,
+    purchasedAlbums,
+    likedsong,
+    ...otherFields
+  };
+
+  console.log("Storing user to localStorage:", userToStore); // Debug log
+
+  localStorage.setItem("user", JSON.stringify(userToStore));
 };
 
 const clearAuthFromLocal = () => {
@@ -52,6 +76,7 @@ export const registerUser = createAsyncThunk(
     try {
       const res = await axios.post("/users/register", userData);
       localStorage.setItem("token", res.data.token);
+      console.log("Register response:", res.data.user); // Debug log
       storeAuthToLocal(res.data.user);
       return res.data.user;
     } catch (err) {
@@ -68,6 +93,7 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await axios.post("/users/login", userData);
       localStorage.setItem("token", res.data.token);
+      console.log("Login response:", res.data.user); // Debug log
       storeAuthToLocal(res.data.user);
       return res.data.user;
     } catch (err) {
@@ -81,6 +107,7 @@ export const loginUser = createAsyncThunk(
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
     const res = await axios.get("/users/me");
+    console.log("getMyProfile response:", res.data); // Debug log
     storeAuthToLocal(res.data);
     return res.data;
   } catch (err) {
@@ -109,6 +136,7 @@ export const updatePreferredGenres = createAsyncThunk(
   async (genres, thunkAPI) => {
     try {
       const res = await axios.put("/users/update-genres", { genres });
+      console.log("updatePreferredGenres response:", res.data); // Debug log
       return res.data.preferredGenres;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -182,11 +210,13 @@ const authSlice = createSlice({
       })
       .addCase(getMyProfile.fulfilled, (state, action) => {
         const user = action.payload;
+        // Merge with existing user data to preserve all fields
         state.user = {
-          ...user,
-          purchasedSongs: user.purchasedSongs || [],
-          purchasedAlbums: user.purchasedAlbums || [],
-          likedsong: user.likedsong || [],
+          ...state.user, // Preserve existing Redux state
+          ...user, // Override with new API data
+          purchasedSongs: user.purchasedSongs || state.user?.purchasedSongs || [],
+          purchasedAlbums: user.purchasedAlbums || state.user?.purchasedAlbums || [],
+          likedsong: user.likedsong || state.user?.likedsong || [],
         };
         state.isAuthenticated = true;
         state.status = "succeeded";
@@ -205,6 +235,8 @@ const authSlice = createSlice({
       .addCase(updatePreferredGenres.fulfilled, (state, action) => {
         if (state.user) {
           state.user.preferredGenres = action.payload;
+          // Update localStorage with current complete state
+          storeAuthToLocal(state.user);
         }
         state.status = "succeeded";
         state.message = "Preferred genres updated successfully";
@@ -224,6 +256,8 @@ const authSlice = createSlice({
           : [...state.user.likedsong, songId];
 
         state.message = message;
+        // Update localStorage with current state
+        storeAuthToLocal(state.user);
       })
       .addMatcher(
         (action) =>
