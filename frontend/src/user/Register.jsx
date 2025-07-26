@@ -8,6 +8,7 @@ import { assets } from "../assets/assets";
 import { registerUser, getMyProfile } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Helmet } from "react-helmet";
 
 const monthMap = {
   January: "01",
@@ -98,11 +99,17 @@ const Register = () => {
   };
 
   return (
+    <>
+    <Helmet>
+      <title>Register | RESET MUSIC STREAMING PLATFORM</title>
+      <meta name="robots" content="index, follow" />
+      <meta name="description" content="Create your RESET Music account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening." />
+    </Helmet>
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
       <div className="gradiant-line"></div>
 
-      <div className="text-white mt-auto mb-auto flex flex-col justify-around items-center">
+      <div className="text-white sm:mt-auto mt-0 mb-auto flex flex-col justify-around items-center">
         <h1 className="text-4xl my-6">
           <span className="text-blue-700">sign up</span>, it's free
         </h1>
@@ -226,77 +233,6 @@ const Register = () => {
             </p>
           )}
 
-          {/* DOB (Optional) */}
-          <div className="w-full mb-1 mt-5">
-            <label htmlFor="dob" className="md:text-xl text-lg flex items-end gap-2">
-              date of birth <span className="text-sm text-gray-400">(optional)</span>
-            </label>
-          </div>
-          <div className="w-full flex justify-between gap-2">
-            {/* Month */}
-            <div className="relative flex-1">
-              <select
-                id="dob-month"
-                className="input-login w-full appearance-none bg-white text-black pr-8"
-                value={dob.month}
-                onChange={(e) => setDob((prev) => ({ ...prev, month: e.target.value }))}
-                disabled={btnLoading}
-              >
-                <option value="">month</option>
-                {Object.keys(monthMap).map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-blue-600">
-                <FaChevronDown />
-              </div>
-            </div>
-
-            {/* Day */}
-            <div className="relative flex-1">
-              <select
-                id="dob-day"
-                className="input-login w-full appearance-none bg-white text-black pr-8"
-                value={dob.day}
-                onChange={(e) => setDob((prev) => ({ ...prev, day: e.target.value }))}
-                disabled={btnLoading}
-              >
-                <option value="">day</option>
-                {Array.from({ length: 31 }, (_, i) => (
-                  <option key={i + 1} value={String(i + 1)}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-blue-600">
-                <FaChevronDown />
-              </div>
-            </div>
-
-            {/* Year */}
-            <div className="relative flex-1">
-              <select
-                id="dob-year"
-                className="input-login w-full appearance-none bg-white text-black pr-8"
-                value={dob.year}
-                onChange={(e) => setDob((prev) => ({ ...prev, year: e.target.value }))}
-                disabled={btnLoading}
-              >
-                <option value="">year</option>
-                {Array.from({ length: 100 }, (_, i) => (
-                  <option key={i} value={2025 - i}>
-                    {2025 - i}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-blue-600">
-                <FaChevronDown />
-              </div>
-            </div>
-          </div>
-
           <div className="button-wrapper mt-9 shadow-sm shadow-black">
             <button
               className="custom-button"
@@ -356,6 +292,7 @@ const Register = () => {
         </p>
       </div>
     </section>
+    </>
   );
 };
 

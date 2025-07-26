@@ -49,6 +49,11 @@ function App() {
             {/* Public */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
+             <Route path="/help" element={<Pages.Help />} />
+             <Route path="/data-deletion" element={<Pages.DataDeletion />}/>
+             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />}/>
+
+             {/* User Routes */}
             <Route
               path="/register"
               element={
@@ -57,6 +62,8 @@ function App() {
                 </PublicRoute>
               }
             />
+
+           
             <Route
               path="/login"
               element={
@@ -124,17 +131,8 @@ function App() {
                 </RedirectedProtectedRoute>
               }
             />
-            <Route
-              path="/admin/payments/:artistId"
-              element={
-                <AdminRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.ArtistPayments />
-                </AdminRoute>
-              }
-            />
+
+           
             <Route
               path="/purchases"
               element={
@@ -194,8 +192,19 @@ function App() {
                 </AdminRoute>
               }
             />
+            <Route
+              path="/admin/payments/:artistId"
+              element={
+                <AdminRoute
+                  isAuthenticated={isAuthenticated}
+                  user={user}
+                >
+                  <Pages.ArtistPayments />
+                </AdminRoute>
+              }
+            />
 
-            <Route path="/help" element={<Pages.Help />} />
+           
 
             {/* Fallback */}
             <Route

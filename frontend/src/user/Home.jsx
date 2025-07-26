@@ -24,6 +24,7 @@ import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
 import SongList from "../components/user/SongList";
+import { Helmet } from "react-helmet";
 
 // Utils
 import { formatDuration } from "../utills/helperFunctions";
@@ -184,6 +185,13 @@ const Home = () => {
   );
 
   return (
+
+    <>
+    <Helmet>
+      <title>RESET MUSIC STREAMING PLATFORM</title>
+      <meta name="robots" content="index, follow" />
+    <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
+    </Helmet>
     <UserLayout>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
@@ -223,10 +231,10 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 mt-2 sm:mt-0 py-1 rounded"
                             onClick={() => handlePurchaseClick(song, "song")}
                           >
-                            Buy for ₹{song.price}
+                            ₹{song.price}
                           </button>
                         )
                       ) : (
@@ -289,10 +297,10 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded"
                             onClick={() => handlePurchaseClick(album, "album")}
                           >
-                            Buy for ₹{album.price}
+                            ₹{album.price}
                           </button>
                         )
                       }
@@ -498,6 +506,7 @@ const Home = () => {
         )}
       </SkeletonTheme>
     </UserLayout>
+    </>
   );
 };
 

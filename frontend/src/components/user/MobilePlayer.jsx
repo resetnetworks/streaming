@@ -318,183 +318,195 @@ const MobilePlayer = () => {
       </div>
 
       {/* Enhanced Full Player with DJ/Night Club Theme */}
+     {/* Full Player with Blue & Black Theme */}
+<div
+  className={`fixed inset-0 z-50 bg-gradient-to-br from-black via-blue-900 to-black text-white flex flex-col items-center px-4 py-6 transition-transform duration-500 ease-in-out transform ${
+    isFullPlayerOpen ? "translate-y-0" : "translate-y-full"
+  }`}
+>
+  {/* Glowing blue border effect */}
+  <div
+    className="absolute inset-0 border-8 border-transparent animate-pulse pointer-events-none"
+    style={{
+      boxShadow: "0 0 20px 5px rgba(59, 130, 246, 0.5)", // blue-500
+    }}
+  ></div>
+
+  {/* Header */}
+  <div className="flex w-full justify-between items-center mb-4">
+    <button
+      onClick={() => setIsFullPlayerOpen(false)}
+      className="p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all"
+    >
+      <IoIosArrowDown className="text-xl" />
+    </button>
+
+    <div className="text-center flex-1 px-4">
+      <div className="text-sm font-medium text-blue-400">NOW PLAYING</div>
+      <div className="text-lg font-bold truncate max-w-xs mx-auto">
+        {currentSong?.title}
+      </div>
+    </div>
+
+    <button
+      onClick={handleLikeToggle}
+      className="p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all"
+    >
+      {isLiked ? (
+        <BsHeartFill className="text-xl text-blue-400 animate-pulse" />
+      ) : (
+        <BsHeart className="text-xl text-gray-400" />
+      )}
+    </button>
+  </div>
+
+  {/* Artwork */}
+  <div
+    ref={artworkRef}
+    className={`relative ${isArtworkExpanded ? "w-72 h-72" : "w-64 h-64"} rounded-full border-4 border-blue-500 shadow-lg transition-all duration-500 mb-8 overflow-hidden cursor-pointer`}
+    onClick={toggleArtworkSize}
+    style={{
+      boxShadow: "0 0 30px rgba(59, 130, 246, 0.7)",
+      background:
+        "radial-gradient(circle, rgba(59,130,246,0.2) 0%, rgba(0,0,0,0) 70%)",
+    }}
+  >
+    <img
+      src={currentSong?.coverImage}
+      className="w-full h-full object-cover"
+      alt="Album cover"
+    />
+
+    {/* Equalizer */}
+    {isPlaying && (
+      <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent flex justify-center items-end gap-1 px-4">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="w-2 bg-blue-400 rounded-t-sm"
+            style={{
+              height: `${Math.random() * 100}%`,
+              animation: `equalizer 1s infinite ${i * 0.1}s alternate`,
+            }}
+          ></div>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Song Info */}
+  <div className="w-full text-center mb-6">
+    <h2 className="text-2xl font-bold truncate px-10">
+      {currentSong?.title}
+    </h2>
+    <p className="text-blue-300">{currentSong?.singer}</p>
+  </div>
+
+  {/* Progress Bar */}
+  <div className="w-full px-4 mb-6">
+    <div className="relative h-3 mb-2 group">
+      <div className="absolute inset-0 bg-gray-800 rounded-full overflow-hidden"></div>
       <div
-        className={`fixed inset-0 z-50 bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white flex flex-col items-center px-4 py-6 transition-transform duration-500 ease-in-out transform ${
-          isFullPlayerOpen ? "translate-y-0" : "translate-y-full"
+        className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+        style={{
+          width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+        }}
+      ></div>
+      <div
+        className="absolute top-0 left-0 h-full w-full rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{
+          boxShadow: "0 0 10px rgba(59,130,246,0.7)",
+          width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+        }}
+      ></div>
+      <input
+        type="range"
+        min="0"
+        max={duration || 0}
+        value={currentTime}
+        onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
+        className="absolute w-full h-full opacity-0 cursor-pointer z-10"
+      />
+    </div>
+    <div className="flex justify-between text-xs text-gray-400">
+      <span>{formatTime(currentTime)}</span>
+      <span>{formatTime(duration)}</span>
+    </div>
+  </div>
+
+  {/* Controls */}
+  <div className="w-full max-w-md">
+    <div className="flex justify-between items-center px-6">
+      <button
+        onClick={handleFeatureSoon}
+        className="p-3 text-gray-400 hover:text-white transition-colors"
+      >
+        <IoMdShuffle className="text-2xl" />
+      </button>
+
+      <button
+        onClick={handlePrev}
+        className="p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-all"
+      >
+        <RiSkipLeftFill className="text-3xl" />
+      </button>
+
+      <button
+        onClick={handleTogglePlay}
+        className="p-5 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full shadow-lg hover:from-blue-500 hover:to-cyan-400 transition-all transform hover:scale-105"
+      >
+        {streamError?.songId === currentSong?._id ? (
+          <FaLock className="text-xl text-white" />
+        ) : isLoading ? (
+          <div className="spinner h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        ) : isPlaying ? (
+          <FaPause className="text-xl" />
+        ) : (
+          <FaPlay className="text-xl" />
+        )}
+      </button>
+
+      <button
+        onClick={handleNext}
+        className="p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-all"
+      >
+        <RiSkipRightFill className="text-3xl" />
+      </button>
+
+      <button
+        onClick={() => setIsLooping(!isLooping)}
+        className={`p-3 transition-colors ${
+          isLooping ? "text-blue-500" : "text-gray-400"
         }`}
       >
-        {/* Glowing border effect */}
-        <div className="absolute inset-0 border-8 border-transparent animate-pulse pointer-events-none" style={{
-          boxShadow: "0 0 20px 5px rgba(139, 92, 246, 0.5)"
-        }}></div>
-        
-        {/* Header with close button */}
-        <div className="flex w-full justify-between items-center mb-4">
-          <button 
-            onClick={() => setIsFullPlayerOpen(false)}
-            className="p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all"
-          >
-            <IoIosArrowDown className="text-xl" />
-          </button>
-          
-          <div className="text-center flex-1 px-4">
-            <div className="text-sm font-medium text-purple-300">NOW PLAYING</div>
-            <div className="text-lg font-bold truncate max-w-xs mx-auto">
-              {currentSong?.title}
-            </div>
-          </div>
-          
-          <button 
-            onClick={handleLikeToggle}
-            className="p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all"
-          >
-            {isLiked ? (
-              <BsHeartFill className="text-xl text-pink-500 animate-pulse" />
-            ) : (
-              <BsHeart className="text-xl text-gray-400" />
-            )}
-          </button>
-        </div>
+        <IoIosInfinite className="text-2xl" />
+      </button>
+    </div>
+  </div>
 
-        {/* Animated Artwork with Equalizer Effect */}
-        <div 
-          ref={artworkRef}
-          className={`relative ${isArtworkExpanded ? 'w-72 h-72' : 'w-64 h-64'} rounded-full border-4 border-purple-500 shadow-lg transition-all duration-500 mb-8 overflow-hidden cursor-pointer`}
-          onClick={toggleArtworkSize}
-          style={{
-            boxShadow: '0 0 30px rgba(139, 92, 246, 0.7)',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, rgba(0,0,0,0) 70%)'
-          }}
-        >
-          <img
-            src={currentSong?.coverImage}
-            className="w-full h-full object-cover"
-            alt="Album cover"
-          />
-          
-          {/* Equalizer bars animation when playing */}
-          {isPlaying && (
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent flex justify-center items-end gap-1 px-4">
-              {[...Array(12)].map((_, i) => (
-                <div 
-                  key={i}
-                  className="w-2 bg-purple-400 rounded-t-sm"
-                  style={{
-                    height: `${Math.random() * 100}%`,
-                    animation: `equalizer 1s infinite ${i * 0.1}s alternate`,
-                  }}
-                ></div>
-              ))}
-            </div>
-          )}
-        </div>
+  {/* Footer Visualizer */}
+  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent flex justify-center items-end gap-1 px-4">
+    {[...Array(30)].map((_, i) => (
+      <div
+        key={i}
+        className="w-1 bg-blue-400 rounded-t-sm"
+        style={{
+          height: `${Math.random() * 100}%`,
+          animation: `equalizer 1.5s infinite ${i * 0.05}s alternate`,
+        }}
+      ></div>
+    ))}
+  </div>
 
-        {/* Song Info */}
-        <div className="w-full text-center mb-6">
-          <h2 className="text-2xl font-bold truncate px-10">{currentSong?.title}</h2>
-          <p className="text-purple-300">{currentSong?.singer}</p>
-        </div>
+  {/* CSS Animation */}
+  <style>{`
+    @keyframes equalizer {
+      0% { height: 10%; }
+      100% { height: 100%; }
+    }
+  `}</style>
+</div>
 
-        {/* Progress Bar with Neon Effect */}
-        <div className="w-full px-4 mb-6">
-          <div className="relative h-3 mb-2 group">
-            <div className="absolute inset-0 bg-gray-800 rounded-full overflow-hidden"></div>
-            <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-              style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-            ></div>
-            <div
-              className="absolute top-0 left-0 h-full w-full rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{
-                boxShadow: '0 0 10px rgba(219, 39, 119, 0.7)',
-                width: `${duration ? (currentTime / duration) * 100 : 0}%`
-              }}
-            ></div>
-            <input
-              type="range"
-              min="0"
-              max={duration || 0}
-              value={currentTime}
-              onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
-              className="absolute w-full h-full opacity-0 cursor-pointer z-10"
-            />
-          </div>
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-        </div>
-
-        {/* DJ Style Controls */}
-        <div className="w-full max-w-md">
-          <div className="flex justify-between items-center px-6">
-            <button 
-              onClick={handleFeatureSoon}
-              className="p-3 text-gray-400 hover:text-white transition-colors"
-            >
-              <IoMdShuffle className="text-2xl" />
-            </button>
-            
-            <button 
-              onClick={handlePrev}
-              className="p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-all"
-            >
-              <RiSkipLeftFill className="text-3xl" />
-            </button>
-            
-            <button
-              onClick={handleTogglePlay}
-              className="p-5 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full shadow-lg hover:from-purple-500 hover:to-pink-500 transition-all transform hover:scale-105"
-            >
-              {streamError?.songId === currentSong?._id ? (
-                <FaLock className="text-xl text-white" />
-              ) : isLoading ? (
-                <div className="spinner h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : isPlaying ? (
-                <FaPause className="text-xl" />
-              ) : (
-                <FaPlay className="text-xl" />
-              )}
-            </button>
-            
-            <button 
-              onClick={handleNext}
-              className="p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-all"
-            >
-              <RiSkipRightFill className="text-3xl" />
-            </button>
-            
-            <button 
-              onClick={() => setIsLooping(!isLooping)}
-              className={`p-3 transition-colors ${isLooping ? 'text-purple-500' : 'text-gray-400'}`}
-            >
-              <IoIosInfinite className="text-2xl" />
-            </button>
-          </div>
-        </div>
-
-        {/* Footer with Visualizer */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent flex justify-center items-end gap-1 px-4">
-          {[...Array(30)].map((_, i) => (
-            <div 
-              key={i}
-              className="w-1 bg-purple-400 rounded-t-sm"
-              style={{
-                height: `${Math.random() * 100}%`,
-                animation: `equalizer 1.5s infinite ${i * 0.05}s alternate`,
-              }}
-            ></div>
-          ))}
-        </div>
-
-        {/* CSS for equalizer animation */}
-       <style>{`
-  @keyframes equalizer {
-    0% { height: 10%; }
-    100% { height: 100%; }
-  }
-`}</style>
-      </div>
     </>
   );
 };

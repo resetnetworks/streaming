@@ -1,4 +1,6 @@
 import { lazy } from "react";
+
+//User pages routes
 export const Register = lazy(() => import("../user/Register"));
 export const Login = lazy(() => import("../user/Login"));
 export const ForgotPassword = lazy(() => import("../user/ForgotPassword"));
@@ -11,9 +13,14 @@ export const LikedSong = lazy(() => import("../user/LikedSong"));
 export const Album = lazy(() => import("../user/Album"));
 export const Search = lazy(() => import("../user/Search"));
 export const Library = lazy(() => import("../user/Library"));
-export const Admin = lazy(() => import("../admin/Admin"));
 export const PaymentSuccess = lazy(() => import("../user/PaymentSuccess"));
 export const PaymentFailure = lazy(() => import("../user/PaymentFailure"));
 export const Help = lazy(() => import("../user/Help"));
 export const PaymentHistory = lazy(() => import("../user/PaymentHistory"));
+export const DataDeletion = lazy(() => import("../user/DataDeletion"));
+export const PrivacyPolicy = lazy(() => import("../user/PrivacyPolicy"));
+
+
+// Admin pages routes
 export const ArtistPayments = lazy(() => import("../admin/ArtistPayments"));
+export const Admin = lazy(() => import("../admin/Admin"));
