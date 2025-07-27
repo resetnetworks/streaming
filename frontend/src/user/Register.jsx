@@ -5,7 +5,7 @@ import { TbLockPassword, TbUserSquareRounded } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FaChevronDown } from "react-icons/fa6";
 import { assets } from "../assets/assets";
-import { registerUser, getMyProfile } from "../features/auth/authSlice";
+import { registerUser } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
@@ -82,13 +82,19 @@ const Register = () => {
 
     dispatch(registerUser({ email, password, name, dob: finalDOB }))
       .unwrap()
-      .then(() => {
-        dispatch(getMyProfile());
+      .then((user) => {
+        toast.success("Registration successful!");
       })
       .catch((err) => {
         toast.error(err || "Registration failed");
       });
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard"); // or "/"
+    }
+  }, [isAuthenticated, navigate]);
 
   const googleRegister = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/users/google`;
@@ -100,11 +106,14 @@ const Register = () => {
 
   return (
     <>
-    <Helmet>
-  <title>Register | MusicReset Streaming Platform</title>
-  <meta name="robots" content="index, follow" />
-  <meta name="description" content="Create your MusicReset account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening." />
-</Helmet>
+      <Helmet>
+        <title>Register | MusicReset Streaming Platform</title>
+        <meta name="robots" content="index, follow" />
+        <meta
+          name="description"
+          content="Create your MusicReset account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening."
+        />
+      </Helmet>
 
     <section className="w-full min-h-screen bg-image flex flex-col items-center">
       <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
