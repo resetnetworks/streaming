@@ -6,9 +6,21 @@ import { toast } from "sonner";
 // 📦 Local Storage Helpers
 // ====================
 
+const getInitialUser = () => {
+  try {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  } catch (err) {
+    console.error("Failed to parse user from localStorage", err);
+    return null;
+  }
+};
+
 const storeAuthToLocal = (user) => {
   if (!user) return;
   
+  // ✅ FIX: Get existing user from localStorage first
+  const existingUser = getInitialUser();
   
   const {
     _id,
@@ -50,8 +62,7 @@ const storeAuthToLocal = (user) => {
     ...otherFields
   };
 
-  console.log("Storing user to localStorage:", userToStore); // Debug log
-
+  console.log("Storing user to localStorage:", userToStore);
   localStorage.setItem("user", JSON.stringify(userToStore));
 };
 
@@ -59,16 +70,6 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
   localStorage.removeItem("subscribedArtists");
-};
-
-const getInitialUser = () => {
-  try {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
-  } catch (err) {
-    console.error("Failed to parse user from localStorage", err);
-    return null;
-  }
 };
 
 // ====================
@@ -81,7 +82,7 @@ export const registerUser = createAsyncThunk(
     try {
       const res = await axios.post("/users/register", userData);
       localStorage.setItem("token", res.data.token);
-      console.log("Register response:", res.data.user); // Debug log
+      console.log("Register response:", res.data.user);
       storeAuthToLocal(res.data.user);
       return res.data.user;
     } catch (err) {
@@ -98,7 +99,7 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await axios.post("/users/login", userData);
       localStorage.setItem("token", res.data.token);
-      console.log("Login response:", res.data.user); // Debug log
+      console.log("Login response:", res.data.user);
       storeAuthToLocal(res.data.user);
       return res.data.user;
     } catch (err) {
@@ -134,7 +135,7 @@ export const updatePreferredGenres = createAsyncThunk(
   async (genres, thunkAPI) => {
     try {
       const res = await axios.put("/users/update-genres", { genres });
-      console.log("updatePreferredGenres response:", res.data); // Debug log
+      console.log("updatePreferredGenres response:", res.data);
       return res.data.preferredGenres;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
@@ -211,9 +212,7 @@ const authSlice = createSlice({
         state.message = "Logged in successfully";
       })
 
-      // ✅ FIXED - Preserve existing data
       .addCase(getMyProfile.fulfilled, (state, action) => {
-        
         // Current localStorage data को preserve करें
         const currentUser = state.user || {};
         
@@ -270,8 +269,6 @@ const authSlice = createSlice({
 
         storeAuthToLocal(state.user);
         state.message = message;
-        // Update localStorage with current state
-        storeAuthToLocal(state.user);
       })
 
       .addMatcher(

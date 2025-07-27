@@ -1,4 +1,3 @@
-// Register.jsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MdOutlineEmail } from "react-icons/md";
@@ -31,20 +30,21 @@ const Register = () => {
     symbol: false,
   });
 
+  // ✅ Only one navigation useEffect - handles existing users
   useEffect(() => {
     if (isAuthenticated && !justRegistered) {
       navigate("/");
     }
   }, [isAuthenticated, navigate, justRegistered]);
 
+  // ✅ Handles post-registration flow for new users
   useEffect(() => {
     if (justRegistered && isAuthenticated && user) {
-      // Add a small delay to ensure token is properly set
       const timer = setTimeout(() => {
         localStorage.setItem('justRegistered', 'true');
-        // Also store a timestamp for token validation
         localStorage.setItem('registrationTime', Date.now().toString());
-        toast.success("Registration successful! Please select your favorite genres.");
+        // ✅ Show specific message for new registration with user name
+        toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
         navigate("/genres");
         setJustRegistered(false);
       }, 100);
@@ -84,21 +84,16 @@ const Register = () => {
 
     setFormErrors({});
 
-    dispatch(registerUser({ email, password, name, dob: finalDOB }))
+    dispatch(registerUser({ email, password, name }))
       .unwrap()
-      .then((user) => {
-        toast.success("Registration successful!");
+      .then(() => {
+        // ✅ No duplicate toast here - handled in useEffect
+        setJustRegistered(true);
       })
       .catch((err) => {
         toast.error(err || "Registration failed");
       });
   };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard"); // or "/"
-    }
-  }, [isAuthenticated, navigate]);
 
   const googleRegister = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/users/google`;
@@ -176,9 +171,7 @@ const Register = () => {
               />
             </div>
             {formErrors.email && (
-              <p className="text-red-500 text-left w-full text-sm mt-1">
-                {formErrors.email}
-              </p>
+              <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.email}</p>
             )}
 
             {/* Password */}
@@ -242,29 +235,21 @@ const Register = () => {
               </span>
             </div>
             {formErrors.password && (
-              <p className="text-red-500 text-left w-full text-sm mt-1">
-                {formErrors.password}
-              </p>
+              <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.password}</p>
             )}
 
             <div className="button-wrapper mt-9 shadow-sm shadow-black">
-              <button
-                className="custom-button"
-                disabled={btnLoading}
-                type="submit"
-              >
+              <button className="custom-button" disabled={btnLoading} type="submit">
                 {btnLoading ? "Registering..." : "Create Account"}
               </button>
             </div>
 
-            {/* Or Sign Up With */}
             <div className="flex items-center w-64 my-8">
               <div className="flex-grow border-t border-gray-400"></div>
               <span className="mx-4 text-white text-sm">Or Sign up With</span>
               <div className="flex-grow border-t border-gray-400"></div>
             </div>
 
-            {/* Social Icons */}
             <div className="flex justify-around items-center md:w-64 w-52">
               <button
                 onClick={googleRegister}
