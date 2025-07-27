@@ -2,10 +2,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance.js";
 import { toast } from "sonner";
 
-// --- Helpers ---
+// ====================
+// 📦 Local Storage Helpers
+// ====================
+
 const storeAuthToLocal = (user) => {
   if (!user) return;
-
+  
+  
   const {
     _id,
     name,
@@ -40,12 +44,16 @@ const getInitialUser = () => {
   try {
     const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
-  } catch {
+  } catch (err) {
+    console.error("Failed to parse user from localStorage", err);
     return null;
   }
 };
 
-// --- Thunks ---
+// ====================
+// 🔄 Async Thunks
+// ====================
+
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (userData, thunkAPI) => {
@@ -81,7 +89,6 @@ export const loginUser = createAsyncThunk(
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
     const res = await axios.get("/users/me");
-    storeAuthToLocal(res.data);
     return res.data;
   } catch (err) {
     clearAuthFromLocal();
@@ -89,20 +96,15 @@ export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   }
 });
 
-export const logoutUser = createAsyncThunk(
-  "auth/logout",
-  async (_, thunkAPI) => {
-    try {
-      const res = await axios.post("/users/logout");
-      clearAuthFromLocal();
-      return res.data.message;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || err.message
-      );
-    }
+export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
+  try {
+    const res = await axios.post("/users/logout");
+    clearAuthFromLocal();
+    return res.data.message;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 export const updatePreferredGenres = createAsyncThunk(
   "auth/updatePreferredGenres",
@@ -111,9 +113,7 @@ export const updatePreferredGenres = createAsyncThunk(
       const res = await axios.put("/users/update-genres", { genres });
       return res.data.preferredGenres;
     } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || err.message
-      );
+      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
@@ -125,25 +125,32 @@ export const toggleLikeSong = createAsyncThunk(
       const res = await axios.put(`/users/likedsong/${songId}`);
       return { songId, message: res.data.message };
     } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || err.message
-      );
+      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
-// --- Initial State ---
+// ====================
+// 🧠 Initial State
+// ====================
+
 const initialUser = getInitialUser();
+
+const initialState = {
+  user: initialUser,
+  isAuthenticated: !!initialUser,
+  status: "idle",
+  error: null,
+  message: null,
+};
+
+// ====================
+// 🧩 Slice Definition
+// ====================
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    user: initialUser,
-    isAuthenticated: !!initialUser,
-    status: "idle",
-    error: null,
-    message: null,
-  },
+  initialState,
   reducers: {
     clearMessage: (state) => {
       state.message = null;
@@ -153,14 +160,12 @@ const authSlice = createSlice({
       const { itemType, itemId } = action.payload;
       if (!state.user) return;
 
-      if (itemType === "song") {
-        if (!state.user.purchasedSongs.includes(itemId)) {
-          state.user.purchasedSongs.push(itemId);
-        }
-      } else if (itemType === "album") {
-        if (!state.user.purchasedAlbums.includes(itemId)) {
-          state.user.purchasedAlbums.push(itemId);
-        }
+      if (itemType === "song" && !state.user.purchasedSongs.includes(itemId)) {
+        state.user.purchasedSongs.push(itemId);
+      }
+
+      if (itemType === "album" && !state.user.purchasedAlbums.includes(itemId)) {
+        state.user.purchasedAlbums.push(itemId);
       }
 
       storeAuthToLocal(state.user);
@@ -174,57 +179,75 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.message = "Registered successfully";
       })
+
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.status = "succeeded";
         state.message = "Logged in successfully";
       })
+
+      // ✅ FIXED - Preserve existing data
       .addCase(getMyProfile.fulfilled, (state, action) => {
-        const user = action.payload;
-        state.user = {
-          ...user,
-          purchasedSongs: user.purchasedSongs || [],
-          purchasedAlbums: user.purchasedAlbums || [],
-          likedsong: user.likedsong || [],
+        
+        // Current localStorage data को preserve करें
+        const currentUser = state.user || {};
+        
+        const user = {
+          _id: action.payload._id || action.payload.id || currentUser._id,
+          name: action.payload.name || currentUser.name || "",
+          email: action.payload.email || currentUser.email || "",
+          profileImage: action.payload.profileImage || currentUser.profileImage || "",
+          purchasedSongs: action.payload.purchasedSongs || [],
+          purchasedAlbums: action.payload.purchasedAlbums || [],
+          likedsong: action.payload.likedsong || [],
+          preferredGenres: action.payload.preferredGenres || currentUser.preferredGenres || [],
         };
+                
+        state.user = user;
         state.isAuthenticated = true;
         state.status = "succeeded";
+        storeAuthToLocal(user);
       })
       .addCase(getMyProfile.rejected, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.status = "failed";
       })
+
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.status = "succeeded";
         state.message = "Logged out successfully";
       })
+
       .addCase(updatePreferredGenres.fulfilled, (state, action) => {
         if (state.user) {
           state.user.preferredGenres = action.payload;
+          storeAuthToLocal(state.user);
         }
         state.status = "succeeded";
-        state.message = "Preferred genres updated successfully";
+        state.message = "Preferred genres updated";
       })
       .addCase(updatePreferredGenres.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload || "Failed to update preferred genres";
+        state.error = action.payload || "Failed to update genres";
       })
+
       .addCase(toggleLikeSong.fulfilled, (state, action) => {
         const { songId, message } = action.payload;
-
-        if (!state.user.likedsong) state.user.likedsong = [];
+        if (!state.user?.likedsong) state.user.likedsong = [];
 
         const alreadyLiked = state.user.likedsong.includes(songId);
         state.user.likedsong = alreadyLiked
           ? state.user.likedsong.filter((id) => id !== songId)
           : [...state.user.likedsong, songId];
 
+        storeAuthToLocal(state.user);
         state.message = message;
       })
+
       .addMatcher(
         (action) =>
           action.type.startsWith("auth/") &&
@@ -235,6 +258,7 @@ const authSlice = createSlice({
           state.error = action.payload || "Something went wrong";
         }
       )
+
       .addMatcher(
         (action) =>
           action.type.startsWith("auth/") &&
