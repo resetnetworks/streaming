@@ -1,4 +1,3 @@
-// FavouriteGen.jsx
 import React, { useState, useEffect } from "react";
 import { IoMdCheckmark } from "react-icons/io";
 import IconHeader from "../components/user/IconHeader";
@@ -10,31 +9,11 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const tags = [
-  {
-    id: "electronic",
-    label: "#electronic",
-    image: "https://images.unsplash.com/photo-1511376777868-611b54f68947",
-  },
-  {
-    id: "techno",
-    label: "#techno",
-    image: "https://images.unsplash.com/photo-1549924231-f129b911e442",
-  },
-  {
-    id: "idm",
-    label: "#IDM",
-    image: "https://images.unsplash.com/photo-1581091215367-59d3a6ccf3fc",
-  },
-  {
-    id: "ambient",
-    label: "#ambient",
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-  },
-  {
-    id: "soundtrack",
-    label: "#soundtrack",
-    image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
-  },
+  { id: "electronic", label: "#electronic", image: "https://images.unsplash.com/photo-1511376777868-611b54f68947" },
+  { id: "techno", label: "#techno", image: "https://images.unsplash.com/photo-1549924231-f129b911e442" },
+  { id: "idm", label: "#IDM", image: "https://images.unsplash.com/photo-1581091215367-59d3a6ccf3fc" },
+  { id: "ambient", label: "#ambient", image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb" },
+  { id: "soundtrack", label: "#soundtrack", image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02" },
 ];
 
 const FavouriteGen = () => {
@@ -47,15 +26,14 @@ const FavouriteGen = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const justRegistered = localStorage.getItem('justRegistered');
-    const registrationTime = localStorage.getItem('registrationTime');
+    const justRegistered = localStorage.getItem("justRegistered");
+    const registrationTime = localStorage.getItem("registrationTime");
 
-    // Check if registration was too long ago (more than 10 minutes)
     if (registrationTime) {
       const timeDiff = Date.now() - parseInt(registrationTime);
-      if (timeDiff > 10 * 60 * 1000) { // 10 minutes
-        localStorage.removeItem('justRegistered');
-        localStorage.removeItem('registrationTime');
+      if (timeDiff > 10 * 60 * 1000) {
+        localStorage.removeItem("justRegistered");
+        localStorage.removeItem("registrationTime");
       }
     }
 
@@ -65,10 +43,10 @@ const FavouriteGen = () => {
     }
 
     if (justRegistered && (!user || !user._id)) {
-      dispatch(getMyProfile()).catch((error) => {
+      dispatch(getMyProfile()).catch(() => {
         toast.error("Session expired. Please login again.");
-        localStorage.removeItem('justRegistered');
-        localStorage.removeItem('registrationTime');
+        localStorage.removeItem("justRegistered");
+        localStorage.removeItem("registrationTime");
         navigate("/login");
       });
       return;
@@ -93,12 +71,6 @@ const FavouriteGen = () => {
   };
 
   const handleSubmit = async () => {
-    if (selected.length < 3) {
-      toast.error("Please select at least 3 genres");
-      return;
-    }
-
-    // Check authentication before proceeding
     if (!isAuthenticated) {
       toast.error("Please login again to continue");
       navigate("/login");
@@ -107,53 +79,40 @@ const FavouriteGen = () => {
 
     try {
       setLoading(true);
-
-      // Verify user is still authenticated by checking profile first
-      try {
-        await dispatch(getMyProfile()).unwrap();
-      } catch (profileError) {
-        // If profile fetch fails, likely token is invalid
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem('justRegistered');
-        localStorage.removeItem('registrationTime');
-        navigate("/login");
-        return;
-      }
-
-      // Now update preferred genres
-      await dispatch(updatePreferredGenres(selected)).unwrap();
-
-      // Refresh user profile after successful update
       await dispatch(getMyProfile()).unwrap();
 
-      // Clean up localStorage
-      localStorage.removeItem('justRegistered');
-      localStorage.removeItem('registrationTime');
+      if (selected.length > 0) {
+        await dispatch(updatePreferredGenres(selected)).unwrap();
+        await dispatch(getMyProfile()).unwrap();
+        toast.success("Genres saved successfully!");
+      }
 
-      toast.success("Genres saved successfully!");
+      // cleanup and go home
+      localStorage.removeItem("justRegistered");
+      localStorage.removeItem("registrationTime");
       navigate("/", { replace: true });
     } catch (error) {
-      // Handle specific token/auth errors
-      if (error?.includes?.('token') || error?.includes?.('expired') || error?.includes?.('Invalid')) {
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem('justRegistered');
-        localStorage.removeItem('registrationTime');
-        navigate("/login");
-      } else {
-        toast.error(error || "Failed to update genres");
-      }
+      toast.error("Session expired or failed. Please login again.");
+      localStorage.removeItem("justRegistered");
+      localStorage.removeItem("registrationTime");
+      navigate("/login");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSkip = () => {
+    localStorage.removeItem("justRegistered");
+    localStorage.removeItem("registrationTime");
+    navigate("/", { replace: true });
+  };
+
   return (
     <section className="bg-image min-h-screen w-full flex flex-col items-center text-white">
       <IconHeader />
-
       <h1 className="md:text-4xl text-3xl text-center mt-6 px-2">
         Choose favourite genres
-        <span className="text-blue-700"> (at least three)</span>
+        <span className="text-blue-700"> (optional)</span>
       </h1>
 
       <div className="w-full flex flex-col items-center px-8">
@@ -166,7 +125,6 @@ const FavouriteGen = () => {
               className="w-full bg-transparent text-white placeholder-gray-400 py-2 pr-4 outline-none"
             />
           </div>
-
           <button className="bg-gradient-to-r from-[#1b233dfe] via-[#0942a4e1] via-40% to-[#0C63FF] text-white font-semibold py-2 px-6 rounded-r-2xl border-[1px] searchbar-button">
             Search
           </button>
@@ -203,13 +161,20 @@ const FavouriteGen = () => {
         })}
       </div>
 
-      <div className="button-wrapper my-9 shadow-sm shadow-black">
+      <div className="flex flex-wrap gap-4 my-9">
         <button
           onClick={handleSubmit}
-          disabled={selected.length < 3 || loading}
+          disabled={loading}
           className="custom-button"
         >
           {loading ? "Saving..." : "Continue"}
+        </button>
+
+        <button
+          onClick={handleSkip}
+          className="custom-button bg-gray-600 hover:bg-gray-700"
+        >
+          Skip
         </button>
       </div>
     </section>
