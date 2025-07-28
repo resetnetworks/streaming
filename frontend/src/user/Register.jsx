@@ -30,22 +30,27 @@ const Register = () => {
     symbol: false,
   });
 
-  // ✅ Redirect to /genres after registration
+  // ✅ Updated useEffect for cookie-based authentication
   useEffect(() => {
     if (justRegistered && user) {
-      const timer = setTimeout(() => {
-        localStorage.setItem("justRegistered", "true");
-        localStorage.setItem("registrationTime", Date.now().toString());
+      const timer = setTimeout(async () => {
+        try {
+          localStorage.setItem("justRegistered", "true");
+          localStorage.setItem("registrationTime", Date.now().toString());
 
-        const token = localStorage.getItem("token");
-        if (token) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          // ✅ Since we're using cookies, just verify the authentication works
+          await axios.get("/users/me", { withCredentials: true });
+          
+          toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
+          navigate("/genres");
+          setJustRegistered(false);
+          
+        } catch (error) {
+          console.error("Post-registration error:", error);
+          toast.error("Registration successful but please login again");
+          navigate("/login");
         }
-
-        toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
-        navigate("/genres");
-        setJustRegistered(false);
-      }, 100);
+      }, 300);
 
       return () => clearTimeout(timer);
     }
@@ -65,6 +70,7 @@ const Register = () => {
     return newErrors;
   };
 
+  // ✅ Simplified handleSubmit for cookie-based authentication
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validate();
@@ -74,15 +80,18 @@ const Register = () => {
     }
 
     setFormErrors({});
+    
     try {
+      console.log("Starting registration...");
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
+      console.log("Registration successful:", result);
+      
+      // ✅ No token handling needed - cookies handle authentication
+      // Just set the flag to trigger navigation
       setJustRegistered(true);
-
-      const token = localStorage.getItem("token");
-      if (token) {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      }
+      
     } catch (err) {
+      console.error("Registration error:", err);
       toast.error(err || "Registration failed");
     }
   };
@@ -120,7 +129,7 @@ const Register = () => {
             onSubmit={handleSubmit}
             noValidate
           >
-            {/* Name */}
+            {/* Name Field */}
             <div className="w-full mb-1">
               <label htmlFor="name" className="md:text-xl text-lg">
                 name
@@ -143,7 +152,7 @@ const Register = () => {
               <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.name}</p>
             )}
 
-            {/* Email */}
+            {/* Email Field */}
             <div className="w-full mt-5 mb-1">
               <label htmlFor="email" className="md:text-xl text-lg">
                 email
@@ -166,7 +175,7 @@ const Register = () => {
               <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.email}</p>
             )}
 
-            {/* Password */}
+            {/* Password Field */}
             <div className="w-full mt-5 mb-1">
               <label htmlFor="password" className="md:text-xl text-lg">
                 password

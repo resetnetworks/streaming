@@ -22,18 +22,13 @@ const storeAuthToLocal = (user) => {
   const existingUser = getInitialUser();
 
   const {
-    _id,
-    id,
     name,
     email,
     profileImage,
     purchasedSongs = [],
     purchasedAlbums = [],
     likedsong = [],
-    role,
     preferredGenres = [],
-    createdAt,
-    updatedAt,
     playlist = [],
     purchaseHistory = [],
     ...otherFields
@@ -41,15 +36,10 @@ const storeAuthToLocal = (user) => {
 
   const userToStore = {
     ...existingUser,
-    _id: _id || id || existingUser?._id,
-    id: id || _id || existingUser?.id,
     name: name || existingUser?.name,
     email: email || existingUser?.email,
     profileImage: profileImage !== undefined ? profileImage : existingUser?.profileImage,
-    role: role || existingUser?.role,
     preferredGenres: preferredGenres.length > 0 ? preferredGenres : existingUser?.preferredGenres || [],
-    createdAt: createdAt || existingUser?.createdAt,
-    updatedAt: updatedAt || existingUser?.updatedAt,
     playlist: playlist.length > 0 ? playlist : existingUser?.playlist || [],
     purchaseHistory: purchaseHistory.length > 0 ? purchaseHistory : existingUser?.purchaseHistory || [],
     purchasedSongs,
@@ -73,35 +63,119 @@ const clearAuthFromLocal = () => {
 
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
   try {
-    const res = await axios.post("/users/register", userData);
-    const { token, user } = res.data;
+    console.log('📝 Starting registration process...');
+    
+    const res = await axios.post("/users/register", userData, {
+      withCredentials: true, // ✅ Important for cookie handling
+    });
+    
+    console.log('🔍 Server Response:', res.data);
+    const { user } = res.data;
 
-    // ✅ Save token and update default headers immediately
-    localStorage.setItem("token", token);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    // ✅ Function to get token from cookie
+    const getTokenFromCookie = () => {
+      if (typeof document === 'undefined') return null;
+      
+      const cookies = document.cookie.split('; ');
+      const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
+      
+      if (tokenCookie) {
+        return tokenCookie.split('=')[1];
+      }
+      return null;
+    };
+
+    // ✅ Wait a bit for cookie to be set by server
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const token = getTokenFromCookie();
+    
+    if (token) {
+      console.log('🔑 Token found in cookie:', token.substring(0, 20) + '...');
+      
+      // Store token in localStorage for axios headers
+      localStorage.setItem("token", token);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
+      // Verify token works
+      try {
+        await axios.get("/users/me", { withCredentials: true });
+        console.log('✅ Token verified successfully');
+      } catch (tokenError) {
+        console.error('❌ Token verification failed:', tokenError);
+        throw new Error("Token verification failed after registration");
+      }
+      
+    } else {
+      console.log('⚠️ No token found in cookie, trying /me endpoint...');
+      
+      // Try to verify authentication via cookie
+      try {
+        const meResponse = await axios.get("/users/me", { withCredentials: true });
+        if (meResponse.status === 200) {
+          console.log('✅ Authentication verified via cookie');
+        } else {
+          throw new Error("Authentication verification failed");
+        }
+      } catch (meError) {
+        console.error('❌ Authentication verification failed:', meError);
+        throw new Error("Authentication failed after registration");
+      }
+    }
 
     storeAuthToLocal(user);
+    console.log('✅ Registration completed successfully');
     return user;
+    
   } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    console.error("❌ Registration error:", err);
+    
+    // Clear any partial data
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    delete axios.defaults.headers.common["Authorization"];
+    
+    const errorMessage = err.response?.data?.message || 
+                        err.message || 
+                        "Registration failed";
+    
+    return thunkAPI.rejectWithValue(errorMessage);
   }
 });
 
+// ✅ Also update loginUser similarly
 export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
   try {
-    const res = await axios.post("/users/login", userData);
-    const { token, user } = res.data;
+    const res = await axios.post("/users/login", userData, {
+      withCredentials: true,
+    });
+    
+    const { user } = res.data;
 
-    // ✅ Save token and set header
-    localStorage.setItem("token", token);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    // Get token from cookie
+    const getTokenFromCookie = () => {
+      if (typeof document === 'undefined') return null;
+      const cookies = document.cookie.split('; ');
+      const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
+      return tokenCookie ? tokenCookie.split('=')[1] : null;
+    };
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const token = getTokenFromCookie();
+
+    if (token) {
+      localStorage.setItem("token", token);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
 
     storeAuthToLocal(user);
     return user;
+    
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
+
 
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
@@ -203,7 +277,6 @@ const authSlice = createSlice({
       .addCase(getMyProfile.fulfilled, (state, action) => {
         const currentUser = state.user || {};
         const user = {
-          _id: action.payload._id || action.payload.id || currentUser._id,
           name: action.payload.name || currentUser.name || "",
           email: action.payload.email || currentUser.email || "",
           profileImage: action.payload.profileImage || currentUser.profileImage || "",
