@@ -224,13 +224,13 @@ const Register = () => {
             </div>
 
             <div className="flex justify-around items-center md:w-64 w-52">
-              <button onClick={googleRegister} type="button" disabled={loading} className="w-12 h-12 rounded-lg bg-white">
+              <button onClick={googleRegister} type="button" disabled={loading} className="w-12 h-12 flex justify-center items-center rounded-lg bg-white">
                 <img src={assets.google_icon} alt="google_icon" className="w-6 h-6" />
               </button>
-              <button onClick={facebookRegister} type="button" disabled={loading} className="w-12 h-12 rounded-lg bg-white">
+              <button onClick={facebookRegister} type="button" disabled={loading} className="w-12 h-12 flex justify-center items-center rounded-lg bg-white">
                 <img src={assets.facebook_icon} alt="facebook_icon" className="w-6 h-6" />
               </button>
-              <button type="button" disabled={loading} className="w-12 h-12 rounded-lg bg-white">
+              <button type="button" disabled={loading} className="w-12 h-12 flex justify-center items-center rounded-lg bg-white">
                 <img src={assets.apple_icon} alt="apple_icon" className="w-6 h-6" />
               </button>
             </div>
