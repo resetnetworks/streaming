@@ -1,3 +1,4 @@
+// FavouriteGen.jsx
 import React, { useState, useEffect } from "react";
 import { IoMdCheckmark } from "react-icons/io";
 import IconHeader from "../components/user/IconHeader";
@@ -41,18 +42,47 @@ const FavouriteGen = () => {
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  
+
   const [selected, setSelected] = useState(user?.preferredGenres || []);
   const [loading, setLoading] = useState(false);
 
-  // Redirect if not authenticated or already has genres
   useEffect(() => {
+    const justRegistered = localStorage.getItem('justRegistered');
+    const registrationTime = localStorage.getItem('registrationTime');
+
+    // Check if registration was too long ago (more than 10 minutes)
+    if (registrationTime) {
+      const timeDiff = Date.now() - parseInt(registrationTime);
+      if (timeDiff > 10 * 60 * 1000) { // 10 minutes
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+      }
+    }
+
     if (!isAuthenticated) {
       navigate("/login");
-    } else if (user?.preferredGenres?.length > 0) {
-      navigate("/");
+      return;
     }
-  }, [isAuthenticated, user, navigate]);
+
+    if (justRegistered && (!user || !user._id)) {
+      dispatch(getMyProfile()).catch((error) => {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+        navigate("/login");
+      });
+      return;
+    }
+
+    if (!justRegistered && user?.preferredGenres?.length > 0) {
+      navigate("/");
+      return;
+    }
+
+    if (user?.preferredGenres?.length > 0) {
+      setSelected(user.preferredGenres);
+    }
+  }, [isAuthenticated, user, navigate, dispatch]);
 
   const handleSelection = (id) => {
     if (selected.includes(id)) {
@@ -68,14 +98,50 @@ const FavouriteGen = () => {
       return;
     }
 
+    // Check authentication before proceeding
+    if (!isAuthenticated) {
+      toast.error("Please login again to continue");
+      navigate("/login");
+      return;
+    }
+
     try {
       setLoading(true);
+
+      // Verify user is still authenticated by checking profile first
+      try {
+        await dispatch(getMyProfile()).unwrap();
+      } catch (profileError) {
+        // If profile fetch fails, likely token is invalid
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+        navigate("/login");
+        return;
+      }
+
+      // Now update preferred genres
       await dispatch(updatePreferredGenres(selected)).unwrap();
+
+      // Refresh user profile after successful update
       await dispatch(getMyProfile()).unwrap();
+
+      // Clean up localStorage
+      localStorage.removeItem('justRegistered');
+      localStorage.removeItem('registrationTime');
+
       toast.success("Genres saved successfully!");
-      navigate("/", { replace: true }); // Use replace to prevent going back to genres page
+      navigate("/", { replace: true });
     } catch (error) {
-      toast.error(error || "Failed to update genres");
+      // Handle specific token/auth errors
+      if (error?.includes?.('token') || error?.includes?.('expired') || error?.includes?.('Invalid')) {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem('justRegistered');
+        localStorage.removeItem('registrationTime');
+        navigate("/login");
+      } else {
+        toast.error(error || "Failed to update genres");
+      }
     } finally {
       setLoading(false);
     }
