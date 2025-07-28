@@ -12,8 +12,8 @@ import { Helmet } from "react-helmet";
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, isAuthenticated, user } = useSelector((state) => state.auth);
-  const btnLoading = status === "loading";
+  const { loading, error, user } = useSelector((state) => state.auth);
+  const btnLoading = loading;
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -30,20 +30,19 @@ const Register = () => {
     symbol: false,
   });
 
-  // ✅ Only one navigation useEffect - handles existing users
+  // ✅ Navigate to homepage if already authenticated and not just registered
   useEffect(() => {
-    if (isAuthenticated && !justRegistered) {
+    if (user && !justRegistered) {
       navigate("/");
     }
-  }, [isAuthenticated, navigate, justRegistered]);
+  }, [user, justRegistered, navigate]);
 
-  // ✅ Handles post-registration flow for new users
+  // ✅ Navigate new users to genre selection
   useEffect(() => {
-    if (justRegistered && isAuthenticated && user) {
+    if (justRegistered && user) {
       const timer = setTimeout(() => {
-        localStorage.setItem('justRegistered', 'true');
-        localStorage.setItem('registrationTime', Date.now().toString());
-        // ✅ Show specific message for new registration with user name
+        localStorage.setItem("justRegistered", "true");
+        localStorage.setItem("registrationTime", Date.now().toString());
         toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
         navigate("/genres");
         setJustRegistered(false);
@@ -51,7 +50,7 @@ const Register = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [justRegistered, isAuthenticated, user, navigate]);
+  }, [justRegistered, user, navigate]);
 
   const validate = () => {
     const newErrors = {};
@@ -83,16 +82,12 @@ const Register = () => {
     }
 
     setFormErrors({});
-
-    dispatch(registerUser({ email, password, name }))
-      .unwrap()
-      .then(() => {
-        // ✅ No duplicate toast here - handled in useEffect
-        setJustRegistered(true);
-      })
-      .catch((err) => {
-        toast.error(err || "Registration failed");
-      });
+    try {
+      await dispatch(registerUser({ email, password, name })).unwrap();
+      setJustRegistered(true);
+    } catch (err) {
+      toast.error(err || "Registration failed");
+    }
   };
 
   const googleRegister = () => {

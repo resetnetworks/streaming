@@ -18,10 +18,9 @@ const getInitialUser = () => {
 
 const storeAuthToLocal = (user) => {
   if (!user) return;
-  
-  // ✅ FIX: Get existing user from localStorage first
+
   const existingUser = getInitialUser();
-  
+
   const {
     _id,
     id,
@@ -40,11 +39,8 @@ const storeAuthToLocal = (user) => {
     ...otherFields
   } = user;
 
-  // Merge with existing data to preserve all fields
   const userToStore = {
-    // Use existing data as fallback
     ...existingUser,
-    // Override with new data
     _id: _id || id || existingUser?._id,
     id: id || _id || existingUser?.id,
     name: name || existingUser?.name,
@@ -75,37 +71,29 @@ const clearAuthFromLocal = () => {
 // 🔄 Async Thunks
 // ====================
 
-export const registerUser = createAsyncThunk(
-  "auth/register",
-  async (userData, thunkAPI) => {
-    try {
-      const res = await axios.post("/users/register", userData);
-      localStorage.setItem("token", res.data.token);
-      storeAuthToLocal(res.data.user);
-      return res.data.user;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || err.message
-      );
-    }
+export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
+  try {
+    const res = await axios.post("/users/register", userData);
+    localStorage.setItem("token", res.data.token);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+    storeAuthToLocal(res.data.user);
+    return res.data.user;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
-export const loginUser = createAsyncThunk(
-  "auth/login",
-  async (userData, thunkAPI) => {
-    try {
-      const res = await axios.post("/users/login", userData);
-      localStorage.setItem("token", res.data.token);
-      storeAuthToLocal(res.data.user);
-      return res.data.user;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || err.message
-      );
-    }
+export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
+  try {
+    const res = await axios.post("/users/login", userData);
+    localStorage.setItem("token", res.data.token);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+    storeAuthToLocal(res.data.user);
+    return res.data.user;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
@@ -121,35 +109,30 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) =>
   try {
     const res = await axios.post("/users/logout");
     clearAuthFromLocal();
+    delete axios.defaults.headers.common["Authorization"];
     return res.data.message;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
 
-export const updatePreferredGenres = createAsyncThunk(
-  "auth/updatePreferredGenres",
-  async (genres, thunkAPI) => {
-    try {
-      const res = await axios.put("/users/update-genres", { genres });
-      return res.data.preferredGenres;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const updatePreferredGenres = createAsyncThunk("auth/updatePreferredGenres", async (genres, thunkAPI) => {
+  try {
+    const res = await axios.put("/users/update-genres", { genres });
+    return res.data.preferredGenres;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
-export const toggleLikeSong = createAsyncThunk(
-  "auth/toggleLikeSong",
-  async (songId, thunkAPI) => {
-    try {
-      const res = await axios.put(`/users/likedsong/${songId}`);
-      return { songId, message: res.data.message };
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const toggleLikeSong = createAsyncThunk("auth/toggleLikeSong", async (songId, thunkAPI) => {
+  try {
+    const res = await axios.put(`/users/likedsong/${songId}`);
+    return { songId, message: res.data.message };
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // ====================
 // 🧠 Initial State
@@ -209,9 +192,7 @@ const authSlice = createSlice({
       })
 
       .addCase(getMyProfile.fulfilled, (state, action) => {
-        // Current localStorage data को preserve करें
         const currentUser = state.user || {};
-        
         const user = {
           _id: action.payload._id || action.payload.id || currentUser._id,
           name: action.payload.name || currentUser.name || "",
@@ -222,12 +203,13 @@ const authSlice = createSlice({
           likedsong: action.payload.likedsong || [],
           preferredGenres: action.payload.preferredGenres || currentUser.preferredGenres || [],
         };
-                
+
         state.user = user;
         state.isAuthenticated = true;
         state.status = "succeeded";
         storeAuthToLocal(user);
       })
+
       .addCase(getMyProfile.rejected, (state) => {
         state.user = null;
         state.isAuthenticated = false;
@@ -249,6 +231,7 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.message = "Preferred genres updated";
       })
+
       .addCase(updatePreferredGenres.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || "Failed to update genres";
