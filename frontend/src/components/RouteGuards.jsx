@@ -5,7 +5,6 @@ export const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login
 
 export const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.preferredGenres?.length === 0) return <Navigate to="/genres" replace />;
   return children;
 };
 
