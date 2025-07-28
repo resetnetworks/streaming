@@ -8,7 +8,7 @@ import { registerUser } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
-import axios from "../utills/axiosInstance"; // ✅ Import axios instance
+import axios from "../utills/axiosInstance";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -30,23 +30,13 @@ const Register = () => {
     symbol: false,
   });
 
-  // ✅ Redirect authenticated users who already passed genre page
-  useEffect(() => {
-    const genreCompleted = localStorage.getItem("genreSelected") === "true";
-
-    if (user && !justRegistered && genreCompleted) {
-      navigate("/");
-    }
-  }, [user, justRegistered, navigate]);
-
-  // ✅ Redirect newly registered users to genre selection
+  // ✅ Redirect to /genres after registration
   useEffect(() => {
     if (justRegistered && user) {
       const timer = setTimeout(() => {
         localStorage.setItem("justRegistered", "true");
         localStorage.setItem("registrationTime", Date.now().toString());
 
-        // ✅ Axios token header to persist through next requests
         const token = localStorage.getItem("token");
         if (token) {
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -66,19 +56,12 @@ const Register = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
-    if (!emailRegex.test(email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-
+    if (!emailRegex.test(email)) newErrors.email = "Please enter a valid email address.";
     if (!passwordRegex.test(password)) {
       newErrors.password =
         "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
     }
-
-    if (!name.trim()) {
-      newErrors.name = "Name is required.";
-    }
-
+    if (!name.trim()) newErrors.name = "Name is required.";
     return newErrors;
   };
 
@@ -95,13 +78,10 @@ const Register = () => {
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
       setJustRegistered(true);
 
-      // ✅ Save token header in axios instance manually
       const token = localStorage.getItem("token");
       if (token) {
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
-
-      // user goes to /genres inside useEffect
     } catch (err) {
       toast.error(err || "Registration failed");
     }
@@ -214,32 +194,18 @@ const Register = () => {
                 placeholder="Create a strong password"
                 disabled={loading}
               />
-              <div
-                className="eye-icon"
-                onClick={() => setShowPassword((prev) => !prev)}
-                role="button"
-              >
+              <div className="eye-icon" onClick={() => setShowPassword((prev) => !prev)} role="button">
                 {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
               </div>
             </div>
 
-            {/* Password criteria live feedback */}
+            {/* Password criteria */}
             <div className="text-sm mt-2 w-full flex flex-wrap gap-2">
-              <span className={passwordCriteria.length ? "text-green-500" : "text-red-500"}>
-                At least 8 characters
-              </span>
-              <span className={passwordCriteria.lowercase ? "text-green-500" : "text-red-500"}>
-                • Lowercase
-              </span>
-              <span className={passwordCriteria.uppercase ? "text-green-500" : "text-red-500"}>
-                • Uppercase
-              </span>
-              <span className={passwordCriteria.number ? "text-green-500" : "text-red-500"}>
-                • Number
-              </span>
-              <span className={passwordCriteria.symbol ? "text-green-500" : "text-red-500"}>
-                • Symbol
-              </span>
+              <span className={passwordCriteria.length ? "text-green-500" : "text-red-500"}>At least 8 characters</span>
+              <span className={passwordCriteria.lowercase ? "text-green-500" : "text-red-500"}>• Lowercase</span>
+              <span className={passwordCriteria.uppercase ? "text-green-500" : "text-red-500"}>• Uppercase</span>
+              <span className={passwordCriteria.number ? "text-green-500" : "text-red-500"}>• Number</span>
+              <span className={passwordCriteria.symbol ? "text-green-500" : "text-red-500"}>• Symbol</span>
             </div>
             {formErrors.password && (
               <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.password}</p>
