@@ -62,14 +62,11 @@ const clearAuthFromLocal = () => {
 // ====================
 
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
-  try {
-    console.log('📝 Starting registration process...');
-    
+  try {    
     const res = await axios.post("/users/register", userData, {
       withCredentials: true, // ✅ Important for cookie handling
     });
     
-    console.log('🔍 Server Response:', res.data);
     const { user } = res.data;
 
     // ✅ Function to get token from cookie
@@ -91,7 +88,6 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     const token = getTokenFromCookie();
     
     if (token) {
-      console.log('🔑 Token found in cookie:', token.substring(0, 20) + '...');
       
       // Store token in localStorage for axios headers
       localStorage.setItem("token", token);
@@ -100,20 +96,17 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
       // Verify token works
       try {
         await axios.get("/users/me", { withCredentials: true });
-        console.log('✅ Token verified successfully');
       } catch (tokenError) {
         console.error('❌ Token verification failed:', tokenError);
         throw new Error("Token verification failed after registration");
       }
       
     } else {
-      console.log('⚠️ No token found in cookie, trying /me endpoint...');
       
       // Try to verify authentication via cookie
       try {
         const meResponse = await axios.get("/users/me", { withCredentials: true });
         if (meResponse.status === 200) {
-          console.log('✅ Authentication verified via cookie');
         } else {
           throw new Error("Authentication verification failed");
         }
@@ -124,7 +117,6 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     }
 
     storeAuthToLocal(user);
-    console.log('✅ Registration completed successfully');
     return user;
     
   } catch (err) {
