@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MdOutlineEmail } from "react-icons/md";
 import { TbLockPassword, TbUserSquareRounded } from "react-icons/tb";
@@ -8,19 +8,18 @@ import { registerUser } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
-import axios from "../utills/axiosInstance"; // ✅ Import axios instance
+import axios from "../utills/axiosInstance"; // ✅ Custom axios instance
 
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, user } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [formErrors, setFormErrors] = useState({});
-  const [justRegistered, setJustRegistered] = useState(false);
 
   const [passwordCriteria, setPasswordCriteria] = useState({
     length: false,
@@ -29,37 +28,6 @@ const Register = () => {
     number: false,
     symbol: false,
   });
-
-  // ✅ Redirect authenticated users who already passed genre page
-  useEffect(() => {
-    const genreCompleted = localStorage.getItem("genreSelected") === "true";
-
-    if (user && !justRegistered && genreCompleted) {
-      navigate("/");
-    }
-  }, [user, justRegistered, navigate]);
-
-  // ✅ Redirect newly registered users to genre selection
-  useEffect(() => {
-    if (justRegistered && user) {
-      const timer = setTimeout(() => {
-        localStorage.setItem("justRegistered", "true");
-        localStorage.setItem("registrationTime", Date.now().toString());
-
-        // ✅ Axios token header to persist through next requests
-        const token = localStorage.getItem("token");
-        if (token) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        }
-
-        toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
-        navigate("/genres");
-        setJustRegistered(false);
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [justRegistered, user, navigate]);
 
   const validate = () => {
     const newErrors = {};
@@ -93,15 +61,15 @@ const Register = () => {
     setFormErrors({});
     try {
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
-      setJustRegistered(true);
 
-      // ✅ Save token header in axios instance manually
+      // ✅ Optionally update axios headers
       const token = localStorage.getItem("token");
       if (token) {
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
 
-      // user goes to /genres inside useEffect
+      toast.success(`Welcome ${result.name || name}! You're now registered.`);
+      navigate("/"); // ✅ Redirect to home page
     } catch (err) {
       toast.error(err || "Registration failed");
     }
@@ -223,7 +191,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Password criteria live feedback */}
+            {/* Password criteria */}
             <div className="text-sm mt-2 w-full flex flex-wrap gap-2">
               <span className={passwordCriteria.length ? "text-green-500" : "text-red-500"}>
                 At least 8 characters
