@@ -8,12 +8,12 @@ import { registerUser } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
+import axios from "../utills/axiosInstance"; // ✅ Import axios instance
 
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, user } = useSelector((state) => state.auth);
-  const btnLoading = loading;
+  const { loading, user } = useSelector((state) => state.auth);
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -30,19 +30,28 @@ const Register = () => {
     symbol: false,
   });
 
-  // ✅ Navigate to homepage if already authenticated and not just registered
+  // ✅ Redirect authenticated users who already passed genre page
   useEffect(() => {
-    if (user && !justRegistered) {
+    const genreCompleted = localStorage.getItem("genreSelected") === "true";
+
+    if (user && !justRegistered && genreCompleted) {
       navigate("/");
     }
   }, [user, justRegistered, navigate]);
 
-  // ✅ Navigate new users to genre selection
+  // ✅ Redirect newly registered users to genre selection
   useEffect(() => {
     if (justRegistered && user) {
       const timer = setTimeout(() => {
         localStorage.setItem("justRegistered", "true");
         localStorage.setItem("registrationTime", Date.now().toString());
+
+        // ✅ Axios token header to persist through next requests
+        const token = localStorage.getItem("token");
+        if (token) {
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        }
+
         toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
         navigate("/genres");
         setJustRegistered(false);
@@ -83,8 +92,16 @@ const Register = () => {
 
     setFormErrors({});
     try {
-      await dispatch(registerUser({ email, password, name })).unwrap();
+      const result = await dispatch(registerUser({ email, password, name })).unwrap();
       setJustRegistered(true);
+
+      // ✅ Save token header in axios instance manually
+      const token = localStorage.getItem("token");
+      if (token) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      }
+
+      // user goes to /genres inside useEffect
     } catch (err) {
       toast.error(err || "Registration failed");
     }
@@ -139,7 +156,7 @@ const Register = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
-                disabled={btnLoading}
+                disabled={loading}
               />
             </div>
             {formErrors.name && (
@@ -162,7 +179,7 @@ const Register = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
-                disabled={btnLoading}
+                disabled={loading}
               />
             </div>
             {formErrors.email && (
@@ -195,17 +212,12 @@ const Register = () => {
                   });
                 }}
                 placeholder="Create a strong password"
-                disabled={btnLoading}
+                disabled={loading}
               />
               <div
                 className="eye-icon"
                 onClick={() => setShowPassword((prev) => !prev)}
                 role="button"
-                tabIndex={0}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setShowPassword((prev) => !prev);
-                }}
               >
                 {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
               </div>
@@ -234,8 +246,8 @@ const Register = () => {
             )}
 
             <div className="button-wrapper mt-9 shadow-sm shadow-black">
-              <button className="custom-button" disabled={btnLoading} type="submit">
-                {btnLoading ? "Registering..." : "Create Account"}
+              <button className="custom-button" disabled={loading} type="submit">
+                {loading ? "Registering..." : "Create Account"}
               </button>
             </div>
 
@@ -246,39 +258,19 @@ const Register = () => {
             </div>
 
             <div className="flex justify-around items-center md:w-64 w-52">
-              <button
-                onClick={googleRegister}
-                type="button"
-                disabled={btnLoading}
-                className={`w-12 h-12 rounded-lg flex justify-center items-center bg-white ${
-                  btnLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
+              <button onClick={googleRegister} type="button" disabled={loading} className="w-12 h-12 rounded-lg bg-white">
                 <img src={assets.google_icon} alt="google_icon" className="w-6 h-6" />
               </button>
-              <button
-                onClick={facebookRegister}
-                type="button"
-                disabled={btnLoading}
-                className={`w-12 h-12 rounded-lg flex justify-center items-center bg-white ${
-                  btnLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
+              <button onClick={facebookRegister} type="button" disabled={loading} className="w-12 h-12 rounded-lg bg-white">
                 <img src={assets.facebook_icon} alt="facebook_icon" className="w-6 h-6" />
               </button>
-              <button
-                type="button"
-                disabled={btnLoading}
-                className={`w-12 h-12 rounded-lg flex justify-center items-center bg-white ${
-                  btnLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
+              <button type="button" disabled={loading} className="w-12 h-12 rounded-lg bg-white">
                 <img src={assets.apple_icon} alt="apple_icon" className="w-6 h-6" />
               </button>
             </div>
           </form>
 
-          <p className={`mt-4 ${btnLoading ? "pointer-events-none opacity-50" : ""}`}>
+          <p className={`mt-4 ${loading ? "pointer-events-none opacity-50" : ""}`}>
             Already have an account?{" "}
             <a href="/login" className="text-blue-800 underline">
               Login

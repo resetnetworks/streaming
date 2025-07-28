@@ -74,10 +74,14 @@ const clearAuthFromLocal = () => {
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
   try {
     const res = await axios.post("/users/register", userData);
-    localStorage.setItem("token", res.data.token);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-    storeAuthToLocal(res.data.user);
-    return res.data.user;
+    const { token, user } = res.data;
+
+    // ✅ Save token and update default headers immediately
+    localStorage.setItem("token", token);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    storeAuthToLocal(user);
+    return user;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
@@ -86,10 +90,14 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
 export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
   try {
     const res = await axios.post("/users/login", userData);
-    localStorage.setItem("token", res.data.token);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-    storeAuthToLocal(res.data.user);
-    return res.data.user;
+    const { token, user } = res.data;
+
+    // ✅ Save token and set header
+    localStorage.setItem("token", token);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    storeAuthToLocal(user);
+    return user;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
@@ -100,7 +108,10 @@ export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
     const res = await axios.get("/users/me");
     return res.data;
   } catch (err) {
-    clearAuthFromLocal();
+    // Only clear on 401
+    if (err.response?.status === 401) {
+      clearAuthFromLocal();
+    }
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
@@ -183,14 +194,12 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.message = "Registered successfully";
       })
-
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.status = "succeeded";
         state.message = "Logged in successfully";
       })
-
       .addCase(getMyProfile.fulfilled, (state, action) => {
         const currentUser = state.user || {};
         const user = {
@@ -209,20 +218,17 @@ const authSlice = createSlice({
         state.status = "succeeded";
         storeAuthToLocal(user);
       })
-
       .addCase(getMyProfile.rejected, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.status = "failed";
       })
-
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.status = "succeeded";
         state.message = "Logged out successfully";
       })
-
       .addCase(updatePreferredGenres.fulfilled, (state, action) => {
         if (state.user) {
           state.user.preferredGenres = action.payload;
@@ -231,12 +237,10 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.message = "Preferred genres updated";
       })
-
       .addCase(updatePreferredGenres.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload || "Failed to update genres";
       })
-
       .addCase(toggleLikeSong.fulfilled, (state, action) => {
         const { songId, message } = action.payload;
         if (!state.user?.likedsong) state.user.likedsong = [];
@@ -249,7 +253,6 @@ const authSlice = createSlice({
         storeAuthToLocal(state.user);
         state.message = message;
       })
-
       .addMatcher(
         (action) =>
           action.type.startsWith("auth/") &&
@@ -260,7 +263,6 @@ const authSlice = createSlice({
           state.error = action.payload || "Something went wrong";
         }
       )
-
       .addMatcher(
         (action) =>
           action.type.startsWith("auth/") &&
