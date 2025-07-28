@@ -693,3 +693,63 @@
 2025-07-21T10:17:16.534Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
     at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:26:02.533Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:26:02.630Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:26:09.751Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:26:47.547Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:26:55.351Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:27:01.310Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:27:04.250Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:27:05.670Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:27:07.154Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:27:10.918Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T07:27:14.257Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:22:49.506Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:22:52.841Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:23:02.177Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:25:36.873Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:28:27.460Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:28:30.737Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-25T09:34:04.578Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-28T05:32:35.403Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
+2025-07-28T05:32:46.337Z [ERROR]: UnauthorizedError: You do not have access to stream this song.
+    at streamSong (file:///Users/resetstudio02/Documents/streaming/backend/controllers/streamController.js:13:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) 
