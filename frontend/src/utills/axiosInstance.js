@@ -32,16 +32,9 @@ axiosInstance.interceptors.request.use(
       if (token) {
         // Store in localStorage for future use
         localStorage.setItem('token', token);
-        console.log('🔑 Token found in cookie and stored in localStorage');
       }
     }
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔑 Token attached to request');
-    } else {
-      console.log('⚠️ No token found');
-    }
+
     
     return config;
   },
@@ -51,11 +44,9 @@ axiosInstance.interceptors.request.use(
 // ✅ Global response error handling
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log('✅ Response received:', response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.error('❌ Response error:', error.response?.status, error.config?.url);
     
     if (error.response?.status === 401) {
       console.warn("🚫 Unauthorized — clearing auth data");
@@ -70,7 +61,6 @@ axiosInstance.interceptors.response.use(
       const isOnAuthPage = authPaths.some(path => currentPath.includes(path));
       
       if (!isOnAuthPage) {
-        console.log('🔄 Redirecting to login');
         window.location.href = '/login';
       }
     }

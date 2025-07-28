@@ -82,9 +82,7 @@ const Register = () => {
     setFormErrors({});
     
     try {
-      console.log("Starting registration...");
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
-      console.log("Registration successful:", result);
       
       // ✅ No token handling needed - cookies handle authentication
       // Just set the flag to trigger navigation
