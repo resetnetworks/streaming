@@ -8,3 +8,11 @@
 
 
 // export default router;
+
+// import { razorpayWebhook } from "../controllers/webhookController.j";
+
+// app.post(
+//   "/api/webhooks/razorpay",
+//   express.raw({ type: "application/json" }),
+//   razorpayWebhook
+// );

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Razorpay Test</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+  <h2>Test Razorpay Payment</h2>
+  <button id="payButton">Pay Now</button>
+
+  <script>
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjUwMjZjZGU5M2Y2ZTY4MjM0ZTIxYiIsImlhdCI6MTc1MzQzNTc2NCwiZXhwIjoxNzU0NzMxNzY0fQ.jgih79N9u3cN5Mhb_UFGHpRj84AKj8pVzfzrCW37b5Y"; // ✅ Replace with your real JWT token
+
+    document.getElementById("payButton").onclick = async function () {
+      try {
+        const res = await fetch("http://localhost:4000/api/payments/razorpay/create-order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // ✅ Important
+          },
+          body: JSON.stringify({
+            itemType: "album",
+            itemId: "68834f36442620718848c870",
+            amount: 499, // in INR (backend multiplies by 100)
+            currency: "INR"
+          })
+        });
+
+        const data = await res.json();
+        console.log("Order Response:", data);
+
+        if (!data.success) {
+          alert("Order creation failed!");
+          return;
+        }
+
+        const options = {
+          key: "rzp_test_qNqiQUvdA7BAau", // ✅ Replace with your Razorpay Test Key
+          amount: data.order.amount,
+          currency: data.order.currency,
+          name: "Music Reset",
+          description: "Purchase Song",
+          order_id: data.order.id,
+          handler: function (response) {
+            alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+            console.log("Payment Response:", response);
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+  </script>
+</body>
+</html>

@@ -10,6 +10,7 @@ import { StatusCodes } from 'http-status-codes';
 import { shapeArtistResponse } from "../dto/artist.dto.js";
 import { log } from "console";
 import { createArtistStripeSubscriptionPrice } from "../utils/stripe.js";
+import { createRazorpayPlan } from "../utils/razorpay.js";
 
 
 
@@ -49,6 +50,15 @@ export const createArtist = async (req, res) => {
   const priceId = await createArtistStripeSubscriptionPrice(artist.name, artist.subscriptionPrice);
   artist.stripePriceId = priceId;
   await artist.save();
+
+  if (!artist.razorpayPlanId) {
+  artist.razorpayPlanId = await createRazorpayPlan(
+    artist.name,
+    artist.subscriptionPrice
+  );
+  await artist.save();
+}
+
 
   // ✂️ Shape response
   const shaped = await shapeArtistResponse(artist.toObject())

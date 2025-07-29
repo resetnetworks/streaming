@@ -9,7 +9,7 @@ export const canStreamSong = async (userId, songId) => {
   
   const song = await Song.findById(songId).lean();
   if (!song) return false;
-  console.log("DEBUG song:", song);
+ 
 
   if (song.accessType === "free") return true;
  

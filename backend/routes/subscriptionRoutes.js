@@ -4,6 +4,7 @@ import { initiateArtistSubscription, cancelArtistSubscription } from "../control
 import { artistIdValidator } from "../validators/artistValidators.js";
 import validate from "../middleware/validate.js";
 import { createSetupIntent } from "../controllers/subscriptionController.js";
+import { createRazorpaySubscription } from "../controllers/subscriptionController.js";
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ const router = express.Router();
 router.post(
   "/artist/:artistId",
   authenticateUser,
-  initiateArtistSubscription
+  createRazorpaySubscription,
 );
 router.post("/setup-intent", authenticateUser, createSetupIntent);
 

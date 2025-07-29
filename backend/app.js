@@ -12,6 +12,7 @@ import YAML from "yamljs";
 import swaggerUi from "swagger-ui-express";
 import path from "path";
 import { fileURLToPath } from "url";
+import bodyParser from "body-parser";
 
 // Routes
 import userRoutes from "./routes/userRoutes.js";
@@ -29,6 +30,7 @@ import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 import discoverRoutes from "./routes/discoverRoutes.js";
 import streamRoutes from "./routes/streamRoutes.js";
 import { stripeWebhook } from './controllers/webhookController.js';
+import { razorpayWebhook } from './controllers/webhookController.js';
 
 // Middleware
 import passport from "./middleware/passport.js";
@@ -53,22 +55,43 @@ const swaggerDocument = YAML.load(path.join(__dirname, "swagger.yaml"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Security & Parsing Middleware
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-  credentials: true,
-}));
+
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://www.musicreset.com", "http://127.0.0.1:5500"],
+    credentials: true,
+  })
+);
+
+// app.options("*", cors({
+//   origin: "http://localhost:5173",
+//   credentials: true,
+// }));
+
+
 app.set('trust proxy', 1);
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
-app.use("/api/webhooks/stripe",express.raw({ type: "application/json" }), stripeWebhook); // Before JSON parsing if needed
+// app.use("/api/webhooks/stripe",express.raw({ type: "application/json" }), stripeWebhook); // Before JSON parsing if needed
+// app.use("/api/webhooks/razorpay",express.raw({ type: "application/json" }), razorpayWebhook); // Before JSON parsing if needed
+app.post(
+  "/api/webhooks/razorpay",
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString(); // 🔥 store raw body for signature verification
+    },
+  }),
+  razorpayWebhook
+);
 app.use(cookieParser());
 app.use(express.json());
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "https://js.stripe.com"],
-    frameSrc: ["'self'", "https://js.stripe.com"],
-  },
-}));
+// app.use(helmet.contentSecurityPolicy({
+//   directives: {
+//     defaultSrc: ["'self'"],
+//     scriptSrc: ["'self'", "https://js.stripe.com"],
+//     frameSrc: ["'self'", "https://js.stripe.com"],
+//   },
+// }));
 app.use(morgan("combined"));
 app.use(xssClean());
 app.use(mongoSanitize());

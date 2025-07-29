@@ -1,12 +1,15 @@
-// /webhooks/webhookController.js
 import Stripe from "stripe";
+import crypto from "crypto";
 import { Transaction } from "../models/Transaction.js";
 import { Subscription } from "../models/Subscription.js";
-import {
-  markTransactionPaid,
-  updateUserAfterPurchase,
-} from "../services/paymentService.js";
+import {markTransactionPaid, updateUserAfterPurchase,} from "../services/paymentService.js";
 import { WebhookEventLog } from "../models/WebhookEventLog.js";
+import Razorpay from "razorpay";
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -151,40 +154,74 @@ await WebhookEventLog.create({
 // ---------------------------
 // ✅ RAZORPAY WEBHOOK HANDLER
 // ---------------------------
-// export const razorpayWebhook = async (req, res) => {
-//   const secret = process.env.RAZORPAY_SECRET;
-//   const signature = req.headers["x-razorpay-signature"];
-//   const body = JSON.stringify(req.body);
 
-//   const expectedSignature = crypto
-//     .createHmac("sha256", secret)
-//     .update(body)
-//     .digest("hex");
 
-//   if (signature !== expectedSignature) {
-//     console.error("❌ Invalid Razorpay signature");
-//     return res.status(400).json({ message: "Invalid signature" });
-//   }
+export const razorpayWebhook = async (req, res) => {
+  const signature = req.headers["x-razorpay-signature"];
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-//   const event = req.body.event;
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(req.rawBody)
+    .digest("hex");
 
-//   if (event === "payment.captured") {
-//     const paymentEntity = req.body.payload.payment.entity;
-//     const razorpayOrderId = paymentEntity.order_id;
-//     const paymentId = paymentEntity.id;
+  if (signature !== expectedSignature) {
+    console.error("❌ Invalid Razorpay signature");
+    return res.status(400).json({ message: "Invalid signature" });
+  }
 
-//     const transaction = await markTransactionPaid({
-//       gateway: "razorpay",
-//       razorpayOrderId,
-//     });
+  const event = req.body.event;
 
-//     if (transaction) {
-//       await updateUserAfterPurchase(transaction, paymentId);
-//       console.log("✅ Razorpay: Transaction and user updated");
-//     } else {
-//       console.warn("⚠️ Razorpay: Transaction already paid or not found");
-//     }
-//   }
 
-//   res.status(200).json({ status: "ok" });
-// };
+
+  try {
+    if (event === "payment.captured") {
+      const paymentEntity = req.body.payload.payment.entity;
+      const paymentId = paymentEntity.id;
+      const razorpayOrderId = paymentEntity.order_id;
+
+      // Try to get subscription ID from payload
+     const fullPayment = await razorpay.payments.fetch(paymentId);
+     let subscriptionId = null;
+
+   if (fullPayment.invoice_id) {
+     const invoice = await razorpay.invoices.fetch(fullPayment.invoice_id);
+     subscriptionId = invoice.subscription_id;
+   }
+    
+
+      if (!subscriptionId) {
+        console.warn("No subscription ID found for captured payment", paymentId);
+        return res.status(200).send("OK");
+      }
+
+      const transaction = await markTransactionPaid({
+        gateway: "razorpay",
+        paymentId,
+        subscriptionId,
+      });
+
+      if (transaction) {
+        await updateUserAfterPurchase(transaction, subscriptionId);
+        console.log("✅ Subscription activated/renewed");
+      }
+    }
+
+    if (event === "subscription.charged") {
+      console.log("🔄 Recurring charge successful", req.body.payload.subscription.entity.id);
+      // You can optionally extend `validUntil` here if needed
+    }
+
+    if (event === "subscription.halted" || event === "subscription.completed") {
+      await Subscription.findOneAndUpdate(
+        { externalSubscriptionId: req.body.payload.subscription.entity.id },
+        { status: "cancelled" }
+      );
+      console.log("❌ Subscription stopped/cancelled");
+    }
+  } catch (err) {
+    console.error("Webhook processing failed:", err.message);
+  }
+
+  res.status(200).json({ status: "ok" });
+};
