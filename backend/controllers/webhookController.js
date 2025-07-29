@@ -197,10 +197,11 @@ export const razorpayWebhook = async (req, res) => {
 
       const transaction = await markTransactionPaid({
         gateway: "razorpay",
-        paymentId,
+        paymentId, 
         subscriptionId,
       });
-
+    console.log("Transaction after markTransactionPaid:", transaction);
+    
       if (transaction) {
         await updateUserAfterPurchase(transaction, subscriptionId);
         console.log("✅ Subscription activated/renewed");

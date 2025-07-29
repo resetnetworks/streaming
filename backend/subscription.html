@@ -11,12 +11,12 @@
 
   <script>
     const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjUwMjZjZGU5M2Y2ZTY4MjM0ZTIxYiIsImlhdCI6MTc1MzQzNTc2NCwiZXhwIjoxNzU0NzMxNzY0fQ.jgih79N9u3cN5Mhb_UFGHpRj84AKj8pVzfzrCW37b5Y"; // ✅ Replace with your real JWT token
-    const artistId = "688880adc6234132ba37d683"; // ✅ Replace with your artist ID
+    const artistId = "68889919dc6ba14b13fba7a9"; // ✅ Replace with your artist ID
 
     document.getElementById("subscribeButton").onclick = async function () {
       try {
         // ✅ 1. Call backend to create subscription
-        const res = await fetch("http://localhost:4000/api/subscriptions/artist/688753376d96e99b0617c093", {
+        const res = await fetch("http://localhost:4000/api/subscriptions/artist/68889919dc6ba14b13fba7a9", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

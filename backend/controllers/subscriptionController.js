@@ -150,38 +150,57 @@ if (subscription.latest_invoice && !subscription.latest_invoice.payment_intent) 
 };
 
 export const cancelArtistSubscription = async (req, res) => {
-  const { artistId } = req.params;
-  const userId = req.user._id;
+  try {
+    const { artistId } = req.params;
+    const userId = req.user._id;
 
-  const sub = await Subscription.findOne({
-    userId,
-    artistId,
-    status: "active",
-    validUntil: { $gt: new Date() },
-  });
+    const sub = await Subscription.findOne({
+      userId,
+      artistId,
+      status: "active",
+      validUntil: { $gt: new Date() },
+    });
 
-  if (!sub) {
-    return res.status(404).json({ message: "No active subscription found." });
-  }
-
-  sub.status = "cancelled";
-  // sub.validUntil = new Date(); // immediately invalid
-  await sub.save();
-
-  // Optional: cancel from Stripe if using recurring
-  if (sub.gateway === "stripe" && sub.externalSubscriptionId) {
-    try {
-      await stripe.subscriptions.update(sub.externalSubscriptionId, {
-        cancel_at_period_end: true,
-      });
-      console.log("⛔ Stripe subscription set to cancel at end of period");
-    } catch (err) {
-      console.warn("⚠️ Error cancelling Stripe sub:", err.message);
+    if (!sub) {
+      return res.status(404).json({ message: "No active subscription found." });
     }
-  }
 
-  return res.status(200).json({ success: true, message: "Subscription cancelled." });
+    // Step 1: Mark as cancelled in DB
+    sub.status = "cancelled";
+    await sub.save();
+
+    // Step 2: Cancel at Stripe if needed
+    if (sub.gateway === "stripe" && sub.externalSubscriptionId) {
+      try {
+        await stripe.subscriptions.update(sub.externalSubscriptionId, {
+          cancel_at_period_end: true,
+        });
+        console.log("⛔ Stripe subscription set to cancel at period end");
+      } catch (err) {
+        console.warn("⚠️ Stripe cancel failed:", err.message);
+      }
+    }
+
+    // Step 3: Cancel at Razorpay if needed
+    else if (sub.gateway === "razorpay" && sub.externalSubscriptionId) {
+      try {
+        await razorpay.subscriptions.cancel(sub.externalSubscriptionId);
+        console.log("⛔ Razorpay subscription cancelled immediately");
+      } catch (err) {
+        console.warn("⚠️ Razorpay cancel failed:", err.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Subscription cancelled. If paid, access will remain until expiry.",
+    });
+  } catch (error) {
+    console.error("❌ Error in cancelArtistSubscription:", error.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
+
 
 // controllers/paymentController.js
 export const createSetupIntent = async (req, res) => {

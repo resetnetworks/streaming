@@ -12,14 +12,7 @@ export const markTransactionPaid = async ({
   subscriptionId,
 }) => {
   let query = {};
-  console.log("markTransactionPaid called with:", {
-    gateway,
-    paymentId,
-    paymentIntentId,
-    razorpayOrderId,
-    stripeSubscriptionId,
-    subscriptionId,
-  });
+  
 
   if (gateway === "stripe") {
     if (stripeSubscriptionId) {
@@ -92,11 +85,14 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
 
     case "artist-subscription": {
       let validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // default: +30 days
-      const fallbackExternalId =
-        transaction.stripeSubscriptionId ||
-        transaction.paymentIntentId ||
-        transaction.razorpayOrderId ||
-        "unknown";
+   const fallbackExternalId =
+  transaction.metadata?.externalSubscriptionId || // top priority
+  transaction.metadata?.razorpaySubscriptionId || // fallback if above not present
+  transaction.stripeSubscriptionId ||
+  transaction.paymentIntentId ||
+  transaction.razorpayOrderId ||
+  "unknown";
+
 
       // 🧠 Try getting real billing period from Stripe
       if (transaction.stripeSubscriptionId) {
@@ -110,7 +106,7 @@ export const updateUserAfterPurchase = async (transaction, paymentId) => {
           console.warn("⚠️ Failed to fetch Stripe period:", err.message);
         }
       }
-
+     console.log("Valid until date:", transaction);
       // ✅ Upsert subscription (avoid duplicate key error)
       await Subscription.findOneAndUpdate(
         { userId: transaction.userId, artistId: transaction.artistId },
