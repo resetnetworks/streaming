@@ -7,28 +7,39 @@ import { createRazorpayOrder } from "../utils/razorpay.js";
 import { getOrCreateStripeCustomer } from "../utils/stripe.js";
 import Stripe from "stripe";
 import {User} from "../models/User.js";
+import Razorpay from "razorpay";
+import { createRazorpayPlan } from "../utils/razorpay.js";
+import { razorpay } from "../utils/razorpay.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const initiateArtistSubscription = async (req, res) => {
   const userId = req.user._id;
   const { paymentMethodId, gateway } = req.body;
   const { artistId } = req.params;
+  const {line1, city, state, postal_code, country} = req.body
+  const address = {
+    line1,
+    city,
+    state,
+    postal_code,
+    country,
+  };
 
   if (gateway !== 'stripe') {
     return res.status(400).json({ message: 'Invalid gateway' });
   }
 
   // ✅ Check if subscription is already in process or active
-// const existingActiveSub = await Subscription.findOne({
-//   userId,
-//   artistId,
-//   status: "active",
-//   validUntil: { $gt: new Date() }, // still valid
-// });
+const existingActiveSub = await Subscription.findOne({
+  userId,
+  artistId,
+  status: "active",
+  validUntil: { $gt: new Date() }, // still valid
+});
 
-// if (existingActiveSub) {
-//   return res.status(400).json({ message: 'Subscription already active.' });
-// }
+if (existingActiveSub) {
+  return res.status(400).json({ message: 'Subscription already active.' });
+}
 
   // const user = await User.findById(userId);
   // const artist = await Artist.findById(artistId);
@@ -47,13 +58,7 @@ let customerId = user.stripeCustomerId;
   const customer = await stripe.customers.create({
     email: user.email,
     name: user.name,
-    address: {
-      line1: '48 Subhas Sangha Square',
-      city: 'Durgapur',
-      state: 'West Bengal',
-      postal_code: '713213',
-      country: 'IN',
-    },
+    address: address,
   });
   customerId = customer.id;
   user.stripeCustomerId = customerId;
@@ -62,13 +67,7 @@ let customerId = user.stripeCustomerId;
   // 👇 Ensure address is present even for existing customers
   await stripe.customers.update(customerId, {
     name: user.name,
-    address: {
-      line1: '48 Subhas Sangha Square',
-      city: 'Durgapur',
-      state: 'West Bengal',
-      postal_code: '713213',
-      country: 'IN',
-    },
+    address: address,
   });
 }
 
@@ -195,4 +194,47 @@ export const createSetupIntent = async (req, res) => {
   });
 
   res.status(200).json({ clientSecret: setupIntent.client_secret });
+};
+
+
+export const createRazorpaySubscription = async (req, res) => {
+  const { artistId } = req.params;
+  const user = req.user;
+  console.log(artistId, user._id);
+  
+
+  const artist = await Artist.findById(artistId).select(
+    "razorpayPlanId subscriptionPrice"
+  );
+  if (!artist || !artist.razorpayPlanId) {
+    throw new Error("Artist subscription not available");
+  }
+
+  const subscription = await razorpay.subscriptions.create({
+    plan_id: artist.razorpayPlanId,
+    total_count: 12, // 12 months, or set null for "infinite until cancel"
+    customer_notify: 1,
+    notes: {
+      userId: user._id.toString(),
+      artistId: artistId.toString(),
+    },
+  });
+
+  // ✅ Save transaction as pending
+  await Transaction.create({
+    userId: user._id,
+    itemType: "artist-subscription",
+    itemId: artistId,
+    artistId,
+    amount: artist.subscriptionPrice,
+    currency: "INR",
+    gateway: "razorpay",
+    status: "pending",
+    metadata: { razorpaySubscriptionId: subscription.id },
+  });
+
+  res.status(201).json({
+    success: true,
+    subscriptionId: subscription.id,
+  });
 };

@@ -56,28 +56,25 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // 1. Find user by email and include password
   const user = await User.findOne({ email }).select("+password");
 
   if (!user) {
     throw new BadRequestError("No user exists with this email");
   }
 
-  // 2. Compare entered password with hashed password
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new BadRequestError("Incorrect password");
   }
 
-  // 3. Generate token and set it in cookie
-  generateToken(user._id, res);
+  // ✅ Token is now captured and returned
+  const token = generateToken(user._id, res);
 
-  // 4. Shape safe user object
   const shapedUser = shapeUserResponse(user.toObject());
 
-  // 5. Send response
-  res.status(StatusCodes.OK).json({
+  res.status(200).json({
     user: shapedUser,
+    token, // ✅ include token
     message: "User logged in successfully",
   });
 };
@@ -300,7 +297,7 @@ export const googleAuthCallback = (req, res) => {
   generateToken(req.user._id, res);
 
   // Redirect to frontend (after successful login)
-  const redirectUrl = process.env.CLIENT_URL || "http://localhost:5173/";
+  const redirectUrl = process.env.CLIENT_URL || "https://www.musicreset.com/";
   res.redirect(redirectUrl);
 };
 
@@ -321,7 +318,7 @@ export const facebookAuthCallback = (req, res) => {
   generateToken(req.user._id, res);
 
   // Redirect to frontend after successful login
-  const redirectUrl = process.env.CLIENT_URL || "/";
+  const redirectUrl = process.env.CLIENT_URL || "https://www.musicreset.com/";
   res.redirect(redirectUrl);
 };
 
@@ -333,18 +330,15 @@ export const facebookAuthCallback = (req, res) => {
 // @access  Public (OAuth)
 // ===================================================================
 export const appleCallback = (req, res) => {
-  // If authentication failed and no user is attached to req
+  // If Passport (or your OAuth middleware) did not set req.user, authentication failed
   if (!req.user) {
     throw new UnauthorizedError("Apple authentication failed");
   }
 
-  // Generate authentication token and set in cookie
+  // Generate auth token (e.g., set as cookie) for the authenticated user
   generateToken(req.user._id, res);
 
-  // Respond with success and user data
-  res.status(200).json({
-    success: true,
-    message: "Apple login successful",
-    user: req.user,
-  });
+  // Redirect to frontend after successful login
+  const redirectUrl = process.env.CLIENT_URL || "https://www.musicreset.com/";
+  res.redirect(redirectUrl);
 };

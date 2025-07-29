@@ -1,0 +1,56 @@
+mport crypto from "crypto";
+
+
+export const razorpayWebhook = async (req, res) => {
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  const signature = req.headers["x-razorpay-signature"];
+  const body = JSON.stringify(req.body);
+
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(body)
+    .digest("hex");
+
+  if (signature !== expectedSignature) {
+    console.error("❌ Invalid Razorpay signature");
+    return res.status(400).json({ message: "Invalid signature" });
+  }
+
+  const event = req.body.event;
+  console.log(`📥 Razorpay Event: ${event}`);
+
+  try {
+    if (event === "payment.captured") {
+      const payment = req.body.payload.payment.entity;
+      const subscriptionId = payment.subscription_id;
+
+      const transaction = await markTransactionPaid({
+        gateway: "razorpay",
+        razorpaySubscriptionId: subscriptionId,
+      });
+
+      if (transaction) {
+        await updateUserAfterPurchase(transaction, subscriptionId);
+        console.log("✅ Subscription activated/renewed");
+      }
+    }
+
+    if (event === "subscription.charged") {
+      console.log("🔄 Recurring charge successful", req.body.payload.subscription.entity.id);
+      // Extend validUntil in Subscription model
+    }
+
+    if (event === "subscription.halted" || event === "subscription.completed") {
+      await Subscription.findOneAndUpdate(
+        { externalSubscriptionId: req.body.payload.subscription.entity.id },
+        { status: "cancelled" }
+      );
+      console.log("❌ Subscription stopped/cancelled");
+    }
+  } catch (err) {
+    console.error("Webhook processing failed:", err.message);
+  }
+
+  res.status(200).json({ status: "ok" });
+};
+

@@ -4,7 +4,9 @@ import logger from "../utils/logger.js";
 
 export const authenticateUser = async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    // ✅ Check Authorization header first, fallback to cookies
+    let token =
+      req.header("Authorization")?.replace("Bearer ", "") || req.cookies.token;
 
     if (!token) {
       return res.status(401).json({
@@ -37,7 +39,7 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     req.user = user;
-    return next();
+    next();
   } catch (error) {
     logger.error("Authentication middleware error:", error);
     res.status(500).json({

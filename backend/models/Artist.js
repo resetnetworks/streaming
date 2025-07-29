@@ -49,6 +49,10 @@ const artistSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    razorpayPlanId: { 
+      type:String , 
+      default: null,
+      trim: true },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
