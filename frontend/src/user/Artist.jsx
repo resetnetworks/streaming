@@ -26,7 +26,8 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
 import SaveCardModal from "../components/payments/saveCardModal";
-import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice"; // 👈 NEW
+import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice";
+import { initiateRazorpaySubscription } from "../features/payments/paymentSlice"; // 🆕 NEW
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -50,16 +51,21 @@ const Artist = () => {
     shallowEqual
   );
 
-  // ✅ NEW: Get subscriptions from Redux
+  // ✅ Get subscriptions from Redux
   const userSubscriptions = useSelector(
     (state) => state.userDashboard.subscriptions || []
   );
 
   const isSubscribed = userSubscriptions.some((sub) => sub.artist.slug === artistId);
 
+
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSaveCardModal, setShowSaveCardModal] = useState(false);
+  
+  // 🆕 NEW: Gateway selection states
+  const [showGatewayModal, setShowGatewayModal] = useState(false);
+  const [selectedGateway, setSelectedGateway] = useState(null);
 
   const {
     songs: artistSongs = [],
@@ -96,7 +102,7 @@ const Artist = () => {
   useEffect(() => {
     if (artistId) {
       dispatch(fetchArtistById(artistId));
-      dispatch(fetchUserSubscriptions()); // 👈 Fetch subscriptions
+      dispatch(fetchUserSubscriptions());
       dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 }));
       dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
     }
@@ -140,6 +146,7 @@ const Artist = () => {
     ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
   };
 
+  // 🆕 UPDATED: Handle Subscribe with Gateway Selection
   const handleSubscribe = async () => {
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
@@ -155,7 +162,7 @@ const Artist = () => {
       setSubscriptionLoading(true);
       try {
         await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
-        dispatch(fetchUserSubscriptions()); // 👈 Refresh Redux state
+        dispatch(fetchUserSubscriptions());
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         toast.error("Failed to unsubscribe");
@@ -164,7 +171,71 @@ const Artist = () => {
         setSubscriptionLoading(false);
       }
     } else {
+      // 🆕 Show gateway selection modal instead of direct SaveCardModal
+      setShowGatewayModal(true);
+    }
+  };
+
+  // 🆕 NEW: Handle Gateway Selection
+  const handleGatewaySelection = (gateway) => {
+    setSelectedGateway(gateway);
+    setShowGatewayModal(false);
+    
+    if (gateway === 'stripe') {
       setShowSaveCardModal(true);
+    } else if (gateway === 'razorpay') {
+      handleRazorpaySubscription();
+    }
+  };
+
+  // 🆕 NEW: Handle Razorpay Subscription
+  const handleRazorpaySubscription = async () => {
+    setSubscriptionLoading(true);
+    try {
+      const result = await dispatch(initiateRazorpaySubscription(artist._id)).unwrap();
+      
+      if (result.subscriptionId) {
+        // Load Razorpay script
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+
+        script.onload = () => {
+          const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+            subscription_id: result.subscriptionId,
+            name: 'MusicReset',
+            description: `Subscribe to ${artist.name}`,
+            image: artist.image || '/logo.png',
+            handler: function (response) {
+              // Handle successful payment
+              toast.success(`Successfully subscribed to ${artist.name}!`);
+              dispatch(fetchUserSubscriptions());
+            },
+            prefill: {
+              name: currentUser?.name,
+              email: currentUser?.email,
+            },
+            theme: {
+              color: '#3b82f6'
+            },
+            modal: {
+              ondismiss: function() {
+                toast.info('Subscription cancelled');
+              }
+            }
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+      }
+    } catch (error) {
+      toast.error('Failed to initiate Razorpay subscription');
+      console.error(error);
+    } finally {
+      setSubscriptionLoading(false);
     }
   };
 
@@ -300,7 +371,8 @@ const Artist = () => {
           )}
         </div>
 
-        {/* All Songs */}
+        {/* Rest of your existing JSX content... */}
+        {/* All Songs Section */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
           {artistSongs.length > 5 && (
@@ -491,12 +563,70 @@ const Artist = () => {
           getArtistColor={getArtistColor}
         />
 
+        {/* 🆕 NEW: Gateway Selection Modal */}
+        {showGatewayModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-96 max-w-[90vw]">
+              <h3 className="text-xl font-semibold text-white mb-4 text-center">
+                Choose Payment Method
+              </h3>
+              <p className="text-gray-300 text-sm mb-6 text-center">
+                Subscribe to {artist?.name} for ₹{subscriptionPrice.toFixed(2)}/month
+              </p>
+              
+              <div className="space-y-3">
+                {/* Stripe Option */}
+                <button
+                  onClick={() => handleGatewaySelection('stripe')}
+                  className="w-full flex items-center justify-between p-4 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm">S</span>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-white font-medium">Credit/Debit Card</div>
+                      <div className="text-blue-200 text-xs">Powered by Stripe</div>
+                    </div>
+                  </div>
+                  <div className="text-blue-200 text-xs">Secure</div>
+                </button>
+
+                {/* Razorpay Option */}
+                <button
+                  onClick={() => handleGatewaySelection('razorpay')}
+                  className="w-full flex items-center justify-between p-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                      <span className="text-green-600 font-bold text-sm">R</span>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-white font-medium">UPI, Cards, Wallets</div>
+                      <div className="text-green-200 text-xs">Powered by Razorpay</div>
+                    </div>
+                  </div>
+                  <div className="text-green-200 text-xs">Indian</div>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowGatewayModal(false)}
+                className="w-full mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Existing Modals */}
         {showSaveCardModal && (
           <SaveCardModal
             artistId={artist?._id}
             onCardSaved={() => {
               setShowSaveCardModal(false);
-              dispatch(fetchUserSubscriptions()); // 👈 Refresh
+              dispatch(fetchUserSubscriptions());
               toast.success(`Subscribed to ${artist?.name}`);
             }}
             onClose={() => setShowSaveCardModal(false)}

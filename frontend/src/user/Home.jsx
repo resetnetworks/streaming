@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight } from "react-icons/lu";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
+import { toast } from "sonner";
+
 // Redux actions
 import { fetchAllSongs } from "../features/songs/songSlice";
 import {
@@ -17,6 +18,7 @@ import {
   selectRandomArtistSongs,
 } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
+import { initiateRazorpayItemPayment } from "../features/payments/paymentSlice"; // 🆕 Razorpay import
 
 // Components
 import UserHeader from "../components/user/UserHeader";
@@ -45,6 +47,10 @@ const Home = () => {
   const randomArtist = useSelector(selectRandomArtist);
   const similarSongs = useSelector(selectRandomArtistSongs);
 
+  // 🆕 Payment state from Redux
+  const paymentLoading = useSelector((state) => state.payment.loading);
+  const razorpayOrder = useSelector((state) => state.payment.razorpayOrder);
+
   // State
   const [recentPage, setRecentPage] = useState(1);
   const [topPicksPage, setTopPicksPage] = useState(1);
@@ -52,9 +58,10 @@ const Home = () => {
   const [albumsPage, setAlbumsPage] = useState(1);
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [purchaseItem, setPurchaseItem] = useState(null);
-  const [purchaseType, setPurchaseType] = useState(null);
+  
+  // 🆕 Purchase state - no modal needed, direct Razorpay
+  const [processingPayment, setProcessingPayment] = useState(false);
+  
   const [loadingMore, setLoadingMore] = useState({
     recent: false,
     topPicks: false,
@@ -81,13 +88,12 @@ const Home = () => {
     dispatch(fetchRandomArtistWithSongs({ page: similarPage, limit: 10 }));
   }, [dispatch, similarPage]);
 
- useEffect(() => {
-  dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }))
-    .then(() => {
-      setLoadingMore((prev) => ({ ...prev, albums: false }));
-    });
-}, [dispatch, albumsPage]);
-
+  useEffect(() => {
+    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }))
+      .then(() => {
+        setLoadingMore((prev) => ({ ...prev, albums: false }));
+      });
+  }, [dispatch, albumsPage]);
 
   useEffect(() => {
     dispatch(
@@ -119,6 +125,14 @@ const Home = () => {
     });
   }, [dispatch, topPicksPage]);
 
+  // 🆕 Watch for Razorpay order creation
+  useEffect(() => {
+    if (razorpayOrder && !processingPayment) {
+      setProcessingPayment(true);
+      handleRazorpayCheckout(razorpayOrder);
+    }
+  }, [razorpayOrder, processingPayment]);
+
   // Handlers
   const handleScroll = (ref) => {
     if (ref.current) {
@@ -131,10 +145,123 @@ const Home = () => {
     dispatch(play());
   };
 
-  const handlePurchaseClick = (item, type) => {
-    setPurchaseItem(item);
-    setPurchaseType(type);
-    setShowPurchaseModal(true);
+  // 🆕 NEW: Razorpay Purchase Handler
+  const handlePurchaseClick = async (item, type) => {
+    if (!currentUser) {
+      toast.error("Please login to purchase");
+      navigate("/login");
+      return;
+    }
+
+    console.log('🛒 PURCHASE INITIATED:', {
+      itemType: type,
+      itemId: item._id,
+      itemName: item.title || item.name,
+      price: item.price,
+      timestamp: new Date().toISOString()
+    });
+
+    if (paymentLoading || processingPayment) {
+      toast.info("Payment already in progress...");
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      
+      // Dispatch Razorpay order creation
+      const result = await dispatch(initiateRazorpayItemPayment({
+        itemType: type,
+        itemId: item._id,
+        amount: item.price
+      })).unwrap();
+
+      console.log('✅ RAZORPAY ORDER CREATED:', result);
+
+      if (result.order) {
+        await handleRazorpayCheckout(result.order, item, type);
+      }
+    } catch (error) {
+      console.error('❌ PURCHASE FAILED:', error);
+      toast.error(error.message || 'Failed to initiate payment');
+      setProcessingPayment(false);
+    }
+  };
+
+  // 🆕 NEW: Handle Razorpay Checkout
+  const handleRazorpayCheckout = async (order, item = null, type = null) => {
+    try {
+      console.log('💳 OPENING RAZORPAY CHECKOUT:', {
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency
+      });
+
+      // Load Razorpay script if not already loaded
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = () => reject(new Error('Failed to load Razorpay script'));
+        });
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.id,
+        name: 'MusicReset',
+        description: item 
+          ? `Purchase ${type}: ${item.title || item.name}`
+          : 'Music Purchase',
+        image: '/logo.png',
+        handler: function (response) {
+          console.log('🎉 RAZORPAY PAYMENT SUCCESS:', {
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+            timestamp: new Date().toISOString()
+          });
+
+          toast.success(`Successfully purchased ${item?.title || item?.name || 'item'}!`);
+          
+          // Refresh user data to update purchased items
+          // You might want to dispatch an action to refresh user purchases here
+          
+          setProcessingPayment(false);
+        },
+        prefill: {
+          name: currentUser?.name || '',
+          email: currentUser?.email || '',
+          contact: currentUser?.phone || ''
+        },
+        theme: {
+          color: '#3b82f6'
+        },
+        modal: {
+          ondismiss: function() {
+            console.log('ℹ️ RAZORPAY CHECKOUT CANCELLED');
+            toast.info('Payment cancelled');
+            setProcessingPayment(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+      console.log('🚀 RAZORPAY CHECKOUT OPENED');
+
+    } catch (error) {
+      console.error('❌ RAZORPAY CHECKOUT ERROR:', error);
+      toast.error('Failed to open payment gateway');
+      setProcessingPayment(false);
+    }
   };
 
   // Create chunks for top songs grid
@@ -188,14 +315,13 @@ const Home = () => {
   );
 
   return (
-
     <>
-    <Helmet>
-      <title>MUSICRESET - RESET MUSIC STREAMING PLATFORM</title>
-      <meta name="robots" content="index, follow" />
-    <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
-    </Helmet>
-    
+      <Helmet>
+        <title>MUSICRESET - RESET MUSIC STREAMING PLATFORM</title>
+        <meta name="robots" content="index, follow" />
+        <meta name="description" content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm." />
+      </Helmet>
+      
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
@@ -234,10 +360,15 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 mt-2 sm:mt-0 py-1 rounded"
+                            className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 mt-2 sm:mt-0 py-1 rounded transition-colors ${
+                              processingPayment || paymentLoading
+                                ? "bg-gray-500 cursor-not-allowed" 
+                                : "bg-indigo-600 hover:bg-indigo-700"
+                            }`}
                             onClick={() => handlePurchaseClick(song, "song")}
+                            disabled={processingPayment || paymentLoading}
                           >
-                            ₹{song.price}
+                            {processingPayment || paymentLoading ? "..." : `₹${song.price}`}
                           </button>
                         )
                       ) : (
@@ -300,10 +431,15 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded"
+                            className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded transition-colors ${
+                              processingPayment || paymentLoading
+                                ? "bg-gray-500 cursor-not-allowed"
+                                : "bg-indigo-600 hover:bg-indigo-700"
+                            }`}
                             onClick={() => handlePurchaseClick(album, "album")}
+                            disabled={processingPayment || paymentLoading}
                           >
-                            ₹{album.price}
+                            {processingPayment || paymentLoading ? "..." : `₹${album.price}`}
                           </button>
                         )
                       }
@@ -312,12 +448,11 @@ const Home = () => {
                   </div>
                 ))}
             {loadingMore.albums && albumsPage < albumsTotalPages ? (
-  <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
-    <Skeleton height={160} width={160} className="rounded-xl" />
-    <Skeleton width={100} height={12} />
-  </div>
-) : null}
-
+              <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
+                <Skeleton height={160} width={160} className="rounded-xl" />
+                <Skeleton width={100} height={12} />
+              </div>
+            ) : null}
           </div>
 
           {/* Similar Artist Section */}
@@ -368,10 +503,15 @@ const Home = () => {
                             "Purchased"
                           ) : (
                             <button
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                              className={`text-white text-xs px-2 py-1 rounded transition-colors ${
+                                processingPayment || paymentLoading
+                                  ? "bg-gray-500 cursor-not-allowed"
+                                  : "bg-indigo-600 hover:bg-indigo-700"
+                              }`}
                               onClick={() => handlePurchaseClick(song, "song")}
+                              disabled={processingPayment || paymentLoading}
                             >
-                              Buy for ₹{song.price}
+                              {processingPayment || paymentLoading ? "..." : `Buy for ₹${song.price}`}
                             </button>
                           )
                         ) : (
@@ -496,20 +636,17 @@ const Home = () => {
             </div>
           </div>
         </div>
-        {showPurchaseModal && purchaseItem && (
-          <OneTimePaymentModal
-            itemType={purchaseType}
-            itemId={purchaseItem._id}
-            amount={purchaseItem.price}
-            onClose={() => {
-              setShowPurchaseModal(false);
-              setPurchaseItem(null);
-              setPurchaseType(null);
-            }}
-          />
+
+        {/* 🆕 Loading Overlay for Payment Processing */}
+        {(processingPayment || paymentLoading) && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <p className="text-white text-center">Processing payment...</p>
+            </div>
+          </div>
         )}
       </SkeletonTheme>
-    
     </>
   );
 };
