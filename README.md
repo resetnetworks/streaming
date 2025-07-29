@@ -35,7 +35,7 @@
 - Password encryption with bcrypt
 
 ### 🎵 **Music Streaming**
-- HLS (HTTP Live Streaming) with AES encryption
+- HLS (HTTPS Live Streaming)
 - High-quality audio streaming
 - Progressive loading with skeleton UI
 - Responsive audio player
@@ -90,7 +90,7 @@
 |--------------|------------------|--------|
 | ![AWS S3](https://img.shields.io/badge/AWS_S3-Storage-FF9900?logo=amazons3) | ![HLS](https://img.shields.io/badge/HLS-Streaming-red) | ![Docker](https://img.shields.io/badge/Docker-20.x-2496ED?logo=docker) |
 | ![MediaConvert](https://img.shields.io/badge/MediaConvert-Processing-FF9900) | ![AES Encryption](https://img.shields.io/badge/AES-Encryption-green) | ![AWS EC2](https://img.shields.io/badge/AWS_EC2-Compute-FF9900?logo=amazonec2) |
-| ![Lambda](https://img.shields.io/badge/AWS_Lambda-Serverless-FF9900?logo=awslambda) | | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?logo=githubactions) |
+| ![Lambda](https://img.shields.io/badge/AWS_Lambda-Serverless-FF9900?logo=awslambda) | 
 
 ### **Payment & Social Integration**
 | Payments | Social Auth |
