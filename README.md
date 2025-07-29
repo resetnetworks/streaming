@@ -4,7 +4,7 @@
 
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![Tech](https://img.shields.io/badge/stack-React%20%7C%20Node%20%7C%20MongoDB%20%7C%20AWS%20%7C%20Docker-blue)
-![Version](https://img.shields.io/badge/version-2.0.0-green)
+![Version](https://img.shields.io/badge/version-1.0.0-green)
 ![Status](https://img.shields.io/badge/status-production--ready-success)
 
 </div>
@@ -53,7 +53,7 @@
 - Like/unlike songs and playlist management
 - Advanced search with filters
 - Fully responsive design
-- Dark/Light theme support
+- Dark theme support
 - Loading states and error handling
 
 </td>
