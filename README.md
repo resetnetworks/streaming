@@ -10,7 +10,7 @@
 </div>
 
 <div align="center">
- <img src="logo.svg" alt="MusicReset Logo" width="100" />
+ <img src="logo.svg" alt="MusicReset Logo" width="60" />
 </div>
 
 ---
