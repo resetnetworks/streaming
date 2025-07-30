@@ -6,7 +6,7 @@ import SongList from "../components/user/SongList";
 import RecentPlays from "../components/user/RecentPlays";
 import { FiMapPin } from "react-icons/fi";
 import { LuSquareChevronRight } from "react-icons/lu";
-import { fetchArtistById } from "../features/artists/artistsSlice";
+import { fetchArtistBySlug } from "../features/artists/artistsSlice";
 import { selectSelectedArtist } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
@@ -25,11 +25,11 @@ import { selectSongsByArtist } from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
-import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice";
+import SaveCardModal from "../components/payments/saveCardModal";
+import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice"; // 👈 NEW
 
 const Artist = () => {
-  // ✅ FIXED: Rename for clarity - artistSlug from URL params
-  const { artistId: artistSlug } = useParams();
+  const { artistId } = useParams();
   const dispatch = useDispatch();
   const recentScrollRef = useRef(null);
   const singlesScrollRef = useRef(null);
@@ -45,22 +45,21 @@ const Artist = () => {
   const artistAlbums = useSelector(selectArtistAlbums);
   const artistAlbumPagination = useSelector(selectArtistAlbumPagination);
   const artistInfo = useSelector(selectArtistInfo);
-  
-  // ✅ FIXED: Use artistSlug for selector
   const artistSongsData = useSelector(
-    (state) => selectSongsByArtist(state, artistSlug),
+    (state) => selectSongsByArtist(state, artistId),
     shallowEqual
   );
 
-  // ✅ Get subscriptions from Redux
+  // ✅ NEW: Get subscriptions from Redux
   const userSubscriptions = useSelector(
     (state) => state.userDashboard.subscriptions || []
   );
 
-  // ✅ FIXED: Check subscription using slug
-  const isSubscribed = userSubscriptions.some((sub) => sub.artist.slug === artistSlug);
+  const isSubscribed = userSubscriptions.some((sub) => sub.artist.slug === artistId);
 
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showSaveCardModal, setShowSaveCardModal] = useState(false);
 
   const {
     songs: artistSongs = [],
@@ -94,22 +93,21 @@ const Artist = () => {
     return colors[hash % colors.length];
   };
 
-  // ✅ FIXED: Use artistSlug for all data fetching
   useEffect(() => {
-    if (artistSlug) {
-      dispatch(fetchArtistById(artistSlug));
-      dispatch(fetchUserSubscriptions());
-      dispatch(getAlbumsByArtist({ artistId: artistSlug, page: 1, limit: 10 }));
-      dispatch(fetchSongsByArtist({ artistId: artistSlug, page: 1, limit: 10 }));
+    if (artistId) {
+      dispatch(fetchArtistBySlug(artistId));
+      dispatch(fetchUserSubscriptions()); // 👈 Fetch subscriptions
+      dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 }));
+      dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
     }
-  }, [dispatch, artistSlug]);
+  }, [dispatch, artistId]);
 
   const fetchAlbums = async (page) => {
     if (albumsStatus === "loading") return;
     setAlbumsStatus("loading");
     try {
       await dispatch(
-        getAlbumsByArtist({ artistId: artistSlug, page, limit: 10 })
+        getAlbumsByArtist({ artistId, page, limit: 10 })
       ).unwrap();
       if (page >= artistAlbumPagination.totalPages) {
         setHasMoreAlbums(false);
@@ -128,10 +126,10 @@ const Artist = () => {
   }, [albumsPage, hasMoreAlbums]);
 
   useEffect(() => {
-    if (artistSlug && songsPage > 1) {
-      dispatch(fetchSongsByArtist({ artistId: artistSlug, page: songsPage, limit: 10 }));
+    if (artistId && songsPage > 1) {
+      dispatch(fetchSongsByArtist({ artistId, page: songsPage, limit: 10 }));
     }
-  }, [dispatch, artistSlug, songsPage]);
+  }, [dispatch, artistId, songsPage]);
 
   const handlePlaySong = (song) => {
     dispatch(setSelectedSong(song));
@@ -142,7 +140,6 @@ const Artist = () => {
     ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
   };
 
-  // 🆕 UPDATED: Direct Razorpay Subscription (Similar to HTML example)
   const handleSubscribe = async () => {
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
@@ -157,9 +154,8 @@ const Artist = () => {
 
       setSubscriptionLoading(true);
       try {
-        // ✅ FIXED: Use actual database ID for API calls
         await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
-        dispatch(fetchUserSubscriptions());
+        dispatch(fetchUserSubscriptions()); // 👈 Refresh Redux state
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         toast.error("Failed to unsubscribe");
@@ -168,93 +164,7 @@ const Artist = () => {
         setSubscriptionLoading(false);
       }
     } else {
-      // 🆕 DIRECT RAZORPAY SUBSCRIPTION (like HTML example)
-      await handleRazorpaySubscription();
-    }
-  };
-
-  // 🆕 NEW: Direct Razorpay Subscription Handler (Similar to HTML example)
-  const handleRazorpaySubscription = async () => {
-    console.log('🚀 RAZORPAY SUBSCRIPTION INITIATED:', {
-      artistId: artist._id,
-      artistName: artist.name,
-      timestamp: new Date().toISOString()
-    });
-
-    setSubscriptionLoading(true);
-    
-    try {
-      // ✅ 1. Call backend to create subscription (like HTML example)
-      const response = await axiosInstance.post(`/subscriptions/artist/${artist._id}`);
-      
-      console.log("✅ Subscription Response:", response.data);
-
-      if (!response.data.success) {
-        toast.error("Subscription creation failed!");
-        return;
-      }
-
-      // ✅ 2. Load Razorpay script if not already loaded
-      if (!window.Razorpay) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
-
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = () => reject(new Error('Failed to load Razorpay script'));
-        });
-      }
-
-      // ✅ 3. Open Razorpay subscription checkout (exactly like HTML example)
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // ✅ Your test key
-        subscription_id: response.data.subscriptionId,
-        name: "MusicReset",
-        description: `Monthly subscription to ${artist.name}`,
-        image: artist.image || '/logo.png',
-        handler: function (response) {
-          console.log("🎉 Subscription Successful:", response);
-          toast.success(`Successfully subscribed to ${artist.name}!`);
-          
-          // ✅ Refresh user subscriptions
-          dispatch(fetchUserSubscriptions());
-        },
-        prefill: {
-          name: currentUser?.name || '',
-          email: currentUser?.email || '',
-          contact: currentUser?.phone || ''
-        },
-        theme: {
-          color: "#3b82f6"
-        },
-        modal: {
-          ondismiss: function() {
-            console.log('ℹ️ RAZORPAY SUBSCRIPTION CANCELLED');
-            toast.info('Subscription cancelled');
-          }
-        }
-      };
-
-      console.log('🚀 OPENING RAZORPAY CHECKOUT:', {
-        subscription_id: options.subscription_id,
-        key: options.key?.substring(0, 8) + '...'
-      });
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-
-    } catch (error) {
-      console.error("❌ Subscription Error:", error);
-      
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Failed to create subscription. Please try again.");
-      }
-    } finally {
-      setSubscriptionLoading(false);
+      setShowSaveCardModal(true);
     }
   };
 
@@ -370,7 +280,7 @@ const Artist = () => {
                         ${
                           isSubscribed
                             ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-green-600 text-white hover:bg-green-700"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
                     >
                       {subscriptionLoading
@@ -390,7 +300,7 @@ const Artist = () => {
           )}
         </div>
 
-        {/* All Songs Section */}
+        {/* All Songs */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
           {artistSongs.length > 5 && (
@@ -454,7 +364,7 @@ const Artist = () => {
           )}
         </div>
 
-        {/* Albums Section */}
+        {/* Albums */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Albums</h2>
           <div className="flex items-center gap-2">
@@ -497,7 +407,7 @@ const Artist = () => {
                           className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
                           onClick={() => handlePurchaseClick(album, "album")}
                         >
-                          Buy for ₹{album.price}
+                          Buy for ${album.price}
                         </button>
                       )
                     }
@@ -519,7 +429,7 @@ const Artist = () => {
           </div>
         </div>
 
-        {/* Singles Section */}
+        {/* Singles */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Singles</h2>
           <LuSquareChevronRight
@@ -560,7 +470,7 @@ const Artist = () => {
                           className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
                           onClick={() => handlePurchaseClick(song, "song")}
                         >
-                          Buy for ₹{song.price}
+                          Buy for ${song.price}
                         </button>
                       )
                     ) : (
@@ -581,7 +491,18 @@ const Artist = () => {
           getArtistColor={getArtistColor}
         />
 
-        {/* Purchase Modal for Songs/Albums */}
+        {showSaveCardModal && (
+          <SaveCardModal
+            artistId={artist?._id}
+            onCardSaved={() => {
+              setShowSaveCardModal(false);
+              dispatch(fetchUserSubscriptions()); // 👈 Refresh
+              toast.success(`Subscribed to ${artist?.name}`);
+            }}
+            onClose={() => setShowSaveCardModal(false)}
+          />
+        )}
+
         {showPurchaseModal && purchaseItem && (
           <OneTimePaymentModal
             itemType={purchaseType}

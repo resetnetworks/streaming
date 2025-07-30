@@ -34,7 +34,7 @@ export const fetchAllArtistsNoPagination = createAsyncThunk(
   }
 );
 
-export const fetchArtistById = createAsyncThunk(
+export const fetchArtistBySlug = createAsyncThunk(
   "artists/fetchById",
   async (id, thunkAPI) => {
     try {
@@ -196,15 +196,15 @@ const artistSlice = createSlice({
         state.error = action.payload;
       })
 
-      .addCase(fetchArtistById.pending, (state) => {
+      .addCase(fetchArtistBySlug.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchArtistById.fulfilled, (state, action) => {
+      .addCase(fetchArtistBySlug.fulfilled, (state, action) => {
         state.loading = false;
         state.selectedArtist = action.payload;
       })
-      .addCase(fetchArtistById.rejected, (state, action) => {
+      .addCase(fetchArtistBySlug.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
