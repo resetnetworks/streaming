@@ -18,7 +18,7 @@ import {
   selectRandomArtistSongs,
 } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
-import { initiateRazorpayItemPayment } from "../features/payments/paymentSlice"; // 🆕 Razorpay import
+import { initiateRazorpayItemPayment, resetPaymentState } from "../features/payments/paymentSlice";
 
 // Components
 import UserHeader from "../components/user/UserHeader";
@@ -29,6 +29,21 @@ import { Helmet } from "react-helmet";
 
 // Utils
 import { formatDuration } from "../utills/helperFunctions";
+
+// 🎯 Razorpay Script Loader
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -47,9 +62,8 @@ const Home = () => {
   const randomArtist = useSelector(selectRandomArtist);
   const similarSongs = useSelector(selectRandomArtistSongs);
 
-  // 🆕 Payment state from Redux
+  // Payment state from Redux
   const paymentLoading = useSelector((state) => state.payment.loading);
-  const razorpayOrder = useSelector((state) => state.payment.razorpayOrder);
 
   // State
   const [recentPage, setRecentPage] = useState(1);
@@ -59,8 +73,8 @@ const Home = () => {
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
   
-  // 🆕 Purchase state - no modal needed, direct Razorpay
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null); // 🆕 Track Razorpay instance
   
   const [loadingMore, setLoadingMore] = useState({
     recent: false,
@@ -125,13 +139,10 @@ const Home = () => {
     });
   }, [dispatch, topPicksPage]);
 
-  // 🆕 Watch for Razorpay order creation
+  // Clear payment state on mount
   useEffect(() => {
-    if (razorpayOrder && !processingPayment) {
-      setProcessingPayment(true);
-      handleRazorpayCheckout(razorpayOrder);
-    }
-  }, [razorpayOrder, processingPayment]);
+    dispatch(resetPaymentState());
+  }, [dispatch]);
 
   // Handlers
   const handleScroll = (ref) => {
@@ -145,7 +156,7 @@ const Home = () => {
     dispatch(play());
   };
 
-  // 🆕 NEW: Razorpay Purchase Handler
+  // 🆕 FIXED: Razorpay Purchase Handler
   const handlePurchaseClick = async (item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
@@ -169,6 +180,12 @@ const Home = () => {
     try {
       setProcessingPayment(true);
       
+      // Load Razorpay script first
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error("Failed to load Razorpay script");
+      }
+      
       // Dispatch Razorpay order creation
       const result = await dispatch(initiateRazorpayItemPayment({
         itemType: type,
@@ -180,6 +197,8 @@ const Home = () => {
 
       if (result.order) {
         await handleRazorpayCheckout(result.order, item, type);
+      } else {
+        throw new Error("Failed to create payment order");
       }
     } catch (error) {
       console.error('❌ PURCHASE FAILED:', error);
@@ -188,8 +207,8 @@ const Home = () => {
     }
   };
 
-  // 🆕 NEW: Handle Razorpay Checkout
-  const handleRazorpayCheckout = async (order, item = null, type = null) => {
+  // 🆕 FIXED: Handle Razorpay Checkout with proper success handling
+  const handleRazorpayCheckout = async (order, item, type) => {
     try {
       console.log('💳 OPENING RAZORPAY CHECKOUT:', {
         orderId: order.id,
@@ -197,28 +216,13 @@ const Home = () => {
         currency: order.currency
       });
 
-      // Load Razorpay script if not already loaded
-      if (!window.Razorpay) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
-
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = () => reject(new Error('Failed to load Razorpay script'));
-        });
-      }
-
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
         name: 'MusicReset',
-        description: item 
-          ? `Purchase ${type}: ${item.title || item.name}`
-          : 'Music Purchase',
+        description: `Purchase ${type}: ${item.title || item.name}`,
         image: '/logo.png',
         handler: function (response) {
           console.log('🎉 RAZORPAY PAYMENT SUCCESS:', {
@@ -228,12 +232,29 @@ const Home = () => {
             timestamp: new Date().toISOString()
           });
 
-          toast.success(`Successfully purchased ${item?.title || item?.name || 'item'}!`);
+          // ✅ Immediately close modal and show success
+          if (currentRazorpayInstance) {
+            try {
+              currentRazorpayInstance.close();
+            } catch (e) {
+              console.log('Razorpay instance already closed');
+            }
+          }
+
+          // Show success message
+          toast.success(`🎉 Successfully purchased ${item.title || item.name}!`, {
+            duration: 5000,
+          });
           
-          // Refresh user data to update purchased items
-          // You might want to dispatch an action to refresh user purchases here
-          
+          // Reset states
           setProcessingPayment(false);
+          setCurrentRazorpayInstance(null);
+          dispatch(resetPaymentState());
+          
+          // Refresh data after a short delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
         },
         prefill: {
           name: currentUser?.name || '',
@@ -248,19 +269,42 @@ const Home = () => {
             console.log('ℹ️ RAZORPAY CHECKOUT CANCELLED');
             toast.info('Payment cancelled');
             setProcessingPayment(false);
+            setCurrentRazorpayInstance(null);
           }
+        },
+        // 🆕 Add error handling
+        error: function(error) {
+          console.error('❌ RAZORPAY ERROR:', error);
+          toast.error('Payment failed. Please try again.');
+          setProcessingPayment(false);
+          setCurrentRazorpayInstance(null);
         }
       };
 
       const rzp = new window.Razorpay(options);
-      rzp.open();
+      setCurrentRazorpayInstance(rzp); // Store instance
+      
+      // 🆕 Add event listeners for better control
+      rzp.on('payment.success', function (response) {
+        console.log('🎯 PAYMENT SUCCESS EVENT:', response);
+        // Additional success handling if needed
+      });
 
+      rzp.on('payment.error', function (error) {
+        console.error('🚫 PAYMENT ERROR EVENT:', error);
+        toast.error('Payment failed. Please try again.');
+        setProcessingPayment(false);
+        setCurrentRazorpayInstance(null);
+      });
+
+      rzp.open();
       console.log('🚀 RAZORPAY CHECKOUT OPENED');
 
     } catch (error) {
       console.error('❌ RAZORPAY CHECKOUT ERROR:', error);
       toast.error('Failed to open payment gateway');
       setProcessingPayment(false);
+      setCurrentRazorpayInstance(null);
     }
   };
 
@@ -637,15 +681,30 @@ const Home = () => {
           </div>
         </div>
 
-        {/* 🆕 Loading Overlay for Payment Processing */}
+        {/* 🆕 Enhanced Loading Overlay */}
         {(processingPayment || paymentLoading) && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <p className="text-white text-center">Processing payment...</p>
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <div className="text-center">
+                <p className="text-white text-lg font-semibold">Processing Payment</p>
+                <p className="text-gray-300 text-sm mt-1">Please wait, do not close this window</p>
+              </div>
             </div>
           </div>
         )}
+
+        {/* 🆕 Success Toast Enhancement */}
+        <style jsx global>{`
+          [data-sonner-toast] {
+            background: rgb(31, 41, 55) !important;
+            border: 1px solid rgb(75, 85, 99) !important;
+            color: white !important;
+          }
+          [data-sonner-toast] [data-icon] {
+            color: rgb(34, 197, 94) !important;
+          }
+        `}</style>
       </SkeletonTheme>
     </>
   );

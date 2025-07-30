@@ -14,7 +14,6 @@ import { getAlbumsByArtist } from "../features/albums/albumsSlice";
 import ArtistAboutSection from "../components/user/ArtistAboutSection";
 import AlbumCard from "../components/user/AlbumCard";
 import axiosInstance from "../utills/axiosInstance";
-import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 import {
   selectArtistAlbums,
   selectArtistAlbumPagination,
@@ -25,20 +24,40 @@ import { selectSongsByArtist } from "../features/songs/songSelectors";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
-import SaveCardModal from "../components/payments/saveCardModal";
-import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice"; // 👈 NEW
+import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice";
+import { 
+  initiateRazorpayItemPayment, 
+  initiateRazorpaySubscription,
+  resetPaymentState 
+} from "../features/payments/paymentSlice";
+import {
+  selectPaymentLoading,
+  selectRazorpayOrder,
+  selectRazorpaySubscriptionId,
+  selectPaymentError
+} from "../features/payments/paymentSelectors";
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const Artist = () => {
   const { artistId } = useParams();
   const dispatch = useDispatch();
   const recentScrollRef = useRef(null);
   const singlesScrollRef = useRef(null);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [purchaseItem, setPurchaseItem] = useState(null);
-  const [purchaseType, setPurchaseType] = useState(null);
   const navigate = useNavigate();
 
-  // Selectors
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
   const artist = useSelector(selectSelectedArtist);
@@ -50,7 +69,11 @@ const Artist = () => {
     shallowEqual
   );
 
-  // ✅ NEW: Get subscriptions from Redux
+  const paymentLoading = useSelector(selectPaymentLoading);
+  const razorpayOrder = useSelector(selectRazorpayOrder);
+  const razorpaySubscriptionId = useSelector(selectRazorpaySubscriptionId);
+  const paymentError = useSelector(selectPaymentError);
+
   const userSubscriptions = useSelector(
     (state) => state.userDashboard.subscriptions || []
   );
@@ -58,8 +81,6 @@ const Artist = () => {
   const isSubscribed = userSubscriptions.some((sub) => sub.artist.slug === artistId);
 
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showSaveCardModal, setShowSaveCardModal] = useState(false);
 
   const {
     songs: artistSongs = [],
@@ -94,13 +115,24 @@ const Artist = () => {
   };
 
   useEffect(() => {
+    loadRazorpayScript();
+  }, []);
+
+  useEffect(() => {
     if (artistId) {
       dispatch(fetchArtistBySlug(artistId));
-      dispatch(fetchUserSubscriptions()); // 👈 Fetch subscriptions
+      dispatch(fetchUserSubscriptions());
       dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 }));
       dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
     }
   }, [dispatch, artistId]);
+
+  useEffect(() => {
+    dispatch(resetPaymentState());
+    return () => {
+      dispatch(resetPaymentState());
+    };
+  }, [dispatch]);
 
   const fetchAlbums = async (page) => {
     if (albumsStatus === "loading") return;
@@ -140,6 +172,137 @@ const Artist = () => {
     ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
   };
 
+  const handleRazorpayItemPurchase = async (item, itemType) => {
+    try {
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        toast.error("Failed to load payment gateway. Please try again.");
+        return;
+      }
+
+      const orderResult = await dispatch(
+        initiateRazorpayItemPayment({
+          itemType,
+          itemId: item._id,
+          amount: item.price,
+        })
+      ).unwrap();
+
+      if (!orderResult.order) {
+        toast.error("Failed to create payment order. Please try again.");
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderResult.order.amount,
+        currency: orderResult.order.currency || 'INR',
+        name: "RESET Music",
+        description: `Purchase ${item.title || item.name}`,
+        image: "/logo.png",
+        order_id: orderResult.order.id,
+        handler: async function (response) {
+          toast.success(`Successfully purchased ${item.title || item.name}!`);
+          dispatch(fetchUserSubscriptions());
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        },
+        prefill: {
+          name: currentUser?.name || "",
+          email: currentUser?.email || "",
+          contact: currentUser?.phone || "",
+        },
+        notes: {
+          itemType,
+          itemId: item._id,
+          userId: currentUser?._id,
+          artistId: artist?._id,
+        },
+        theme: {
+          color: "#3B82F6",
+        },
+        modal: {
+          ondismiss: function () {
+            toast.error("Payment cancelled.");
+            dispatch(resetPaymentState());
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Purchase error:", error);
+      toast.error(error.message || "Failed to initiate purchase");
+    }
+  };
+
+  const handleRazorpaySubscription = async () => {
+    if (!artist?._id) {
+      toast.error("Artist info not loaded.");
+      return;
+    }
+
+    try {
+      setSubscriptionLoading(true);
+
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        toast.error("Failed to load payment gateway. Please try again.");
+        return;
+      }
+
+      const subscriptionResult = await dispatch(
+        initiateRazorpaySubscription(artist._id)
+      ).unwrap();
+
+      if (!subscriptionResult.subscriptionId) {
+        toast.error("Failed to create subscription. Please try again.");
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        subscription_id: subscriptionResult.subscriptionId,
+        name: "RESET Music",
+        description: `Subscribe to ${artist.name}`,
+        image: "/logo.png",
+        handler: async function (response) {
+          toast.success(`Successfully subscribed to ${artist.name}!`);
+          dispatch(fetchUserSubscriptions());
+        },
+        prefill: {
+          name: currentUser?.name || "",
+          email: currentUser?.email || "",
+          contact: currentUser?.phone || "",
+        },
+        notes: {
+          artistId: artist._id,
+          artistSlug: artistId,
+          userId: currentUser?._id,
+        },
+        theme: {
+          color: "#3B82F6",
+        },
+        modal: {
+          ondismiss: function () {
+            toast.error("Subscription cancelled.");
+            dispatch(resetPaymentState());
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast.error(`Subscription failed: ${error.message || "Failed to initiate subscription"}`);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
   const handleSubscribe = async () => {
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
@@ -155,23 +318,21 @@ const Artist = () => {
       setSubscriptionLoading(true);
       try {
         await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
-        dispatch(fetchUserSubscriptions()); // 👈 Refresh Redux state
+        dispatch(fetchUserSubscriptions());
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
-        toast.error("Failed to unsubscribe");
-        console.error(error);
+        console.error("Unsubscribe error:", error);
+        toast.error(`Failed to unsubscribe: ${error.response?.data?.message || error.message}`);
       } finally {
         setSubscriptionLoading(false);
       }
     } else {
-      setShowSaveCardModal(true);
+      await handleRazorpaySubscription();
     }
   };
 
   const handlePurchaseClick = (item, type) => {
-    setPurchaseItem(item);
-    setPurchaseType(type);
-    setShowPurchaseModal(true);
+    handleRazorpayItemPurchase(item, type);
   };
 
   const songsLastRef = useCallback(
@@ -240,7 +401,6 @@ const Artist = () => {
     <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        {/* Hero Section */}
         <div className="relative h-80 w-full">
           {artist ? (
             <>
@@ -274,16 +434,16 @@ const Artist = () => {
                     </span>
                     <button
                       onClick={handleSubscribe}
-                      disabled={subscriptionLoading}
+                      disabled={subscriptionLoading || paymentLoading}
                       className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
-                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
+                        ${(subscriptionLoading || paymentLoading) ? "opacity-70 cursor-not-allowed" : ""}
                         ${
                           isSubscribed
                             ? "bg-red-600 text-white hover:bg-red-700"
                             : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
                     >
-                      {subscriptionLoading
+                      {(subscriptionLoading || paymentLoading)
                         ? "Processing..."
                         : isSubscribed
                         ? "Cancel Subscription"
@@ -300,7 +460,6 @@ const Artist = () => {
           )}
         </div>
 
-        {/* All Songs */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
           {artistSongs.length > 5 && (
@@ -364,7 +523,6 @@ const Artist = () => {
           )}
         </div>
 
-        {/* Albums */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Albums</h2>
           <div className="flex items-center gap-2">
@@ -404,10 +562,11 @@ const Artist = () => {
                         "Purchased"
                       ) : (
                         <button
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded disabled:opacity-50"
                           onClick={() => handlePurchaseClick(album, "album")}
+                          disabled={paymentLoading}
                         >
-                          Buy for ${album.price}
+                          {paymentLoading ? "Processing..." : `Buy for ₹${album.price}`}
                         </button>
                       )
                     }
@@ -429,7 +588,6 @@ const Artist = () => {
           </div>
         </div>
 
-        {/* Singles */}
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Singles</h2>
           <LuSquareChevronRight
@@ -467,10 +625,11 @@ const Artist = () => {
                         "Purchased"
                       ) : (
                         <button
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded disabled:opacity-50"
                           onClick={() => handlePurchaseClick(song, "song")}
+                          disabled={paymentLoading}
                         >
-                          Buy for ${song.price}
+                          {paymentLoading ? "Processing..." : `Buy for ₹${song.price}`}
                         </button>
                       )
                     ) : (
@@ -481,39 +640,25 @@ const Artist = () => {
               ))}
         </div>
 
-        {/* About Section */}
         <ArtistAboutSection
           artist={artist}
           isSubscribed={isSubscribed}
-          subscriptionLoading={subscriptionLoading}
+          subscriptionLoading={subscriptionLoading || paymentLoading}
           subscriptionPrice={subscriptionPrice}
           handleSubscribe={handleSubscribe}
           getArtistColor={getArtistColor}
         />
 
-        {showSaveCardModal && (
-          <SaveCardModal
-            artistId={artist?._id}
-            onCardSaved={() => {
-              setShowSaveCardModal(false);
-              dispatch(fetchUserSubscriptions()); // 👈 Refresh
-              toast.success(`Subscribed to ${artist?.name}`);
-            }}
-            onClose={() => setShowSaveCardModal(false)}
-          />
-        )}
-
-        {showPurchaseModal && purchaseItem && (
-          <OneTimePaymentModal
-            itemType={purchaseType}
-            itemId={purchaseItem._id}
-            amount={purchaseItem.price}
-            onClose={() => {
-              setShowPurchaseModal(false);
-              setPurchaseItem(null);
-              setPurchaseType(null);
-            }}
-          />
+        {paymentError && (
+          <div className="fixed top-4 right-4 z-50 bg-red-900/90 backdrop-blur-sm border border-red-500/30 rounded-lg p-4 text-red-300 max-w-sm">
+            <p className="text-sm">{paymentError.message || "Payment failed. Please try again."}</p>
+            <button 
+              onClick={() => dispatch(resetPaymentState())}
+              className="text-xs text-red-400 hover:text-red-300 mt-2"
+            >
+              Dismiss
+            </button>
+          </div>
         )}
       </SkeletonTheme>
     </>
