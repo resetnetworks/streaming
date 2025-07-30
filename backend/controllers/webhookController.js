@@ -208,7 +208,8 @@ export const razorpayWebhook = async (req, res) => {
 
         return res.status(200).json({ status: "subscription processed" });
       }
-
+      console.log("-----",fullPayment.notes);
+      
       // 2️⃣ One-time purchase flow (song/album)
       const { itemType:type, itemId, userId } = fullPayment.notes || {};
 
