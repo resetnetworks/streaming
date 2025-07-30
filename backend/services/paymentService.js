@@ -6,12 +6,14 @@ import { Subscription } from "../models/Subscription.js";
 export const markTransactionPaid = async ({
   gateway,
   paymentId,
-  paymentIntentId,
   razorpayOrderId,
+  paymentIntentId,
   stripeSubscriptionId,
   subscriptionId,
 }) => {
   let query = {};
+  console.log("-------",gateway, paymentId, paymentIntentId, razorpayOrderId, stripeSubscriptionId, subscriptionId);
+  
   
 
   if (gateway === "stripe") {

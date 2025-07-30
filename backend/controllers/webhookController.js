@@ -172,47 +172,75 @@ export const razorpayWebhook = async (req, res) => {
 
   const event = req.body.event;
 
-
-
   try {
     if (event === "payment.captured") {
+      console.log("💰 Payment captured:", req.body.payload.payment.entity.id);
+      
       const paymentEntity = req.body.payload.payment.entity;
       const paymentId = paymentEntity.id;
       const razorpayOrderId = paymentEntity.order_id;
+      console.log("Razorpay Order ID:", razorpayOrderId);
 
-      // Try to get subscription ID from payload
-     const fullPayment = await razorpay.payments.fetch(paymentId);
-     let subscriptionId = null;
+      // Fetch full payment details
+      const fullPayment = await razorpay.payments.fetch(paymentId);
 
-   if (fullPayment.invoice_id) {
-     const invoice = await razorpay.invoices.fetch(fullPayment.invoice_id);
-     subscriptionId = invoice.subscription_id;
-   }
-    
+      // 1️⃣ Subscription flow (monthly recurring)
+      let subscriptionId = null;
 
-      if (!subscriptionId) {
-        console.warn("No subscription ID found for captured payment", paymentId);
+      if (fullPayment.invoice_id) {
+        const invoice = await razorpay.invoices.fetch(fullPayment.invoice_id);
+        subscriptionId = invoice.subscription_id;
+      }
+
+      if (subscriptionId) {
+        // Handle subscription logic
+        const transaction = await markTransactionPaid({
+          gateway: "razorpay",
+          paymentId,
+          subscriptionId,
+          razorpayOrderId,
+        });
+
+        if (transaction) {
+          await updateUserAfterPurchase(transaction, subscriptionId);
+          console.log("✅ Subscription activated/renewed");
+        }
+
+        return res.status(200).json({ status: "subscription processed" });
+      }
+
+      // 2️⃣ One-time purchase flow (song/album)
+      const { itemType:type, itemId, userId } = fullPayment.notes || {};
+
+      if (!type || !itemId || !userId) {
+        console.warn("⚠️ Missing metadata in one-time Razorpay payment", fullPayment.notes);
         return res.status(200).send("OK");
       }
 
       const transaction = await markTransactionPaid({
         gateway: "razorpay",
-        paymentId, 
-        subscriptionId,
+        paymentId,
+        userId,
+        itemId,
+        type, // 'song' or 'album'
+        razorpayOrderId,
       });
-    console.log("Transaction after markTransactionPaid:", transaction);
-    
+
       if (transaction) {
-        await updateUserAfterPurchase(transaction, subscriptionId);
-        console.log("✅ Subscription activated/renewed");
+        await updateUserAfterPurchase(transaction, paymentId);
+        console.log("✅ One-time purchase completed:", type, itemId);
       }
+
+      return res.status(200).json({ status: "purchase processed" });
     }
 
+    // Recurring payment for existing subscription
     if (event === "subscription.charged") {
       console.log("🔄 Recurring charge successful", req.body.payload.subscription.entity.id);
-      // You can optionally extend `validUntil` here if needed
+      // Optionally extend validUntil
     }
 
+    // Cancellation or end of subscription
     if (event === "subscription.halted" || event === "subscription.completed") {
       await Subscription.findOneAndUpdate(
         { externalSubscriptionId: req.body.payload.subscription.entity.id },
@@ -221,7 +249,7 @@ export const razorpayWebhook = async (req, res) => {
       console.log("❌ Subscription stopped/cancelled");
     }
   } catch (err) {
-    console.error("Webhook processing failed:", err.message);
+    console.error("❌ Webhook processing failed:", err.message);
   }
 
   res.status(200).json({ status: "ok" });
