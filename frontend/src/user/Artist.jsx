@@ -397,7 +397,6 @@ const Artist = () => {
       </div>
     );
 
-    console.log("first")
 
   return (
     <>
