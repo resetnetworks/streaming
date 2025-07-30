@@ -92,7 +92,7 @@ app.use(express.json());
 //     frameSrc: ["'self'", "https://js.stripe.com"],
 //   },
 // }));
-app.use(morgan("combined"));
+// app.use(morgan("combined"));
 app.use(xssClean());
 app.use(mongoSanitize());
 

@@ -84,7 +84,7 @@ export const createRazorpayOrder = async (req, res) => {
   }
 
   // ✅ Create Razorpay Order
-  const razorpayOrder = await createRazorpayOrderUtil(amount, `${userId}-${itemType}-${itemId}`);
+  const razorpayOrder = await createRazorpayOrderUtil(amount, userId, itemType, itemId);
   
   
   

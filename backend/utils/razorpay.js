@@ -12,13 +12,15 @@ export const razorpay = new Razorpay({
  * @param {object} metadata - Optional: { itemType, itemId }.
  * @returns Razorpay Order
  */
-export const createRazorpayOrder = async (amount, userId, metadata = {}) => {
+export const createRazorpayOrder = async (amount, userId, itemType, itemId, metadata = {}) => {
   const order = await razorpay.orders.create({
     amount: amount * 100, // Razorpay expects amount in paise
     currency: "INR",
     receipt: `receipt_${Date.now()}`,
     notes: {
       userId,
+      itemType,
+      itemId,
       ...metadata,
     },
   });
