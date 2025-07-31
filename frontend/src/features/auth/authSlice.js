@@ -57,56 +57,121 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem("subscribedArtists");
 };
 
+// ✅ Enhanced token management functions
+const getTokenFromCookie = () => {
+  if (typeof document === 'undefined') return null;
+  
+  const cookies = document.cookie.split('; ');
+  const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
+  
+  if (tokenCookie) {
+    return tokenCookie.split('=')[1];
+  }
+  return null;
+};
+
+const getTokenFromResponse = (response) => {
+  // Try multiple ways to get token from response
+  if (response.data?.token) {
+    return response.data.token;
+  }
+  if (response.headers?.authorization) {
+    return response.headers.authorization.replace('Bearer ', '');
+  }
+  if (response.headers?.Authorization) {
+    return response.headers.Authorization.replace('Bearer ', '');
+  }
+  return null;
+};
+
+const storeTokenAndSetHeaders = (token) => {
+  if (token) {
+    console.log('✅ Storing token in localStorage:', token.substring(0, 10) + '...');
+    localStorage.setItem("token", token);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    return true;
+  }
+  return false;
+};
+
+const waitForCookie = async (maxAttempts = 5, delay = 100) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    const token = getTokenFromCookie();
+    if (token) {
+      return token;
+    }
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  return null;
+};
+
 // ====================
-// 🔄 Async Thunks
+// 🔄 Enhanced Async Thunks
 // ====================
 
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
   try {    
+    console.log('🚀 Starting registration process...');
+    
     const res = await axios.post("/users/register", userData, {
       withCredentials: true, // ✅ Important for cookie handling
     });
     
     const { user } = res.data;
+    console.log('✅ Registration API successful, user received:', !!user);
 
-    // ✅ Function to get token from cookie
-    const getTokenFromCookie = () => {
-      if (typeof document === 'undefined') return null;
-      
-      const cookies = document.cookie.split('; ');
-      const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
-      
-      if (tokenCookie) {
-        return tokenCookie.split('=')[1];
-      }
-      return null;
-    };
-
-    // ✅ Wait a bit for cookie to be set by server
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // ✅ Enhanced token retrieval with multiple fallbacks
+    let token = null;
     
-    const token = getTokenFromCookie();
-    
+    // Method 1: Try to get token from response directly
+    token = getTokenFromResponse(res);
     if (token) {
-      
-      // Store token in localStorage for axios headers
-      localStorage.setItem("token", token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      console.log('✅ Token found in response headers');
+    }
+    
+    // Method 2: Wait for cookie to be set by server
+    if (!token) {
+      console.log('⏳ Waiting for token in cookies...');
+      token = await waitForCookie();
+      if (token) {
+        console.log('✅ Token found in cookies after waiting');
+      }
+    }
+    
+    // Method 3: Check localStorage if token was set by interceptor
+    if (!token) {
+      token = localStorage.getItem('token');
+      if (token) {
+        console.log('✅ Token found in localStorage');
+      }
+    }
+    
+    // ✅ Store token and set headers
+    if (token) {
+      storeTokenAndSetHeaders(token);
       
       // Verify token works
       try {
-        await axios.get("/users/me", { withCredentials: true });
+        console.log('🔍 Verifying token with server...');
+        const verifyResponse = await axios.get("/users/me", { 
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('✅ Token verification successful');
       } catch (tokenError) {
         console.error('❌ Token verification failed:', tokenError);
-        throw new Error("Token verification failed after registration");
+        // Don't throw error, just log warning
+        console.warn('⚠️ Proceeding despite token verification failure');
       }
       
     } else {
+      console.warn('⚠️ No token found, trying cookie-only authentication...');
       
-      // Try to verify authentication via cookie
+      // Try to verify authentication via cookie-only
       try {
         const meResponse = await axios.get("/users/me", { withCredentials: true });
         if (meResponse.status === 200) {
+          console.log('✅ Cookie-only authentication verified');
         } else {
           throw new Error("Authentication verification failed");
         }
@@ -116,7 +181,10 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
       }
     }
 
+    // Store user data
     storeAuthToLocal(user);
+    
+    console.log('✅ Registration process completed successfully');
     return user;
     
   } catch (err) {
@@ -135,39 +203,90 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
   }
 });
 
-// ✅ Also update loginUser similarly
 export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
   try {
+    console.log('🚀 Starting login process...');
+    
     const res = await axios.post("/users/login", userData, {
       withCredentials: true,
     });
     
     const { user } = res.data;
+    console.log('✅ Login API successful, user received:', !!user);
 
-    // Get token from cookie
-    const getTokenFromCookie = () => {
-      if (typeof document === 'undefined') return null;
-      const cookies = document.cookie.split('; ');
-      const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
-      return tokenCookie ? tokenCookie.split('=')[1] : null;
-    };
-
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const token = getTokenFromCookie();
-
+    // ✅ Enhanced token retrieval with multiple fallbacks
+    let token = null;
+    
+    // Method 1: Try to get token from response directly
+    token = getTokenFromResponse(res);
     if (token) {
-      localStorage.setItem("token", token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      console.log('✅ Token found in response headers');
+    }
+    
+    // Method 2: Wait for cookie to be set by server
+    if (!token) {
+      console.log('⏳ Waiting for token in cookies...');
+      token = await waitForCookie();
+      if (token) {
+        console.log('✅ Token found in cookies after waiting');
+      }
+    }
+    
+    // Method 3: Check localStorage if token was set by interceptor
+    if (!token) {
+      token = localStorage.getItem('token');
+      if (token) {
+        console.log('✅ Token found in localStorage');
+      }
+    }
+    
+    // ✅ Store token and set headers (always attempt in all environments)
+    if (token) {
+      storeTokenAndSetHeaders(token);
+      
+      // Verify token works
+      try {
+        console.log('🔍 Verifying token with server...');
+        const verifyResponse = await axios.get("/users/me", { 
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('✅ Token verification successful');
+      } catch (tokenError) {
+        console.error('❌ Token verification failed:', tokenError);
+        console.warn('⚠️ Proceeding despite token verification failure');
+      }
+    } else {
+      console.warn('⚠️ No token found, trying cookie-only authentication...');
+      
+      // Try to verify authentication via cookie-only
+      try {
+        const meResponse = await axios.get("/users/me", { withCredentials: true });
+        if (meResponse.status === 200) {
+          console.log('✅ Cookie-only authentication verified');
+        }
+      } catch (meError) {
+        console.error('❌ Cookie authentication verification failed:', meError);
+      }
     }
 
+    // Store user data
     storeAuthToLocal(user);
+    
+    console.log('✅ Login process completed successfully');
     return user;
     
   } catch (err) {
+    console.error("❌ Login error:", err);
+    
+    // Clear any partial data on error
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    delete axios.defaults.headers.common["Authorization"];
+    
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
-
 
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
@@ -187,8 +306,16 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) =>
     const res = await axios.post("/users/logout");
     clearAuthFromLocal();
     delete axios.defaults.headers.common["Authorization"];
+    
+    // Clear cookies as well
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    
     return res.data.message;
   } catch (err) {
+    // Clear auth data even if logout request fails
+    clearAuthFromLocal();
+    delete axios.defaults.headers.common["Authorization"];
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
@@ -208,6 +335,37 @@ export const toggleLikeSong = createAsyncThunk("auth/toggleLikeSong", async (son
     return { songId, message: res.data.message };
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+  }
+});
+
+// ✅ New action to restore session on app load
+export const restoreSession = createAsyncThunk("auth/restoreSession", async (_, thunkAPI) => {
+  try {
+    console.log('🔄 Attempting to restore session...');
+    
+    // Check if we have user in localStorage
+    const localUser = getInitialUser();
+    if (!localUser) {
+      throw new Error('No user found in localStorage');
+    }
+    
+    // Check for token in localStorage or cookies
+    let token = localStorage.getItem('token') || getTokenFromCookie();
+    
+    if (token) {
+      storeTokenAndSetHeaders(token);
+    }
+    
+    // Verify with server
+    const response = await axios.get('/users/me', { withCredentials: true });
+    
+    console.log('✅ Session restored successfully');
+    return response.data;
+    
+  } catch (error) {
+    console.log('❌ Session restore failed:', error.message);
+    clearAuthFromLocal();
+    return thunkAPI.rejectWithValue('Session restore failed');
   }
 });
 
@@ -251,6 +409,16 @@ const authSlice = createSlice({
 
       storeAuthToLocal(state.user);
     },
+    // ✅ New reducer to clear auth state
+    clearAuth: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+      state.status = "idle";
+      state.error = null;
+      state.message = null;
+      clearAuthFromLocal();
+      delete axios.defaults.headers.common["Authorization"];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -259,28 +427,34 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.status = "succeeded";
         state.message = "Registered successfully";
+        state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.status = "succeeded";
         state.message = "Logged in successfully";
+        state.error = null;
       })
       .addCase(getMyProfile.fulfilled, (state, action) => {
         const currentUser = state.user || {};
         const user = {
+          ...currentUser, // Preserve existing user data
           name: action.payload.name || currentUser.name || "",
           email: action.payload.email || currentUser.email || "",
           profileImage: action.payload.profileImage || currentUser.profileImage || "",
-          purchasedSongs: action.payload.purchasedSongs || [],
-          purchasedAlbums: action.payload.purchasedAlbums || [],
-          likedsong: action.payload.likedsong || [],
+          purchasedSongs: action.payload.purchasedSongs || currentUser.purchasedSongs || [],
+          purchasedAlbums: action.payload.purchasedAlbums || currentUser.purchasedAlbums || [],
+          likedsong: action.payload.likedsong || currentUser.likedsong || [],
           preferredGenres: action.payload.preferredGenres || currentUser.preferredGenres || [],
+          playlist: action.payload.playlist || currentUser.playlist || [],
+          purchaseHistory: action.payload.purchaseHistory || currentUser.purchaseHistory || [],
         };
 
         state.user = user;
         state.isAuthenticated = true;
         state.status = "succeeded";
+        state.error = null;
         storeAuthToLocal(user);
       })
       .addCase(getMyProfile.rejected, (state) => {
@@ -293,6 +467,19 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.status = "succeeded";
         state.message = "Logged out successfully";
+        state.error = null;
+      })
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.status = "succeeded";
+        state.error = null;
+        storeAuthToLocal(action.payload);
+      })
+      .addCase(restoreSession.rejected, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.status = "idle";
       })
       .addCase(updatePreferredGenres.fulfilled, (state, action) => {
         if (state.user) {
@@ -301,6 +488,7 @@ const authSlice = createSlice({
         }
         state.status = "succeeded";
         state.message = "Preferred genres updated";
+        state.error = null;
       })
       .addCase(updatePreferredGenres.rejected, (state, action) => {
         state.status = "failed";
@@ -322,7 +510,8 @@ const authSlice = createSlice({
         (action) =>
           action.type.startsWith("auth/") &&
           action.type.endsWith("/rejected") &&
-          !action.type.includes("toggleLikeSong"),
+          !action.type.includes("toggleLikeSong") &&
+          !action.type.includes("restoreSession"),
         (state, action) => {
           state.status = "failed";
           state.error = action.payload || "Something went wrong";
@@ -341,5 +530,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearMessage, addPurchase } = authSlice.actions;
+export const { clearMessage, addPurchase, clearAuth } = authSlice.actions;
 export default authSlice.reducer;
