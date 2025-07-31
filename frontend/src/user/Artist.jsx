@@ -37,6 +37,46 @@ import {
   selectPaymentError
 } from "../features/payments/paymentSelectors";
 
+// ✅ Cookie utility functions
+const getCookieValue = (cookieName) => {
+  if (typeof document === 'undefined') return null;
+  
+  const cookies = document.cookie.split('; ');
+  const targetCookie = cookies.find(cookie => cookie.startsWith(`${cookieName}=`));
+  
+  if (targetCookie) {
+    return targetCookie.split('=')[1];
+  }
+  return null;
+};
+
+const isTokenValid = (token) => {
+  if (!token) return false;
+  
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    const payload = JSON.parse(atob(parts[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    return payload.exp > currentTime;
+  } catch (error) {
+    console.error('❌ Token validation error:', error);
+    return false;
+  }
+};
+
+const clearAuthCookies = () => {
+  // Clear auth cookies
+  document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  
+  // Clear localStorage
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+};
+
 // ✅ Enhanced Razorpay script loader with retry mechanism
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -80,7 +120,8 @@ const Artist = () => {
   const navigate = useNavigate();
 
   const selectedSong = useSelector((state) => state.player.selectedSong);
-  const currentUser = useSelector((state) => state.auth.user);
+  const currentUser = useSelector((state) => state.auth?.user || null);
+  const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated || false);
   const artist = useSelector(selectSelectedArtist);
   const artistAlbums = useSelector(selectArtistAlbums);
   const artistAlbumPagination = useSelector(selectArtistAlbumPagination);
@@ -140,13 +181,20 @@ const Artist = () => {
   // ✅ Environment and network checks
   useEffect(() => {
     if (debugMode) {
+      const tokenFromCookie = getCookieValue('token');
+      const tokenFromLocalStorage = localStorage.getItem('token');
+      
       console.log('🔧 Debug Info:', {
         environment: import.meta.env.MODE,
         razorpayKey: import.meta.env.VITE_RAZORPAY_KEY_ID?.substring(0, 10) + '...',
         apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
         artistId,
         userId: currentUser?._id,
-        networkStatus: navigator.onLine ? 'Online' : 'Offline'
+        networkStatus: navigator.onLine ? 'Online' : 'Offline',
+        tokenInCookie: !!tokenFromCookie,
+        tokenInLocalStorage: !!tokenFromLocalStorage,
+        cookiesCount: document.cookie.split(';').filter(c => c.trim()).length,
+        isAuthenticated
       });
     }
 
@@ -161,7 +209,33 @@ const Artist = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [debugMode, artistId, currentUser]);
+  }, [debugMode, artistId, currentUser, isAuthenticated]);
+
+  // ✅ Enhanced auth state monitoring with cookies
+  useEffect(() => {
+    const tokenFromCookie = getCookieValue('token');
+    const tokenFromLocalStorage = localStorage.getItem('token');
+    const userFromStorage = localStorage.getItem('user');
+    
+    console.log('🔐 Auth State Check:', {
+      hasUser: !!currentUser,
+      userId: currentUser?._id,
+      tokenInCookie: !!tokenFromCookie,
+      tokenInLocalStorage: !!tokenFromLocalStorage,
+      cookieToken: tokenFromCookie?.substring(0, 10) + '...',
+      localToken: tokenFromLocalStorage?.substring(0, 10) + '...',
+      userInStorage: !!userFromStorage,
+      isAuthenticated,
+      cookiesCount: document.cookie.split(';').filter(c => c.trim()).length,
+      timestamp: new Date().toISOString()
+    });
+
+    // Validate token from cookie
+    if (tokenFromCookie && !isTokenValid(tokenFromCookie)) {
+      console.warn('⚠️ Invalid token found in cookie, clearing...');
+      clearAuthCookies();
+    }
+  }, [currentUser, isAuthenticated]);
 
   // ✅ Load Razorpay script with retry
   useEffect(() => {
@@ -326,7 +400,7 @@ const Artist = () => {
     }
   };
 
-  // ✅ Enhanced subscription handler with comprehensive debugging
+  // ✅ Enhanced subscription handler with comprehensive debugging and cookie support
   const handleRazorpaySubscription = async () => {
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
@@ -336,24 +410,116 @@ const Artist = () => {
     try {
       setSubscriptionLoading(true);
       
-      // ✅ Comprehensive logging
+      // ✅ Enhanced authentication check with cookies
+      const tokenFromCookie = getCookieValue('token');
+      const tokenFromLocalStorage = localStorage.getItem('token');
+      const activeToken = tokenFromCookie || tokenFromLocalStorage;
+      
+      console.log('🔐 Authentication check:', {
+        currentUser: !!currentUser,
+        userId: currentUser?._id,
+        tokenInCookie: !!tokenFromCookie,
+        tokenInLocalStorage: !!tokenFromLocalStorage,
+        activeToken: !!activeToken,
+        cookieCount: document.cookie.split(';').length,
+        authState: !!currentUser,
+        isAuthenticated: isAuthenticated
+      });
+
+      // Check if user is logged in
+      if (!currentUser || !currentUser._id) {
+        console.warn('❌ User not authenticated in Redux state');
+        
+        // Try to get user from localStorage as fallback
+        const userFromStorage = localStorage.getItem('user');
+        if (userFromStorage) {
+          try {
+            const parsedUser = JSON.parse(userFromStorage);
+            if (parsedUser && parsedUser._id) {
+              console.log('✅ Found user in localStorage, but Redux state empty');
+            }
+          } catch (parseError) {
+            console.error('❌ Error parsing user from localStorage:', parseError);
+          }
+        }
+        
+        toast.error("Please login to subscribe.");
+        
+        // Save current location for redirect after login
+        localStorage.setItem('redirectAfterLogin', window.location.pathname);
+        
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              from: window.location.pathname,
+              message: 'Please login to subscribe to this artist'
+            }
+          });
+        }, 2000);
+        return;
+      }
+
+      // ✅ Enhanced token validation for cookies
+      if (!activeToken) {
+        console.warn('❌ No auth token found in cookies or localStorage');
+        toast.error("Session not found. Please login again.");
+        clearAuthCookies();
+        navigate('/login');
+        return;
+      }
+
+      // Validate token format and expiry
+      if (!isTokenValid(activeToken)) {
+        console.warn('❌ Token invalid or expired');
+        toast.error("Session expired. Please login again.");
+        clearAuthCookies();
+        navigate('/login');
+        return;
+      }
+
+      // ✅ Verify current session with server
+      try {
+        console.log('🔍 Verifying session with server...');
+        const sessionCheck = await axiosInstance.get('/users/me', {
+          withCredentials: true,
+          headers: activeToken ? {
+            'Authorization': `Bearer ${activeToken}`
+          } : undefined
+        });
+        
+        if (!sessionCheck.data || sessionCheck.status !== 200) {
+          throw new Error('Session verification failed');
+        }
+        
+        console.log('✅ Session verified with server');
+      } catch (sessionError) {
+        console.error('❌ Session verification failed:', sessionError);
+        
+        if (sessionError.response?.status === 401) {
+          toast.error("Session expired. Please login again.");
+          clearAuthCookies();
+          navigate('/login');
+          return;
+        } else {
+          console.warn('⚠️ Session check failed, proceeding with caution...');
+        }
+      }
+      
+      // ✅ Enhanced logging with masked sensitive info
       console.log('🚀 Starting subscription process:', {
         artistId: artist._id,
         artistName: artist.name,
-        userId: currentUser?._id,
+        userId: currentUser._id,
+        userName: currentUser.name,
+        userEmail: currentUser.email?.substring(0, 5) + '***',
+        tokenSource: tokenFromCookie ? 'cookie' : tokenFromLocalStorage ? 'localStorage' : 'none',
+        tokenValid: isTokenValid(activeToken),
         razorpayKey: import.meta.env.VITE_RAZORPAY_KEY_ID?.substring(0, 10) + '...',
         environment: import.meta.env.MODE,
         apiUrl: import.meta.env.VITE_API_BASE_URL,
         networkStatus: navigator.onLine ? 'Online' : 'Offline',
         timestamp: new Date().toISOString()
       });
-
-      // Check authentication
-      if (!currentUser?._id) {
-        toast.error("Please login to subscribe.");
-        navigate('/login');
-        return;
-      }
 
       const isScriptLoaded = await loadRazorpayScript();
       if (!isScriptLoaded) {
@@ -365,7 +531,7 @@ const Artist = () => {
       console.log('✅ Razorpay script loaded successfully');
       console.log('📡 Initiating subscription API call...');
 
-      // ✅ Enhanced API call with detailed logging
+      // ✅ API call with enhanced error handling
       const subscriptionResult = await dispatch(
         initiateRazorpaySubscription(artist._id)
       ).unwrap();
@@ -373,6 +539,7 @@ const Artist = () => {
       console.log('💳 Subscription API response:', {
         success: !!subscriptionResult?.subscriptionId,
         subscriptionId: subscriptionResult?.subscriptionId,
+        hasOrder: !!subscriptionResult?.order,
         fullResponse: subscriptionResult
       });
 
@@ -384,7 +551,25 @@ const Artist = () => {
 
       console.log('✅ Subscription ID created:', subscriptionResult.subscriptionId);
 
-      // ✅ Comprehensive Razorpay options
+      // ✅ Optional: Payment verification function
+      const verifySubscriptionPayment = async (paymentResponse) => {
+        try {
+          console.log('🔍 Verifying subscription payment...');
+          const response = await axiosInstance.post('/payments/verify-subscription', {
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_subscription_id: paymentResponse.razorpay_subscription_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            artistId: artist._id
+          });
+          console.log('✅ Payment verified:', response.data);
+          return response.data;
+        } catch (error) {
+          console.error('❌ Payment verification failed:', error);
+          return null;
+        }
+      };
+
+      // ✅ Razorpay configuration
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         subscription_id: subscriptionResult.subscriptionId,
@@ -392,7 +577,12 @@ const Artist = () => {
         description: `Subscribe to ${artist.name}`,
         image: `${window.location.origin}/logo.png`,
         handler: async function (response) {
-          console.log('✅ Subscription payment successful:', response);
+          console.log('✅ Subscription payment successful:', {
+            payment_id: response.razorpay_payment_id,
+            subscription_id: response.razorpay_subscription_id,
+            signature: response.razorpay_signature ? 'present' : 'missing'
+          });
+          
           toast.success(`Successfully subscribed to ${artist.name}!`);
           
           try {
@@ -402,7 +592,7 @@ const Artist = () => {
             console.warn('⚠️ Failed to refresh subscriptions:', refreshError);
           }
 
-          // Optional: Verify payment
+          // Optional: Verify payment on backend
           try {
             await verifySubscriptionPayment(response);
           } catch (verifyError) {
@@ -410,17 +600,18 @@ const Artist = () => {
           }
         },
         prefill: {
-          name: currentUser?.name || "",
-          email: currentUser?.email || "",
-          contact: currentUser?.phone || "",
+          name: currentUser.name || "",
+          email: currentUser.email || "",
+          contact: currentUser.phone || "",
         },
         notes: {
           artistId: artist._id,
           artistSlug: artistId,
-          userId: currentUser?._id,
+          userId: currentUser._id,
           timestamp: new Date().toISOString(),
           source: 'artist-page',
-          subscriptionPrice: artist.subscriptionPrice || 4.99
+          subscriptionPrice: artist.subscriptionPrice || 4.99,
+          authMethod: tokenFromCookie ? 'cookie' : 'localStorage'
         },
         theme: {
           color: "#3B82F6",
@@ -440,17 +631,13 @@ const Artist = () => {
         }
       };
 
-      console.log('🎛️ Opening Razorpay with options:', {
-        ...options,
-        key: options.key?.substring(0, 10) + '...'
-      });
+      console.log('🎛️ Opening Razorpay with options');
 
-      // ✅ Enhanced Razorpay instance with error handling
       const razorpay = new window.Razorpay(options);
       
       razorpay.on('payment.failed', function (response) {
         console.error('❌ Payment failed event:', response);
-        toast.error(`Payment failed: ${response.error.description || 'Unknown error'}`);
+        toast.error(`Payment failed: ${response.error?.description || 'Unknown error'}`);
       });
 
       razorpay.open();
@@ -465,14 +652,16 @@ const Artist = () => {
         timestamp: new Date().toISOString()
       });
       
-      // ✅ Smart error messages
       let errorMessage = "Failed to initiate subscription";
       
       if (!navigator.onLine) {
         errorMessage = "No internet connection. Please check your network.";
       } else if (error.response?.status === 401) {
-        errorMessage = "Please login to continue";
+        errorMessage = "Authentication failed. Please login again.";
+        clearAuthCookies();
         setTimeout(() => navigate('/login'), 2000);
+      } else if (error.response?.status === 403) {
+        errorMessage = "Access denied. Please check your permissions.";
       } else if (error.response?.status === 400) {
         errorMessage = error.response.data?.message || "Invalid subscription request";
       } else if (error.response?.status === 404) {
@@ -486,25 +675,6 @@ const Artist = () => {
       toast.error(`Subscription failed: ${errorMessage}`);
     } finally {
       setSubscriptionLoading(false);
-    }
-  };
-
-  // ✅ Optional: Payment verification function
-  const verifySubscriptionPayment = async (paymentResponse) => {
-    try {
-      console.log('🔍 Verifying subscription payment...');
-      const response = await axiosInstance.post('/payments/verify-subscription', {
-        razorpay_payment_id: paymentResponse.razorpay_payment_id,
-        razorpay_subscription_id: paymentResponse.razorpay_subscription_id,
-        razorpay_signature: paymentResponse.razorpay_signature,
-        artistId: artist._id
-      });
-      console.log('✅ Payment verified:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ Payment verification failed:', error);
-      // Don't throw error as payment is already successful
-      return null;
     }
   };
 
@@ -619,6 +789,11 @@ const Artist = () => {
               <div>Artist ID: {artistId}</div>
               <div>Subscribed: {isSubscribed ? '✅' : '❌'}</div>
               <div>Razorpay: {window.Razorpay ? '✅' : '❌'}</div>
+              <div>Cookie Token: {getCookieValue('token') ? '✅' : '❌'}</div>
+              <div>Local Token: {localStorage.getItem('token') ? '✅' : '❌'}</div>
+              <div>User in State: {currentUser ? '✅' : '❌'}</div>
+              <div>Auth State: {isAuthenticated ? '✅' : '❌'}</div>
+              <div>Cookies: {document.cookie.split(';').filter(c => c.trim()).length}</div>
             </div>
             <button 
               onClick={() => setDebugMode(false)}
