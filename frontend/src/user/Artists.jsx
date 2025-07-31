@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllArtists } from "../features/artists/artistsSlice";
+import { fetchAllArtists, loadFromCache } from "../features/artists/artistsSlice";
 import { useNavigate } from "react-router-dom";
 import {
   selectAllArtists,
   selectArtistLoading,
   selectArtistError,
   selectArtistPagination,
+  selectIsCached,
+  selectCachedPages,
+  selectIsPageCached,
+  selectCachedPageData,
 } from "../features/artists/artistsSelectors";
 import UserHeader from "../components/user/UserHeader";
 import Skeleton from "react-loading-skeleton";
@@ -19,44 +23,102 @@ const Artists = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ SAFE: Redux selectors with fallbacks
+  // ✅ Redux selectors with cache
   const artists = useSelector(selectAllArtists) || [];
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
   const pagination = useSelector(selectArtistPagination) || { page: 1, totalPages: 1, limit: 12 };
-  
-  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const isCached = useSelector(selectIsCached);
+  const cachedPages = useSelector(selectCachedPages);
 
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // ✅ Check if current page is cached
+  const isPageCached = useSelector(selectIsPageCached(currentPage));
+  const cachedPageData = useSelector(selectCachedPageData(currentPage));
+
+  // ✅ Initial load with cache check
   useEffect(() => {
     if (!initialFetchDone) {
-      dispatch(fetchAllArtists({ page: 1, limit: 12 }));
+      if (isPageCached && cachedPageData) {
+        // Load from cache
+        dispatch(loadFromCache(currentPage));
+      } else {
+        // Fetch from server
+        dispatch(fetchAllArtists({ page: currentPage, limit: 12 }));
+      }
       setInitialFetchDone(true);
     }
-  }, [dispatch, initialFetchDone]);
+  }, [dispatch, initialFetchDone, currentPage, isPageCached, cachedPageData]);
 
-  // ✅ SAFE: Navigation handler
+  // ✅ Handle browser refresh - clear cache and refetch
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // This will be handled by browser refresh, no need to clear cache here
+      // Cache will persist until component unmounts or user manually refreshes
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  // ✅ Navigation handler
   const handleArtistClick = (slug) => {
     if (slug) {
       navigate(`/artist/${slug}`);
     }
   };
 
-  // ✅ SAFE: Pagination handlers
+  // ✅ Enhanced pagination handlers with cache
   const handlePrevPage = () => {
     if (pagination.page > 1) {
       const newPage = pagination.page - 1;
-      dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
+      setCurrentPage(newPage);
+      
+      const isNewPageCached = cachedPages.includes(newPage);
+      
+      if (isNewPageCached) {
+        dispatch(loadFromCache(newPage));
+      } else {
+        dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
+      }
     }
   };
 
   const handleNextPage = () => {
     if (pagination.page < pagination.totalPages) {
       const newPage = pagination.page + 1;
-      dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
+      setCurrentPage(newPage);
+      
+      const isNewPageCached = cachedPages.includes(newPage);
+      
+      if (isNewPageCached) {
+        dispatch(loadFromCache(newPage));
+      } else {
+        dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
+      }
     }
   };
 
-  // ✅ SAFE: Get artist gradient
+  // ✅ Handle page change by clicking page number
+  const handlePageClick = (pageNumber) => {
+    if (pageNumber !== pagination.page) {
+      setCurrentPage(pageNumber);
+      
+      const isPageCachedCheck = cachedPages.includes(pageNumber);
+      
+      if (isPageCachedCheck) {
+        dispatch(loadFromCache(pageNumber));
+      } else {
+        dispatch(fetchAllArtists({ page: pageNumber, limit: 12 }));
+      }
+    }
+  };
+
+  // ✅ Get artist gradient
   const getArtistGradient = (index) => {
     const gradients = [
       'from-purple-500 to-pink-500',
@@ -69,10 +131,33 @@ const Artists = () => {
     return gradients[index % gradients.length];
   };
 
-  // ✅ SAFE: Get artist name initial
+  // ✅ Get artist name initial
   const getArtistInitial = (name) => {
     if (!name || typeof name !== 'string') return 'A';
     return name.charAt(0).toUpperCase();
+  };
+
+  // ✅ Generate page numbers for pagination
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    const totalPages = pagination.totalPages;
+    const currentPageNum = pagination.page;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, currentPageNum - 2);
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
   };
 
   return (
@@ -103,6 +188,8 @@ const Artists = () => {
               <FaMicrophone className="w-8 h-8 text-cyan-400" />
             </div>
             <p className="text-gray-400 text-lg">Discover Amazing Artists</p>
+            
+         
           </div>
 
           {/* ❌ Error State */}
@@ -178,7 +265,7 @@ const Artists = () => {
                         </div>
                       </div>
 
-                      {/* 📝 Artist Info - MINIMAL */}
+                      {/* 📝 Artist Info */}
                       <div className="text-center space-y-2">
                         <h3 className="text-white font-semibold text-sm truncate group-hover:text-purple-300 transition-colors">
                           {artist.name || 'Unknown Artist'}
@@ -204,9 +291,10 @@ const Artists = () => {
             </div>
           )}
 
-          {/* 🎛️ Pagination */}
+          {/* 🎛️ Enhanced Pagination with Page Numbers */}
           {!loading && artists.length > 0 && (
-            <div className="flex justify-center items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              {/* Previous Button */}
               <button
                 onClick={handlePrevPage}
                 disabled={pagination.page <= 1}
@@ -215,12 +303,24 @@ const Artists = () => {
                 ← Prev
               </button>
 
-              <div className="px-4 py-2 bg-gray-800/80 rounded-lg border border-gray-700/50">
-                <span className="text-white text-sm">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
+              {/* Page Numbers */}
+              <div className="flex items-center gap-2">
+                {generatePageNumbers().map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageClick(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                      pageNum === pagination.page
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50'
+                    } ${cachedPages.includes(pageNum) ? 'ring-2 ring-green-500/30' : ''}`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
               </div>
 
+              {/* Next Button */}
               <button
                 onClick={handleNextPage}
                 disabled={pagination.page >= pagination.totalPages}
@@ -228,6 +328,9 @@ const Artists = () => {
               >
                 Next →
               </button>
+
+              {/* Page Info */}
+             
             </div>
           )}
 

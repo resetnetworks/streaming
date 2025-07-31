@@ -161,10 +161,77 @@ const artistSlice = createSlice({
       total: 0,
       totalPages: 0,
     },
+    // ✅ Cache system properties for paginated artists
+    isCached: false,
+    lastFetchTime: null,
+    cachedPages: [],
+    cachedData: {}, // Store data for each page
+    
+    // ✅ Cache system properties for full artist list (no pagination)
+    isFullListCached: false,
+    fullListLastFetchTime: null,
   },
   reducers: {
     clearSelectedArtist: (state) => {
       state.selectedArtist = null;
+    },
+    // ✅ Cache management reducers
+    clearCache: (state) => {
+      state.allArtists = [];
+      state.isCached = false;
+      state.lastFetchTime = null;
+      state.cachedPages = [];
+      state.cachedData = {};
+      state.pagination = {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      };
+    },
+    // ✅ Clear full list cache
+    clearFullListCache: (state) => {
+      state.fullArtistList = [];
+      state.isFullListCached = false;
+      state.fullListLastFetchTime = null;
+    },
+    // ✅ Clear all caches
+    clearAllCaches: (state) => {
+      // Clear paginated cache
+      state.allArtists = [];
+      state.isCached = false;
+      state.lastFetchTime = null;
+      state.cachedPages = [];
+      state.cachedData = {};
+      state.pagination = {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      };
+      // Clear full list cache
+      state.fullArtistList = [];
+      state.isFullListCached = false;
+      state.fullListLastFetchTime = null;
+    },
+    setCachedData: (state, action) => {
+      const { page, artists, pagination } = action.payload;
+      state.cachedData[page] = { artists, pagination };
+      if (!state.cachedPages.includes(page)) {
+        state.cachedPages.push(page);
+      }
+    },
+    loadFromCache: (state, action) => {
+      const page = action.payload;
+      if (state.cachedData[page]) {
+        state.allArtists = state.cachedData[page].artists;
+        state.pagination = state.cachedData[page].pagination;
+      }
+    },
+    // ✅ Load full list from cache
+    loadFullListFromCache: (state) => {
+      // Data is already in fullArtistList, just update loading state
+      state.loading = false;
     },
   },
   extraReducers: (builder) => {
@@ -177,12 +244,24 @@ const artistSlice = createSlice({
         state.loading = false;
         state.allArtists = action.payload.artists;
         state.pagination = action.payload.pagination;
+        // ✅ Cache the data
+        state.isCached = true;
+        state.lastFetchTime = Date.now();
+        const page = action.payload.pagination.page;
+        state.cachedData[page] = {
+          artists: action.payload.artists,
+          pagination: action.payload.pagination,
+        };
+        if (!state.cachedPages.includes(page)) {
+          state.cachedPages.push(page);
+        }
       })
       .addCase(fetchAllArtists.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
+      // ✅ Enhanced fetchAllArtistsNoPagination with cache
       .addCase(fetchAllArtistsNoPagination.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -190,6 +269,9 @@ const artistSlice = createSlice({
       .addCase(fetchAllArtistsNoPagination.fulfilled, (state, action) => {
         state.loading = false;
         state.fullArtistList = action.payload;
+        // ✅ Cache the full artist list
+        state.isFullListCached = true;
+        state.fullListLastFetchTime = Date.now();
       })
       .addCase(fetchAllArtistsNoPagination.rejected, (state, action) => {
         state.loading = false;
@@ -216,6 +298,12 @@ const artistSlice = createSlice({
       .addCase(createArtist.fulfilled, (state, action) => {
         state.loading = false;
         state.allArtists.push(action.payload);
+        // ✅ Clear all caches when new artist is created
+        state.isCached = false;
+        state.cachedPages = [];
+        state.cachedData = {};
+        state.isFullListCached = false;
+        state.fullListLastFetchTime = null;
       })
       .addCase(createArtist.rejected, (state, action) => {
         state.loading = false;
@@ -230,6 +318,17 @@ const artistSlice = createSlice({
         state.loading = false;
         const index = state.allArtists.findIndex(a => a._id === action.payload._id);
         if (index !== -1) state.allArtists[index] = action.payload;
+        
+        // ✅ Update in full list cache as well
+        const fullListIndex = state.fullArtistList.findIndex(a => a._id === action.payload._id);
+        if (fullListIndex !== -1) state.fullArtistList[fullListIndex] = action.payload;
+        
+        // ✅ Clear all caches when artist is updated
+        state.isCached = false;
+        state.cachedPages = [];
+        state.cachedData = {};
+        state.isFullListCached = false;
+        state.fullListLastFetchTime = null;
       })
       .addCase(updateArtist.rejected, (state, action) => {
         state.loading = false;
@@ -244,6 +343,12 @@ const artistSlice = createSlice({
         state.loading = false;
         state.allArtists = state.allArtists.filter(artist => artist._id !== action.payload);
         state.fullArtistList = state.fullArtistList.filter(artist => artist._id !== action.payload);
+        // ✅ Clear all caches when artist is deleted
+        state.isCached = false;
+        state.cachedPages = [];
+        state.cachedData = {};
+        state.isFullListCached = false;
+        state.fullListLastFetchTime = null;
       })
       .addCase(deleteArtist.rejected, (state, action) => {
         state.loading = false;
@@ -281,7 +386,14 @@ const artistSlice = createSlice({
   },
 });
 
-export const { clearSelectedArtist } = artistSlice.actions;
+export const { 
+  clearSelectedArtist, 
+  clearCache, 
+  clearFullListCache, 
+  clearAllCaches, 
+  setCachedData, 
+  loadFromCache,
+  loadFullListFromCache 
+} = artistSlice.actions;
+
 export default artistSlice.reducer;
-
-
