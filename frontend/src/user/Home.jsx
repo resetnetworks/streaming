@@ -19,6 +19,8 @@ import {
 } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { initiateRazorpayItemPayment, resetPaymentState } from "../features/payments/paymentSlice";
+// ✅ ADD THESE IMPORTS
+import { addPurchasedSong, addPurchasedAlbum } from "../features/auth/authSlice";
 
 // Components
 import UserHeader from "../components/user/UserHeader";
@@ -30,7 +32,7 @@ import { Helmet } from "react-helmet";
 // Utils
 import { formatDuration } from "../utills/helperFunctions";
 
-// 🎯 Razorpay Script Loader
+// Razorpay Script Loader
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     if (window.Razorpay) {
@@ -74,7 +76,7 @@ const Home = () => {
   const [recentSongs, setRecentSongs] = useState([]);
   
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null); // 🆕 Track Razorpay instance
+  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
   
   const [loadingMore, setLoadingMore] = useState({
     recent: false,
@@ -156,21 +158,13 @@ const Home = () => {
     dispatch(play());
   };
 
-  // 🆕 FIXED: Razorpay Purchase Handler
+  // Razorpay Purchase Handler
   const handlePurchaseClick = async (item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
       navigate("/login");
       return;
     }
-
-    console.log('🛒 PURCHASE INITIATED:', {
-      itemType: type,
-      itemId: item._id,
-      itemName: item.title || item.name,
-      price: item.price,
-      timestamp: new Date().toISOString()
-    });
 
     if (paymentLoading || processingPayment) {
       toast.info("Payment already in progress...");
@@ -193,29 +187,20 @@ const Home = () => {
         amount: item.price
       })).unwrap();
 
-      console.log('✅ RAZORPAY ORDER CREATED:', result);
-
       if (result.order) {
         await handleRazorpayCheckout(result.order, item, type);
       } else {
         throw new Error("Failed to create payment order");
       }
     } catch (error) {
-      console.error('❌ PURCHASE FAILED:', error);
       toast.error(error.message || 'Failed to initiate payment');
       setProcessingPayment(false);
     }
   };
 
-  // 🆕 FIXED: Handle Razorpay Checkout with proper success handling
+  // Handle Razorpay Checkout with proper success handling
   const handleRazorpayCheckout = async (order, item, type) => {
     try {
-      console.log('💳 OPENING RAZORPAY CHECKOUT:', {
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency
-      });
-
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -225,24 +210,24 @@ const Home = () => {
         description: `Purchase ${type}: ${item.title || item.name}`,
         image: '/logo.png',
         handler: function (response) {
-          console.log('🎉 RAZORPAY PAYMENT SUCCESS:', {
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_signature: response.razorpay_signature,
-            timestamp: new Date().toISOString()
-          });
-
-          // ✅ Immediately close modal and show success
+          // Immediately close modal and show success
           if (currentRazorpayInstance) {
             try {
               currentRazorpayInstance.close();
             } catch (e) {
-              console.log('Razorpay instance already closed');
+              // Razorpay instance already closed
             }
           }
 
+          // ✅ IMMEDIATELY UPDATE REDUX STATE
+          if (type === "song") {
+            dispatch(addPurchasedSong(item._id));
+          } else if (type === "album") {
+            dispatch(addPurchasedAlbum(item._id));
+          }
+
           // Show success message
-          toast.success(`🎉 Successfully purchased ${item.title || item.name}!`, {
+          toast.success(`Successfully purchased ${item.title || item.name}!`, {
             duration: 5000,
           });
           
@@ -251,10 +236,7 @@ const Home = () => {
           setCurrentRazorpayInstance(null);
           dispatch(resetPaymentState());
           
-          // Refresh data after a short delay
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          // ✅ NO PAGE RELOAD NEEDED NOW - Button will show "Purchased" immediately
         },
         prefill: {
           name: currentUser?.name || '',
@@ -266,15 +248,12 @@ const Home = () => {
         },
         modal: {
           ondismiss: function() {
-            console.log('ℹ️ RAZORPAY CHECKOUT CANCELLED');
             toast.info('Payment cancelled');
             setProcessingPayment(false);
             setCurrentRazorpayInstance(null);
           }
         },
-        // 🆕 Add error handling
         error: function(error) {
-          console.error('❌ RAZORPAY ERROR:', error);
           toast.error('Payment failed. Please try again.');
           setProcessingPayment(false);
           setCurrentRazorpayInstance(null);
@@ -282,26 +261,21 @@ const Home = () => {
       };
 
       const rzp = new window.Razorpay(options);
-      setCurrentRazorpayInstance(rzp); // Store instance
+      setCurrentRazorpayInstance(rzp);
       
-      // 🆕 Add event listeners for better control
       rzp.on('payment.success', function (response) {
-        console.log('🎯 PAYMENT SUCCESS EVENT:', response);
         // Additional success handling if needed
       });
 
       rzp.on('payment.error', function (error) {
-        console.error('🚫 PAYMENT ERROR EVENT:', error);
         toast.error('Payment failed. Please try again.');
         setProcessingPayment(false);
         setCurrentRazorpayInstance(null);
       });
 
       rzp.open();
-      console.log('🚀 RAZORPAY CHECKOUT OPENED');
 
     } catch (error) {
-      console.error('❌ RAZORPAY CHECKOUT ERROR:', error);
       toast.error('Failed to open payment gateway');
       setProcessingPayment(false);
       setCurrentRazorpayInstance(null);
@@ -681,7 +655,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* 🆕 Enhanced Loading Overlay */}
+        {/* Loading Overlay */}
         {(processingPayment || paymentLoading) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
@@ -694,7 +668,7 @@ const Home = () => {
           </div>
         )}
 
-        {/* 🆕 Success Toast Enhancement */}
+        {/* Success Toast Enhancement */}
         <style jsx global>{`
           [data-sonner-toast] {
             background: rgb(31, 41, 55) !important;

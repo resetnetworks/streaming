@@ -2,9 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance.js";
 import { toast } from "sonner";
 
+
 // ====================
 // 📦 Local Storage Helpers
 // ====================
+
 
 const getInitialUser = () => {
   try {
@@ -16,10 +18,13 @@ const getInitialUser = () => {
   }
 };
 
+
 const storeAuthToLocal = (user) => {
   if (!user) return;
 
+
   const existingUser = getInitialUser();
+
 
   const {
     name,
@@ -33,6 +38,7 @@ const storeAuthToLocal = (user) => {
     purchaseHistory = [],
     ...otherFields
   } = user;
+
 
   const userToStore = {
     ...existingUser,
@@ -48,8 +54,10 @@ const storeAuthToLocal = (user) => {
     ...otherFields
   };
 
+
   localStorage.setItem("user", JSON.stringify(userToStore));
 };
+
 
 const clearAuthFromLocal = () => {
   localStorage.removeItem("user");
@@ -57,9 +65,11 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem("subscribedArtists");
 };
 
+
 // ====================
 // 🔄 Async Thunks
 // ====================
+
 
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
   try {    
@@ -68,6 +78,7 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     });
     
     const { user } = res.data;
+
 
     // ✅ Function to get token from cookie
     const getTokenFromCookie = () => {
@@ -81,6 +92,7 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
       }
       return null;
     };
+
 
     // ✅ Wait a bit for cookie to be set by server
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -116,6 +128,7 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
       }
     }
 
+
     storeAuthToLocal(user);
     return user;
     
@@ -135,6 +148,7 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
   }
 });
 
+
 // ✅ Also update loginUser similarly
 export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
   try {
@@ -144,6 +158,7 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
     
     const { user } = res.data;
 
+
     // Get token from cookie
     const getTokenFromCookie = () => {
       if (typeof document === 'undefined') return null;
@@ -152,13 +167,16 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
       return tokenCookie ? tokenCookie.split('=')[1] : null;
     };
 
+
     await new Promise(resolve => setTimeout(resolve, 100));
     const token = getTokenFromCookie();
+
 
     if (token) {
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
+
 
     storeAuthToLocal(user);
     return user;
@@ -167,6 +185,7 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
+
 
 
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
@@ -182,6 +201,7 @@ export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   }
 });
 
+
 export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
     const res = await axios.post("/users/logout");
@@ -193,6 +213,7 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) =>
   }
 });
 
+
 export const updatePreferredGenres = createAsyncThunk("auth/updatePreferredGenres", async (genres, thunkAPI) => {
   try {
     const res = await axios.put("/users/update-genres", { genres });
@@ -201,6 +222,7 @@ export const updatePreferredGenres = createAsyncThunk("auth/updatePreferredGenre
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
+
 
 export const toggleLikeSong = createAsyncThunk("auth/toggleLikeSong", async (songId, thunkAPI) => {
   try {
@@ -211,11 +233,14 @@ export const toggleLikeSong = createAsyncThunk("auth/toggleLikeSong", async (son
   }
 });
 
+
 // ====================
 // 🧠 Initial State
 // ====================
 
+
 const initialUser = getInitialUser();
+
 
 const initialState = {
   user: initialUser,
@@ -225,9 +250,11 @@ const initialState = {
   message: null,
 };
 
+
 // ====================
 // 🧩 Slice Definition
 // ====================
+
 
 const authSlice = createSlice({
   name: "auth",
@@ -241,15 +268,45 @@ const authSlice = createSlice({
       const { itemType, itemId } = action.payload;
       if (!state.user) return;
 
+
       if (itemType === "song" && !state.user.purchasedSongs.includes(itemId)) {
         state.user.purchasedSongs.push(itemId);
       }
+
 
       if (itemType === "album" && !state.user.purchasedAlbums.includes(itemId)) {
         state.user.purchasedAlbums.push(itemId);
       }
 
+
       storeAuthToLocal(state.user);
+    },
+    // ✅ NEW ACTIONS ADDED
+    addPurchasedSong: (state, action) => {
+      if (state.user) {
+        // Initialize array if it doesn't exist
+        if (!state.user.purchasedSongs) {
+          state.user.purchasedSongs = [];
+        }
+        // Add song ID if not already present
+        if (!state.user.purchasedSongs.includes(action.payload)) {
+          state.user.purchasedSongs.push(action.payload);
+        }
+        storeAuthToLocal(state.user);
+      }
+    },
+    addPurchasedAlbum: (state, action) => {
+      if (state.user) {
+        // Initialize array if it doesn't exist
+        if (!state.user.purchasedAlbums) {
+          state.user.purchasedAlbums = [];
+        }
+        // Add album ID if not already present
+        if (!state.user.purchasedAlbums.includes(action.payload)) {
+          state.user.purchasedAlbums.push(action.payload);
+        }
+        storeAuthToLocal(state.user);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -277,6 +334,7 @@ const authSlice = createSlice({
           likedsong: action.payload.likedsong || [],
           preferredGenres: action.payload.preferredGenres || currentUser.preferredGenres || [],
         };
+
 
         state.user = user;
         state.isAuthenticated = true;
@@ -310,10 +368,12 @@ const authSlice = createSlice({
         const { songId, message } = action.payload;
         if (!state.user?.likedsong) state.user.likedsong = [];
 
+
         const alreadyLiked = state.user.likedsong.includes(songId);
         state.user.likedsong = alreadyLiked
           ? state.user.likedsong.filter((id) => id !== songId)
           : [...state.user.likedsong, songId];
+
 
         storeAuthToLocal(state.user);
         state.message = message;
@@ -341,5 +401,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearMessage, addPurchase } = authSlice.actions;
+
+export const { clearMessage, addPurchase, addPurchasedSong, addPurchasedAlbum } = authSlice.actions;
 export default authSlice.reducer;

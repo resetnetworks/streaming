@@ -13,27 +13,27 @@ const tags = [
   {
     id: "electronic",
     label: "#electronic",
-    image: "https://images.unsplash.com/photo-1511376777868-611b54f68947",
+    image: "/images/genre.png",
   },
   {
     id: "techno",
     label: "#techno",
-    image: "https://images.unsplash.com/photo-1549924231-f129b911e442",
+    image: "/images/genre.png",
   },
   {
     id: "idm",
     label: "#IDM",
-    image: "https://images.unsplash.com/photo-1581091215367-59d3a6ccf3fc",
+    image: "/images/genre.png",
   },
   {
     id: "ambient",
     label: "#ambient",
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+    image: "/images/genre.png",
   },
   {
     id: "soundtrack",
     label: "#soundtrack",
-    image: "https://images.unsplash.com/photo-1600267165910-2f47d8eecf02",
+    image: "/images/genre.png",
   },
 ];
 

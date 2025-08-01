@@ -71,7 +71,6 @@ if (process.env.NODE_ENV === 'development') {
   window.clearReduxCache = () => {
     persistor.purge().then(() => {
       clearPlayerCache();
-      console.log('🔁 Redux cache cleared manually.');
     });
   };
 }

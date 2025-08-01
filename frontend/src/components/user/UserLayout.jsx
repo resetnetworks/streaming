@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import UserSidebar from "./UserSidebar";
+import Footer from "./Footer";
 
 const UserLayout = () => {
   return (
@@ -11,6 +12,7 @@ const UserLayout = () => {
           <Outlet />
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };
