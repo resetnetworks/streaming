@@ -412,7 +412,7 @@ const Home = () => {
                             onClick={() => handlePurchaseClick(song, "song")}
                             disabled={processingPayment || paymentLoading}
                           >
-                            {processingPayment || paymentLoading ? "..." : `₹${song.price}`}
+                            {processingPayment || paymentLoading ? "..." : `Buy ₹${song.price}`}
                           </button>
                         )
                       ) : (

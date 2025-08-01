@@ -121,11 +121,11 @@ const Artists = () => {
   // ✅ Get artist gradient
   const getArtistGradient = (index) => {
     const gradients = [
-      'from-purple-500 to-pink-500',
+      'from-blue-500 to-pink-500',
       'from-cyan-500 to-blue-500',
       'from-green-500 to-teal-500',
       'from-orange-500 to-red-500',
-      'from-indigo-500 to-purple-500',
+      'from-indigo-500 to-blue-500',
       'from-pink-500 to-rose-500',
     ];
     return gradients[index % gradients.length];
@@ -172,20 +172,16 @@ const Artists = () => {
       
       <div className="min-h-screen">
         {/* ✨ Animated Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 right-20 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 left-20 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
 
         <div className="relative z-10 p-6">
           {/* 🎵 Header */}
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <HiSpeakerWave className="w-8 h-8 text-purple-400" />
-              <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <HiSpeakerWave className="w-8 h-8 text-blue-400" />
+              <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 to-blue-900 bg-clip-text text-transparent">
                 ARTISTS
               </h1>
-              <FaMicrophone className="w-8 h-8 text-cyan-400" />
+              <FaMicrophone className="w-8 h-8 text-blue-300" />
             </div>
             <p className="text-gray-400 text-lg">Discover Amazing Artists</p>
             
@@ -239,12 +235,13 @@ const Artists = () => {
                     onClick={() => handleArtistClick(artist.slug)}
                     className="group cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:scale-105"
                   >
-                    <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+                    <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
                       
                       {/* 🖼️ Artist Image */}
                       <div className="relative aspect-square overflow-hidden rounded-xl mb-3">
                         {artist.image ? (
                           <img
+                            loading="lazy"
                             src={artist.image}
                             alt={artist.name || 'Artist'}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -256,25 +253,18 @@ const Artists = () => {
                             </span>
                           </div>
                         )}
-                        
-                        {/* 🎵 Play Overlay */}
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                            <FaPlay className="text-white text-sm ml-0.5" />
-                          </div>
-                        </div>
                       </div>
 
                       {/* 📝 Artist Info */}
                       <div className="text-center space-y-2">
-                        <h3 className="text-white font-semibold text-sm truncate group-hover:text-purple-300 transition-colors">
+                        <h3 className="text-white font-semibold text-sm truncate group-hover:text-blue-300 transition-colors">
                           {artist.name || 'Unknown Artist'}
                         </h3>
                         
                         {/* 💰 Price Badge */}
                         <div className="flex justify-center">
                           {artist.subscriptionPrice ? (
-                            <span className="px-2 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300 font-medium">
+                            <span className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium">
                               ₹{artist.subscriptionPrice}/mo
                             </span>
                           ) : (
@@ -298,7 +288,7 @@ const Artists = () => {
               <button
                 onClick={handlePrevPage}
                 disabled={pagination.page <= 1}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-purple-500/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-900 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-blue-500/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 ← Prev
               </button>
@@ -311,7 +301,7 @@ const Artists = () => {
                     onClick={() => handlePageClick(pageNum)}
                     className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${
                       pageNum === pagination.page
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-900 text-white shadow-lg'
                         : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50'
                     } ${cachedPages.includes(pageNum) ? 'ring-2 ring-green-500/30' : ''}`}
                   >
