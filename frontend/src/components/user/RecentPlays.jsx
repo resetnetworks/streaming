@@ -12,11 +12,11 @@ const RecentPlays = React.forwardRef(
     return (
       <div
         ref={ref}
-        className="min-w-[120px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group p-2"
+        className="min-w-[140px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group p-2"
         onClick={handleClick}
       >
         <div
-          className={`relative md:w-48 md:h-48 h-28 w-28 rounded-lg overflow-hidden 
+          className={`relative md:w-48 md:h-48 h-32 w-32 rounded-lg overflow-hidden 
             ${
               isSelected
                 ? "border-2 border-blue-500 shadow-[0_0_8px_1px_#3b82f6]"

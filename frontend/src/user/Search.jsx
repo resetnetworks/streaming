@@ -23,6 +23,10 @@ const Search = () => {
   const [purchaseItem, setPurchaseItem] = useState(null);
   const [purchaseType, setPurchaseType] = useState(null);
 
+  // Payment processing states (add these if you don't have them)
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
   const { results, loading, error } = useSelector((state) => state.search);
   const trendingSongs = useSelector((state) => state.songs.songs);
   const selectedSong = useSelector((state) => state.player.selectedSong);
@@ -56,26 +60,37 @@ const Search = () => {
     return shuffled.slice(0, count);
   };
 
-  // Function to get price component for songs
+  // Updated function with new price logic
   const getSongPriceComponent = (song) => {
-    if (song.price === 0) {
-      return "album";
-    } else if (song.accessType === "purchase-only") {
-      if (currentUser?.purchasedSongs?.includes(song._id)) {
-        return "Purchased";
-      } else {
-        return (
-          <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded"
-            onClick={() => handlePurchaseClick(song, "song")}
-          >
-             ₹{song.price}
-          </button>
-        );
-      }
-    } else {
-      return "Subs..";
-    }
+    return (
+      // First check if song is already purchased
+      currentUser?.purchasedSongs?.includes(song._id) ? (
+        "Purchased"
+      ) : // Then check subscription songs first (they can have price = 0)
+      song.accessType === "subscription" ? (
+        "Subs.."
+      ) : // Then check purchase-only songs with price > 0
+      song.accessType === "purchase-only" && song.price > 0 ? (
+        <button
+          className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
+            processingPayment || paymentLoading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+          onClick={() => handlePurchaseClick(song, "song")}
+          disabled={processingPayment || paymentLoading}
+        >
+          {processingPayment || paymentLoading
+            ? "..."
+            : `Buy ₹${song.price}`}
+        </button>
+      ) : // Then check if it's a free album song (purchase-only with price = 0)
+      song.accessType === "purchase-only" && song.price === 0 ? (
+        "album"
+      ) : (
+        "Free"
+      )
+    );
   };
 
   // Function to get price component for albums
@@ -104,6 +119,7 @@ const Search = () => {
       </h1>
 
       {/* Search Bar */}
+      <div className="min-h-screen">
       <div className="w-full flex flex-col items-center px-8 sticky top-2 z-10 pt-4">
         <div className="flex items-center w-full max-w-3xl mx-auto p-[2px] rounded-2xl searchbar-container shadow-inner shadow-[#7B7B7B47] bg-gray-700">
           <div className="flex items-center flex-grow rounded-l-2xl bg-gray-700">
@@ -236,6 +252,7 @@ const Search = () => {
           }}
         />
       )}
+      </div>
     </>
   );
 };

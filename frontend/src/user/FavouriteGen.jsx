@@ -11,29 +11,104 @@ import { useNavigate } from "react-router-dom";
 
 const tags = [
   {
-    id: "electronic",
-    label: "#electronic",
-    image: "/images/genre.png",
+    id: "Electronic",
+    label: "#Electronic",
+    image: "/images/genre1.jpg",
   },
   {
-    id: "techno",
-    label: "#techno",
-    image: "/images/genre.png",
-  },
-  {
-    id: "idm",
+    id: "IDM",
     label: "#IDM",
-    image: "/images/genre.png",
+    image: "/images/genre2.jpg",
   },
   {
-    id: "ambient",
-    label: "#ambient",
-    image: "/images/genre.png",
+    id: "Ambient",
+    label: "#Ambient",
+    image: "/images/genre3.jpg",
   },
   {
-    id: "soundtrack",
-    label: "#soundtrack",
-    image: "/images/genre.png",
+    id: "Experimental",
+    label: "#Experimental",
+    image: "/images/genre4.jpg",
+  },
+  {
+    id: "Avant Garde",
+    label: "#Avant Garde",
+    image: "/images/genre5.jpg",
+  },
+  {
+    id: "Noise",
+    label: "#Noise",
+    image: "/images/genre6.jpg",
+  },
+  {
+    id: "Downtempo",
+    label: "#Downtempo",
+    image: "/images/genre7.jpg",
+  },
+  {
+    id: "Soundtrack",
+    label: "#Soundtrack",
+    image: "/images/genre8.jpg",
+  },
+  {
+    id: "Industrial",
+    label: "#Industrial",
+    image: "/images/genre9.jpg",
+  },
+  {
+    id: "EBM",
+    label: "#Techno",
+    image: "/images/genre10.jpg",
+  },
+  {
+    id: "Electro",
+    label: "#Electro",
+    image: "/images/genre11.jpg",
+  },
+  {
+    id: "Techno",
+    label: "#Techno",
+    image: "/images/genre12.jpg",
+  },
+  {
+    id: "Dance",
+    label: "#Dance",
+    image: "/images/genre13.jpg",
+  },
+  {
+    id: "Electronica",
+    label: "#Electronica",
+    image: "/images/genre14.jpg",
+  },
+  {
+    id: "Sound Art",
+    label: "#Sound Art",
+    image: "/images/genre15.jpg",
+  },
+  {
+    id: "Jazz",
+    label: "#Jazz",
+    image: "/images/genre16.jpg",
+  },
+  {
+    id: "Classical",
+    label: "#Classical",
+    image: "/images/genre17.jpg",
+  },
+  {
+    id: "Classical Crossover",
+    label: "#Classical Crossover",
+    image: "/images/genre18.jpg",
+  },
+  {
+    id: "Soundscapes",
+    label: "#Soundscapes",
+    image: "/images/genre19.jpg",
+  },
+  {
+    id: "Field Recordings",
+    label: "#Field Recordings",
+    image: "/images/genre20.jpg",
   },
 ];
 
@@ -86,15 +161,34 @@ const FavouriteGen = () => {
 
   const handleSelection = (id) => {
     if (selected.includes(id)) {
-      setSelected(selected.filter((item) => item !== id));
+      const newSelected = selected.filter((item) => item !== id);
+      setSelected(newSelected);
+      
+      // Show toast when deselecting and goes below 3
+      if (newSelected.length < 3 && newSelected.length > 0) {
+        toast.warning(`Please select at least 3 genres. Currently selected: ${newSelected.length}`);
+      } else if (newSelected.length === 0) {
+        toast.info("Start selecting your favorite genres!");
+      }
     } else {
-      setSelected([...selected, id]);
+      const newSelected = [...selected, id];
+      setSelected(newSelected);
+      
+      // Show success toast when reaching 3 or more
+      if (newSelected.length === 3) {
+        toast.success("Great! You can now continue or select more genres.");
+      } else if (newSelected.length === 1) {
+        toast.info("Good start! Select 2 more genres to continue.");
+      } else if (newSelected.length === 2) {
+        toast.info("Almost there! Select 1 more genre to continue.");
+      }
     }
   };
 
   const handleSubmit = async () => {
     if (selected.length < 3) {
-      toast.error("Please select at least 3 genres");
+      const remaining = 3 - selected.length;
+      toast.error(`Please select at least 3 genres. You need ${remaining} more genre${remaining === 1 ? '' : 's'}.`);
       return;
     }
 
@@ -156,6 +250,18 @@ const FavouriteGen = () => {
         <span className="text-blue-700"> (at least three)</span>
       </h1>
 
+      {/* Selection Counter */}
+      <div className="mt-4 text-center">
+        <p className={`text-lg font-semibold ${selected.length >= 3 ? 'text-green-400' : 'text-yellow-400'}`}>
+          Selected: {selected.length} / 3 minimum
+          {selected.length < 3 && (
+            <span className="block text-sm text-gray-300 mt-1">
+              Choose {3 - selected.length} more to continue
+            </span>
+          )}
+        </p>
+      </div>
+
       <div className="w-full flex flex-col items-center px-8">
         <div className="flex items-center w-full max-w-3xl mx-auto mt-8 p-[2px] rounded-2xl searchbar-container shadow-inner shadow-[#7B7B7B47] bg-gray-700">
           <div className="flex items-center flex-grow rounded-l-2xl bg-gray-700">
@@ -173,13 +279,13 @@ const FavouriteGen = () => {
         </div>
       </div>
 
-      <div className="flex md:w-2/3 w-full justify-center gap-6 flex-wrap py-8">
+      <div className="flex md:w-[80%] w-full justify-center gap-6 flex-wrap py-8">
         {tags.map((tag) => {
           const isSelected = selected.includes(tag.id);
           return (
             <div
               key={tag.id}
-              className="flex flex-col items-center cursor-pointer"
+              className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
               onClick={() => handleSelection(tag.id)}
             >
               <div
@@ -187,7 +293,7 @@ const FavouriteGen = () => {
                 ${
                   isSelected
                     ? "border-[#2400FF] shadow-[inset_0_0_30px_rgba(36,0,255,0.7),0_0_15px_rgba(36,0,255,0.5)]"
-                    : "border-gray-700 border-2"
+                    : "border-gray-700 border-2 hover:border-gray-500"
                 }`}
                 style={{ backgroundImage: `url(${tag.image})` }}
               >
@@ -197,7 +303,7 @@ const FavouriteGen = () => {
                   </div>
                 )}
               </div>
-              <p className="mt-2 text-white text-sm">{tag.label}</p>
+              <p className="mt-2 text-white text-sm text-center">{tag.label}</p>
             </div>
           );
         })}
@@ -207,7 +313,14 @@ const FavouriteGen = () => {
         <button
           onClick={handleSubmit}
           disabled={selected.length < 3 || loading}
-          className="custom-button"
+          className={`custom-button transition-all duration-300 ${
+            selected.length < 3 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+          }`}
+          title={
+            selected.length < 3 
+              ? `Please select ${3 - selected.length} more genre${3 - selected.length === 1 ? '' : 's'}` 
+              : 'Click to save your preferences'
+          }
         >
           {loading ? "Saving..." : "Continue"}
         </button>

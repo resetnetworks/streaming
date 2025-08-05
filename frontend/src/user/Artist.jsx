@@ -25,16 +25,16 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
 import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice";
-import { 
-  initiateRazorpayItemPayment, 
+import {
+  initiateRazorpayItemPayment,
   initiateRazorpaySubscription,
-  resetPaymentState 
+  resetPaymentState,
 } from "../features/payments/paymentSlice";
 import {
   selectPaymentLoading,
   selectRazorpayOrder,
   selectRazorpaySubscriptionId,
-  selectPaymentError
+  selectPaymentError,
 } from "../features/payments/paymentSelectors";
 
 const loadRazorpayScript = () => {
@@ -73,12 +73,15 @@ const Artist = () => {
   const razorpayOrder = useSelector(selectRazorpayOrder);
   const razorpaySubscriptionId = useSelector(selectRazorpaySubscriptionId);
   const paymentError = useSelector(selectPaymentError);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const userSubscriptions = useSelector(
     (state) => state.userDashboard.subscriptions || []
   );
 
-  const isSubscribed = userSubscriptions.some((sub) => sub.artist.slug === artistId);
+  const isSubscribed = userSubscriptions.some(
+    (sub) => sub.artist.slug === artistId
+  );
 
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
@@ -110,7 +113,9 @@ const Artist = () => {
       "bg-teal-600",
       "bg-indigo-600",
     ];
-    const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+    const hash = name
+      .split("")
+      .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
     return colors[hash % colors.length];
   };
 
@@ -138,9 +143,7 @@ const Artist = () => {
     if (albumsStatus === "loading") return;
     setAlbumsStatus("loading");
     try {
-      await dispatch(
-        getAlbumsByArtist({ artistId, page, limit: 10 })
-      ).unwrap();
+      await dispatch(getAlbumsByArtist({ artistId, page, limit: 10 })).unwrap();
       if (page >= artistAlbumPagination.totalPages) {
         setHasMoreAlbums(false);
       }
@@ -196,7 +199,7 @@ const Artist = () => {
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderResult.order.amount,
-        currency: orderResult.order.currency || 'INR',
+        currency: orderResult.order.currency || "INR",
         name: "RESET Music",
         description: `Purchase ${item.title || item.name}`,
         image: "/logo.png",
@@ -297,7 +300,11 @@ const Artist = () => {
       razorpay.open();
     } catch (error) {
       console.error("Subscription error:", error);
-      toast.error(`Subscription failed: ${error.message || "Failed to initiate subscription"}`);
+      toast.error(
+        `Subscription failed: ${
+          error.message || "Failed to initiate subscription"
+        }`
+      );
     } finally {
       setSubscriptionLoading(false);
     }
@@ -322,7 +329,11 @@ const Artist = () => {
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         console.error("Unsubscribe error:", error);
-        toast.error(`Failed to unsubscribe: ${error.response?.data?.message || error.message}`);
+        toast.error(
+          `Failed to unsubscribe: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       } finally {
         setSubscriptionLoading(false);
       }
@@ -397,7 +408,6 @@ const Artist = () => {
       </div>
     );
 
-
   return (
     <>
       <UserHeader />
@@ -437,14 +447,18 @@ const Artist = () => {
                       onClick={handleSubscribe}
                       disabled={subscriptionLoading || paymentLoading}
                       className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
-                        ${(subscriptionLoading || paymentLoading) ? "opacity-70 cursor-not-allowed" : ""}
+                        ${
+                          subscriptionLoading || paymentLoading
+                            ? "opacity-70 cursor-not-allowed"
+                            : ""
+                        }
                         ${
                           isSubscribed
                             ? "bg-red-600 text-white hover:bg-red-700"
                             : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
                     >
-                      {(subscriptionLoading || paymentLoading)
+                      {subscriptionLoading || paymentLoading
                         ? "Processing..."
                         : isSubscribed
                         ? "Cancel Subscription"
@@ -498,7 +512,7 @@ const Artist = () => {
                       ? song.coverImage
                       : renderCoverImage(null, song.title, "w-12 h-12")
                   }
-                  songName={song.title}
+                  songName={song.title.slice(0, 12)}
                   singerName={song.singer}
                   seekTime={formatDuration(song.duration)}
                   onPlay={() => handlePlaySong(song)}
@@ -528,7 +542,8 @@ const Artist = () => {
           <h2>Albums</h2>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">
-              Page {artistAlbumPagination.page} of {artistAlbumPagination.totalPages}
+              Page {artistAlbumPagination.page} of{" "}
+              {artistAlbumPagination.totalPages}
             </span>
             <LuSquareChevronRight
               className="text-white cursor-pointer hover:text-blue-800 text-2xl"
@@ -567,7 +582,9 @@ const Artist = () => {
                           onClick={() => handlePurchaseClick(album, "album")}
                           disabled={paymentLoading}
                         >
-                          {paymentLoading ? "Processing..." : `Buy for ₹${album.price}`}
+                          {paymentLoading
+                            ? "Processing..."
+                            : `Buy for ₹${album.price}`}
                         </button>
                       )
                     }
@@ -578,7 +595,11 @@ const Artist = () => {
                   hasMoreAlbums &&
                   [...Array(2)].map((_, idx) => (
                     <div key={`album-loading-${idx}`} className="min-w-[160px]">
-                      <Skeleton height={160} width={160} className="rounded-xl" />
+                      <Skeleton
+                        height={160}
+                        width={160}
+                        className="rounded-xl"
+                      />
                       <Skeleton width={120} height={16} className="mt-2" />
                     </div>
                   ))}
@@ -621,20 +642,33 @@ const Artist = () => {
                   onPlay={() => handlePlaySong(song)}
                   isSelected={selectedSong?._id === song._id}
                   price={
-                    song.accessType === "purchase-only" ? (
-                      currentUser?.purchasedSongs?.includes(song._id) ? (
-                        "Purchased"
-                      ) : (
-                        <button
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded disabled:opacity-50"
-                          onClick={() => handlePurchaseClick(song, "song")}
-                          disabled={paymentLoading}
-                        >
-                          {paymentLoading ? "Processing..." : `Buy for ₹${song.price}`}
-                        </button>
-                      )
-                    ) : (
+                    // First check if song is already purchased
+                    currentUser?.purchasedSongs?.includes(song._id) ? (
+                      "Purchased"
+                    ) : // Then check subscription songs first (they can have price = 0)
+                    song.accessType === "subscription" ? (
                       "Subs.."
+                    ) : // Then check purchase-only songs with price > 0
+                    song.accessType === "purchase-only" && song.price > 0 ? (
+                      <button
+                        className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
+                          processingPayment || paymentLoading
+                            ? "bg-gray-500 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-700"
+                        }`}
+                        onClick={() => handlePurchaseClick(song, "song")}
+                        disabled={processingPayment || paymentLoading}
+                      >
+                        {processingPayment || paymentLoading
+                          ? "..."
+                          : `Buy ₹${song.price}`}
+                      </button>
+                    ) : // Then check if it's a free album song (purchase-only with price = 0)
+                    song.accessType === "purchase-only" && song.price === 0 ? (
+                      "album"
+                    ) : (
+                      // Default case
+                      "Free"
                     )
                   }
                 />
@@ -652,8 +686,10 @@ const Artist = () => {
 
         {paymentError && (
           <div className="fixed top-4 right-4 z-50 bg-red-900/90 backdrop-blur-sm border border-red-500/30 rounded-lg p-4 text-red-300 max-w-sm">
-            <p className="text-sm">{paymentError.message || "Payment failed. Please try again."}</p>
-            <button 
+            <p className="text-sm">
+              {paymentError.message || "Payment failed. Please try again."}
+            </p>
+            <button
               onClick={() => dispatch(resetPaymentState())}
               className="text-xs text-red-400 hover:text-red-300 mt-2"
             >

@@ -9,14 +9,11 @@ const AlbumCard = ({
   price,
 }) => {
   return (
-    <div
-      className="md:w-56 w-32 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative"
-    >
-      <div className="relative"
-      onClick={onClick}>
+    <div className="md:w-56 w-36 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative">
+      <div className="relative" onClick={onClick}>
         <img
           src={image}
-          alt="Electronic Music"
+          alt="Album Cover"
           className="w-full md:h-48 h-32 object-cover"
         />
         <div
@@ -31,10 +28,11 @@ const AlbumCard = ({
         </div>
       </div>
 
-      <div className="w-full flex justify-between bg-gray-800/40 md:p-4 p-3">
-        <p className="text-xs text-white text-wrap">{artists}</p>
+      {/* Single responsive container with flex direction change */}
+      <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-800/40 md:p-4 p-3 gap-2 sm:gap-0">
+        <p className="text-xs text-white text-wrap text-left">{artists}</p>
         {price && (
-          <div className="text-blue-500 text-xs font-semibold">
+          <div className="text-xs">
             {typeof price === "string" ? price : price}
           </div>
         )}

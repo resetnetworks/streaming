@@ -370,29 +370,35 @@ const Home = () => {
                     ref={idx === recentSongs.length - 1 ? recentLastRef : null}
                     key={song._id}
                     title={song.title}
-                    price={
-                      song.price === 0 ? (
-                        "album"
-                      ) : song.accessType === "purchase-only" ? (
-                        currentUser?.purchasedSongs?.includes(song._id) ? (
-                          "Purchased"
-                        ) : (
-                          <button
-                            className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 mt-2 sm:mt-0 py-1 rounded transition-colors ${
-                              processingPayment || paymentLoading
-                                ? "bg-gray-500 cursor-not-allowed" 
-                                : "bg-indigo-600 hover:bg-indigo-700"
-                            }`}
-                            onClick={() => handlePurchaseClick(song, "song")}
-                            disabled={processingPayment || paymentLoading}
-                          >
-                            {processingPayment || paymentLoading ? "..." : `Buy ₹${song.price}`}
-                          </button>
-                        )
-                      ) : (
-                        "Subs.."
-                      )
-                    }
+                   price={
+                    // First check if song is already purchased
+                    currentUser?.purchasedSongs?.includes(song._id) ? (
+                      "Purchased"
+                    ) : // Then check subscription songs first (they can have price = 0)
+                    song.accessType === "subscription" ? (
+                      "Subs.."
+                    ) : // Then check purchase-only songs with price > 0
+                    song.accessType === "purchase-only" && song.price > 0 ? (
+                      <button
+                        className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
+                          processingPayment || paymentLoading
+                            ? "bg-gray-500 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-700"
+                        }`}
+                        onClick={() => handlePurchaseClick(song, "song")}
+                        disabled={processingPayment || paymentLoading}
+                      >
+                        {processingPayment || paymentLoading
+                          ? "..."
+                          : `Buy ₹${song.price}`}
+                      </button>
+                    ) : // Then check if it's a free album song (purchase-only with price = 0)
+                    song.accessType === "purchase-only" && song.price === 0 ? (
+                      "album"
+                    ) : (
+                      "Free"
+                    )
+                  }
                     singer={song.singer}
                     image={song.coverImage || "/images/placeholder.png"}
                     onPlay={() => handlePlaySong(song)}
@@ -449,7 +455,7 @@ const Home = () => {
                           "Purchased"
                         ) : (
                           <button
-                            className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded transition-colors ${
+                            className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors ${
                               processingPayment || paymentLoading
                                 ? "bg-gray-500 cursor-not-allowed"
                                 : "bg-indigo-600 hover:bg-indigo-700"
@@ -457,7 +463,7 @@ const Home = () => {
                             onClick={() => handlePurchaseClick(album, "album")}
                             disabled={processingPayment || paymentLoading}
                           >
-                            {processingPayment || paymentLoading ? "..." : `₹${album.price}`}
+                            {processingPayment || paymentLoading ? "..." : `Buy ₹${album.price}`}
                           </button>
                         )
                       }
@@ -582,7 +588,7 @@ const Home = () => {
             ref={scrollRefs.topPicks}
             className="w-full overflow-x-auto no-scrollbar min-h-[280px]"
           >
-            <div className="flex md:gap-8 gap-32">
+            <div className="flex md:gap-8 gap-16">
               {songsStatus === "loading" && topSongs.length === 0
                 ? [...Array(5)].map((_, idx) => (
                     <div

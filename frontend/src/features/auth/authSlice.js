@@ -219,6 +219,7 @@ export const updatePreferredGenres = createAsyncThunk("auth/updatePreferredGenre
     const res = await axios.put("/users/update-genres", { genres });
     return res.data.preferredGenres;
   } catch (err) {
+    console.log(err)
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
