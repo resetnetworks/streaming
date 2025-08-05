@@ -24,7 +24,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 
 // ⚠️ Use your actual publishable key here (from .env or directly)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY); // or process.env.STRIPE_PUBLISHABLE_KEY
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 function App() {
   const dispatch = useDispatch();
@@ -74,14 +74,17 @@ function App() {
       <BrowserRouter>
         <Suspense fallback={<Loader />}>
           <Routes>
-            {/* Public */}
+            {/* Public Routes */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route path="/help" element={<Pages.Help />} />
             <Route path="/data-deletion" element={<Pages.DataDeletion />} />
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
 
-            {/* User Routes */}
+            {/* 🔥 NEW: Social Login Callback Route */}
+            <Route path="/auth/callback" element={<Pages.SocialLoginCallback />} />
+
+            {/* User Authentication Routes */}
             <Route
               path="/register"
               element={
@@ -115,7 +118,7 @@ function App() {
               }
             />
 
-            {/* Protected */}
+            {/* Genre Selection - Protected but Special Case */}
             <Route
               path="/genres"
               element={
@@ -125,83 +128,83 @@ function App() {
               }
             />
 
-            {/* User Layout */}
+            {/* User Layout Protected Routes */}
             <Route element={<UserLayout />}>
-            <Route
-              path="/"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.Home />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/artists"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.Artists />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/artist/:artistId"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.Artist />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/purchases"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.Library />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/liked-songs"
-              element={
-                <RedirectedProtectedRoute
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                >
-                  <Pages.LikedSong />
-                </RedirectedProtectedRoute>
-              }
-            />
-            <Route
-              path="/album/:albumId"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Pages.Album />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Pages.Search />
-                </ProtectedRoute>
-              }
-            />
-
+              <Route
+                path="/"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.Home />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
+                path="/artists"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.Artists />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
+                path="/artist/:artistId"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.Artist />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
+                path="/purchases"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.Library />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
+                path="/liked-songs"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.LikedSong />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
+                path="/album/:albumId"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <Pages.Album />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/search"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <Pages.Search />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
 
-             <Route
+            {/* Payment History - Outside UserLayout */}
+            <Route
               path="/payment-history"
               element={
                 <RedirectedProtectedRoute
@@ -213,7 +216,7 @@ function App() {
               }
             />
 
-            {/* Admin */}
+            {/* Admin Routes */}
             <Route
               path="/admin"
               element={
@@ -231,7 +234,7 @@ function App() {
               }
             />
 
-            {/* Fallback */}
+            {/* Fallback Route */}
             <Route
               path="*"
               element={

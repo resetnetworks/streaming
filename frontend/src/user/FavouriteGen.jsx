@@ -1,4 +1,4 @@
-// FavouriteGen.jsx
+// src/pages/FavouriteGen.jsx
 import React, { useState, useEffect } from "react";
 import { IoMdCheckmark } from "react-icons/io";
 import IconHeader from "../components/user/IconHeader";
@@ -125,12 +125,16 @@ const FavouriteGen = () => {
     const justRegistered = localStorage.getItem('justRegistered');
     const registrationTime = localStorage.getItem('registrationTime');
 
-    // Check if registration was too long ago (more than 10 minutes)
+    // Check if registration was too long ago (more than 15 minutes)
     if (registrationTime) {
       const timeDiff = Date.now() - parseInt(registrationTime);
-      if (timeDiff > 10 * 60 * 1000) { // 10 minutes
+      if (timeDiff > 15 * 60 * 1000) { // 15 minutes
         localStorage.removeItem('justRegistered');
         localStorage.removeItem('registrationTime');
+        if (user?.preferredGenres?.length > 0) {
+          navigate("/");
+          return;
+        }
       }
     }
 
@@ -139,8 +143,10 @@ const FavouriteGen = () => {
       return;
     }
 
+    // If user doesn't exist yet and justRegistered flag is set, wait for profile
     if (justRegistered && (!user || !user._id)) {
       dispatch(getMyProfile()).catch((error) => {
+        console.error("Failed to get profile:", error);
         toast.error("Session expired. Please login again.");
         localStorage.removeItem('justRegistered');
         localStorage.removeItem('registrationTime');
@@ -149,11 +155,14 @@ const FavouriteGen = () => {
       return;
     }
 
+    // If user has genres and not just registered, redirect to home
+    // This prevents showing genre page every time for existing users
     if (!justRegistered && user?.preferredGenres?.length > 0) {
       navigate("/");
       return;
     }
 
+    // Set selected genres from user data if they exist
     if (user?.preferredGenres?.length > 0) {
       setSelected(user.preferredGenres);
     }
@@ -220,13 +229,14 @@ const FavouriteGen = () => {
       // Refresh user profile after successful update
       await dispatch(getMyProfile()).unwrap();
 
-      // Clean up localStorage
+      // Clean up localStorage - This is important!
       localStorage.removeItem('justRegistered');
       localStorage.removeItem('registrationTime');
 
-      toast.success("Genres saved successfully!");
+      toast.success("Genres saved successfully! Welcome to MusicReset!");
       navigate("/", { replace: true });
     } catch (error) {
+      console.error("Genre update error:", error);
       // Handle specific token/auth errors
       if (error?.includes?.('token') || error?.includes?.('expired') || error?.includes?.('Invalid')) {
         toast.error("Session expired. Please login again.");
@@ -234,7 +244,7 @@ const FavouriteGen = () => {
         localStorage.removeItem('registrationTime');
         navigate("/login");
       } else {
-        toast.error(error || "Failed to update genres");
+        toast.error(error || "Failed to update genres. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -322,7 +332,14 @@ const FavouriteGen = () => {
               : 'Click to save your preferences'
           }
         >
-          {loading ? "Saving..." : "Continue"}
+          {loading ? (
+            <>
+              <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+              Saving...
+            </>
+          ) : (
+            "Continue"
+          )}
         </button>
       </div>
     </section>

@@ -1,3 +1,4 @@
+// src/pages/Register.js
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MdOutlineEmail } from "react-icons/md";
@@ -30,7 +31,6 @@ const Register = () => {
     symbol: false,
   });
 
-  // ✅ Updated useEffect for cookie-based authentication
   useEffect(() => {
     if (justRegistered && user) {
       const timer = setTimeout(async () => {
@@ -38,7 +38,6 @@ const Register = () => {
           localStorage.setItem("justRegistered", "true");
           localStorage.setItem("registrationTime", Date.now().toString());
 
-          // ✅ Since we're using cookies, just verify the authentication works
           await axios.get("/users/me", { withCredentials: true });
           
           toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
@@ -70,7 +69,6 @@ const Register = () => {
     return newErrors;
   };
 
-  // ✅ Simplified handleSubmit for cookie-based authentication
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validate();
@@ -83,9 +81,6 @@ const Register = () => {
     
     try {
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
-      
-      // ✅ No token handling needed - cookies handle authentication
-      // Just set the flag to trigger navigation
       setJustRegistered(true);
       
     } catch (err) {
@@ -94,11 +89,15 @@ const Register = () => {
     }
   };
 
+  // Updated social login functions
   const googleRegister = () => {
+    // Show loading toast
+    toast.loading("Redirecting to Google...");
     window.location.href = `${import.meta.env.VITE_API_URL}/users/google`;
   };
 
   const facebookRegister = () => {
+    toast.loading("Redirecting to Facebook...");
     window.location.href = `${import.meta.env.VITE_API_URL}/users/facebook`;
   };
 
@@ -231,13 +230,27 @@ const Register = () => {
             </div>
 
             <div className="flex justify-around items-center md:w-64 w-52">
-              <button onClick={googleRegister} type="button" disabled={loading} className="w-12 h-12 flex justify-center items-center rounded-lg bg-white">
+              <button 
+                onClick={googleRegister} 
+                type="button" 
+                disabled={loading} 
+                className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
                 <img src={assets.google_icon} alt="google_icon" className="w-6 h-6" />
               </button>
-              <button onClick={facebookRegister} type="button" disabled={loading} className="w-12 h-12 flex justify-center items-center rounded-lg bg-white">
+              <button 
+                onClick={facebookRegister} 
+                type="button" 
+                disabled={loading} 
+                className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
                 <img src={assets.facebook_icon} alt="facebook_icon" className="w-6 h-6" />
               </button>
-              <button type="button" disabled={loading} className="w-12 h-12 flex justify-center items-center rounded-lg bg-white">
+              <button 
+                type="button" 
+                disabled={loading} 
+                className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
                 <img src={assets.apple_icon} alt="apple_icon" className="w-6 h-6" />
               </button>
             </div>
