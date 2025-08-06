@@ -30,7 +30,7 @@ export const canStreamSong = async (userId, songId) => {
   if (song.accessType === "purchase-only") {
     if(song.albumOnly){
       const album = await Album.findOne({ songs: song._id }).populate("artist");
-      console.log("DEBUG album:", album);
+    
       
       if (!album) return false;
 

@@ -12,10 +12,11 @@ export const markTransactionPaid = async ({
   subscriptionId,
 }) => {
   let query = {};
-  console.log("-------",gateway, paymentId, paymentIntentId, razorpayOrderId, stripeSubscriptionId, subscriptionId);
-  
-  
 
+  if (!gateway) {
+    console.warn("⚠️ No payment gateway provided. Cannot mark transaction as paid.");
+    return null;
+  }
   if (gateway === "stripe") {
     if (stripeSubscriptionId) {
       query = { stripeSubscriptionId };
@@ -28,15 +29,15 @@ export const markTransactionPaid = async ({
     } else if (razorpayOrderId) {
       query = { razorpayOrderId };
     } else if (paymentId) {
-      query = { paymentId }; // fallback (e.g. direct one-time payments)
+      query = { paymentId }; 
     }
   }
-console.log("query",query);
+
 
   const transaction = await Transaction.findOne(query);
   if (!transaction || transaction.status === "paid") {
     console.warn("⚠️ Transaction not found or already marked as paid");
-    // console.log(transaction);
+    
     
     return null;
   }

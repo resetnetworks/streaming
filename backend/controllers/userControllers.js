@@ -99,12 +99,24 @@ export const myProfile = async (req, res) => {
     throw new NotFoundError("User not found");
   }
 
-  const shaped = shapeUserResponse(user);
+  // 🔥 NEW: Enhanced response for social login with all necessary fields
+  const userResponse = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    profileImage: user.profileImage || "",
+    authType: user.authType || "email",
+    role: user.role || "user",
+    purchasedSongs: user.purchasedSongs || [],
+    purchasedAlbums: user.purchasedAlbums || [],
+    likedsong: user.likedsong || [],
+    preferredGenres: user.preferredGenres || [],
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
+  };
 
-  res.status(StatusCodes.OK).json({
-    success: true,
-    user: shaped,
-  });
+
+  res.status(StatusCodes.OK).json(userResponse);
 };
 
 
@@ -293,15 +305,29 @@ export const resetPassword = async (req, res) => {
 // @access  Public (OAuth)
 // ===================================================================
 export const googleAuthCallback = (req, res) => {
-  // Generate and set auth token
-  generateToken(req.user._id, res);
+  try {
+    // 🔥 NEW: Extract user and isNewUser from req.user (updated passport strategy)
+    const { user, isNewUser } = req.user || {};
+    
+    if (!user) {
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=google_auth_failed`);
+    }
 
-  // Redirect to frontend (after successful login)
-  const redirectUrl = process.env.CLIENT_URL || "https://www.musicreset.com/";
-  res.redirect(redirectUrl);
+   
+    
+    // 🔥 NEW: Use same generateToken pattern as login/register
+    const token = generateToken(user._id, res);
+    
+    
+    // 🔥 NEW: Redirect to frontend callback with newUser parameter
+    const redirectUrl = `${process.env.CLIENT_URL}/auth/callback?newUser=${isNewUser}`;
+    
+    res.redirect(redirectUrl);
+    
+  } catch (error) {
+    res.redirect(`${process.env.CLIENT_URL}/login?error=callback_failed`);
+  }
 };
-
-
 
 // ===================================================================
 // @desc    Handle Facebook OAuth callback and redirect to client
@@ -309,20 +335,28 @@ export const googleAuthCallback = (req, res) => {
 // @access  Public (OAuth)
 // ===================================================================
 export const facebookAuthCallback = (req, res) => {
-  // If Passport (or your OAuth middleware) did not set req.user, authentication failed
-  if (!req.user) {
-    throw new UnauthorizedError("Facebook authentication failed");
+  try {
+    // 🔥 NEW: Extract user and isNewUser from req.user
+    const { user, isNewUser } = req.user || {};
+    
+    if (!user) {
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=facebook_auth_failed`);
+    }
+
+    
+    // 🔥 NEW: Use same generateToken pattern as login/register
+    const token = generateToken(user._id, res);
+    
+    
+    // 🔥 NEW: Redirect to frontend callback with newUser parameter
+    const redirectUrl = `${process.env.CLIENT_URL}/auth/callback?newUser=${isNewUser}`;
+    
+    res.redirect(redirectUrl);
+    
+  } catch (error) {
+    res.redirect(`${process.env.CLIENT_URL}/login?error=callback_failed`);
   }
-
-  // Generate auth token (e.g., set as cookie) for the authenticated user
-  generateToken(req.user._id, res);
-
-  // Redirect to frontend after successful login
-  const redirectUrl = process.env.CLIENT_URL || "https://www.musicreset.com/";
-  res.redirect(redirectUrl);
 };
-
-
 
 // ===================================================================
 // @desc    Handle Apple OAuth callback and respond with token & user
@@ -330,15 +364,37 @@ export const facebookAuthCallback = (req, res) => {
 // @access  Public (OAuth)
 // ===================================================================
 export const appleCallback = (req, res) => {
-  // If Passport (or your OAuth middleware) did not set req.user, authentication failed
-  if (!req.user) {
-    throw new UnauthorizedError("Apple authentication failed");
+  try {
+    // 🔥 NEW: Extract user and isNewUser from req.user
+    const { user, isNewUser } = req.user || {};
+    
+    if (!user) {
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=apple_auth_failed`);
+    }
+
+   
+    
+    // 🔥 NEW: Use same generateToken pattern as login/register
+    const token = generateToken(user._id, res);
+    
+    
+    // 🔥 NEW: Redirect to frontend callback with newUser parameter
+    const redirectUrl = `${process.env.CLIENT_URL}/auth/callback?newUser=${isNewUser}`;
+    
+    res.redirect(redirectUrl);
+    
+  } catch (error) {
+    res.redirect(`${process.env.CLIENT_URL}/login?error=callback_failed`);
   }
-
-  // Generate auth token (e.g., set as cookie) for the authenticated user
-  generateToken(req.user._id, res);
-
-  // Redirect to frontend after successful login
-  const redirectUrl = process.env.CLIENT_URL || "https://www.musicreset.com/";
-  res.redirect(redirectUrl);
 };
+
+// 🆕 NEW: Get user profile endpoint for social login (used by frontend)
+// ===================================================================
+// @desc    Get current user's profile (enhanced for social login)
+// @route   GET /api/users/me
+// @access  Private
+// ===================================================================
+
+
+
+

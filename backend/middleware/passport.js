@@ -1,3 +1,4 @@
+// passport.js
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
@@ -20,8 +21,10 @@ passport.use(
         if (!email) return done(new Error("Google account does not have an email"), null);
 
         let user = await User.findOne({ email });
+        let isNewUser = false; // 🔥 NEW: Track if user is new
 
         if (!user) {
+          // Create new user with proper initialization
           user = new User({
             name: profile.displayName,
             email,
@@ -29,12 +32,19 @@ passport.use(
             authType: "google",
             profileImage: profile.photos?.[0]?.value || "",
             role: "user",
+            // 🔥 NEW: Initialize arrays for new users
+            purchasedSongs: [],
+            purchasedAlbums: [],
+            likedsong: [],
+            preferredGenres: [] // Empty for new users - will be set in genre selection
           });
 
           await user.save({ validateBeforeSave: false });
+          isNewUser = true; // 🔥 NEW: Mark as new user
         }
 
-        return done(null, user);
+        // 🔥 NEW: Return user with isNewUser flag
+        return done(null, { user, isNewUser });
       } catch (error) {
         return done(error, null);
       }
@@ -56,8 +66,10 @@ passport.use(
         if (!email) return done(new Error("Facebook account has no email"), null);
 
         let user = await User.findOne({ email });
+        let isNewUser = false; // 🔥 NEW: Track if user is new
 
         if (!user) {
+          // Create new user with proper initialization
           user = new User({
             name: `${profile.name.givenName} ${profile.name.familyName}`,
             email,
@@ -65,19 +77,25 @@ passport.use(
             authType: "facebook",
             profileImage: profile.photos?.[0]?.value || "",
             role: "user",
+            // 🔥 NEW: Initialize arrays for new users
+            purchasedSongs: [],
+            purchasedAlbums: [],
+            likedsong: [],
+            preferredGenres: [] // Empty for new users
           });
 
           await user.save({ validateBeforeSave: false });
+          isNewUser = true; // 🔥 NEW: Mark as new user
         }
 
-        return done(null, user);
+        // 🔥 NEW: Return user with isNewUser flag
+        return done(null, { user, isNewUser });
       } catch (error) {
         return done(error, null);
       }
     }
   )
 );
-
 
 passport.use(
   new AppleStrategy(
@@ -91,25 +109,35 @@ passport.use(
     },
     async (accessToken, refreshToken, idToken, profile, done) => {
       try {
-        const email = idToken.email; // Email is only available the first time
+        const email = idToken.email;
         const name = `${idToken.firstName || "Apple"} ${idToken.lastName || "User"}`;
 
         let user = await User.findOne({ email });
+        let isNewUser = false; // 🔥 NEW: Track if user is new
 
         if (!user) {
+          // Create new user with proper initialization
           user = new User({
             name,
             email,
             appleId: idToken.sub,
             password: null,
             authType: "apple",
-            profileImage: "", // Apple doesn’t provide profile pictures
+            profileImage: "",
             role: "user",
+            // 🔥 NEW: Initialize arrays for new users
+            purchasedSongs: [],
+            purchasedAlbums: [],
+            likedsong: [],
+            preferredGenres: [] // Empty for new users
           });
+          
           await user.save({ validateBeforeSave: false });
+          isNewUser = true; // 🔥 NEW: Mark as new user
         }
 
-        return done(null, user);
+        // 🔥 NEW: Return user with isNewUser flag
+        return done(null, { user, isNewUser });
       } catch (err) {
         return done(err, null);
       }
@@ -117,4 +145,31 @@ passport.use(
   )
 );
 
+// 🔥 NEW: Serialize and deserialize user for session
+passport.serializeUser((data, done) => {
+  // data contains { user, isNewUser }
+  done(null, data);
+});
+
+passport.deserializeUser(async (data, done) => {
+  try {
+    // If data is just user ID (from other login methods)
+    if (typeof data === 'string') {
+      const user = await User.findById(data);
+      return done(null, user);
+    }
+    
+    // If data contains user object and isNewUser flag
+    if (data.user) {
+      const user = await User.findById(data.user._id);
+      return done(null, { user, isNewUser: data.isNewUser });
+    }
+    
+    return done(null, data);
+  } catch (error) {
+    return done(error, null);
+  }
+});
+
 export default passport;
+

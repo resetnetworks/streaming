@@ -150,41 +150,36 @@ await WebhookEventLog.create({
 };
 
 
-
 // ---------------------------
 // ✅ RAZORPAY WEBHOOK HANDLER
 // ---------------------------
 
 
 export const razorpayWebhook = async (req, res) => {
-  const signature = req.headers["x-razorpay-signature"];
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-
-  const expectedSignature = crypto
-    .createHmac("sha256", secret)
-    .update(req.rawBody)
-    .digest("hex");
-
-  if (signature !== expectedSignature) {
-    console.error("❌ Invalid Razorpay signature");
-    return res.status(400).json({ message: "Invalid signature" });
-  }
-
-  const event = req.body.event;
-
   try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const signature = req.headers["x-razorpay-signature"];
+    const rawBody = req.body; // Buffer due to express.raw()
+
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(rawBody)
+      .digest("hex");
+
+    if (signature !== expectedSignature) {
+      console.error("❌ Invalid Razorpay signature");
+      return res.status(400).json({ message: "Invalid signature" });
+    }
+
+    const eventData = JSON.parse(rawBody.toString());
+    const event = eventData.event;
+
     if (event === "payment.captured") {
-      console.log("💰 Payment captured:", req.body.payload.payment.entity.id);
-      
-      const paymentEntity = req.body.payload.payment.entity;
+      const paymentEntity = eventData.payload.payment.entity;
       const paymentId = paymentEntity.id;
       const razorpayOrderId = paymentEntity.order_id;
-      console.log("Razorpay Order ID:", razorpayOrderId);
 
-      // Fetch full payment details
       const fullPayment = await razorpay.payments.fetch(paymentId);
-
-      // 1️⃣ Subscription flow (monthly recurring)
       let subscriptionId = null;
 
       if (fullPayment.invoice_id) {
@@ -192,8 +187,8 @@ export const razorpayWebhook = async (req, res) => {
         subscriptionId = invoice.subscription_id;
       }
 
+      // 🔁 Subscription flow
       if (subscriptionId) {
-        // Handle subscription logic
         const transaction = await markTransactionPaid({
           gateway: "razorpay",
           paymentId,
@@ -208,13 +203,12 @@ export const razorpayWebhook = async (req, res) => {
 
         return res.status(200).json({ status: "subscription processed" });
       }
-      console.log("-----",fullPayment.notes);
-      
-      // 2️⃣ One-time purchase flow (song/album)
-      const { itemType:type, itemId, userId } = fullPayment.notes || {};
+
+      // 💳 One-time payment flow
+      const { itemType: type, itemId, userId } = fullPayment.notes || {};
 
       if (!type || !itemId || !userId) {
-        console.warn("⚠️ Missing metadata in one-time Razorpay payment", fullPayment.notes);
+        console.warn("⚠️ Missing metadata for one-time payment.");
         return res.status(200).send("OK");
       }
 
@@ -223,7 +217,7 @@ export const razorpayWebhook = async (req, res) => {
         paymentId,
         userId,
         itemId,
-        type, // 'song' or 'album'
+        type,
         razorpayOrderId,
       });
 
@@ -235,23 +229,25 @@ export const razorpayWebhook = async (req, res) => {
       return res.status(200).json({ status: "purchase processed" });
     }
 
-    // Recurring payment for existing subscription
+    // 🔄 Recurring subscription charge (not used for logic, just logging)
     if (event === "subscription.charged") {
-      console.log("🔄 Recurring charge successful", req.body.payload.subscription.entity.id);
-      // Optionally extend validUntil
+      console.log("🔄 Subscription charged:", eventData.payload.subscription.entity.id);
     }
 
-    // Cancellation or end of subscription
+    // ❌ Subscription ended
     if (event === "subscription.halted" || event === "subscription.completed") {
       await Subscription.findOneAndUpdate(
-        { externalSubscriptionId: req.body.payload.subscription.entity.id },
+        { externalSubscriptionId: eventData.payload.subscription.entity.id },
         { status: "cancelled" }
       );
-      console.log("❌ Subscription stopped/cancelled");
+      console.log("❌ Subscription cancelled or completed.");
     }
-  } catch (err) {
-    console.error("❌ Webhook processing failed:", err.message);
-  }
 
-  res.status(200).json({ status: "ok" });
+    return res.status(200).json({ status: "ok" });
+
+  } catch (err) {
+    console.error("❌ Webhook processing failed:", err);
+    return res.status(500).json({ message: "Something went wrong, please try again later" });
+  }
 };
+

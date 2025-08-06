@@ -71,28 +71,18 @@ app.use(
 
 
 app.set('trust proxy', 1);
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
+app.use(rateLimit({ windowMs: 5 * 60 * 1000, max: 300 }));
 // app.use("/api/webhooks/stripe",express.raw({ type: "application/json" }), stripeWebhook); // Before JSON parsing if needed
 // app.use("/api/webhooks/razorpay",express.raw({ type: "application/json" }), razorpayWebhook); // Before JSON parsing if needed
 app.post(
   "/api/webhooks/razorpay",
-  bodyParser.json({
-    verify: (req, res, buf) => {
-      req.rawBody = buf.toString(); // 🔥 store raw body for signature verification
-    },
-  }),
+  express.raw({ type: "application/json" }), // ✅ this is what Razorpay needs
   razorpayWebhook
 );
 app.use(cookieParser());
 app.use(express.json());
-// app.use(helmet.contentSecurityPolicy({
-//   directives: {
-//     defaultSrc: ["'self'"],
-//     scriptSrc: ["'self'", "https://js.stripe.com"],
-//     frameSrc: ["'self'", "https://js.stripe.com"],
-//   },
-// }));
-// app.use(morgan("combined"));
+
+app.use(morgan("combined"));
 app.use(xssClean());
 app.use(mongoSanitize());
 
