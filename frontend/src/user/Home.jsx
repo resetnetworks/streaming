@@ -668,7 +668,7 @@ const Home = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
               <div className="text-center">
                 <p className="text-white text-lg font-semibold">Processing Payment</p>
-                <p className="text-gray-300 text-sm mt-1">Please wait, do not close this window this is sample</p>
+                <p className="text-gray-300 text-sm mt-1">Please wait, do not close this window</p>
               </div>
             </div>
           </div>
