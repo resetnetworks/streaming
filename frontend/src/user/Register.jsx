@@ -244,7 +244,7 @@ const Register = () => {
               <div className="flex-grow border-t border-gray-400"></div>
             </div>
 
-            <div className="flex justify-around items-center md:w-64 w-52">
+            <div className="flex justify-around items-center w-32">
               <button 
                 onClick={googleRegister} 
                 type="button" 
@@ -260,13 +260,6 @@ const Register = () => {
                 className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <img src={assets.facebook_icon} alt="facebook_icon" className="w-6 h-6" />
-              </button>
-              <button 
-                type="button" 
-                disabled={loading} 
-                className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <img src={assets.apple_icon} alt="apple_icon" className="w-6 h-6" />
               </button>
             </div>
           </form>
