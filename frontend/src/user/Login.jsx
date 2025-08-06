@@ -45,14 +45,32 @@ const Login = () => {
       });
   };
 
-  // Updated social login functions
+  // 🔥 UPDATED: Social login functions with correct API routes
   const googleLogin = () => {
-    toast.loading("Redirecting to Google...");
+    
+    // Clear any existing auth data
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("justRegistered");
+    localStorage.removeItem("registrationTime");
+    
+    toast.loading("Redirecting to Google...", { duration: 3000 });
+    
+    // 🔥 Updated URL to match your backend routes
     window.location.href = `${import.meta.env.VITE_API_URL}/users/google`;
   };
 
   const facebookLogin = () => {
-    toast.loading("Redirecting to Facebook...");
+    
+    // Clear any existing auth data
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("justRegistered");
+    localStorage.removeItem("registrationTime");
+    
+    toast.loading("Redirecting to Facebook...", { duration: 3000 });
+    
+    // 🔥 Updated URL to match your backend routes
     window.location.href = `${import.meta.env.VITE_API_URL}/users/facebook`;
   };
 

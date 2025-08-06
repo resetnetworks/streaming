@@ -1,30 +1,25 @@
+// features/auth/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance.js";
 import { toast } from "sonner";
 
-
 // ====================
 // 📦 Local Storage Helpers
 // ====================
-
 
 const getInitialUser = () => {
   try {
     const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
   } catch (err) {
-    console.error("Failed to parse user from localStorage", err);
     return null;
   }
 };
 
-
 const storeAuthToLocal = (user) => {
   if (!user) return;
 
-
   const existingUser = getInitialUser();
-
 
   const {
     name,
@@ -38,7 +33,6 @@ const storeAuthToLocal = (user) => {
     purchaseHistory = [],
     ...otherFields
   } = user;
-
 
   const userToStore = {
     ...existingUser,
@@ -54,10 +48,8 @@ const storeAuthToLocal = (user) => {
     ...otherFields
   };
 
-
   localStorage.setItem("user", JSON.stringify(userToStore));
 };
-
 
 const clearAuthFromLocal = () => {
   localStorage.removeItem("user");
@@ -65,22 +57,18 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem("subscribedArtists");
 };
 
-
 // ====================
 // 🔄 Async Thunks
 // ====================
 
-
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
   try {    
     const res = await axios.post("/users/register", userData, {
-      withCredentials: true, // ✅ Important for cookie handling
+      withCredentials: true,
     });
     
     const { user } = res.data;
 
-
-    // ✅ Function to get token from cookie
     const getTokenFromCookie = () => {
       if (typeof document === 'undefined') return null;
       
@@ -93,33 +81,24 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
       return null;
     };
 
-
-    // ✅ Wait a bit for cookie to be set by server
     await new Promise(resolve => setTimeout(resolve, 100));
     
     const token = getTokenFromCookie();
     
     if (token) {
-      
-      // Store token in localStorage for axios headers
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       
-      // Verify token works
       try {
         await axios.get("/users/me", { withCredentials: true });
       } catch (tokenError) {
         console.error('❌ Token verification failed:', tokenError);
         throw new Error("Token verification failed after registration");
       }
-      
     } else {
-      
-      // Try to verify authentication via cookie
       try {
         const meResponse = await axios.get("/users/me", { withCredentials: true });
-        if (meResponse.status === 200) {
-        } else {
+        if (meResponse.status !== 200) {
           throw new Error("Authentication verification failed");
         }
       } catch (meError) {
@@ -128,14 +107,12 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
       }
     }
 
-
     storeAuthToLocal(user);
     return user;
     
   } catch (err) {
     console.error("❌ Registration error:", err);
     
-    // Clear any partial data
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete axios.defaults.headers.common["Authorization"];
@@ -148,8 +125,6 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
   }
 });
 
-
-// ✅ Also update loginUser similarly
 export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
   try {
     const res = await axios.post("/users/login", userData, {
@@ -158,8 +133,6 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
     
     const { user } = res.data;
 
-
-    // Get token from cookie
     const getTokenFromCookie = () => {
       if (typeof document === 'undefined') return null;
       const cookies = document.cookie.split('; ');
@@ -167,16 +140,13 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
       return tokenCookie ? tokenCookie.split('=')[1] : null;
     };
 
-
     await new Promise(resolve => setTimeout(resolve, 100));
     const token = getTokenFromCookie();
-
 
     if (token) {
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
-
 
     storeAuthToLocal(user);
     return user;
@@ -186,21 +156,63 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
   }
 });
 
+// 🆕 NEW: Social Login Success Handler
+export const handleSocialLoginSuccess = createAsyncThunk(
+  "auth/socialLoginSuccess", 
+  async ({ isNewUser }, thunkAPI) => {
+    try {
+      
+      // Get token from cookie
+      const getTokenFromCookie = () => {
+        if (typeof document === 'undefined') return null;
+        const cookies = document.cookie.split('; ');
+        const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
+        return tokenCookie ? tokenCookie.split('=')[1] : null;
+      };
 
+      // Wait for cookie to be set by backend
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const token = getTokenFromCookie();
+      
+      if (token) {
+        localStorage.setItem("token", token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      }
+
+      // Get user profile from backend /me endpoint
+      const res = await axios.get("/users/me", { withCredentials: true });
+      const user = res.data;
+
+
+      // Store to localStorage using existing function
+      storeAuthToLocal(user);
+      
+      return { user, isNewUser };
+      
+    } catch (err) {
+      
+      // Clear partial data on error
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      delete axios.defaults.headers.common["Authorization"];
+      
+      return thunkAPI.rejectWithValue(err.response?.data?.message || "Social login failed");
+    }
+  }
+);
 
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
     const res = await axios.get("/users/me");
     return res.data;
   } catch (err) {
-    // Only clear on 401
     if (err.response?.status === 401) {
       clearAuthFromLocal();
     }
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
-
 
 export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
@@ -213,17 +225,14 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) =>
   }
 });
 
-
 export const updatePreferredGenres = createAsyncThunk("auth/updatePreferredGenres", async (genres, thunkAPI) => {
   try {
     const res = await axios.put("/users/update-genres", { genres });
     return res.data.preferredGenres;
   } catch (err) {
-    console.log(err)
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
-
 
 export const toggleLikeSong = createAsyncThunk("auth/toggleLikeSong", async (songId, thunkAPI) => {
   try {
@@ -234,14 +243,11 @@ export const toggleLikeSong = createAsyncThunk("auth/toggleLikeSong", async (son
   }
 });
 
-
 // ====================
 // 🧠 Initial State
 // ====================
 
-
 const initialUser = getInitialUser();
-
 
 const initialState = {
   user: initialUser,
@@ -251,11 +257,9 @@ const initialState = {
   message: null,
 };
 
-
 // ====================
 // 🧩 Slice Definition
 // ====================
-
 
 const authSlice = createSlice({
   name: "auth",
@@ -269,27 +273,21 @@ const authSlice = createSlice({
       const { itemType, itemId } = action.payload;
       if (!state.user) return;
 
-
       if (itemType === "song" && !state.user.purchasedSongs.includes(itemId)) {
         state.user.purchasedSongs.push(itemId);
       }
-
 
       if (itemType === "album" && !state.user.purchasedAlbums.includes(itemId)) {
         state.user.purchasedAlbums.push(itemId);
       }
 
-
       storeAuthToLocal(state.user);
     },
-    // ✅ NEW ACTIONS ADDED
     addPurchasedSong: (state, action) => {
       if (state.user) {
-        // Initialize array if it doesn't exist
         if (!state.user.purchasedSongs) {
           state.user.purchasedSongs = [];
         }
-        // Add song ID if not already present
         if (!state.user.purchasedSongs.includes(action.payload)) {
           state.user.purchasedSongs.push(action.payload);
         }
@@ -298,11 +296,9 @@ const authSlice = createSlice({
     },
     addPurchasedAlbum: (state, action) => {
       if (state.user) {
-        // Initialize array if it doesn't exist
         if (!state.user.purchasedAlbums) {
           state.user.purchasedAlbums = [];
         }
-        // Add album ID if not already present
         if (!state.user.purchasedAlbums.includes(action.payload)) {
           state.user.purchasedAlbums.push(action.payload);
         }
@@ -324,6 +320,30 @@ const authSlice = createSlice({
         state.status = "succeeded";
         state.message = "Logged in successfully";
       })
+      // 🆕 NEW: Social Login Cases
+      .addCase(handleSocialLoginSuccess.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(handleSocialLoginSuccess.fulfilled, (state, action) => {
+        const { user, isNewUser } = action.payload;
+        state.user = user;
+        state.isAuthenticated = true;
+        state.status = "succeeded";
+        
+        if (isNewUser) {
+          state.message = "Social registration successful! Please select your genres.";
+        } else {
+          state.message = "Social login successful!";
+        }
+        
+      })
+      .addCase(handleSocialLoginSuccess.rejected, (state, action) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.status = "failed";
+        state.error = action.payload || "Social login failed";
+      })
       .addCase(getMyProfile.fulfilled, (state, action) => {
         const currentUser = state.user || {};
         const user = {
@@ -335,7 +355,6 @@ const authSlice = createSlice({
           likedsong: action.payload.likedsong || [],
           preferredGenres: action.payload.preferredGenres || currentUser.preferredGenres || [],
         };
-
 
         state.user = user;
         state.isAuthenticated = true;
@@ -369,12 +388,10 @@ const authSlice = createSlice({
         const { songId, message } = action.payload;
         if (!state.user?.likedsong) state.user.likedsong = [];
 
-
         const alreadyLiked = state.user.likedsong.includes(songId);
         state.user.likedsong = alreadyLiked
           ? state.user.likedsong.filter((id) => id !== songId)
           : [...state.user.likedsong, songId];
-
 
         storeAuthToLocal(state.user);
         state.message = message;
@@ -401,7 +418,6 @@ const authSlice = createSlice({
       );
   },
 });
-
 
 export const { clearMessage, addPurchase, addPurchasedSong, addPurchasedAlbum } = authSlice.actions;
 export default authSlice.reducer;
