@@ -439,14 +439,14 @@ const SongFormModal = ({
               ) : (
                 <>
                   <FaCloudUploadAlt className="text-3xl text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-400">Click to upload</p>
+                  <p className="text-gray-400">Click to upload only .jpg .jpeg .avif</p>
                 </>
               )}
               <input
                 type="file"
                 ref={coverImageRef}
                 onChange={handleImageUpload}
-                accept="image/*"
+                accept=".jpg, .jpeg, .avif"
                 className="hidden"
                 disabled={isSubmitting}
               />
