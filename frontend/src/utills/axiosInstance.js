@@ -64,6 +64,10 @@ axiosInstance.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    else if (error.response?.status === 400) {
+      error.message = "User already exists. Please try logging in.";
+    }
     
     return Promise.reject(error);
   }
