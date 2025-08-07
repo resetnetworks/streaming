@@ -386,6 +386,7 @@ const SongFormModal = ({
             <input
               type="text"
               name="genre"
+              required
               value={newSong.genre}
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"

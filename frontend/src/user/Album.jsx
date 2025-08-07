@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { toast } from "sonner";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
-import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 
 import { fetchAlbumById } from "../features/albums/albumsSlice";
 import {
@@ -17,9 +17,28 @@ import { selectAllArtists } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 
+// ✅ ADD RAZORPAY IMPORTS
+import { initiateRazorpayItemPayment, resetPaymentState } from "../features/payments/paymentSlice";
+import { addPurchasedSong, addPurchasedAlbum } from "../features/auth/authSlice";
+
 // Skeleton
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+
+// ✅ ADD RAZORPAY SCRIPT LOADER
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -33,6 +52,7 @@ function formatDate(dateStr) {
 export default function Album() {
   const { albumId } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const album = useSelector(selectAlbumDetails);
   const loading = useSelector(selectAlbumsLoading);
@@ -40,25 +60,146 @@ export default function Album() {
   const currentUser = useSelector((state) => state.auth.user);
   const artists = useSelector(selectAllArtists);
 
-  // Purchase modal state
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [purchaseItem, setPurchaseItem] = useState(null);
-  const [purchaseType, setPurchaseType] = useState(null);
+  // ✅ ADD RAZORPAY PAYMENT STATE
+  const paymentLoading = useSelector((state) => state.payment.loading);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
 
   useEffect(() => {
     if (albumId) dispatch(fetchAlbumById(albumId));
     dispatch(fetchAllArtists());
   }, [albumId, dispatch]);
 
+  // ✅ ADD CLEAR PAYMENT STATE ON MOUNT
+  useEffect(() => {
+    dispatch(resetPaymentState());
+  }, [dispatch]);
+
   const handlePlaySong = (song) => {
     dispatch(setSelectedSong(song));
     dispatch(play());
   };
 
-  const handlePurchaseClick = (item, type) => {
-    setPurchaseItem(item);
-    setPurchaseType(type);
-    setShowPurchaseModal(true);
+  // ✅ ADD RAZORPAY PURCHASE HANDLER
+  const handlePurchaseClick = async (item, type) => {
+    if (!currentUser) {
+      toast.error("Please login to purchase");
+      navigate("/login");
+      return;
+    }
+
+    if (paymentLoading || processingPayment) {
+      toast.info("Payment already in progress...");
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      
+      // Load Razorpay script first
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error("Failed to load Razorpay script");
+      }
+      
+      // Dispatch Razorpay order creation
+      const result = await dispatch(initiateRazorpayItemPayment({
+        itemType: type,
+        itemId: item._id,
+        amount: item.price
+      })).unwrap();
+
+      if (result.order) {
+        await handleRazorpayCheckout(result.order, item, type);
+      } else {
+        throw new Error("Failed to create payment order");
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to initiate payment');
+      setProcessingPayment(false);
+    }
+  };
+
+  // ✅ ADD RAZORPAY CHECKOUT HANDLER
+  const handleRazorpayCheckout = async (order, item, type) => {
+    try {
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.id,
+        name: 'MusicReset',
+        description: `Purchase ${type}: ${item.title || item.name}`,
+        image: '/logo.png',
+        handler: function (response) {
+          // Immediately close modal and show success
+          if (currentRazorpayInstance) {
+            try {
+              currentRazorpayInstance.close();
+            } catch (e) {
+              // Razorpay instance already closed
+            }
+          }
+
+          // ✅ IMMEDIATELY UPDATE REDUX STATE
+          if (type === "song") {
+            dispatch(addPurchasedSong(item._id));
+          } else if (type === "album") {
+            dispatch(addPurchasedAlbum(item._id));
+          }
+
+          // Show success message
+          toast.success(`Successfully purchased ${item.title || item.name}!`, {
+            duration: 5000,
+          });
+          
+          // Reset states
+          setProcessingPayment(false);
+          setCurrentRazorpayInstance(null);
+          dispatch(resetPaymentState());
+        },
+        prefill: {
+          name: currentUser?.name || '',
+          email: currentUser?.email || '',
+          contact: currentUser?.phone || ''
+        },
+        theme: {
+          color: '#3b82f6'
+        },
+        modal: {
+          ondismiss: function() {
+            toast.info('Payment cancelled');
+            setProcessingPayment(false);
+            setCurrentRazorpayInstance(null);
+          }
+        },
+        error: function(error) {
+          toast.error('Payment failed. Please try again.');
+          setProcessingPayment(false);
+          setCurrentRazorpayInstance(null);
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      setCurrentRazorpayInstance(rzp);
+      
+      rzp.on('payment.success', function (response) {
+        // Additional success handling if needed
+      });
+
+      rzp.on('payment.error', function (error) {
+        toast.error('Payment failed. Please try again.');
+        setProcessingPayment(false);
+        setCurrentRazorpayInstance(null);
+      });
+
+      rzp.open();
+
+    } catch (error) {
+      toast.error('Failed to open payment gateway');
+      setProcessingPayment(false);
+      setCurrentRazorpayInstance(null);
+    }
   };
 
   const artistName =
@@ -146,11 +287,11 @@ export default function Album() {
                   <span>{songs.length} songs</span>
                 </div>
                 
-                {/* Purchase Button */}
+                {/* ✅ UPDATED PURCHASE BUTTON WITH RAZORPAY */}
                 {album.price > 0 && (
                   <div className="flex items-center gap-4 mt-6">
                     <span className="text-lg font-semibold text-blue-400">
-                      ${album.price}
+                      ₹{album.price}
                     </span>
                     {isAlbumPurchased ? (
                       <span className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold">
@@ -159,9 +300,17 @@ export default function Album() {
                     ) : (
                       <button
                         onClick={() => handlePurchaseClick(album, "album")}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md"
+                        disabled={processingPayment || paymentLoading}
+                        className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
+                          processingPayment || paymentLoading
+                            ? "bg-gray-500 cursor-not-allowed text-gray-300"
+                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                        }`}
                       >
-                        Purchase Album
+                        {processingPayment || paymentLoading 
+                          ? "Processing..." 
+                          : "Purchase Album"
+                        }
                       </button>
                     )}
                   </div>
@@ -201,17 +350,25 @@ export default function Album() {
                   seekTime={formatDuration(song.duration)}
                   onPlay={() => handlePlaySong(song)}
                   isSelected={selectedSong?._id === song._id}
-                  // Show individual song purchase options if needed
+                  // ✅ UPDATED SONG PURCHASE WITH RAZORPAY
                   price={
                     song.accessType === "purchase-only" && !isAlbumPurchased ? (
                       currentUser?.purchasedSongs?.includes(song._id) ? (
                         "Purchased"
                       ) : (
                         <button
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded"
+                          className={`text-white text-xs px-2 py-1 rounded transition-colors ${
+                            processingPayment || paymentLoading
+                              ? "bg-gray-500 cursor-not-allowed"
+                              : "bg-indigo-600 hover:bg-indigo-700"
+                          }`}
                           onClick={() => handlePurchaseClick(song, "song")}
+                          disabled={processingPayment || paymentLoading}
                         >
-                          Buy for ${song.price}
+                          {processingPayment || paymentLoading 
+                            ? "..." 
+                            : `Buy ₹${song.price}`
+                          }
                         </button>
                       )
                     ) : isAlbumPurchased ? (
@@ -224,21 +381,32 @@ export default function Album() {
               </div>
             ))
           )}
-
-          {/* Purchase Modal */}
-          {showPurchaseModal && purchaseItem && (
-            <OneTimePaymentModal
-              itemType={purchaseType}
-              itemId={purchaseItem._id}
-              amount={purchaseItem.price}
-              onClose={() => {
-                setShowPurchaseModal(false);
-                setPurchaseItem(null);
-                setPurchaseType(null);
-              }}
-            />
-          )}
         </div>
+
+        {/* ✅ ADD LOADING OVERLAY */}
+        {(processingPayment || paymentLoading) && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <div className="text-center">
+                <p className="text-white text-lg font-semibold">Processing Payment</p>
+                <p className="text-gray-300 text-sm mt-1">Please wait, do not close this window</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ ADD SUCCESS TOAST ENHANCEMENT */}
+        <style jsx global>{`
+          [data-sonner-toast] {
+            background: rgb(31, 41, 55) !important;
+            border: 1px solid rgb(75, 85, 99) !important;
+            color: white !important;
+          }
+          [data-sonner-toast] [data-icon] {
+            color: rgb(34, 197, 94) !important;
+          }
+        `}</style>
       </SkeletonTheme>
     </>
   );

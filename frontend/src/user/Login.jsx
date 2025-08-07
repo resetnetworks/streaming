@@ -60,19 +60,6 @@ const Login = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/users/google`;
   };
 
-  const facebookLogin = () => {
-    
-    // Clear any existing auth data
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("justRegistered");
-    localStorage.removeItem("registrationTime");
-    
-    toast.loading("Redirecting to Facebook...", { duration: 3000 });
-    
-    // 🔥 Updated URL to match your backend routes
-    window.location.href = `${import.meta.env.VITE_API_URL}/users/facebook`;
-  };
 
   return (
     <>
@@ -159,26 +146,16 @@ const Login = () => {
             </div>
 
             {/* Social Icons */}
-            <div className="flex justify-around items-center w-32">
+            <div className="flex justify-around items-center w-52">
               <button
                 onClick={googleLogin}
                 type="button"
                 disabled={btnLoading}
-                className={`w-12 h-12 rounded-lg flex justify-center items-center bg-white transition-all hover:scale-105 ${
+                className={`w-full h-12 rounded-lg flex justify-center items-center bg-white transition-all hover:scale-105 ${
                   btnLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                <img src={assets.google_icon} alt="google_icon" className="w-6 h-6" />
-              </button>
-              <button
-                onClick={facebookLogin}
-                type="button"
-                disabled={btnLoading}
-                className={`w-12 h-12 rounded-lg flex justify-center items-center bg-white transition-all hover:scale-105 ${
-                  btnLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <img src={assets.facebook_icon} alt="facebook_icon" className="w-6 h-6" />
+                <img src={assets.google_icon} alt="google_icon" className="w-8 h-8" />
               </button>
             
             </div>

@@ -102,20 +102,6 @@ const Register = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/users/google`;
   };
 
-  const facebookRegister = () => {
-    
-    // Clear any existing data
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("justRegistered");
-    localStorage.removeItem("registrationTime");
-    
-    toast.loading("Redirecting to Facebook...", { duration: 3000 });
-    
-    // 🔥 Updated URL to match your backend routes
-    window.location.href = `${import.meta.env.VITE_API_URL}/users/facebook`;
-  };
-
   return (
     <>
       <Helmet>
@@ -244,23 +230,16 @@ const Register = () => {
               <div className="flex-grow border-t border-gray-400"></div>
             </div>
 
-            <div className="flex justify-around items-center w-32">
+            <div className="flex justify-around items-center w-52">
               <button 
                 onClick={googleRegister} 
                 type="button" 
                 disabled={loading} 
-                className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`w-full h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <img src={assets.google_icon} alt="google_icon" className="w-6 h-6" />
+                <img src={assets.google_icon} alt="google_icon" className="w-8 h-8" />
               </button>
-              <button 
-                onClick={facebookRegister} 
-                type="button" 
-                disabled={loading} 
-                className={`w-12 h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <img src={assets.facebook_icon} alt="facebook_icon" className="w-6 h-6" />
-              </button>
+
             </div>
           </form>
 
