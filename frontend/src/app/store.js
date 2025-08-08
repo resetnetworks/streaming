@@ -14,27 +14,27 @@ import payment from "../features/payments/paymentSlice"
 import streamReducer from "../features/stream/streamSlice";
 import adminPaymentReducer from "../features/payments/adminPaymentSlice"
 
-// ✅ Persist config for player slice (now includes selectedSong)
+// ✅ Persist config for player slice
 const playerPersistConfig = {
   key: 'player',
   storage,
-  whitelist: ['volume', 'selectedSong', 'currentTime', 'isPlaying'], // ✅ Add selectedSong
+  whitelist: ['volume', 'selectedSong', 'currentTime', 'isPlaying'],
   stateReconciler: autoMergeLevel2,
 };
 
-// ✅ Root persist config (persist songs only)
+// ✅ Root persist config
 const rootPersistConfig = {
   key: 'root',
   storage,
-  whitelist: ['songs','auth'], // ✅ only songs
-  blacklist: ['player'], // player is handled separately
+  whitelist: ['songs','auth'],
+  blacklist: ['player'],
 };
 
 // ✅ Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer,
   songs: songReducer,
-  player: persistReducer(playerPersistConfig, playerReducer), // wrapped separately
+  player: persistReducer(playerPersistConfig, playerReducer),
   artists: artistsReducer,
   albums: albumsReducer,
   search: searchReducer,
@@ -44,8 +44,52 @@ const rootReducer = combineReducers({
   artistDashboard: adminPaymentReducer,
 });
 
-// ✅ Wrap with persist
 const persistedReducer = persistReducer(rootPersistConfig, rootReducer);
+
+// ✅ NEW: Clear all cache utility
+export const clearAllCache = async () => {
+  try {
+    // Clear all localStorage keys related to redux-persist
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('persist:')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Also clear any other app-specific cache
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('subscribedArtists');
+    
+    console.log('🧹 All cache cleared successfully');
+  } catch (error) {
+    console.error('❌ Error clearing cache:', error);
+  }
+};
+
+// ✅ NEW: Conditional cache clearing based on app version or conditions
+const APP_VERSION = '2.0.0'; // Update this when you want to force cache clear
+const shouldClearCache = () => {
+  const lastVersion = localStorage.getItem('app_version');
+  const isNewVersion = lastVersion !== APP_VERSION;
+  
+  // Clear cache if:
+  // 1. New app version
+  // 2. No version stored (first visit)
+  // 3. Development environment (optional)
+  return isNewVersion || !lastVersion || process.env.NODE_ENV === 'development';
+};
+
+// ✅ NEW: Auto-clear cache on website visit
+if (typeof window !== 'undefined') {
+  if (shouldClearCache()) {
+    clearAllCache().then(() => {
+      localStorage.setItem('app_version', APP_VERSION);
+      console.log('✅ Cache cleared for new website visit');
+    });
+  }
+}
 
 // ✅ Configure Redux store
 export const store = configureStore({
@@ -58,7 +102,6 @@ export const store = configureStore({
   devTools: process.env.NODE_ENV !== 'production',
 });
 
-// ✅ Persistor
 export const persistor = persistStore(store);
 
 // ✅ Utility to manually clear player cache
@@ -66,11 +109,11 @@ export const clearPlayerCache = () => {
   storage.removeItem('persist:player');
 };
 
-// ✅ Dev-only helper to purge cache manually from console
+// ✅ Dev-only helper
 if (process.env.NODE_ENV === 'development') {
   window.clearReduxCache = () => {
-    persistor.purge().then(() => {
-      clearPlayerCache();
+    clearAllCache().then(() => {
+      window.location.reload();
     });
   };
 }

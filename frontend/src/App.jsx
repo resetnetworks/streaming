@@ -16,6 +16,7 @@ import {
   AdminRoute,
   PublicRoute,
 } from "./components/RouteGuards";
+import { clearAllCache } from "./app/store";
 
 import * as Pages from "./routes/LazyRoutes";
 
@@ -31,6 +32,21 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
   const [initialLoad, setInitialLoad] = useState(true);
+
+  useEffect(() => {
+    // ✅ Clear cache on first app load
+    const handleCacheClear = async () => {
+      const isFirstVisit = !localStorage.getItem('app_initialized');
+      
+      if (isFirstVisit) {
+        await clearAllCache();
+        localStorage.setItem('app_initialized', 'true');
+        console.log('🧹 Cache cleared for first visit');
+      }
+    };
+
+    handleCacheClear();
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
