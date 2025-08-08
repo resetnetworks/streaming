@@ -1,6 +1,6 @@
 // src/utils/axiosInstance.js
 import axios from "axios";
-
+import { toast } from "sonner";
 
 // ✅ Create axios instance
 const axiosInstance = axios.create({
@@ -22,7 +22,7 @@ const getTokenFromCookie = () => {
   return null;
 };
 
-// ✅ NEW: Helper function to clear all cookies
+// ✅ Helper function to clear all cookies
 const clearAllCookies = () => {
   if (typeof document === 'undefined') return;
   
@@ -35,7 +35,7 @@ const clearAllCookies = () => {
   }
 };
 
-// ✅ NEW: Comprehensive auth data clearing function
+// ✅ Comprehensive auth data clearing function
 const clearAllAuthData = () => {
   // Clear localStorage
   localStorage.removeItem("user");
@@ -60,6 +60,7 @@ const clearAllAuthData = () => {
   // ✅ Remove Authorization header from axios defaults
   delete axiosInstance.defaults.headers.common["Authorization"];
   
+  console.log("🧹 All auth data cleared due to token expiry");
 };
 
 // ✅ ENHANCED: Attach token on each request with Authorization header
@@ -76,7 +77,7 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    // ✅ NEW: Set Authorization header if token exists
+    // ✅ Set Authorization header if token exists
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -86,7 +87,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ ENHANCED: Global response error handling with comprehensive token expiry detection
+// ✅ FIXED: More precise error handling - Only 401 triggers auth clearing
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -96,24 +97,35 @@ axiosInstance.interceptors.response.use(
     
     const errorStatus = error.response?.status;
     const errorMessage = error.response?.data?.message || error.message;
+    const errorCode = error.code;
     
-    // ✅ ENHANCED: Comprehensive token expiry detection
+    // ✅ FIXED: Only clear auth data on 401 status code
     const isTokenExpired = (
-      errorStatus === 401 ||          // Unauthorized
-       // Server error (database issues)
-      error.code === 'ECONNREFUSED' ||  // Database connection refused
-      error.code === 'ENOTFOUND' ||     // Database not found
-      error.message?.includes('Network Error') ||
-      errorMessage?.toLowerCase().includes('token') ||
-      errorMessage?.toLowerCase().includes('authentication') ||
-      errorMessage?.toLowerCase().includes('unauthorized') ||
-      errorMessage === "Authentication token missing. Please login." ||
-      errorMessage?.includes('User not found') ||
-      errorMessage?.includes('Authentication failed')
+      errorStatus === 401 ||          // ✅ Only 401 Unauthorized
+      errorMessage === "Authentication token missing. Please login."
+    );
+    
+    // ✅ Handle network errors separately (don't clear auth data)
+    const isNetworkError = (
+      errorCode === 'ERR_NETWORK' ||
+      errorCode === 'ECONNREFUSED' ||
+      errorCode === 'ENOTFOUND' ||
+      errorCode === 'ETIMEDOUT' ||
+      error.message === 'Network Error'
     );
     
     if (isTokenExpired) {
-      console.warn("🚫 Token expired or invalid — clearing all auth data");
+      console.warn("🚫 Token expired (401) — clearing all auth data");
+      
+      // ✅ Show toast notification
+      toast.error("Session expired. You have been logged out.", {
+        description: "Please login again to continue using the app.",
+        duration: 5000,
+        action: {
+          label: "Login",
+          onClick: () => window.location.href = '/login'
+        }
+      });
       
       // ✅ Clear all auth data immediately
       clearAllAuthData();
@@ -132,11 +144,42 @@ axiosInstance.interceptors.response.use(
       
       // Only redirect if not already on auth page and not on public pages
       if (!isOnAuthPage && !isOnPublicPage) {
+        console.log("🔄 Redirecting to login page due to 401 error");
         
-        // Clear URL and redirect to login
-        window.history.replaceState(null, '', '/login');
-        window.location.href = '/login';
+        // ✅ Delay redirect slightly to show toast
+        setTimeout(() => {
+          window.history.replaceState(null, '', '/login');
+          window.location.href = '/login';
+        }, 1500);
       }
+    }
+    else if (isNetworkError) {
+      // ✅ Handle network errors without clearing auth data
+      console.warn("🌐 Network error detected - not clearing auth data");
+      
+      if (errorCode === 'ERR_NETWORK') {
+        toast.error("Network connection failed", {
+          description: "Please check your internet connection and try again.",
+          duration: 4000,
+        });
+      } else if (errorCode === 'ECONNREFUSED') {
+        toast.error("Server connection refused", {
+          description: "The server might be down. Please try again later.",
+          duration: 4000,
+        });
+      } else if (errorCode === 'ENOTFOUND') {
+        toast.error("Server not found", {
+          description: "Please check the server URL and try again.",
+          duration: 4000,
+        });
+      } else {
+        toast.error("Network error occurred", {
+          description: "Please check your connection and try again.",
+          duration: 4000,
+        });
+      }
+      
+      // ✅ Don't redirect for network errors - let user retry
     }
     else if (errorStatus === 400) {
       // ✅ Keep your existing 400 error handling
