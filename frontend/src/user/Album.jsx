@@ -207,10 +207,22 @@ export default function Album() {
       ? album.artist.name
       : artists.find((a) => a._id === album?.artist)?.name || "Unknown Artist";
 
+  // ✅ NEW: Get artist slug for navigation
+  const getArtistSlug = () => {
+    if (typeof album?.artist === "object" && album.artist.slug) {
+      return album.artist.slug;
+    }
+    const artistData = artists.find((a) => a._id === album?.artist);
+    return artistData?.slug || null;
+  };
+
   const songs = album?.songs || [];
 
   // Check if album is purchased
   const isAlbumPurchased = currentUser?.purchasedAlbums?.includes(album?._id);
+
+  // ✅ NEW: Check if album is subscription type
+  const isSubscriptionAlbum = album?.accessType === 'subscription' || album?.price === 0;
 
   // Generate color from artist name (same logic as Artist page)
   const getArtistColor = (name) => {
@@ -222,7 +234,7 @@ export default function Album() {
       "bg-red-600",
       "bg-orange-600",
       "bg-yellow-600",
-      "bg-green-600",
+      "bg-blue-600",
       "bg-teal-600",
       "bg-indigo-600",
     ];
@@ -287,34 +299,65 @@ export default function Album() {
                   <span>{songs.length} songs</span>
                 </div>
                 
-                {/* ✅ UPDATED PURCHASE BUTTON WITH RAZORPAY */}
-                {album.price > 0 && (
-                  <div className="flex items-center gap-4 mt-6">
-                    <span className="text-lg font-semibold text-blue-400">
-                      ₹{album.price}
-                    </span>
-                    {isAlbumPurchased ? (
-                      <span className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold">
-                        Purchased
+                {/* ✅ UPDATED: Purchase Button OR Subscription Button */}
+                <div className="flex items-center gap-4 mt-6">
+                  {/* Purchase Button for Paid Albums */}
+                  {album.price > 0 && !isSubscriptionAlbum && (
+                    <>
+                      <span className="text-lg font-semibold text-blue-400">
+                        ₹{album.price}
                       </span>
-                    ) : (
+                      {isAlbumPurchased ? (
+                        <span className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold">
+                          Purchased
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handlePurchaseClick(album, "album")}
+                          disabled={processingPayment || paymentLoading}
+                          className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
+                            processingPayment || paymentLoading
+                              ? "bg-gray-500 cursor-not-allowed text-gray-300"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                          }`}
+                        >
+                          {processingPayment || paymentLoading 
+                            ? "Processing..." 
+                            : "Purchase Album"
+                          }
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* ✅ NEW: Subscription Button for Subscription Albums */}
+                  {isSubscriptionAlbum && getArtistSlug() && (
+                    <>
+                      <span className="text-lg font-semibold text-blue-400">
+                        Subscription
+                      </span>
                       <button
-                        onClick={() => handlePurchaseClick(album, "album")}
-                        disabled={processingPayment || paymentLoading}
-                        className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
-                          processingPayment || paymentLoading
-                            ? "bg-gray-500 cursor-not-allowed text-gray-300"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
+                        onClick={() => navigate(`/artist/${getArtistSlug()}`)}
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
                       >
-                        {processingPayment || paymentLoading 
-                          ? "Processing..." 
-                          : "Purchase Album"
-                        }
+                        <span>View Artist</span>
+                        <svg 
+                          className="w-4 h-4" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M9 5l7 7-7 7" 
+                          />
+                        </svg>
                       </button>
-                    )}
-                  </div>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}

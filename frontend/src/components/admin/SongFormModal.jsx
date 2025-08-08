@@ -140,14 +140,32 @@ const SongFormModal = ({
     setShowArtistDropdown(false);
   };
 
+  // ✅ ENHANCED: Auto-fill release date from selected album
   const handleAlbumSelect = (album) => {
+    // Format album release date to YYYY-MM-DD for input field
+    const albumReleaseDate = album.releaseDate 
+      ? new Date(album.releaseDate).toISOString().split('T')[0]
+      : newSong.releaseDate;
+
     setNewSong((prev) => ({
       ...prev,
       album: album.title,
       albumId: album._id,
+      releaseDate: albumReleaseDate, // ✅ Auto-fill release date from album
     }));
+    
     setSearchTermAlbum(album.title);
     setShowAlbumDropdown(false);
+
+    // ✅ Show toast notification to user about auto-filled date
+    if (album.releaseDate) {
+      const formattedDate = new Date(album.releaseDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      toast.success(`Release date auto-filled from album: ${formattedDate}`);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -304,7 +322,11 @@ const SongFormModal = ({
 
           {/* Album */}
           <div className="col-span-1 relative">
-            <label className="text-gray-300">Album</label>
+            <label className="text-gray-300">
+              Album 
+              {/* ✅ NEW: Visual indicator that release date will be auto-filled */}
+              <span className="text-xs text-blue-400 ml-1">(auto-fills release date)</span>
+            </label>
             <input
               type="text"
               value={searchTermAlbum}
@@ -325,7 +347,18 @@ const SongFormModal = ({
                     className="px-4 py-2 hover:bg-gray-600 cursor-pointer"
                     onClick={() => handleAlbumSelect(album)}
                   >
-                    {album.title}
+                    <div className="flex justify-between items-center">
+                      <span>{album.title}</span>
+                      {/* ✅ NEW: Show release date in dropdown */}
+                      {album.releaseDate && (
+                        <span className="text-xs text-gray-400">
+                          {new Date(album.releaseDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short'
+                          })}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -395,7 +428,13 @@ const SongFormModal = ({
 
           {/* Release Date */}
           <div className="col-span-1">
-            <label className="text-gray-300">Release Date</label>
+            <label className="text-gray-300">
+              Release Date 
+              {/* ✅ NEW: Visual indicator when date is auto-filled */}
+              {newSong.albumId && (
+                <span className="text-xs text-green-400 ml-1">(from album)</span>
+              )}
+            </label>
             <input
               type="date"
               name="releaseDate"

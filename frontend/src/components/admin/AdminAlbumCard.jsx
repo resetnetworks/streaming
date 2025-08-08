@@ -48,7 +48,7 @@ const AdminAlbumCard = ({ album, onDelete, onUpdate }) => {
 
           <div className="flex items-center text-gray-300">
             <RiPriceTag3Fill className="mr-2" />
-            <span>${album.price?.toFixed(2) || '0.00'}</span>
+            <span>₹{album.price?.toFixed(2) || '0.00'}</span>
           </div>
         </div>
 
