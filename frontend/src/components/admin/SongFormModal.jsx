@@ -38,9 +38,6 @@ const SongFormModal = ({
   const [showArtistDropdown, setShowArtistDropdown] = useState(false);
   const [showAlbumDropdown, setShowAlbumDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // ✅ NEW: Track if user manually uploaded a cover image
-  const [userUploadedCover, setUserUploadedCover] = useState(false);
 
   const coverImageRef = useRef(null);
   const audioFileRef = useRef(null);
@@ -56,7 +53,6 @@ const SongFormModal = ({
   useEffect(() => {
     if (songToEdit) {
       setIsEditMode(true);
-      setUserUploadedCover(true); // Assume existing song has custom cover
       setNewSong({
         title: songToEdit.title,
         artist: songToEdit.artist?.name || '',
@@ -85,7 +81,6 @@ const SongFormModal = ({
       }
     } else {
       setIsEditMode(false);
-      setUserUploadedCover(false);
     }
   }, [songToEdit, dispatch]);
 
@@ -112,14 +107,9 @@ const SongFormModal = ({
     }));
   };
 
-  // ✅ ENHANCED: Track manual image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setNewSong((prev) => ({ ...prev, coverImage: file }));
-      setUserUploadedCover(true); // Mark as manually uploaded
-      toast.success(`Cover image selected: ${file.name}`);
-    }
+    if (file) setNewSong((prev) => ({ ...prev, coverImage: file }));
   };
 
   const handleAudioUpload = (e) => {
@@ -150,7 +140,7 @@ const SongFormModal = ({
     setShowArtistDropdown(false);
   };
 
-  // ✅ ENHANCED: Auto-fill release date AND cover image from selected album
+  // ✅ ENHANCED: Auto-fill release date from selected album
   const handleAlbumSelect = (album) => {
     // Format album release date to YYYY-MM-DD for input field
     const albumReleaseDate = album.releaseDate 
@@ -161,31 +151,20 @@ const SongFormModal = ({
       ...prev,
       album: album.title,
       albumId: album._id,
-      releaseDate: albumReleaseDate,
-      // ✅ NEW: Auto-fill cover image from album (only if user hasn't manually uploaded)
-      coverImage: userUploadedCover ? prev.coverImage : (album.coverImage || prev.coverImage),
+      releaseDate: albumReleaseDate, // ✅ Auto-fill release date from album
     }));
     
     setSearchTermAlbum(album.title);
     setShowAlbumDropdown(false);
 
-    // ✅ Enhanced toast notification
-    const notifications = [];
+    // ✅ Show toast notification to user about auto-filled date
     if (album.releaseDate) {
       const formattedDate = new Date(album.releaseDate).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
-      notifications.push(`Release date: ${formattedDate}`);
-    }
-    
-    if (album.coverImage && !userUploadedCover) {
-      notifications.push('Cover image auto-filled from album');
-    }
-
-    if (notifications.length > 0) {
-      toast.success(`Auto-filled from album: ${notifications.join(' & ')}`);
+      toast.success(`Release date auto-filled from album: ${formattedDate}`);
     }
   };
 
@@ -240,17 +219,7 @@ const SongFormModal = ({
       : [];
     genres.forEach((g) => formData.append('genre[]', g));
 
-    // ✅ ENHANCED: Handle cover image (File object or URL string)
-    if (newSong.coverImage) {
-      if (typeof newSong.coverImage === 'string') {
-        // It's a URL from album - send as coverImageUrl
-        formData.append('coverImageUrl', newSong.coverImage);
-      } else {
-        // It's a File object - send as file
-        formData.append('coverImage', newSong.coverImage);
-      }
-    }
-    
+    if (newSong.coverImage) formData.append('coverImage', newSong.coverImage);
     if (newSong.audioFile) formData.append('audio', newSong.audioFile);
 
     try {
@@ -283,28 +252,10 @@ const SongFormModal = ({
       setShowArtistDropdown(false);
       setShowAlbumDropdown(false);
       setAlbums(initialAlbums);
-      setUserUploadedCover(false); // ✅ Reset manual upload flag
       if (coverImageRef.current) coverImageRef.current.value = '';
       if (audioFileRef.current) audioFileRef.current.value = '';
     }
   }, [isOpen]);
-
-  // ✅ NEW: Function to get cover image preview URL
-  const getCoverImagePreview = () => {
-    if (!newSong.coverImage) return null;
-    
-    // If it's a File object (manually uploaded)
-    if (typeof newSong.coverImage === 'object') {
-      return URL.createObjectURL(newSong.coverImage);
-    }
-    
-    // If it's a URL string (from album)
-    if (typeof newSong.coverImage === 'string') {
-      return newSong.coverImage;
-    }
-    
-    return null;
-  };
 
   if (!isOpen) return null;
 
@@ -373,8 +324,8 @@ const SongFormModal = ({
           <div className="col-span-1 relative">
             <label className="text-gray-300">
               Album 
-              {/* ✅ Enhanced: Visual indicator that both release date and cover will be auto-filled */}
-              <span className="text-xs text-blue-400 ml-1">(auto-fills date & cover)</span>
+              {/* ✅ NEW: Visual indicator that release date will be auto-filled */}
+              <span className="text-xs text-blue-400 ml-1">(auto-fills release date)</span>
             </label>
             <input
               type="text"
@@ -398,20 +349,15 @@ const SongFormModal = ({
                   >
                     <div className="flex justify-between items-center">
                       <span>{album.title}</span>
-                      {/* ✅ Enhanced: Show both release date and cover indicator */}
-                      <div className="flex items-center gap-2">
-                        {album.releaseDate && (
-                          <span className="text-xs text-gray-400">
-                            {new Date(album.releaseDate).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short'
-                            })}
-                          </span>
-                        )}
-                        {album.coverImage && (
-                          <span className="text-xs text-blue-400">🖼️</span>
-                        )}
-                      </div>
+                      {/* ✅ NEW: Show release date in dropdown */}
+                      {album.releaseDate && (
+                        <span className="text-xs text-gray-400">
+                          {new Date(album.releaseDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short'
+                          })}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -484,7 +430,7 @@ const SongFormModal = ({
           <div className="col-span-1">
             <label className="text-gray-300">
               Release Date 
-              {/* ✅ Visual indicator when date is auto-filled */}
+              {/* ✅ NEW: Visual indicator when date is auto-filled */}
               {newSong.albumId && (
                 <span className="text-xs text-green-400 ml-1">(from album)</span>
               )}
@@ -498,48 +444,41 @@ const SongFormModal = ({
             />
           </div>
 
-          {/* ✅ ENHANCED: Cover Image with Album Auto-fill */}
+          {/* Cover Image */}
           <div className="col-span-2">
-            <label className="text-gray-300">
-              Cover Image
-              {/* ✅ Show indicator if image is from album */}
-              {newSong.coverImage && typeof newSong.coverImage === 'string' && (
-                <span className="text-xs text-green-400 ml-1">(from album)</span>
-              )}
-              {userUploadedCover && (
-                <span className="text-xs text-blue-400 ml-1">(custom uploaded)</span>
-              )}
-            </label>
+            <label className="text-gray-300">Cover Image</label>
             <div
               className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500"
               onClick={() => !isSubmitting && coverImageRef.current.click()}
             >
               {newSong.coverImage ? (
-                <div className="flex flex-col items-center">
-                  <img
-                    src={getCoverImagePreview()}
-                    alt="Preview"
-                    className="h-32 w-32 object-cover rounded mb-2"
-                  />
-                  <span className="text-sm text-gray-400">
-                    {typeof newSong.coverImage === 'string' 
-                      ? "Album cover image" 
-                      : newSong.coverImage.name
-                    }
-                  </span>
-                  {typeof newSong.coverImage === 'string' && (
-                    <span className="text-xs text-blue-400 mt-1">
-                      Click to upload custom image
+                typeof newSong.coverImage === 'string' ? (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={newSong.coverImage}
+                      alt="Preview"
+                      className="h-32 w-32 object-cover rounded mb-2"
+                    />
+                    <span className="text-sm text-gray-400">
+                      Current cover image
                     </span>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={URL.createObjectURL(newSong.coverImage)}
+                      alt="Preview"
+                      className="h-32 w-32 object-cover rounded mb-2"
+                    />
+                    <span className="text-sm text-gray-400">
+                      {newSong.coverImage.name}
+                    </span>
+                  </div>
+                )
               ) : (
                 <>
                   <FaCloudUploadAlt className="text-3xl text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-400">Click to upload only .jpg .jpeg .avif</p>
-                  <p className="text-xs text-blue-400 mt-1">
-                    Or select album to auto-fill from album cover
-                  </p>
                 </>
               )}
               <input
