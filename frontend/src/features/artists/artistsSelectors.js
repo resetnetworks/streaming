@@ -27,7 +27,7 @@ export const selectIsPageCached = (page) => (state) => {
 export const selectIsCacheValid = (state) => {
   const lastFetch = state.artists.lastFetchTime;
   if (!lastFetch) return false;
-  const cacheValidDuration = 15 * 24 * 60 * 60 * 1000; // 5 minutes
+  const cacheValidDuration = 15 * 24 * 60 * 60 * 1000; 
   return Date.now() - lastFetch < cacheValidDuration;
 };
 
@@ -35,7 +35,7 @@ export const selectIsCacheValid = (state) => {
 export const selectIsFullListCacheValid = (state) => {
   const lastFetch = state.artists.fullListLastFetchTime;
   if (!lastFetch) return false;
-  const cacheValidDuration = 15 * 24 * 60 * 60 * 1000; // 10 minutes for full list
+  const cacheValidDuration = 15 * 24 * 60 * 60 * 1000; 
   return Date.now() - lastFetch < cacheValidDuration;
 };
 
