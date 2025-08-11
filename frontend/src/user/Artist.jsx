@@ -80,7 +80,7 @@ const Artist = () => {
   );
 
   const isSubscribed = userSubscriptions.some(
-    (sub) => sub.artist.slug === artistId
+    (sub) => sub.artist?.slug === artistId
   );
 
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
