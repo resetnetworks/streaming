@@ -99,7 +99,7 @@ const Library = () => {
                 {subscriptions.map((sub) => (
                   <div
                     key={sub._id}
-                    onClick={() => navigate(`/artist/${sub.artist.slug}`)}
+                    onClick={() => navigate(`/artist/${sub.artist?.slug}`)}
                     className="cursor-pointer text-center"
                   >
                     <img
