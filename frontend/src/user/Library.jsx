@@ -103,11 +103,11 @@ const Library = () => {
                     className="cursor-pointer text-center"
                   >
                     <img
-                      src={sub.artist.image || "/images/placeholder.png"}
+                      src={sub.artist?.image || "/images/placeholder.png"}
                       alt={sub.artist.name}
                       className="w-20 h-20 rounded-full object-cover border-2 border-blue-500 shadow-md"
                     />
-                    <p className="text-sm mt-2">{sub.artist.name}</p>
+                    <p className="text-sm mt-2">{sub.artist?.name}</p>
                   </div>
                 ))}
               </div>
