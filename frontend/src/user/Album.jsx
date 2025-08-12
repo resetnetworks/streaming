@@ -216,13 +216,17 @@ export default function Album() {
     return artistData?.slug || null;
   };
 
-  const songs = album?.songs || [];
+  // ✅ REVERSE THE SONGS ORDER
+  const songs = album?.songs ? [...album.songs].reverse() : [];
 
   // Check if album is purchased
   const isAlbumPurchased = currentUser?.purchasedAlbums?.includes(album?._id);
 
   // ✅ NEW: Check if album is subscription type
   const isSubscriptionAlbum = album?.accessType === 'subscription' || album?.price === 0;
+
+  // ✅ CALCULATE TOTAL DURATION
+  const totalDuration = songs.reduce((total, song) => total + (song.duration || 0), 0);
 
   // Generate color from artist name (same logic as Artist page)
   const getArtistColor = (name) => {
@@ -297,6 +301,9 @@ export default function Album() {
                   <span>{formatDate(album.releaseDate)}</span>
                   <span className="text-xl">•</span>
                   <span>{songs.length} songs</span>
+                  {/* ✅ ADD TOTAL DURATION */}
+                  <span className="text-xl">•</span>
+                  <span>{formatDuration(totalDuration)}</span>
                 </div>
                 
                 {/* ✅ UPDATED: Purchase Button OR Subscription Button */}
@@ -383,46 +390,58 @@ export default function Album() {
               No songs in this album.
             </div>
           ) : (
-            songs.map((song) => (
-              <div key={song._id} className="mb-4">
-                <SongList
-                  songId={song._id}
-                  img={song.coverImage || album.coverImage}
-                  songName={song.title}
-                  singerName={song.singer}
-                  seekTime={formatDuration(song.duration)}
-                  onPlay={() => handlePlaySong(song)}
-                  isSelected={selectedSong?._id === song._id}
-                  // ✅ UPDATED SONG PURCHASE WITH RAZORPAY
-                  price={
-                    song.accessType === "purchase-only" && !isAlbumPurchased ? (
-                      currentUser?.purchasedSongs?.includes(song._id) ? (
-                        "Purchased"
-                      ) : (
-                        <button
-                          className={`text-white text-xs px-2 py-1 rounded transition-colors ${
-                            processingPayment || paymentLoading
-                              ? "bg-gray-500 cursor-not-allowed"
-                              : "bg-indigo-600 hover:bg-indigo-700"
-                          }`}
-                          onClick={() => handlePurchaseClick(song, "song")}
-                          disabled={processingPayment || paymentLoading}
-                        >
-                          {processingPayment || paymentLoading 
-                            ? "..." 
-                            : `Buy ₹${song.price}`
-                          }
-                        </button>
-                      )
-                    ) : isAlbumPurchased ? (
-                      "Included"
-                    ) : (
-                      "Subs.."
-                    )
-                  }
-                />
-              </div>
-            ))
+            <>
+              {/* ✅ SONGS WITH NUMBERING */}
+              {songs.map((song, index) => (
+                <div key={song._id} className="mb-4 flex items-center gap-4">
+                  {/* ✅ TRACK NUMBER ON LEFT */}
+                  <div className="w-8 text-center text-gray-400 font-medium">
+                    {index + 1}
+                  </div>
+                  
+                  {/* ✅ SONG COMPONENT */}
+                  <div className="flex-1">
+                    <SongList
+                      songId={song._id}
+                      img={song.coverImage || album.coverImage}
+                      songName={song.title}
+                      singerName={song.singer}
+                      seekTime={formatDuration(song.duration)}
+                      onPlay={() => handlePlaySong(song)}
+                      isSelected={selectedSong?._id === song._id}
+                      // ✅ UPDATED SONG PURCHASE WITH RAZORPAY
+                      price={
+                        song.accessType === "purchase-only" && !isAlbumPurchased ? (
+                          currentUser?.purchasedSongs?.includes(song._id) ? (
+                            "Purchased"
+                          ) : (
+                            <button
+                              className={`text-white text-xs px-2 py-1 rounded transition-colors ${
+                                processingPayment || paymentLoading
+                                  ? "bg-gray-500 cursor-not-allowed"
+                                  : "bg-indigo-600 hover:bg-indigo-700"
+                              }`}
+                              onClick={() => handlePurchaseClick(song, "song")}
+                              disabled={processingPayment || paymentLoading}
+                            >
+                              {processingPayment || paymentLoading 
+                                ? "..." 
+                                : `Buy ₹${song.price}`
+                              }
+                            </button>
+                          )
+                        ) : isAlbumPurchased ? (
+                          "Included"
+                        ) : (
+                          "Subs.."
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+
+            </>
           )}
         </div>
 
