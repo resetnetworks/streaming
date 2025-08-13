@@ -53,8 +53,8 @@ const Songs = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // ✅ Initialize with safe default values
-  const [currentPage, setCurrentPage] = useState(pagination.page || 1);
-  const [itemsPerPage, setItemsPerPage] = useState(pagination.limit || 20);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // ✅ Cache selectors for current page with safe defaults
   const isPageCached = useSelector(selectIsPageCached(currentPage)) || false;
@@ -62,12 +62,12 @@ const Songs = () => {
   const cachedPages = useSelector(selectCachedPages) || [];
   const isCacheValid = useSelector(selectIsCacheValid) || false;
 
-  // ✅ Safe pagination sync - only sync page, not limit
+  // ✅ FIXED: Remove currentPage from dependencies to prevent infinite loop
   useEffect(() => {
     if (pagination?.page && pagination.page !== currentPage) {
       setCurrentPage(pagination.page);
     }
-  }, [pagination?.page, currentPage]);
+  }, [pagination?.page]); // ← Fixed: Removed currentPage from dependencies
 
   // ✅ Main fetch effect with proper cache handling
   useEffect(() => {
