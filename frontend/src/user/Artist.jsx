@@ -200,7 +200,7 @@ const Artist = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderResult.order.amount,
         currency: orderResult.order.currency || "INR",
-        name: "RESET Music",
+        name: "musicreset",
         description: `Purchase ${item.title || item.name}`,
         image: "icon.png",
         order_id: orderResult.order.id,

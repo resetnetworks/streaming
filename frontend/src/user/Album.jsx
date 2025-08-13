@@ -128,9 +128,9 @@ export default function Album() {
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
-        name: 'MusicReset',
+        name: 'musicreset',
         description: `Purchase ${type}: ${item.title || item.name}`,
-        image: '/logo.png',
+        image: 'icon.png',
         handler: function (response) {
           // Immediately close modal and show success
           if (currentRazorpayInstance) {
