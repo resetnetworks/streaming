@@ -289,12 +289,6 @@ const Songs = () => {
             {Math.min(currentPage * itemsPerPage, pagination?.total || 0)} of{' '}
             {pagination?.total || 0} songs
           </span>
-          {/* ✅ Cache info */}
-          {cachedPages.length > 0 && (
-            <span className="text-xs text-green-400 opacity-70">
-              • {cachedPages.length} pages cached
-            </span>
-          )}
         </div>
       </div>
 

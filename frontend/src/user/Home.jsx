@@ -471,10 +471,6 @@ const Home = () => {
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">
               new tracks
-              {/* ✅ Cache indicator */}
-              {isRecentPageCached && (
-                <span className="ml-2 text-xs text-green-400 opacity-70">cached</span>
-              )}
             </h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
@@ -708,10 +704,6 @@ const Home = () => {
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">
               all tracks for you
-              {/* ✅ Cache indicator */}
-              {isTopPicksPageCached && (
-                <span className="ml-2 text-xs text-green-400 opacity-70">cached</span>
-              )}
             </h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
