@@ -433,7 +433,7 @@ const Home = () => {
     "recent",
     recentPage,
     setRecentPage,
-    songsPagination.totalPages,
+    songsPagination?.totalPages,
     songsStatus,
     cachedPages
   );
@@ -442,7 +442,7 @@ const Home = () => {
     "topPicks",
     topPicksPage,
     setTopPicksPage,
-    songsPagination.totalPages,
+    songsPagination?.totalPages,
     songsStatus,
     cachedPages
   );
