@@ -202,7 +202,7 @@ const Artist = () => {
         currency: orderResult.order.currency || "INR",
         name: "RESET Music",
         description: `Purchase ${item.title || item.name}`,
-        image: "/logo.png",
+        image: "icon.png",
         order_id: orderResult.order.id,
         handler: async function (response) {
           toast.success(`Successfully purchased ${item.title || item.name}!`);

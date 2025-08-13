@@ -327,7 +327,7 @@ const Home = () => {
         order_id: order.id,
         name: 'MusicReset',
         description: `Purchase ${type}: ${item.title || item.name}`,
-        image: '/logo.png',
+        image: 'icon.png',
         handler: function (response) {
           // Immediately close modal and show success
           if (currentRazorpayInstance) {
