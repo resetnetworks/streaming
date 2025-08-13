@@ -13,7 +13,7 @@ import {
   createSong,
   loadFromCache,
   setCachedData,
-  clearCache, // ✅ Added this
+  clearCache,
 } from '../features/songs/songSlice';
 import {
   selectAllSongs,
@@ -36,7 +36,15 @@ const Songs = () => {
   const songs = useSelector(selectAllSongs);
   const status = useSelector(selectSongsStatus);
   const error = useSelector(selectSongsError);
-  const pagination = useSelector(selectSongsPagination);
+  
+  // ✅ Safe pagination selector with default values
+  const pagination = useSelector(selectSongsPagination) || {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1
+  };
+  
   const artists = useSelector(selectFullArtistList);
   const albums = useSelector(selectAllAlbums);
 
@@ -44,27 +52,25 @@ const Songs = () => {
   const [editingSong, setEditingSong] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Initialize with current pagination state from Redux
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  // ✅ Initialize with safe default values
+  const [currentPage, setCurrentPage] = useState(pagination.page || 1);
+  const [itemsPerPage, setItemsPerPage] = useState(pagination.limit || 20);
 
-  // ✅ Cache selectors for current page
-  const isPageCached = useSelector(selectIsPageCached(currentPage));
-  const cachedPageData = useSelector(selectCachedPageData(currentPage));
-  const cachedPages = useSelector(selectCachedPages);
-  const isCacheValid = useSelector(selectIsCacheValid);
+  // ✅ Cache selectors for current page with safe defaults
+  const isPageCached = useSelector(selectIsPageCached(currentPage)) || false;
+  const cachedPageData = useSelector(selectCachedPageData(currentPage)) || null;
+  const cachedPages = useSelector(selectCachedPages) || [];
+  const isCacheValid = useSelector(selectIsCacheValid) || false;
 
-  // ✅ Fixed pagination sync - only sync page, not limit
+  // ✅ Safe pagination sync - only sync page, not limit
   useEffect(() => {
-    if (pagination.page && pagination.page !== currentPage) {
+    if (pagination?.page && pagination.page !== currentPage) {
       setCurrentPage(pagination.page);
     }
-  }, [pagination.page]);
+  }, [pagination?.page, currentPage]);
 
   // ✅ Main fetch effect with proper cache handling
   useEffect(() => {
-    // Create a unique cache key based on page and limit
-    const cacheKey = `${currentPage}-${itemsPerPage}`;
     const isCachedForCurrentLimit = isPageCached && cachedPageData && 
       cachedPageData.pagination?.limit === itemsPerPage;
 
@@ -141,13 +147,15 @@ const Songs = () => {
     setEditingSong(null);
   };
 
-  // Pagination handlers
+  // Pagination handlers with safe checks
   const goToPage = (page) => {
-    setCurrentPage(page);
+    if (page >= 1 && page <= (pagination?.totalPages || 1)) {
+      setCurrentPage(page);
+    }
   };
 
   const nextPage = () => {
-    if (currentPage < pagination.totalPages) {
+    if (currentPage < (pagination?.totalPages || 1)) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -169,16 +177,16 @@ const Songs = () => {
   };
 
   const filteredSongs = (songs || []).filter(song =>
-    song.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    song.artist?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    song.album?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    song?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    song?.artist?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    song?.album?.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Generate page numbers for pagination with ellipsis
+  // ✅ Generate page numbers with safe pagination access
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    const { totalPages } = pagination;
+    const totalPages = pagination?.totalPages || 1;
     
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
@@ -278,8 +286,8 @@ const Songs = () => {
         <div className="text-gray-400 flex items-center gap-2">
           <span>
             Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-            {Math.min(currentPage * itemsPerPage, pagination.total)} of{' '}
-            {pagination.total} songs
+            {Math.min(currentPage * itemsPerPage, pagination?.total || 0)} of{' '}
+            {pagination?.total || 0} songs
           </span>
           {/* ✅ Cache info */}
           {cachedPages.length > 0 && (
@@ -324,7 +332,7 @@ const Songs = () => {
           {/* Show filtered results info */}
           {searchTerm && (
             <div className="mb-4 text-gray-400">
-              Showing {filteredSongs.length} of {songs.length} songs on this page
+              Showing {filteredSongs.length} of {songs?.length || 0} songs on this page
             </div>
           )}
           
@@ -340,7 +348,7 @@ const Songs = () => {
           </div>
 
           {/* Pagination Controls */}
-          {pagination.totalPages > 1 && (
+          {(pagination?.totalPages || 0) > 1 && (
             <div className="flex justify-center mt-8">
               <nav className="inline-flex items-center space-x-1">
                 <button
@@ -383,15 +391,15 @@ const Songs = () => {
 
                 <button
                   onClick={nextPage}
-                  disabled={currentPage === pagination.totalPages}
+                  disabled={currentPage === (pagination?.totalPages || 1)}
                   className="p-2 rounded-md text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Next page"
                 >
                   <FaAngleRight />
                 </button>
                 <button
-                  onClick={() => goToPage(pagination.totalPages)}
-                  disabled={currentPage === pagination.totalPages}
+                  onClick={() => goToPage(pagination?.totalPages || 1)}
+                  disabled={currentPage === (pagination?.totalPages || 1)}
                   className="p-2 rounded-md text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Last page"
                 >
