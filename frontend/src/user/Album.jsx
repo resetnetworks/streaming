@@ -459,7 +459,7 @@ export default function Album() {
         )}
 
         {/* ✅ ADD SUCCESS TOAST ENHANCEMENT */}
-        <style jsx global>{`
+        <style jsx="true" global="true">{`
           [data-sonner-toast] {
             background: rgb(31, 41, 55) !important;
             border: 1px solid rgb(75, 85, 99) !important;

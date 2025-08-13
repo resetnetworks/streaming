@@ -7,7 +7,11 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
 
 // Redux actions
-import { fetchAllSongs } from "../features/songs/songSlice";
+import { 
+  fetchAllSongs,
+  loadFromCache,
+  setCachedData
+} from "../features/songs/songSlice";
 import {
   fetchAllArtists,
   fetchRandomArtistWithSongs,
@@ -17,6 +21,13 @@ import {
   selectRandomArtist,
   selectRandomArtistSongs,
 } from "../features/artists/artistsSelectors";
+// ✅ Import song cache selectors
+import {
+  selectIsPageCached,
+  selectCachedPageData,
+  selectCachedPages,
+  selectIsCacheValid
+} from "../features/songs/songSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { initiateRazorpayItemPayment, resetPaymentState } from "../features/payments/paymentSlice";
 // ✅ ADD THESE IMPORTS
@@ -54,7 +65,7 @@ const Home = () => {
   // Redux selectors
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const songsStatus = useSelector((state) => state.songs.status);
-  const songsTotalPages = useSelector((state) => state.songs.totalPages);
+  const songsPagination = useSelector((state) => state.songs.pagination);
   const currentUser = useSelector((state) => state.auth.user);
   const albumsStatus = useSelector((state) => state.albums.loading);
   const albumsTotalPages = useSelector(
@@ -63,6 +74,10 @@ const Home = () => {
   const allAlbums = useSelector((state) => state.albums.allAlbums);
   const randomArtist = useSelector(selectRandomArtist);
   const similarSongs = useSelector(selectRandomArtistSongs);
+
+  // ✅ Cache selectors for songs
+  const cachedPages = useSelector(selectCachedPages);
+  const isCacheValid = useSelector(selectIsCacheValid);
 
   // Payment state from Redux
   const paymentLoading = useSelector((state) => state.payment.loading);
@@ -74,6 +89,10 @@ const Home = () => {
   const [albumsPage, setAlbumsPage] = useState(1);
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
+  
+  // ✅ Cache tracking state
+  const [initialRecentFetchDone, setInitialRecentFetchDone] = useState(false);
+  const [initialTopPicksFetchDone, setInitialTopPicksFetchDone] = useState(false);
   
   const [processingPayment, setProcessingPayment] = useState(false);
   const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
@@ -98,6 +117,12 @@ const Home = () => {
     topPicks: useRef(null),
   };
 
+  // ✅ Cache selectors for current pages
+  const isRecentPageCached = useSelector(selectIsPageCached(recentPage));
+  const recentCachedPageData = useSelector(selectCachedPageData(recentPage));
+  const isTopPicksPageCached = useSelector(selectIsPageCached(topPicksPage));
+  const topPicksCachedPageData = useSelector(selectCachedPageData(topPicksPage));
+
   // Fetch data on mount and page changes
   useEffect(() => {
     dispatch(fetchAllArtists());
@@ -111,35 +136,129 @@ const Home = () => {
       });
   }, [dispatch, albumsPage]);
 
+  // ✅ Enhanced recent songs fetch with cache
   useEffect(() => {
-    dispatch(
-      fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })
-    ).then((res) => {
-      if (res.payload?.songs) {
-        setRecentSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
+    if (!initialRecentFetchDone) {
+      if (isRecentPageCached && recentCachedPageData && isCacheValid) {
+        // Load from cache
+        dispatch(loadFromCache(recentPage));
+        if (recentCachedPageData.songs) {
+          setRecentSongs(recentCachedPageData.songs);
+        }
+        setLoadingMore((prev) => ({ ...prev, recent: false }));
+      } else {
+        // Fetch from server
+        dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 }))
+          .then((res) => {
+            if (res.payload?.songs) {
+              setRecentSongs(res.payload.songs);
+              // Cache the data
+              dispatch(setCachedData({
+                page: recentPage,
+                songs: res.payload.songs,
+                pagination: res.payload.pagination || { page: recentPage, limit: 10, total: 0, totalPages: 1 }
+              }));
+            }
+            setLoadingMore((prev) => ({ ...prev, recent: false }));
+          });
       }
-      setLoadingMore((prev) => ({ ...prev, recent: false }));
-    });
-  }, [dispatch, recentPage]);
+      setInitialRecentFetchDone(true);
+    } else {
+      // Subsequent page fetches
+      if (isRecentPageCached && recentCachedPageData && isCacheValid) {
+        // Load from cache
+        if (recentCachedPageData.songs) {
+          setRecentSongs((prev) => {
+            const seen = new Set(prev.map((s) => s._id));
+            const newSongs = recentCachedPageData.songs.filter((s) => !seen.has(s._id));
+            return [...prev, ...newSongs];
+          });
+        }
+        setLoadingMore((prev) => ({ ...prev, recent: false }));
+      } else {
+        // Fetch from server
+        dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 }))
+          .then((res) => {
+            if (res.payload?.songs) {
+              setRecentSongs((prev) => {
+                const seen = new Set(prev.map((s) => s._id));
+                const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+                return [...prev, ...newSongs];
+              });
+              // Cache the data
+              dispatch(setCachedData({
+                page: recentPage,
+                songs: res.payload.songs,
+                pagination: res.payload.pagination || { page: recentPage, limit: 10, total: 0, totalPages: 1 }
+              }));
+            }
+            setLoadingMore((prev) => ({ ...prev, recent: false }));
+          });
+      }
+    }
+  }, [dispatch, recentPage, isRecentPageCached, recentCachedPageData, isCacheValid, initialRecentFetchDone]);
 
+  // ✅ Enhanced top picks fetch with cache
   useEffect(() => {
-    dispatch(
-      fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 })
-    ).then((res) => {
-      if (res.payload?.songs) {
-        setTopSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
+    if (!initialTopPicksFetchDone) {
+      if (isTopPicksPageCached && topPicksCachedPageData && isCacheValid) {
+        // Load from cache
+        dispatch(loadFromCache(topPicksPage));
+        if (topPicksCachedPageData.songs) {
+          setTopSongs(topPicksCachedPageData.songs);
+        }
+        setLoadingMore((prev) => ({ ...prev, topPicks: false }));
+      } else {
+        // Fetch from server
+        dispatch(fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 }))
+          .then((res) => {
+            if (res.payload?.songs) {
+              setTopSongs(res.payload.songs);
+              // Cache the data
+              dispatch(setCachedData({
+                page: topPicksPage,
+                songs: res.payload.songs,
+                pagination: res.payload.pagination || { page: topPicksPage, limit: 20, total: 0, totalPages: 1 }
+              }));
+            }
+            setLoadingMore((prev) => ({ ...prev, topPicks: false }));
+          });
       }
-      setLoadingMore((prev) => ({ ...prev, topPicks: false }));
-    });
-  }, [dispatch, topPicksPage]);
+      setInitialTopPicksFetchDone(true);
+    } else {
+      // Subsequent page fetches
+      if (isTopPicksPageCached && topPicksCachedPageData && isCacheValid) {
+        // Load from cache
+        if (topPicksCachedPageData.songs) {
+          setTopSongs((prev) => {
+            const seen = new Set(prev.map((s) => s._id));
+            const newSongs = topPicksCachedPageData.songs.filter((s) => !seen.has(s._id));
+            return [...prev, ...newSongs];
+          });
+        }
+        setLoadingMore((prev) => ({ ...prev, topPicks: false }));
+      } else {
+        // Fetch from server
+        dispatch(fetchAllSongs({ type: "top", page: topPicksPage, limit: 20 }))
+          .then((res) => {
+            if (res.payload?.songs) {
+              setTopSongs((prev) => {
+                const seen = new Set(prev.map((s) => s._id));
+                const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
+                return [...prev, ...newSongs];
+              });
+              // Cache the data
+              dispatch(setCachedData({
+                page: topPicksPage,
+                songs: res.payload.songs,
+                pagination: res.payload.pagination || { page: topPicksPage, limit: 20, total: 0, totalPages: 1 }
+              }));
+            }
+            setLoadingMore((prev) => ({ ...prev, topPicks: false }));
+          });
+      }
+    }
+  }, [dispatch, topPicksPage, isTopPicksPageCached, topPicksCachedPageData, isCacheValid, initialTopPicksFetchDone]);
 
   // Clear payment state on mount
   useEffect(() => {
@@ -289,8 +408,8 @@ const Home = () => {
     songColumns.push(topSongs.slice(i, i + chunkSize));
   }
 
-  // Observer callback factory
-  const createObserver = (key, pageState, setPageState, totalPages, status) => {
+  // ✅ Enhanced observer callback factory with cache awareness
+  const createObserver = (key, pageState, setPageState, totalPages, status, cachedPagesRef) => {
     return useCallback(
       (node) => {
         if (status === "loading" || loadingMore[key] || !totalPages) return;
@@ -306,7 +425,7 @@ const Home = () => {
 
         if (node) observerRefs[key].current.observe(node);
       },
-      [status, pageState, totalPages, loadingMore[key]]
+      [status, pageState, totalPages, loadingMore[key], cachedPagesRef]
     );
   };
 
@@ -314,22 +433,27 @@ const Home = () => {
     "recent",
     recentPage,
     setRecentPage,
-    songsTotalPages,
-    songsStatus
+    songsPagination.totalPages,
+    songsStatus,
+    cachedPages
   );
+  
   const topPicksLastRef = createObserver(
     "topPicks",
     topPicksPage,
     setTopPicksPage,
-    songsTotalPages,
-    songsStatus
+    songsPagination.totalPages,
+    songsStatus,
+    cachedPages
   );
+  
   const albumsLastRef = createObserver(
     "albums",
     albumsPage,
     setAlbumsPage,
     albumsTotalPages || 1,
-    albumsStatus === "loading" ? "loading" : "idle"
+    albumsStatus === "loading" ? "loading" : "idle",
+    [] // No cache for albums yet
   );
 
   return (
@@ -345,7 +469,13 @@ const Home = () => {
         <div className="text-white px-4 py-2 flex flex-col gap-4">
           {/* Recent Played Section */}
           <div className="w-full flex justify-between items-center">
-            <h2 className="md:text-xl text-lg font-semibold">new tracks</h2>
+            <h2 className="md:text-xl text-lg font-semibold">
+              new tracks
+              {/* ✅ Cache indicator */}
+              {isRecentPageCached && (
+                <span className="ml-2 text-xs text-green-400 opacity-70">cached</span>
+              )}
+            </h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
               onClick={() => handleScroll(scrollRefs.recent)}
@@ -370,35 +500,35 @@ const Home = () => {
                     ref={idx === recentSongs.length - 1 ? recentLastRef : null}
                     key={song._id}
                     title={song.title}
-                   price={
-                    // First check if song is already purchased
-                    currentUser?.purchasedSongs?.includes(song._id) ? (
-                      "Purchased"
-                    ) : // Then check subscription songs first (they can have price = 0)
-                    song.accessType === "subscription" ? (
-                      "Subs.."
-                    ) : // Then check purchase-only songs with price > 0
-                    song.accessType === "purchase-only" && song.price > 0 ? (
-                      <button
-                        className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
-                          processingPayment || paymentLoading
-                            ? "bg-gray-500 cursor-not-allowed"
-                            : "bg-indigo-600 hover:bg-indigo-700"
-                        }`}
-                        onClick={() => handlePurchaseClick(song, "song")}
-                        disabled={processingPayment || paymentLoading}
-                      >
-                        {processingPayment || paymentLoading
-                          ? "..."
-                          : `Buy ₹${song.price}`}
-                      </button>
-                    ) : // Then check if it's a free album song (purchase-only with price = 0)
-                    song.accessType === "purchase-only" && song.price === 0 ? (
-                      "album"
-                    ) : (
-                      "Free"
-                    )
-                  }
+                    price={
+                      // First check if song is already purchased
+                      currentUser?.purchasedSongs?.includes(song._id) ? (
+                        "Purchased"
+                      ) : // Then check subscription songs first (they can have price = 0)
+                      song.accessType === "subscription" ? (
+                        "Subs.."
+                      ) : // Then check purchase-only songs with price > 0
+                      song.accessType === "purchase-only" && song.price > 0 ? (
+                        <button
+                          className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
+                            processingPayment || paymentLoading
+                              ? "bg-gray-500 cursor-not-allowed"
+                              : "bg-indigo-600 hover:bg-indigo-700"
+                          }`}
+                          onClick={() => handlePurchaseClick(song, "song")}
+                          disabled={processingPayment || paymentLoading}
+                        >
+                          {processingPayment || paymentLoading
+                            ? "..."
+                            : `Buy ₹${song.price}`}
+                        </button>
+                      ) : // Then check if it's a free album song (purchase-only with price = 0)
+                      song.accessType === "purchase-only" && song.price === 0 ? (
+                        "album"
+                      ) : (
+                        "Free"
+                      )
+                    }
                     singer={song.singer}
                     image={song.coverImage || "/images/placeholder.png"}
                     onPlay={() => handlePlaySong(song)}
@@ -578,6 +708,10 @@ const Home = () => {
           <div className="w-full flex justify-between items-center">
             <h2 className="md:text-xl text-lg font-semibold">
               all tracks for you
+              {/* ✅ Cache indicator */}
+              {isTopPicksPageCached && (
+                <span className="ml-2 text-xs text-green-400 opacity-70">cached</span>
+              )}
             </h2>
             <LuSquareChevronRight
               className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
@@ -675,7 +809,7 @@ const Home = () => {
         )}
 
         {/* Success Toast Enhancement */}
-        <style jsx global>{`
+        <style jsx="true" global="true">{`
           [data-sonner-toast] {
             background: rgb(31, 41, 55) !important;
             border: 1px solid rgb(75, 85, 99) !important;
