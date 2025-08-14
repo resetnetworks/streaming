@@ -233,12 +233,6 @@ const Songs = () => {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-white">
           Songs
-          {/* ✅ Cache indicator */}
-          {isPageCached && isCacheValid && (
-            <span className="ml-2 text-xs text-green-400 opacity-70 bg-green-400/10 px-2 py-1 rounded">
-              cached
-            </span>
-          )}
         </h2>
 
         <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
