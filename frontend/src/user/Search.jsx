@@ -5,35 +5,62 @@ import { useNavigate } from "react-router-dom";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
-import OneTimePaymentModal from "../components/payments/OneTimePaymentModal";
 import {
   fetchUnifiedSearchResults,
   clearSearchResults,
 } from "../features/search/searchSlice";
 import { fetchAllSongs } from "../features/songs/songSlice";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
+import { initiateRazorpayItemPayment, resetPaymentState } from "../features/payments/paymentSlice";
+import {
+  selectPaymentLoading,
+  selectPaymentError,
+} from "../features/payments/paymentSelectors";
+import { addPurchasedSong, addPurchasedAlbum } from "../features/auth/authSlice";
+import { toast } from "sonner";
+
+// Razorpay Script Loader
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const Search = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  
-  // Purchase modal state
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [purchaseItem, setPurchaseItem] = useState(null);
-  const [purchaseType, setPurchaseType] = useState(null);
 
-  // Payment processing states (add these if you don't have them)
+  // Payment processing states
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
 
   const { results, loading, error } = useSelector((state) => state.search);
   const trendingSongs = useSelector((state) => state.songs.songs);
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
+  
+  // Payment state from Redux
+  const paymentLoading = useSelector(selectPaymentLoading);
+  const paymentError = useSelector(selectPaymentError);
 
   useEffect(() => {
     dispatch(fetchAllSongs());
+    // Load Razorpay script on component mount
+    loadRazorpayScript();
+  }, [dispatch]);
+
+  // Clear payment state on mount
+  useEffect(() => {
+    dispatch(resetPaymentState());
   }, [dispatch]);
 
   const handleSearch = () => {
@@ -49,10 +76,126 @@ const Search = () => {
     dispatch(play());
   };
 
-  const handlePurchaseClick = (item, type) => {
-    setPurchaseItem(item);
-    setPurchaseType(type);
-    setShowPurchaseModal(true);
+  // Razorpay Purchase Handler
+  const handlePurchaseClick = async (item, type) => {
+    if (!currentUser) {
+      toast.error("Please login to purchase");
+      navigate("/login");
+      return;
+    }
+
+    if (paymentLoading || processingPayment) {
+      toast.info("Payment already in progress...");
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      
+      // Load Razorpay script first
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error("Failed to load Razorpay script");
+      }
+      
+      // Dispatch Razorpay order creation
+      const result = await dispatch(initiateRazorpayItemPayment({
+        itemType: type,
+        itemId: item._id,
+        amount: item.price
+      })).unwrap();
+
+      if (result.order) {
+        await handleRazorpayCheckout(result.order, item, type);
+      } else {
+        throw new Error("Failed to create payment order");
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to initiate payment');
+      setProcessingPayment(false);
+    }
+  };
+
+  // Handle Razorpay Checkout with proper success handling
+  const handleRazorpayCheckout = async (order, item, type) => {
+    try {
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.id,
+        name: 'musicreset',
+        description: `Purchase ${type}: ${item.title || item.name}`,
+        image: `${window.location.origin}/icon.png`,
+        handler: function (response) {
+          // Immediately close modal and show success
+          if (currentRazorpayInstance) {
+            try {
+              currentRazorpayInstance.close();
+            } catch (e) {
+              // Razorpay instance already closed
+            }
+          }
+
+          // ✅ IMMEDIATELY UPDATE REDUX STATE
+          if (type === "song") {
+            dispatch(addPurchasedSong(item._id));
+          } else if (type === "album") {
+            dispatch(addPurchasedAlbum(item._id));
+          }
+
+          // Show success message
+          toast.success(`Successfully purchased ${item.title || item.name}!`, {
+            duration: 5000,
+          });
+          
+          // Reset states
+          setProcessingPayment(false);
+          setCurrentRazorpayInstance(null);
+          dispatch(resetPaymentState());
+        },
+        prefill: {
+          name: currentUser?.name || '',
+          email: currentUser?.email || '',
+          contact: currentUser?.phone || ''
+        },
+        theme: {
+          color: '#3b82f6'
+        },
+        modal: {
+          ondismiss: function() {
+            toast.info('Payment cancelled');
+            setProcessingPayment(false);
+            setCurrentRazorpayInstance(null);
+          }
+        },
+        error: function(error) {
+          toast.error('Payment failed. Please try again.');
+          setProcessingPayment(false);
+          setCurrentRazorpayInstance(null);
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      setCurrentRazorpayInstance(rzp);
+      
+      rzp.on('payment.success', function (response) {
+        // Additional success handling if needed
+      });
+
+      rzp.on('payment.error', function (error) {
+        toast.error('Payment failed. Please try again.');
+        setProcessingPayment(false);
+        setCurrentRazorpayInstance(null);
+      });
+
+      rzp.open();
+
+    } catch (error) {
+      toast.error('Failed to open payment gateway');
+      setProcessingPayment(false);
+      setCurrentRazorpayInstance(null);
+    }
   };
 
   const getRandomItems = (arr, count) => {
@@ -102,10 +245,15 @@ const Search = () => {
     } else {
       return (
         <button
-          className="bg-indigo-600 hover:bg-indigo-700 text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded"
+          className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded transition-colors ${
+            processingPayment || paymentLoading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
           onClick={() => handlePurchaseClick(album, "album")}
+          disabled={processingPayment || paymentLoading}
         >
-           ₹{album.price}
+          {processingPayment || paymentLoading ? "..." : `₹${album.price}`}
         </button>
       );
     }
@@ -120,138 +268,164 @@ const Search = () => {
 
       {/* Search Bar */}
       <div className="min-h-screen">
-      <div className="w-full flex flex-col items-center px-8 sticky top-2 z-10 pt-4">
-        <div className="flex items-center w-full max-w-3xl mx-auto p-[2px] rounded-2xl searchbar-container shadow-inner shadow-[#7B7B7B47] bg-gray-700">
-          <div className="flex items-center flex-grow rounded-l-2xl bg-gray-700">
-            <FiSearch className="text-white mx-3" size={20} />
-            <input
-              type="text"
-              placeholder="Type here..."
-              className="w-full bg-transparent text-white placeholder-gray-400 py-2 pr-4 outline-none"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSearch();
-              }}
-            />
-          </div>
-          <button
-            className="bg-gradient-to-r from-[#1b233dfe] via-[#0942a4e1] via-40% to-[#0C63FF] text-white font-semibold py-2 px-6 rounded-r-2xl border-[1px] searchbar-button"
-            onClick={handleSearch}
-          >
-            Search
-          </button>
-        </div>
-      </div>
-
-      {/* Result Section */}
-      <div className="flex flex-col items-start mt-10 px-6">
-        {loading && <p className="text-white mt-4">Loading...</p>}
-        {error && <p className="text-red-400 mt-4">{error}</p>}
-
-        {!query.trim() ? (
-          <>
-            <h2 className="text-white text-lg mt-6 mb-2">
-              Discover New Songs, Artists And Albums
-            </h2>
-            <div className="flex flex-wrap gap-6">
-              {getRandomItems(trendingSongs, 10).map((song) => (
-                <RecentPlays
-                  key={song._id}
-                  title={song.title}
-                  price={getSongPriceComponent(song)}
-                  singer={song.artist?.name || "Unknown Artist"}
-                  image={song.coverImage || "/images/placeholder.png"}
-                  onPlay={() => handlePlaySong(song)}
-                  isSelected={selectedSong?._id === song._id}
-                />
-              ))}
+        <div className="w-full flex flex-col items-center px-8 sticky top-2 z-10 pt-4">
+          <div className="flex items-center w-full max-w-3xl mx-auto p-[2px] rounded-2xl searchbar-container shadow-inner shadow-[#7B7B7B47] bg-gray-700">
+            <div className="flex items-center flex-grow rounded-l-2xl bg-gray-700">
+              <FiSearch className="text-white mx-3" size={20} />
+              <input
+                type="text"
+                placeholder="Search here..."
+                className="w-full bg-transparent text-white placeholder-gray-400 py-2 pr-4 outline-none"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
+              />
             </div>
-          </>
-        ) : (
-          <>
-            {/* Songs */}
-            {results?.songs?.length > 0 && (
-              <>
-                <h2 className="text-blue-500 font-bold text-lg mt-6 mb-2">Songs</h2>
-                <div className="flex flex-wrap gap-6">
-                  {results.songs.map((song) => (
-                    <RecentPlays
-                      key={song._id}
-                      title={song.title}
-                      price={getSongPriceComponent(song)}
-                      singer={song.artist?.name || "Unknown"}
-                      image={song.coverImage || "/images/placeholder.png"}
-                      onPlay={() => handlePlaySong(song)}
-                      isSelected={selectedSong?._id === song._id}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            <button
+              className="bg-gradient-to-r from-[#1b233dfe] via-[#0942a4e1] via-40% to-[#0C63FF] text-white font-semibold py-2 px-6 rounded-r-2xl border-[1px] searchbar-button"
+              onClick={handleSearch}
+            >
+              Search
+            </button>
+          </div>
+        </div>
 
-            {/* Artists */}
-            {results?.artists?.length > 0 && (
-              <>
-                <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Artists</h2>
-                <div className="flex flex-wrap gap-6">
-                  {results.artists.map((artist) => (
-                    <RecentPlays
-                      key={artist._id}
-                      title={artist.name}
-                      price="Artist"
-                      singer="Artist"
-                      image={artist.image || "/images/placeholder.png"}
-                      onPlay={() => navigate(`/artist/${artist.slug}`)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+        {/* Result Section */}
+        <div className="flex flex-col items-start mt-10 px-6">
+          {loading && <p className="text-white mt-4">Loading...</p>}
+          {error && <p className="text-red-400 mt-4">{error}</p>}
 
-            {/* Albums */}
-            {results?.albums?.length > 0 && (
-              <>
-                <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Albums</h2>
-                <div className="flex flex-wrap gap-6">
-                  {results.albums.map((album) => (
-                    <div key={album._id}>
-                      <AlbumCard
-                        tag={`#${album.title || "music"}`}
-                        artists={album.artist?.name || "Various Artists"}
-                        image={album.coverImage || "/images/placeholder.png"}
-                        price={getAlbumPriceComponent(album)}
-                        onClick={() => navigate(`/album/${album.slug}`)}
+          {!query.trim() ? (
+            <>
+              <h2 className="text-white text-lg mt-6 mb-2">
+                Discover New Songs, Artists And Albums
+              </h2>
+              <div className="flex flex-wrap gap-6">
+                {getRandomItems(trendingSongs, 10).map((song) => (
+                  <RecentPlays
+                    key={song._id}
+                    title={song.title}
+                    price={getSongPriceComponent(song)}
+                    singer={song.artist?.name || "Unknown Artist"}
+                    image={song.coverImage || "/images/placeholder.png"}
+                    onPlay={() => handlePlaySong(song)}
+                    isSelected={selectedSong?._id === song._id}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Songs */}
+              {results?.songs?.length > 0 && (
+                <>
+                  <h2 className="text-blue-500 font-bold text-lg mt-6 mb-2">Songs</h2>
+                  <div className="flex flex-wrap gap-6">
+                    {results.songs.map((song) => (
+                      <RecentPlays
+                        key={song._id}
+                        title={song.title}
+                        price={getSongPriceComponent(song)}
+                        singer={song.artist?.name || "Unknown"}
+                        image={song.coverImage || "/images/placeholder.png"}
+                        onPlay={() => handlePlaySong(song)}
+                        isSelected={selectedSong?._id === song._id}
                       />
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* No results */}
-            {results?.songs?.length === 0 &&
-              results?.artists?.length === 0 &&
-              results?.albums?.length === 0 && (
-                <p className="text-white/70 mt-8">No results found.</p>
+                    ))}
+                  </div>
+                </>
               )}
-          </>
-        )}
-      </div>
 
-      {/* Purchase Modal */}
-      {showPurchaseModal && purchaseItem && (
-        <OneTimePaymentModal
-          itemType={purchaseType}
-          itemId={purchaseItem._id}
-          amount={purchaseItem.price}
-          onClose={() => {
-            setShowPurchaseModal(false);
-            setPurchaseItem(null);
-            setPurchaseType(null);
-          }}
-        />
-      )}
+              {/* Artists */}
+              {results?.artists?.length > 0 && (
+                <>
+                  <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Artists</h2>
+                  <div className="flex flex-wrap gap-6">
+                    {results.artists.map((artist) => (
+                      <RecentPlays
+                        key={artist._id}
+                        title={artist.name}
+                        price="Artist"
+                        singer="Artist"
+                        image={artist.image || "/images/placeholder.png"}
+                        onPlay={() => navigate(`/artist/${artist.slug}`)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Albums */}
+              {results?.albums?.length > 0 && (
+                <>
+                  <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Albums</h2>
+                  <div className="flex flex-wrap gap-6">
+                    {results.albums.map((album) => (
+                      <div key={album._id}>
+                        <AlbumCard
+                          tag={`#${album.title || "music"}`}
+                          artists={album.artist?.name || "Various Artists"}
+                          image={album.coverImage || "/images/placeholder.png"}
+                          price={getAlbumPriceComponent(album)}
+                          onClick={() => navigate(`/album/${album.slug}`)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* No results */}
+              {results?.songs?.length === 0 &&
+                results?.artists?.length === 0 &&
+                results?.albums?.length === 0 && (
+                  <p className="text-white/70 mt-8">No results found.</p>
+                )}
+            </>
+          )}
+        </div>
+
+        {/* Loading Overlay */}
+        {(processingPayment || paymentLoading) && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <div className="text-center">
+                <p className="text-white text-lg font-semibold">Processing Payment</p>
+                <p className="text-gray-300 text-sm mt-1">Please wait, do not close this window</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Error Display */}
+        {paymentError && (
+          <div className="fixed top-4 right-4 z-50 bg-red-900/90 backdrop-blur-sm border border-red-500/30 rounded-lg p-4 text-red-300 max-w-sm">
+            <p className="text-sm">
+              {paymentError.message || "Payment failed. Please try again."}
+            </p>
+            <button
+              onClick={() => dispatch(resetPaymentState())}
+              className="text-xs text-red-400 hover:text-red-300 mt-2"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Success Toast Enhancement */}
+        <style jsx="true" global="true">{`
+          [data-sonner-toast] {
+            background: rgb(31, 41, 55) !important;
+            border: 1px solid rgb(75, 85, 99) !important;
+            color: white !important;
+          }
+          [data-sonner-toast] [data-icon] {
+            color: rgb(34, 197, 94) !important;
+          }
+        `}</style>
       </div>
     </>
   );

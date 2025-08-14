@@ -130,7 +130,7 @@ export default function Album() {
         order_id: order.id,
         name: 'musicreset',
         description: `Purchase ${type}: ${item.title || item.name}`,
-        image: 'icon.png',
+        image: `${window.location.origin}/icon.png`,
         handler: function (response) {
           // Immediately close modal and show success
           if (currentRazorpayInstance) {

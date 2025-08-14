@@ -202,7 +202,7 @@ const Artist = () => {
         currency: orderResult.order.currency || "INR",
         name: "musicreset",
         description: `Purchase ${item.title || item.name}`,
-        image: "icon.png",
+        image: `${window.location.origin}/icon.png`,
         order_id: orderResult.order.id,
         handler: async function (response) {
           toast.success(`Successfully purchased ${item.title || item.name}!`);
@@ -268,9 +268,9 @@ const Artist = () => {
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         subscription_id: subscriptionResult.subscriptionId,
-        name: "RESET Music",
+        name: "musicreset",
         description: `Subscribe to ${artist.name}`,
-        image: "/logo.png",
+        image: `${window.location.origin}/icon.png`,
         handler: async function (response) {
           toast.success(`Successfully subscribed to ${artist.name}!`);
           dispatch(fetchUserSubscriptions());
