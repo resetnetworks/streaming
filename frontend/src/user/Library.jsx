@@ -7,12 +7,10 @@ import {
 } from "../features/payments/userPaymentSlice";
 import { useNavigate } from "react-router-dom";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
-import UserLayout from "../components/user/UserLayout";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
 import { formatDuration } from "../utills/helperFunctions";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
-import AlbumCard from "../components/user/AlbumCard";
 import "react-loading-skeleton/dist/skeleton.css";
 
 const Library = () => {
@@ -83,7 +81,7 @@ const Library = () => {
           {/* ✅ Subscribed Artists */}
           <div>
             <h2 className="md:text-xl text-lg font-semibold mb-2">
-              Subscribed Artists
+              Active Subscriptions
             </h2>
             {dashboardLoading ? (
               <div className="flex gap-4 overflow-x-auto no-scrollbar">

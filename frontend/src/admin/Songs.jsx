@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaMusic, FaPlus, FaSearch, FaAngleLeft, FaAngleRight, FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa';
+import { FaMusic, FaPlus, FaSearch, FaAngleLeft, FaAngleRight, FaAngleDoubleLeft, FaAngleDoubleRight, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
 import AdminSongCard from '../components/admin/AdminSongCard';
 import SongFormModal from '../components/admin/SongFormModal';
+import UploadProgressToast from '../components/admin/UploadProgressToast';
 import {
   fetchAllSongs,
   deleteSong,
@@ -20,7 +21,6 @@ import {
   selectSongsStatus,
   selectSongsError,
   selectSongsPagination,
-  // ✅ Cache selectors
   selectIsPageCached,
   selectCachedPageData,
   selectCachedPages,
@@ -37,7 +37,6 @@ const Songs = () => {
   const status = useSelector(selectSongsStatus);
   const error = useSelector(selectSongsError);
   
-  // ✅ Safe pagination selector with default values
   const pagination = useSelector(selectSongsPagination) || {
     page: 1,
     limit: 20,
@@ -51,38 +50,39 @@ const Songs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSong, setEditingSong] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // ✅ Initialize with safe default values
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  // ✅ Cache selectors for current page with safe defaults
+  // ✅ Background upload tracking
+  const [backgroundUploads, setBackgroundUploads] = useState([]);
+  
+  // ✅ NEW: Track modal submission state to prevent multiple submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const isPageCached = useSelector(selectIsPageCached(currentPage)) || false;
   const cachedPageData = useSelector(selectCachedPageData(currentPage)) || null;
   const cachedPages = useSelector(selectCachedPages) || [];
   const isCacheValid = useSelector(selectIsCacheValid) || false;
 
-  // ✅ FIXED: Remove currentPage from dependencies to prevent infinite loop
+  // Generate unique ID for uploads
+  const generateUploadId = () => `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
   useEffect(() => {
     if (pagination?.page && pagination.page !== currentPage) {
       setCurrentPage(pagination.page);
     }
-  }, [pagination?.page]); // ← Fixed: Removed currentPage from dependencies
+  }, [pagination?.page]);
 
-  // ✅ Main fetch effect with proper cache handling
   useEffect(() => {
     const isCachedForCurrentLimit = isPageCached && cachedPageData && 
       cachedPageData.pagination?.limit === itemsPerPage;
 
     if (isCachedForCurrentLimit && isCacheValid) {
-      // Load from cache only if limit matches
       dispatch(loadFromCache(currentPage));
     } else {
-      // Always fetch from server if cache doesn't match current limit
       dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }))
         .then((res) => {
           if (res.payload?.songs) {
-            // Cache the data
             dispatch(setCachedData({
               page: currentPage,
               songs: res.payload.songs,
@@ -106,8 +106,6 @@ const Songs = () => {
       await dispatch(deleteSong(songId)).unwrap();
       toast.success('Song deleted successfully');
       
-      // Refresh the current page after deletion
-      // If we're on the last page and it becomes empty after deletion, go to previous page
       if (songs.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       } else {
@@ -123,31 +121,162 @@ const Songs = () => {
     setIsModalOpen(true);
   };
 
+
+
+
+  // ✅ FIXED: Background upload handler with proper state management
   const handleAddOrUpdateSong = async (formData) => {
+    // ✅ Prevent multiple submissions
+    if (isSubmitting) {
+      console.log('Already submitting, ignoring duplicate submission');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
       if (editingSong) {
+        // For updates, keep the modal open until completion
         await dispatch(updateSong({ id: editingSong._id, formData })).unwrap();
         toast.success('Song updated successfully');
+        
+        // ✅ Reset states after successful update
+        setIsModalOpen(false);
+        setEditingSong(null);
+        setIsSubmitting(false);
+        
+        dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
       } else {
-        await dispatch(createSong(formData)).unwrap();
-        toast.success('Song created successfully');
+        // For new songs, start background upload
+        const uploadId = generateUploadId();
+        const songTitle = formData.get('title') || 'New Song';
+        const audioFile = formData.get('audioFile');
+        const fileSize = audioFile?.size || 0;
+        
+        // Add to background uploads
+        setBackgroundUploads(prev => [...prev, {
+          id: uploadId,
+          title: songTitle,
+          status: 'uploading',
+          progress: 0,
+          fileSize: fileSize,
+          uploadSpeed: '0 KB/s',
+          startTime: Date.now()
+        }]);
+
+        // ✅ Close modal and reset states immediately for new songs
+        setIsModalOpen(false);
+        setEditingSong(null);
+        setIsSubmitting(false); // ✅ Reset submission state immediately
+
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          setBackgroundUploads(prev => 
+            prev.map(upload => {
+              if (upload.id === uploadId && upload.status === 'uploading' && upload.progress < 90) {
+                const newProgress = Math.min(upload.progress + Math.random() * 15, 90);
+                const elapsed = (Date.now() - upload.startTime) / 1000;
+                const uploadedBytes = (newProgress / 100) * upload.fileSize;
+                const speed = uploadedBytes / elapsed;
+                
+                return {
+                  ...upload,
+                  progress: Math.round(newProgress),
+                  uploadSpeed: formatUploadSpeed(speed)
+                };
+              }
+              return upload;
+            })
+          );
+        }, 500);
+
+        // ✅ Start upload in background (async, don't wait for it)
+        dispatch(createSong(formData))
+          .unwrap()
+          .then((result) => {
+            // Clear progress interval
+            clearInterval(progressInterval);
+            
+            // Update upload status to success
+            setBackgroundUploads(prev => 
+              prev.map(upload => 
+                upload.id === uploadId 
+                  ? { 
+                      ...upload, 
+                      status: 'success', 
+                      progress: 100,
+                      uploadTime: Math.round((Date.now() - upload.startTime) / 1000)
+                    }
+                  : upload
+              )
+            );
+
+            // Refresh current page if we're on page 1
+            if (currentPage === 1) {
+              dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+            }
+
+            // Remove from background uploads after delay
+            setTimeout(() => {
+              setBackgroundUploads(prev => prev.filter(upload => upload.id !== uploadId));
+            }, 5000);
+          })
+          .catch((error) => {
+            // Clear progress interval
+            clearInterval(progressInterval);
+            
+            // Update upload status to error
+            setBackgroundUploads(prev => 
+              prev.map(upload => 
+                upload.id === uploadId 
+                  ? { ...upload, status: 'error', error: error.message }
+                  : upload
+              )
+            );
+
+            // Update toast to error
+            toast.error(`Failed to upload "${songTitle}": ${error?.message || 'Unknown error'}`, {
+              id: uploadId,
+              duration: 5000
+            });
+
+            // Remove from background uploads after delay
+            setTimeout(() => {
+              setBackgroundUploads(prev => prev.filter(upload => upload.id !== uploadId));
+            }, 8000);
+          });
       }
-      setIsModalOpen(false);
-      setEditingSong(null);
-      
-      // Refresh the current page after adding/updating
-      dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
     } catch (error) {
-      toast.error(error?.message || 'Failed to save song');
+      setIsSubmitting(false); // ✅ Reset submission state on error
+      
+      if (editingSong) {
+        toast.error(error?.message || 'Failed to save song');
+      }
     }
   };
 
+  // Helper function to format upload speed
+  const formatUploadSpeed = (bytesPerSecond) => {
+    if (bytesPerSecond < 1024) return `${Math.round(bytesPerSecond)} B/s`;
+    if (bytesPerSecond < 1024 * 1024) return `${Math.round(bytesPerSecond / 1024)} KB/s`;
+    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+  };
+
+  // ✅ FIXED: Reset submission state when closing modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingSong(null);
+    setIsSubmitting(false); // ✅ Reset submission state
   };
 
-  // Pagination handlers with safe checks
+  // ✅ FIXED: Reset submission state when opening modal for new song
+  const handleOpenAddModal = () => {
+    setEditingSong(null);
+    setIsSubmitting(false); // ✅ Reset submission state
+    setIsModalOpen(true);
+  };
+
+  // Rest of your existing methods remain the same...
   const goToPage = (page) => {
     if (page >= 1 && page <= (pagination?.totalPages || 1)) {
       setCurrentPage(page);
@@ -166,13 +295,10 @@ const Songs = () => {
     }
   };
 
-  // ✅ Fixed items per page handler
   const handleItemsPerPageChange = (e) => {
     const newLimit = Number(e.target.value);
     setItemsPerPage(newLimit);
-    setCurrentPage(1); // Reset to first page when changing items per page
-    
-    // ✅ Clear cache when changing page size to force fresh fetch
+    setCurrentPage(1);
     dispatch(clearCache());
   };
 
@@ -182,7 +308,6 @@ const Songs = () => {
     song?.album?.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ Generate page numbers with safe pagination access
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -193,7 +318,6 @@ const Songs = () => {
         pages.push(i);
       }
     } else {
-      // Calculate start and end pages
       let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
       let endPage = startPage + maxVisiblePages - 1;
       
@@ -202,7 +326,6 @@ const Songs = () => {
         startPage = endPage - maxVisiblePages + 1;
       }
       
-      // Add first page and ellipsis if needed
       if (startPage > 1) {
         pages.push(1);
         if (startPage > 2) {
@@ -210,12 +333,10 @@ const Songs = () => {
         }
       }
       
-      // Add middle pages
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
       
-      // Add ellipsis and last page if needed
       if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
           pages.push('...');
@@ -229,11 +350,42 @@ const Songs = () => {
 
   return (
     <div className="p-6">
+      {/* Background Upload Status Bar */}
+      {backgroundUploads.length > 0 && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2 max-h-screen overflow-y-auto">
+          {backgroundUploads.map((upload) => (
+            <UploadProgressToast
+              key={upload.id}
+              upload={upload}
+              showDetails={true}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Top Bar */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-white">
-          Songs
-        </h2>
+        <div className="flex items-center space-x-4">
+          <h2 className="text-2xl font-bold text-white">Songs</h2>
+          {/* Background upload counter */}
+          {backgroundUploads.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
+                {backgroundUploads.filter(u => u.status === 'uploading').length} uploading
+              </span>
+              {backgroundUploads.filter(u => u.status === 'success').length > 0 && (
+                <span className="bg-green-600 text-white px-2 py-1 rounded-full text-xs">
+                  {backgroundUploads.filter(u => u.status === 'success').length} completed
+                </span>
+              )}
+              {backgroundUploads.filter(u => u.status === 'error').length > 0 && (
+                <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs">
+                  {backgroundUploads.filter(u => u.status === 'error').length} failed
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
           <div className="relative w-full md:w-80">
@@ -249,12 +401,13 @@ const Songs = () => {
             />
           </div>
 
+          {/* ✅ FIXED: Use the new handler */}
           <button
-            onClick={() => {
-              setEditingSong(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+            onClick={handleOpenAddModal}
+            disabled={isSubmitting}
+            className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center ${
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <FaPlus className="mr-2" /> Add Song
           </button>
@@ -317,7 +470,6 @@ const Songs = () => {
         </div>
       ) : (
         <>
-          {/* Show filtered results info */}
           {searchTerm && (
             <div className="mb-4 text-gray-400">
               Showing {filteredSongs.length} of {songs?.length || 0} songs on this page
@@ -399,7 +551,7 @@ const Songs = () => {
         </>
       )}
 
-      {/* Modal */}
+      {/* ✅ FIXED: Pass isSubmitting to modal to prevent form resubmission */}
       <SongFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -407,6 +559,7 @@ const Songs = () => {
         artists={artists}
         initialAlbums={albums}
         songToEdit={editingSong}
+        isSubmitting={isSubmitting} // ✅ Pass submission state to modal
       />
     </div>
   );
