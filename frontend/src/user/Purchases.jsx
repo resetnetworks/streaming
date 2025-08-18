@@ -13,7 +13,7 @@ import { formatDuration } from "../utills/helperFunctions";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-const Library = () => {
+const Purchases = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -197,4 +197,4 @@ const Library = () => {
   );
 };
 
-export default Library;
+export default Purchases;

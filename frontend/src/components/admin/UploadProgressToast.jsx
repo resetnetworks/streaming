@@ -1,6 +1,6 @@
 // components/admin/UploadProgressToast.jsx
 import React, { useEffect, useState } from 'react';
-import { FaSpinner, FaCheck, FaTimes, FaMusic, FaFileAudio, FaPause, FaPlay } from 'react-icons/fa';
+import { FaSpinner, FaCheck, FaTimes, FaFileAudio, FaPause } from 'react-icons/fa';
 
 const UploadProgressToast = ({ 
   upload, 

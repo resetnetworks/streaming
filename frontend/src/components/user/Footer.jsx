@@ -1,18 +1,12 @@
 import React from 'react';
 import { 
-  FaSpotify, 
   FaTwitter, 
   FaInstagram, 
   FaYoutube,
-  FaHeart
 } from 'react-icons/fa';
-import { IoMusicalNotesOutline } from 'react-icons/io5';
-import { HiOutlineExternalLink } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
-
   return (
     <footer className="bg-gray-900 border-t border-gray-800/50">
       <div className="max-w-7xl mx-auto px-4 py-6">

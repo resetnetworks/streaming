@@ -1,5 +1,3 @@
-// src/components/user/ArtistAboutSection.jsx
-
 import React from "react";
 import { FiMapPin } from "react-icons/fi";
 
@@ -21,7 +19,7 @@ const ArtistAboutSection = ({
             {artist.image ? (
               <img
                 src={artist.image}
-                alt="Artist"
+                alt={`Artist ${artist.name}`}
                 className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
               />
             ) : (
@@ -83,7 +81,7 @@ const ArtistAboutSection = ({
                   {subscriptionLoading
                     ? "Processing..."
                     : isSubscribed
-                    ? "Manage Subscription"
+                    ? "Cancle Subscription"
                     : "Subscribe Now"}
                 </button>
               </div>

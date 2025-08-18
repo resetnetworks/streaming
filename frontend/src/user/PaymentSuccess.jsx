@@ -43,14 +43,14 @@ export default function PaymentSuccess() {
     case 'song':
       paymentDetails.title = "Song Purchased!";
       paymentDetails.description = `You've successfully purchased this song for ₹${amount}.`;
-      paymentDetails.actionText = "View Your Library";
-      paymentDetails.actionPath = "/library";
+      paymentDetails.actionText = "View Your Purchases";
+      paymentDetails.actionPath = "/Purchases";
       break;
     case 'album':
       paymentDetails.title = "Album Purchased!";
       paymentDetails.description = `You've successfully purchased this album for ₹${amount}.`;
-      paymentDetails.actionText = "View Your Library";
-      paymentDetails.actionPath = "/library";
+      paymentDetails.actionText = "View Your Purchases";
+      paymentDetails.actionPath = "/Purchases";
       break;
   }
 

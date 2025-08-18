@@ -12,7 +12,7 @@ export const Artist = lazy(() => import("../user/Artist"));
 export const LikedSong = lazy(() => import("../user/LikedSong"));
 export const Album = lazy(() => import("../user/Album"));
 export const Search = lazy(() => import("../user/Search"));
-export const Library = lazy(() => import("../user/Library"));
+export const Purchases = lazy(() => import("../user/Purchases"));
 export const PaymentSuccess = lazy(() => import("../user/PaymentSuccess"));
 export const PaymentFailure = lazy(() => import("../user/PaymentFailure"));
 export const Help = lazy(() => import("../user/Help"));

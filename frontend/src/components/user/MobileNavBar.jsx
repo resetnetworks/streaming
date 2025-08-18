@@ -3,14 +3,10 @@ import { NavLink } from "react-router-dom";
 import { FaRegUser } from "react-icons/fa";
 import {
   RxDashboard,
-  RxGlobe,
   RxMagnifyingGlass,
   RxHeart,
-  RxPlus,
 } from "react-icons/rx";
 import { FaShoppingCart } from "react-icons/fa";
-import { FiMusic } from "react-icons/fi";
-
 const menuItems = [
   { name: "Home", icon: <RxDashboard size={24} />, path: "/" },
   { name: "artists", icon: <FaRegUser />, path: "/artists" },

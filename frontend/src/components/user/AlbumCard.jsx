@@ -1,10 +1,9 @@
 import React from "react";
-import Img from "../../images/player.jpg";
 
 const AlbumCard = ({
-  tag = "#electronic",
-  artists = "Julian Gomez, Noah Rosa and more",
-  image = Img,
+  tag,
+  artists,
+  image,
   onClick,
   price,
 }) => {
@@ -13,7 +12,7 @@ const AlbumCard = ({
       <div className="relative" onClick={onClick}>
         <img
           src={image}
-          alt="Album Cover"
+          alt={`Album cover for ${tag} by ${artists}`}
           className="w-full md:h-48 h-32 object-cover"
         />
         <div

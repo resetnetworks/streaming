@@ -170,7 +170,7 @@ function App() {
                     isAuthenticated={isAuthenticated}
                     user={user}
                   >
-                    <Pages.Library />
+                    <Pages.Purchases />
                   </RedirectedProtectedRoute>
                 }
               />
