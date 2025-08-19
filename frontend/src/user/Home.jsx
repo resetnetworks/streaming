@@ -278,19 +278,31 @@ const [modalData, setModalData] = useState(null);
   };
 
 const handlePlaySong = (song) => {
+  // ✅ First check if song is already purchased - no modal needed
+  if (currentUser?.purchasedSongs?.includes(song._id)) {
+    dispatch(setSelectedSong(song));
+    dispatch(play());
+    return;
+  }
+
+  // ✅ Then check subscription requirement
   if (
     song.accessType === "subscription" &&
     (!currentUser?.subscriptions || !currentUser.subscriptions.includes(song.artist?._id))
   ) {
     setModalArtist(song.artist);
-    setModalType("play"); // ✅ Set type as play
+    setModalType("play");
+    setModalData(song);
     setSubscribeModalOpen(true);
     toast.error("Subscribe to play this song!");
     return;
   }
+
+  // If all checks pass, play the song
   dispatch(setSelectedSong(song));
   dispatch(play());
 };
+
 
   // Razorpay Purchase Handler
   const handlePurchaseClick = async (item, type) => {
@@ -300,7 +312,17 @@ const handlePlaySong = (song) => {
       return;
     }
 
-     if (item.artist?.id || item.artist?._id) {
+    const isPurchased = type === "song" 
+    ? currentUser?.purchasedSongs?.includes(item._id)
+    : currentUser?.purchasedAlbums?.includes(item._id);
+
+  if (isPurchased) {
+    toast.info("You have already purchased this item!");
+    return;
+  }
+
+  // ✅ Check subscription requirement only for non-purchased items
+  if (item.artist?.id || item.artist?._id) {
     const artistId = item.artist.id || item.artist._id;
     const isSubscribed = currentUser?.subscriptions && 
                         currentUser.subscriptions.includes(artistId);
@@ -308,13 +330,14 @@ const handlePlaySong = (song) => {
     if (!isSubscribed) {
       // Show subscription modal for purchase
       setModalArtist(item.artist);
-      setModalType("purchase"); // ✅ Set type as purchase
-      setModalData(item); // ✅ NEW: Pass the item data too
+      setModalType("purchase");
+      setModalData(item);
       setSubscribeModalOpen(true);
       toast.error("Subscribe to this artist first to purchase!");
       return;
     }
   }
+
 
     if (paymentLoading || processingPayment) {
       toast.info("Payment already in progress...");
