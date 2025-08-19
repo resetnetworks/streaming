@@ -5,7 +5,7 @@ import { LuSquareChevronRight } from "react-icons/lu";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
-
+import SubscribeModal from "../components/user/SubscribeModal";
 // Redux actions
 import { 
   fetchAllSongs,
@@ -89,6 +89,11 @@ const Home = () => {
   const [albumsPage, setAlbumsPage] = useState(1);
   const [topSongs, setTopSongs] = useState([]);
   const [recentSongs, setRecentSongs] = useState([]);
+ const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
+const [modalArtist, setModalArtist] = useState(null);
+const [modalType, setModalType] = useState(null);
+const [modalData, setModalData] = useState(null); 
+
   
   // ✅ Cache tracking state
   const [initialRecentFetchDone, setInitialRecentFetchDone] = useState(false);
@@ -272,10 +277,20 @@ const Home = () => {
     }
   };
 
-  const handlePlaySong = (songId) => {
-    dispatch(setSelectedSong(songId));
-    dispatch(play());
-  };
+const handlePlaySong = (song) => {
+  if (
+    song.accessType === "subscription" &&
+    (!currentUser?.subscriptions || !currentUser.subscriptions.includes(song.artist?._id))
+  ) {
+    setModalArtist(song.artist);
+    setModalType("play"); // ✅ Set type as play
+    setSubscribeModalOpen(true);
+    toast.error("Subscribe to play this song!");
+    return;
+  }
+  dispatch(setSelectedSong(song));
+  dispatch(play());
+};
 
   // Razorpay Purchase Handler
   const handlePurchaseClick = async (item, type) => {
@@ -284,6 +299,22 @@ const Home = () => {
       navigate("/login");
       return;
     }
+
+     if (item.artist?.id || item.artist?._id) {
+    const artistId = item.artist.id || item.artist._id;
+    const isSubscribed = currentUser?.subscriptions && 
+                        currentUser.subscriptions.includes(artistId);
+    
+    if (!isSubscribed) {
+      // Show subscription modal for purchase
+      setModalArtist(item.artist);
+      setModalType("purchase"); // ✅ Set type as purchase
+      setModalData(item); // ✅ NEW: Pass the item data too
+      setSubscribeModalOpen(true);
+      toast.error("Subscribe to this artist first to purchase!");
+      return;
+    }
+  }
 
     if (paymentLoading || processingPayment) {
       toast.info("Payment already in progress...");
@@ -812,6 +843,30 @@ const Home = () => {
           }
         `}</style>
       </SkeletonTheme>
+<SubscribeModal
+  open={subscribeModalOpen}
+  artist={modalArtist}
+  type={modalType}
+  itemData={modalData} // ✅ Pass the song/album data
+  onClose={() => {
+    setSubscribeModalOpen(false);
+    setModalType(null);
+    setModalArtist(null);
+    setModalData(null); // ✅ Reset item data
+  }}
+  onNavigate={() => {
+    setSubscribeModalOpen(false);
+    setModalType(null);
+    setModalArtist(null);
+    setModalData(null); // ✅ Reset item data
+    if (modalArtist?.slug) {
+      navigate(`/artist/${modalArtist.slug}`);
+    }
+  }}
+/>
+
+
+
     </>
   );
 };

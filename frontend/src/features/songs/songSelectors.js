@@ -47,7 +47,7 @@ export const selectIsPageCached = (page) => (state) => {
 export const selectIsCacheValid = (state) => {
   const lastFetch = state.songs.lastFetchTime;
   if (!lastFetch) return false;
-  const cacheValidDuration = 15 * 24 * 60 * 60 * 1000; // 15 days
+  const cacheValidDuration = 5 * 60 * 1000; // 5 minutes
   return Date.now() - lastFetch < cacheValidDuration;
 };
 
@@ -55,7 +55,7 @@ export const selectIsCacheValid = (state) => {
 export const selectIsFullListCacheValid = (state) => {
   const lastFetch = state.songs.fullListLastFetchTime;
   if (!lastFetch) return false;
-  const cacheValidDuration = 15 * 24 * 60 * 60 * 1000; // 15 days
+  const cacheValidDuration = 5 * 60 * 1000; // 5 minutes
   return Date.now() - lastFetch < cacheValidDuration;
 };
 
