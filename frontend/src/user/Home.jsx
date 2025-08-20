@@ -312,7 +312,7 @@ const handlePlaySong = (song) => {
 
 
   // Razorpay Purchase Handler
-  const handlePurchaseClick = async (item, type) => {
+const handlePurchaseClick = async (item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
       navigate("/login");
@@ -331,10 +331,15 @@ const handlePlaySong = (song) => {
   // ✅ Check subscription requirement only for non-purchased items
   if (item.artist?.id || item.artist?._id) {
     const artistId = item.artist.id || item.artist._id;
-    const isSubscribed = currentUser?.subscriptions && 
-                        currentUser.subscriptions.includes(artistId);
     
-    if (!isSubscribed) {
+    // Check if user has subscribed to this artist by looking in purchaseHistory
+    const hasArtistSubscription = currentUser?.purchaseHistory?.some(
+      purchase => 
+        purchase.itemType === "artist-subscription" && 
+        purchase.itemId === artistId
+    );
+    
+    if (!hasArtistSubscription) {
       // Show subscription modal for purchase
       setModalArtist(item.artist);
       setModalType("purchase");
@@ -344,7 +349,6 @@ const handlePlaySong = (song) => {
       return;
     }
   }
-
 
     if (paymentLoading || processingPayment) {
       toast.info("Payment already in progress...");
@@ -377,6 +381,7 @@ const handlePlaySong = (song) => {
       setProcessingPayment(false);
     }
   };
+
 
   // Handle Razorpay Checkout with proper success handling
   const handleRazorpayCheckout = async (order, item, type) => {
