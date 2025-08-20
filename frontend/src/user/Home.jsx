@@ -286,22 +286,29 @@ const handlePlaySong = (song) => {
   }
 
   // ✅ Then check subscription requirement
-  if (
-    song.accessType === "subscription" &&
-    (!currentUser?.subscriptions || !currentUser.subscriptions.includes(song.artist?._id))
-  ) {
-    setModalArtist(song.artist);
-    setModalType("play");
-    setModalData(song);
-    setSubscribeModalOpen(true);
-    toast.error("Subscribe to play this song!");
-    return;
+  if (song.accessType === "subscription") {
+    // Check if user has subscribed to this artist by looking in purchaseHistory
+    const hasArtistSubscription = currentUser?.purchaseHistory?.some(
+      purchase => 
+        purchase.itemType === "artist-subscription" && 
+        purchase.itemId === song.artist?._id
+    );
+
+    if (!hasArtistSubscription) {
+      setModalArtist(song.artist);
+      setModalType("play");
+      setModalData(song);
+      setSubscribeModalOpen(true);
+      toast.error("Subscribe to play this song!");
+      return;
+    }
   }
 
   // If all checks pass, play the song
   dispatch(setSelectedSong(song));
   dispatch(play());
 };
+
 
 
   // Razorpay Purchase Handler
