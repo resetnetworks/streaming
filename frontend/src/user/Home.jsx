@@ -285,8 +285,16 @@ const handlePlaySong = (song) => {
     return;
   }
 
+  // ✅ Admin check - admins can play any song without subscription
+  if (currentUser?.role === "admin") {
+    dispatch(setSelectedSong(song));
+    dispatch(play());
+    return;
+  }
+
   // ✅ Then check subscription requirement
   if (song.accessType === "subscription") {
+    console.log(currentUser)
     // Check if user has subscribed to this artist by looking in purchaseHistory
     const hasArtistSubscription = currentUser?.purchaseHistory?.some(
       purchase => 
@@ -309,9 +317,7 @@ const handlePlaySong = (song) => {
   dispatch(play());
 };
 
-
-
-  // Razorpay Purchase Handler
+// Razorpay Purchase Handler
 const handlePurchaseClick = async (item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
@@ -328,25 +334,28 @@ const handlePurchaseClick = async (item, type) => {
     return;
   }
 
-  // ✅ Check subscription requirement only for non-purchased items
-  if (item.artist?.id || item.artist?._id) {
-    const artistId = item.artist.id || item.artist._id;
-    
-    // Check if user has subscribed to this artist by looking in purchaseHistory
-    const hasArtistSubscription = currentUser?.purchaseHistory?.some(
-      purchase => 
-        purchase.itemType === "artist-subscription" && 
-        purchase.itemId === artistId
-    );
-    
-    if (!hasArtistSubscription) {
-      // Show subscription modal for purchase
-      setModalArtist(item.artist);
-      setModalType("purchase");
-      setModalData(item);
-      setSubscribeModalOpen(true);
-      toast.error("Subscribe to this artist first to purchase!");
-      return;
+  // ✅ Admin check - admins can purchase without subscription requirement
+  if (currentUser?.role !== "admin") {
+    // ✅ Check subscription requirement only for non-admin users
+    if (item.artist?.id || item.artist?._id) {
+      const artistId = item.artist.id || item.artist._id;
+      
+      // Check if user has subscribed to this artist by looking in purchaseHistory
+      const hasArtistSubscription = currentUser?.purchaseHistory?.some(
+        purchase => 
+          purchase.itemType === "artist-subscription" && 
+          purchase.itemId === artistId
+      );
+      
+      if (!hasArtistSubscription) {
+        // Show subscription modal for purchase
+        setModalArtist(item.artist);
+        setModalType("purchase");
+        setModalData(item);
+        setSubscribeModalOpen(true);
+        toast.error("Subscribe to this artist first to purchase!");
+        return;
+      }
     }
   }
 
@@ -381,6 +390,7 @@ const handlePurchaseClick = async (item, type) => {
       setProcessingPayment(false);
     }
   };
+
 
 
   // Handle Razorpay Checkout with proper success handling
