@@ -553,7 +553,7 @@ const handlePurchaseClick = async (item, type) => {
           </div>
           <div
             ref={scrollRefs.recent}
-            className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
+            className="flex sm:gap-4 gap-1 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
           >
             {songsStatus === "loading" && recentSongs.length === 0
               ? [...Array(10)].map((_, idx) => (
