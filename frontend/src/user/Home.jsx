@@ -294,8 +294,6 @@ const handlePlaySong = (song) => {
 
   // ✅ Then check subscription requirement
   if (song.accessType === "subscription") {
-    console.log(currentUser)
-    // Check if user has subscribed to this artist by looking in purchaseHistory
     const hasArtistSubscription = currentUser?.purchaseHistory?.some(
       purchase => 
         purchase.itemType === "artist-subscription" && 
