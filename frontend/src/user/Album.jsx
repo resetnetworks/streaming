@@ -254,16 +254,20 @@ export default function Album() {
    <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        <div className="min-h-screen text-white px-8 pt-10 pb-8">
-          {/* Header */}
+        {/* ✅ RESPONSIVE CONTAINER */}
+        <div className="min-h-screen text-white px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-10 pb-8 max-w-7xl mx-auto">
+          
+          {/* ✅ LEFT-ALIGNED RESPONSIVE HEADER */}
           {loading || !album || artists.length === 0 ? (
-            <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
-              <Skeleton width={232} height={232} className="rounded-lg" />
-              <div className="flex-1 flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 lg:gap-8 pb-6">
+              <div className="flex-shrink-0">
+                <Skeleton width={200} height={200} className="rounded-lg sm:w-[232px] sm:h-[232px]" />
+              </div>
+              <div className="flex-1 w-full">
                 <Skeleton width={80} height={18} />
-                <Skeleton width={300} height={36} />
-                <Skeleton width={400} height={16} />
-                <div className="flex gap-2 mt-4">
+                <Skeleton width="100%" height={36} className="mt-2 max-w-md" />
+                <Skeleton width="100%" height={16} className="mt-2 max-w-lg" />
+                <div className="flex flex-wrap gap-2 mt-4">
                   <Skeleton width={100} height={14} />
                   <Skeleton width={12} height={14} />
                   <Skeleton width={120} height={14} />
@@ -273,56 +277,64 @@ export default function Album() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
-              {album.coverImage ? (
-                <img
-                  src={album.coverImage}
-                  alt="Album Cover"
-                  className="w-[232px] h-[232px] object-cover rounded-lg shadow-lg"
-                />
-              ) : (
-                <div
-                  className={`w-[232px] h-[232px] ${artistColor} rounded-lg shadow-lg flex items-center justify-center text-white font-bold text-4xl`}
-                >
-                  {album.title ? album.title.charAt(0).toUpperCase() : "A"}
-                </div>
-              )}
-              <div>
-                <div className="text-sm font-bold tracking-widest uppercase opacity-80">
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 lg:gap-8 pb-6">
+              {/* ✅ RESPONSIVE ALBUM COVER */}
+              <div className="flex-shrink-0">
+                {album.coverImage ? (
+                  <img
+                    src={album.coverImage}
+                    alt="Album Cover"
+                    className="w-48 h-48 sm:w-56 sm:h-56 lg:w-[232px] lg:h-[232px] object-cover rounded-lg shadow-lg"
+                  />
+                ) : (
+                  <div
+                    className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-[232px] lg:h-[232px] ${artistColor} rounded-lg shadow-lg flex items-center justify-center text-white font-bold text-3xl sm:text-4xl`}
+                  >
+                    {album.title ? album.title.charAt(0).toUpperCase() : "A"}
+                  </div>
+                )}
+              </div>
+              
+              {/* ✅ LEFT-ALIGNED ALBUM INFO */}
+              <div className="flex-1 w-full">
+                <div className="text-xs sm:text-sm font-bold tracking-widest uppercase opacity-80">
                   Album
                 </div>
-                <h1 className="text-5xl md:text-6xl font-extrabold my-2">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold my-2 leading-tight">
                   {album.title}
                 </h1>
-                <p className="text-lg text-gray-400">{album.description}</p>
-                <div className="flex items-center gap-2 mt-4 flex-wrap text-sm md:text-base text-gray-300">
+                <p className="text-base sm:text-lg text-gray-400 mb-4 max-w-2xl">
+                  {album.description}
+                </p>
+                
+                {/* ✅ LEFT-ALIGNED ALBUM METADATA */}
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm lg:text-base text-gray-300">
                   <span className="font-semibold">{artistName}</span>
-                  <span className="text-xl">•</span>
-                  <span>{formatDate(album.releaseDate)}</span>
-                  <span className="text-xl">•</span>
-                  <span>{songs.length} songs</span>
-                  {/* ✅ ADD TOTAL DURATION */}
-                  <span className="text-xl">•</span>
-                  <span>{formatDuration(totalDuration)}</span>
+                  <span className="text-sm sm:text-xl">•</span>
+                  <span className="whitespace-nowrap">{formatDate(album.releaseDate)}</span>
+                  <span className="text-sm sm:text-xl">•</span>
+                  <span className="whitespace-nowrap">{songs.length} songs</span>
+                  <span className="text-sm sm:text-xl">•</span>
+                  <span className="whitespace-nowrap">{formatDuration(totalDuration)}</span>
                 </div>
                 
-                {/* ✅ UPDATED: Purchase Button OR Subscription Button */}
-                <div className="flex items-center gap-4 mt-6">
+                {/* ✅ LEFT-ALIGNED PURCHASE/SUBSCRIPTION BUTTONS */}
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 mt-4 sm:mt-6">
                   {/* Purchase Button for Paid Albums */}
                   {album.price > 0 && !isSubscriptionAlbum && (
                     <>
-                      <span className="text-lg font-semibold text-blue-400">
+                      <span className="text-base sm:text-lg font-semibold text-blue-400">
                         ₹{album.price}
                       </span>
                       {isAlbumPurchased ? (
-                        <span className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold">
+                        <span className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-full font-semibold text-sm sm:text-base">
                           Purchased
                         </span>
                       ) : (
                         <button
                           onClick={() => handlePurchaseClick(album, "album")}
                           disabled={processingPayment || paymentLoading}
-                          className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
+                          className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all duration-200 shadow-md text-sm sm:text-base ${
                             processingPayment || paymentLoading
                               ? "bg-gray-500 cursor-not-allowed text-gray-300"
                               : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -340,12 +352,12 @@ export default function Album() {
                   {/* ✅ NEW: Subscription Button for Subscription Albums */}
                   {isSubscriptionAlbum && getArtistSlug() && (
                     <>
-                      <span className="text-lg font-semibold text-blue-400">
+                      <span className="text-base sm:text-lg font-semibold text-blue-400">
                         Subscription
                       </span>
                       <button
                         onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+                        className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2 text-sm sm:text-base"
                       >
                         <span>View Artist</span>
                         <svg 
@@ -369,38 +381,43 @@ export default function Album() {
             </div>
           )}
 
-          {/* Song List */}
+          {/* ✅ RESPONSIVE SONG LIST */}
           {loading || !album || artists.length === 0 ? (
-            <div className="flex flex-col gap-4">
+            <div className="space-y-3 sm:space-y-4">
               {[...Array(5)].map((_, idx) => (
                 <div
                   key={`song-skeleton-${idx}`}
-                  className="flex items-center gap-4"
+                  className="flex items-center gap-3 sm:gap-4"
                 >
-                  <Skeleton width={50} height={50} className="rounded-full" />
-                  <div className="flex flex-col gap-1">
-                    <Skeleton width={160} height={14} />
-                    <Skeleton width={100} height={12} />
+                  <Skeleton width={30} height={30} className="rounded-full flex-shrink-0" />
+                  <Skeleton width={40} height={40} className="rounded-lg flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <Skeleton width="70%" height={16} className="mb-1" />
+                    <Skeleton width="50%" height={14} />
                   </div>
+                  <Skeleton width={60} height={24} className="rounded flex-shrink-0" />
                 </div>
               ))}
             </div>
           ) : songs.length === 0 ? (
-            <div className="text-center text-gray-400 mt-8 text-lg">
+            <div className="text-left text-gray-400 mt-8 text-base sm:text-lg">
               No songs in this album.
             </div>
           ) : (
-            <>
-              {/* ✅ SONGS WITH NUMBERING */}
+            <div className="w-full overflow-x-hidden space-y-2 sm:space-y-3">
+              {/* ✅ FULLY RESPONSIVE SONGS WITH NUMBERING */}
               {songs.map((song, index) => (
-                <div key={song._id} className="mb-4 flex items-center gap-4">
-                  {/* ✅ TRACK NUMBER ON LEFT */}
-                  <div className="w-8 text-center text-gray-400 font-medium">
+                <div 
+                  key={song._id} 
+                  className="flex items-center gap-2 sm:gap-3 lg:gap-4 w-full min-w-0"
+                >
+                  {/* ✅ RESPONSIVE TRACK NUMBER */}
+                  <div className="w-6 sm:w-8 text-center text-gray-400 font-medium flex-shrink-0 text-sm sm:text-base">
                     {index + 1}
                   </div>
                   
-                  {/* ✅ SONG COMPONENT */}
-                  <div className="flex-1">
+                  {/* ✅ RESPONSIVE SONG COMPONENT */}
+                  <div className="flex-1 min-w-0 w-full">
                     <SongList
                       songId={song._id}
                       img={song.coverImage || album.coverImage}
@@ -409,14 +426,16 @@ export default function Album() {
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
                       isSelected={selectedSong?._id === song._id}
-                      // ✅ UPDATED SONG PURCHASE WITH RAZORPAY
+                      // ✅ RESPONSIVE SONG PURCHASE BUTTON
                       price={
                         song.accessType === "purchase-only" && !isAlbumPurchased ? (
                           currentUser?.purchasedSongs?.includes(song._id) ? (
-                            "Purchased"
+                            <span className="text-xs sm:text-sm text-green-400 whitespace-nowrap">
+                              Purchased
+                            </span>
                           ) : (
                             <button
-                              className={`text-white text-xs px-2 py-1 rounded transition-colors ${
+                              className={`text-white text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded transition-colors whitespace-nowrap ${
                                 processingPayment || paymentLoading
                                   ? "bg-gray-500 cursor-not-allowed"
                                   : "bg-indigo-600 hover:bg-indigo-700"
@@ -426,39 +445,42 @@ export default function Album() {
                             >
                               {processingPayment || paymentLoading 
                                 ? "..." 
-                                : `Buy ₹${song.price}`
+                                : `₹${song.price}`
                               }
                             </button>
                           )
                         ) : isAlbumPurchased ? (
-                          "Included"
+                          <span className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">
+                            Included
+                          </span>
                         ) : (
-                          "Subs.."
+                          <span className="text-xs sm:text-sm text-blue-400 whitespace-nowrap">
+                            Subs..
+                          </span>
                         )
                       }
                     />
                   </div>
                 </div>
               ))}
-
-            </>
+            </div>
           )}
         </div>
 
-        {/* ✅ ADD LOADING OVERLAY */}
+        {/* ✅ RESPONSIVE LOADING OVERLAY */}
         {(processingPayment || paymentLoading) && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-lg p-6 sm:p-8 flex flex-col items-center gap-4 max-w-sm w-full mx-4">
+              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-500"></div>
               <div className="text-center">
-                <p className="text-white text-lg font-semibold">Processing Payment</p>
-                <p className="text-gray-300 text-sm mt-1">Please wait, do not close this window</p>
+                <p className="text-white text-base sm:text-lg font-semibold">Processing Payment</p>
+                <p className="text-gray-300 text-xs sm:text-sm mt-1">Please wait, do not close this window</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ✅ ADD SUCCESS TOAST ENHANCEMENT */}
+        {/* ✅ TOAST STYLING */}
         <style jsx="true" global="true">{`
           [data-sonner-toast] {
             background: rgb(31, 41, 55) !important;
