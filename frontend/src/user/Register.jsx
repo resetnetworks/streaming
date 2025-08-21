@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
 import axios from "../utills/axiosInstance";
+import BackgroundWrapper from "../components/BackgroundWrapper";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -112,8 +113,8 @@ const Register = () => {
           content="Create your MusicReset account to stream ambient, instrumental, and experimental tracks. Sign up for personalized playlists and immersive listening."
         />
       </Helmet>
-
-      <section className="w-full min-h-screen bg-image flex flex-col items-center">
+     <BackgroundWrapper>
+      <section className="w-full min-h-screen flex flex-col items-center">
         <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
         <div className="gradiant-line"></div>
 
@@ -251,6 +252,7 @@ const Register = () => {
           </p>
         </div>
       </section>
+      </BackgroundWrapper>
     </>
   );
 };

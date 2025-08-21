@@ -8,6 +8,7 @@ import { updatePreferredGenres, getMyProfile } from "../features/auth/authSlice"
 import { selectCurrentUser, selectIsAuthenticated } from "../features/auth/authSelectors";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import BackgroundWrapper from "../components/BackgroundWrapper";
 
 const tags = [
   {
@@ -252,7 +253,8 @@ const FavouriteGen = () => {
   };
 
   return (
-    <section className="bg-image min-h-screen w-full flex flex-col items-center text-white">
+    <BackgroundWrapper>
+    <section className="min-h-screen w-full flex flex-col items-center text-white">
       <IconHeader />
 
       <h1 className="md:text-4xl text-3xl text-center mt-6 px-2">
@@ -343,6 +345,7 @@ const FavouriteGen = () => {
         </button>
       </div>
     </section>
+    </BackgroundWrapper>
   );
 };
 

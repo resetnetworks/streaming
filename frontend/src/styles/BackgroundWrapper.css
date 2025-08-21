@@ -1,0 +1,228 @@
+/* background wrapper  */
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+.background-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #000000 0%, #011639 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.background-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, #000000 0%, #011639 100%);
+  background-attachment: fixed;
+}
+
+.background-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.5;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.1) 10px,
+      rgba(255, 255, 255, 0.1) 20px
+    );
+  mix-blend-mode: overlay;
+}
+
+/* ✅ SOLUTION: Width control + height clamping */
+.diagonal-overlay-1 {
+  position: absolute;
+  top: -200px;
+  left: -100px;
+  width: 100vw;
+  max-width: 1400px; /* ✅ Maximum width limit */
+  height: 40px;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(249, 249, 249, 0.98) 9%,
+    rgba(232, 232, 232, 0.91) 22%,
+    rgba(205, 205, 205, 0.81) 36%,
+    rgba(168, 168, 168, 0.66) 51%,
+    rgba(119, 119, 119, 0.47) 67%,
+    rgba(61, 61, 61, 0.24) 84%,
+    rgba(0, 0, 0, 0) 99%
+  );
+  transform: rotate(-15deg);
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); /* ✅ Clip overflow */
+  overflow: hidden; /* ✅ Hide overflow */
+}
+
+.diagonal-overlay-2 {
+  position: absolute;
+  top: -180px;
+  left: -180px;
+  width: 100vw;
+  max-width: 1400px; /* ✅ Maximum width limit */
+  height: 35px;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(251, 251, 251, 0.98) 13%,
+    rgba(239, 239, 239, 0.94) 25%,
+    rgba(219, 219, 219, 0.86) 38%,
+    rgba(191, 191, 191, 0.75) 50%,
+    rgba(155, 155, 155, 0.61) 62%,
+    rgba(111, 111, 111, 0.44) 75%,
+    rgba(59, 59, 59, 0.23) 87%,
+    rgba(0, 0, 0, 0) 99%
+  );
+  transform: rotate(-12deg);
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  overflow: hidden;
+}
+
+.diagonal-overlay-3 {
+  position: absolute;
+  bottom: 200px;
+  left: -200px;
+  width: 100vw;
+  max-width: 1400px; /* ✅ Maximum width limit */
+  height: 40px;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(249, 249, 249, 0.98) 9%,
+    rgba(232, 232, 232, 0.91) 22%,
+    rgba(205, 205, 205, 0.81) 36%,
+    rgba(168, 168, 168, 0.66) 51%,
+    rgba(119, 119, 119, 0.47) 67%,
+    rgba(61, 61, 61, 0.24) 84%,
+    rgba(0, 0, 0, 0) 99%
+  );
+  transform: rotate(-15deg);
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  overflow: hidden;
+}
+
+.diagonal-overlay-4 {
+  position: absolute;
+  bottom: 180px;
+  left: -180px;
+  width: 100vw;
+  max-width: 1400px; /* ✅ Maximum width limit */
+  height: 35px;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(251, 251, 251, 0.98) 13%,
+    rgba(239, 239, 239, 0.94) 25%,
+    rgba(219, 219, 219, 0.86) 38%,
+    rgba(191, 191, 191, 0.75) 50%,
+    rgba(155, 155, 155, 0.61) 62%,
+    rgba(111, 111, 111, 0.44) 75%,
+    rgba(59, 59, 59, 0.23) 87%,
+    rgba(0, 0, 0, 0) 99%
+  );
+  transform: rotate(-12deg);
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  overflow: hidden;
+}
+
+.pattern-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px, 30px 30px;
+  background-position: 0 0, 25px 25px;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ✅ UPDATED: Large screen fixes with max-width */
+@media (min-width: 1300px) {
+  .background-container {
+    overflow-y: visible; /* ✅ Allow natural scroll */
+  }
+  
+  .diagonal-overlay-1,
+  .diagonal-overlay-2,
+  .diagonal-overlay-3,
+  .diagonal-overlay-4,
+  .diagonal-overlay-5,
+  .diagonal-overlay-6 {
+    max-width: 1400px; /* ✅ Fixed max width */
+  }
+}
+
+/* ✅ ULTRA WIDE screens (1550px+) - strict control */
+@media (min-width: 1550px) {
+  .diagonal-overlay-1,
+  .diagonal-overlay-2,
+  .diagonal-overlay-3,
+  .diagonal-overlay-4,
+  .diagonal-overlay-5,
+  .diagonal-overlay-6 {
+    width: 1400px; /* ✅ Fixed width instead of 100vw */
+    max-width: 1400px;
+  }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .diagonal-overlay-1,
+  .diagonal-overlay-2,
+  .diagonal-overlay-3,
+  .diagonal-overlay-4,
+  .diagonal-overlay-5,
+  .diagonal-overlay-6 {
+    width: 110%;
+    max-width: none; /* ✅ Remove max-width on mobile */
+    left: -100px;
+    right: -100px;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1299px) {
+  .diagonal-overlay-1,
+  .diagonal-overlay-2,
+  .diagonal-overlay-3,
+  .diagonal-overlay-4,
+  .diagonal-overlay-5,
+  .diagonal-overlay-6 {
+    width: 105%;
+    max-width: none; /* ✅ Remove max-width on tablet */
+  }
+}

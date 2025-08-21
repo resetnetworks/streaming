@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet";
+import BackgroundWrapper from "../components/BackgroundWrapper";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +70,8 @@ const Login = () => {
         <meta name="description" content="Access your MusicReset account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
       </Helmet>
 
-      <section className="w-full min-h-screen bg-image flex flex-col items-center">
+      <BackgroundWrapper>
+      <section className="w-full min-h-screen flex flex-col items-center">
         <IconHeader />
 
         <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center">
@@ -170,6 +172,7 @@ const Login = () => {
           </p>
         </div>
       </section>
+      </BackgroundWrapper>
     </>
   );
 };
