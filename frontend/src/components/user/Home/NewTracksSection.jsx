@@ -26,15 +26,16 @@ const NewTracksSection = ({
     songs: recentSongs,
     loading,
     loadingMore,
-    pagination
-  } = useSongCache("recent", { limit: 10 });
+    pagination,
+    loadMore,
+    hasMore
+  } = useSongCache("recent", { limit: 20 }); // ✅ default 20 songs per page
 
+  // ✅ Infinite scroll hook
   const { lastElementRef } = useInfiniteScroll({
-    hasMore: pagination?.page < pagination?.totalPages,
+    hasMore,
     loading: loading || loadingMore,
-    onLoadMore: () => {
-      // Load more logic handled by useSongCache
-    }
+    onLoadMore: loadMore   // ✅ fix: ab naya data fetch hoga
   });
 
   const handleScroll = () => {
@@ -73,7 +74,7 @@ const NewTracksSection = ({
             ))
           : recentSongs.map((song, idx) => (
               <RecentPlays
-                ref={idx === recentSongs.length - 1 ? lastElementRef : null}
+                ref={idx === recentSongs.length - 1 ? lastElementRef : null} // ✅ last element observe hoga
                 key={song._id}
                 title={song.title}
                 price={getSongPriceDisplay(song, currentUser, onPurchaseClick, processingPayment, paymentLoading)}

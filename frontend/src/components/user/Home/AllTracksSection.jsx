@@ -1,19 +1,22 @@
-import React, { useState, useRef, useCallback } from "react";
-import { useSelector } from "react-redux";
+import React, { useRef, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { LuSquareChevronRight } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 
 import SongList from "../SongList";
-
 import { useSongCache } from "../../../hooks/useSongCache";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import { handlePlaySong } from "../../../utills/songHelpers";
 import { formatDuration } from "../../../utills/helperFunctions";
 
 const AllTracksSection = ({ 
-  onSubscribeRequired 
+  onSubscribeRequired,
+  onPurchaseClick,
+  processingPayment,
+  paymentLoading
 }) => {
+  const dispatch = useDispatch();
   const scrollRef = useRef(null);
   
   const currentUser = useSelector((state) => state.auth.user);
@@ -23,15 +26,15 @@ const AllTracksSection = ({
     songs: topSongs,
     loading,
     loadingMore,
-    pagination
-  } = useSongCache("top", { limit: 20 });
+    pagination,
+    loadMore,
+    hasMore
+  } = useSongCache("top", { limit: 20 }); // ✅ ab 20 songs per page
 
   const { lastElementRef } = useInfiniteScroll({
-    hasMore: pagination?.page < pagination?.totalPages,
+    hasMore,
     loading: loading || loadingMore,
-    onLoadMore: () => {
-      // Load more logic handled by useSongCache
-    }
+    onLoadMore: loadMore   // ✅ fix: infinite scroll ab loadMore call karega
   });
 
   const handleScroll = () => {
@@ -41,14 +44,14 @@ const AllTracksSection = ({
   };
 
   const onPlaySong = useCallback((song) => {
-    const result = handlePlaySong(song, currentUser);
+    const result = handlePlaySong(song, currentUser, dispatch);
     if (result.requiresSubscription) {
       onSubscribeRequired(song.artist, "play", song);
       toast.error("Subscribe to play this song!");
     }
-  }, [currentUser, onSubscribeRequired]);
+  }, [currentUser, dispatch, onSubscribeRequired]);
 
-  // Create chunks for grid layout
+  // ✅ chunk bana ke grid view ke liye
   const chunkSize = 5;
   const songColumns = [];
   for (let i = 0; i < topSongs.length; i += chunkSize) {
@@ -101,7 +104,7 @@ const AllTracksSection = ({
                   key={`column-${columnIndex}`}
                   ref={
                     columnIndex === songColumns.length - 1
-                      ? lastElementRef
+                      ? lastElementRef // ✅ last element observe ho raha hai
                       : null
                   }
                   className="flex flex-col gap-4 min-w-[400px]"
@@ -114,7 +117,7 @@ const AllTracksSection = ({
                       songName={song.title}
                       singerName={song.singer}
                       seekTime={formatDuration(song.duration)}
-                      onPlay={() => onPlaySong(song)}
+                      onPlay={() => onPlaySong(song)}   // ✅ ab ye play karega
                       isSelected={selectedSong?._id === song._id}
                     />
                   ))}

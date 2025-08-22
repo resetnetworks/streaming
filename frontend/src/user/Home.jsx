@@ -97,7 +97,18 @@ const Home = () => {
             paymentLoading={paymentLoading}
           />
 
-          <AllTracksSection />
+          <AllTracksSection 
+  onPurchaseClick={handlePurchaseClick}
+  onSubscribeRequired={(artist, type, data) => {
+    setModalArtist(artist);
+    setModalType(type);
+    setModalData(data);
+    setSubscribeModalOpen(true);
+  }}
+  processingPayment={processingPayment}
+  paymentLoading={paymentLoading}
+/>
+
         </div>
 
         <LoadingOverlay 

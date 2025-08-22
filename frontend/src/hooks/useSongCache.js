@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { 
   fetchAllSongs,
-  loadFromCache,
   setCachedData 
 } from "../features/songs/songSlice";
 import {
@@ -13,7 +12,8 @@ import {
 } from "../features/songs/songSelectors";
 
 export const useSongCache = (type, options = {}) => {
-  const { limit = 10 } = options;
+  // ✅ default 30 songs per page
+  const { limit = 30 } = options;  
   const dispatch = useDispatch();
 
   const [page, setPage] = useState(1);
@@ -69,8 +69,8 @@ export const useSongCache = (type, options = {}) => {
             pagination: result.payload.pagination || { 
               page: pageNum, 
               limit, 
-              total: 0, 
-              totalPages: 1 
+              total: result.payload.total || 0, 
+              totalPages: Math.ceil((result.payload.total || 0) / limit) || 1
             }
           }));
         }
@@ -106,7 +106,7 @@ export const useSongCache = (type, options = {}) => {
     loading: status === "loading" && songs.length === 0,
     loadingMore,
     pagination,
-    loadMore,
+    loadMore,   // ✅ Infinite scroll trigger karega
     hasMore: pagination ? page < pagination.totalPages : false
   };
 };
