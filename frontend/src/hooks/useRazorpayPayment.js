@@ -40,7 +40,7 @@ export const useRazorpayPayment = () => {
         order_id: order.id,
         name: 'musicreset',
         description: `Purchase ${type}: ${item.title || item.name}`,
-        image: 'icon.png',
+        image: `${window.location.origin}/icon.png`,
         handler: function (response) {
           if (currentRazorpayInstance) {
             try {
