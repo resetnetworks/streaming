@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LuSquareChevronRight, LuSquareChevronLeft } from 'react-icons/lu';
 import { BsSoundwave } from "react-icons/bs";
-import { FaRobot } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
 import { toast } from "sonner";
 
@@ -39,7 +38,6 @@ const getSongPriceDisplay = (
     return <span className="text-blue-300 text-xs font-semibold">Subs..</span>;
   }
   if (song.accessType === "purchase-only" && song.price > 0) {
-    // Open modal like NewTracksSection, and prevent bubbling
     return (
       <button
         className={`text-white text-xs mt-2 px-3 py-1 rounded-full transition-colors ${
@@ -72,12 +70,22 @@ const MatchingGenreSection = ({
 }) => {
   const dispatch = useDispatch();
   const scrollRef = useRef(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [debugInfo, setDebugInfo] = useState({});
+
+  // Keep a stable, append-only merged list to avoid blinking
+  const [merged, setMerged] = useState([]); // [{...song}]
+  const [pageLoaded, setPageLoaded] = useState(new Set()); // track which pages loaded
+  const [loadingMore, setLoadingMore] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+
+  // Preserve scroll position across renders/appends
+  const pendingScrollLeftRef = useRef(null);
+
+  // Current page and pagination
+  const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
 
-  const songs = useSelector(selectMatchingGenreSongs);
+  // Redux selectors
+  const reduxSongs = useSelector(selectMatchingGenreSongs); // may be last fetched set
   const matchingGenres = useSelector(selectMatchingGenres);
   const status = useSelector(selectSongsStatus);
   const pagination = useSelector(selectMatchingGenrePagination);
@@ -89,38 +97,91 @@ const MatchingGenreSection = ({
   const isPageCached = useSelector(selectIsMatchingGenrePageCached(currentPage));
   const cachedPageData = useSelector(selectMatchingGenreCachedPageData(currentPage));
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      if (!currentUser) return;
+  // Unique by _id helper
+  const mergeUnique = useCallback((prev, next) => {
+    const seen = new Set(prev.map(s => s._id));
+    const out = [...prev];
+    for (const s of next) {
+      if (!seen.has(s._id)) {
+        seen.add(s._id);
+        out.push(s);
+      }
+    }
+    return out;
+  }, []);
 
-      if (isPageCached && isCacheValid && cachedPageData && hasInitialLoad) {
-        dispatch(loadMatchingGenreFromCache(currentPage));
+  // Load a page with cache awareness
+  const loadPage = useCallback(async (page) => {
+    if (!currentUser) return;
+    if (pageLoaded.has(page)) return; // already merged this page into local
+    setLoadingMore(true);
+
+    try {
+      if (isPageCached && isCacheValid && cachedPageData && page === currentPage && hasInitialLoad) {
+        // hydrate from redux cache to local merged
+        const fromCache = cachedPageData.songs || [];
+        setMerged(prev => mergeUnique(prev, fromCache));
+        setPageLoaded(prev => new Set(prev).add(page));
+        setLoadingMore(false);
         return;
       }
 
-      try {
-        const result = await dispatch(fetchSongsMatchingUserGenres({ 
-          page: currentPage, 
-          limit 
-        })).unwrap();
-        
-        setDebugInfo(result);
-        setHasInitialLoad(true);
+      const result = await dispatch(fetchSongsMatchingUserGenres({ page, limit })).unwrap();
 
-        dispatch(setMatchingGenreCachedData({
-          page: currentPage,
-          songs: result.songs,
-          pagination: result.pagination,
-          matchingGenres: result.matchingGenres
-        }));
-      } catch (error) {
-        setDebugInfo({ error: error.toString() });
-        toast.error(`Failed to load songs: ${error}`);
-      }
-    };
+      // write page to redux cache
+      dispatch(setMatchingGenreCachedData({
+        page,
+        songs: result.songs,
+        pagination: result.pagination,
+        matchingGenres: result.matchingGenres
+      }));
 
-    fetchSongs();
-  }, [dispatch, currentPage, currentUser, isPageCached, isCacheValid, cachedPageData, hasInitialLoad]);
+      // append to local merged
+      setMerged(prev => mergeUnique(prev, result.songs));
+      setPageLoaded(prev => new Set(prev).add(page));
+      setHasInitialLoad(true);
+    } catch (error) {
+      toast.error(`Failed to load songs: ${error}`);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [
+    currentUser,
+    pageLoaded,
+    isPageCached,
+    isCacheValid,
+    cachedPageData,
+    currentPage,
+    hasInitialLoad,
+    dispatch,
+    limit,
+    mergeUnique
+  ]);
+
+  // Initial load
+  useEffect(() => {
+    setMerged([]); // reset when user changes
+    setPageLoaded(new Set());
+    setCurrentPage(1);
+    setHasInitialLoad(false);
+  }, [currentUser]);
+
+  useEffect(() => {
+    loadPage(currentPage);
+  }, [currentPage, loadPage]);
+
+  // Preserve scrollLeft around merges
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    if (pendingScrollLeftRef.current == null) return;
+    const target = pendingScrollLeftRef.current;
+    pendingScrollLeftRef.current = null;
+    // Use rAF to ensure DOM updated
+    requestAnimationFrame(() => {
+      if (!scrollRef.current) return;
+      scrollRef.current.scrollLeft = target;
+    });
+  }, [merged]);
 
   const onPlaySong = useCallback((song) => {
     const result = handlePlaySong(song, currentUser, dispatch);
@@ -130,7 +191,7 @@ const MatchingGenreSection = ({
     }
   }, [currentUser, dispatch, onSubscribeRequired]);
 
-  const handleScroll = (direction) => {
+  const handleScrollArrows = (direction) => {
     if (!scrollRef.current) return;
     const scrollAmount = 200;
     scrollRef.current.scrollBy({
@@ -139,25 +200,60 @@ const MatchingGenreSection = ({
     });
   };
 
-  const handleLoadMore = () => {
-    if (currentPage < pagination.totalPages) {
-      setCurrentPage(prev => prev + 1);
+  // IntersectionObserver for infinite load (sentinel)
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const root = scrollRef.current || null;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const last = entries[0];
+        if (last.isIntersecting && !loadingMore && pagination && currentPage < (pagination.totalPages || Infinity)) {
+          // preserve current scrollLeft before appending
+          if (scrollRef.current) {
+            pendingScrollLeftRef.current = scrollRef.current.scrollLeft;
+          }
+          setCurrentPage(p => p + 1);
+        }
+      },
+      {
+        root,
+        rootMargin: '200px', // prefetch a bit earlier
+        threshold: 0.1
+      }
+    );
+
+    io.observe(sentinelRef.current);
+    return () => io.disconnect();
+  }, [loadingMore, pagination, currentPage]);
+
+  // Also support manual infinite load via scroll end
+  const onHorizontalScroll = (e) => {
+    const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
+    // Save position so back navigation feels natural
+    // No state update to avoid re-render; ref only
+    // If near end, trigger next page
+    const nearEnd = scrollLeft + clientWidth >= scrollWidth - 10;
+    if (nearEnd && !loadingMore && pagination && currentPage < (pagination.totalPages || Infinity)) {
+      pendingScrollLeftRef.current = scrollLeft;
+      setCurrentPage(p => p + 1);
     }
   };
 
+  // Loading skeleton for very first load only
   if (!currentUser) {
     return (
       <div className="w-full py-6">
         <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-700/30 rounded-xl p-6 text-center backdrop-blur-sm">
-          <FaRobot className="text-4xl text-blue-400 mx-auto mb-3" />
-          <h3 className="text-white text-lg font-semibold mb-2">AI Personalized Music</h3>
+          <div className="text-white text-lg font-semibold mb-2">AI Personalized Music</div>
           <p className="text-gray-400">Please log in to see personalized song recommendations</p>
         </div>
       </div>
     );
   }
 
-  if (status === 'failed') {
+  if (status === 'failed' && !hasInitialLoad) {
     return (
       <div className="w-full py-6">
         <div className="bg-red-900/20 border border-red-700/30 rounded-xl p-6 text-center backdrop-blur-sm">
@@ -174,14 +270,12 @@ const MatchingGenreSection = ({
     );
   }
 
-  if (status === 'loading' && songs.length === 0) {
+  if ((status === 'loading' && !hasInitialLoad) || (merged.length === 0 && status === 'loading')) {
     return (
       <section className="w-full py-6">
         <div className="w-full flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg">
-              <FaRobot className="text-white text-xl" />
-            </div>
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg" />
             <div>
               <Skeleton width={200} height={24} baseColor="#1a2238" highlightColor="#243056" />
               <Skeleton width={150} height={16} baseColor="#1a2238" highlightColor="#243056" />
@@ -210,14 +304,13 @@ const MatchingGenreSection = ({
       {/* Header */}
       <div className="w-full flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
-         <div className="p-2 rounded-lg backdrop-blur-md border border-white/10">
-  <img
-    src={`${window.location.origin}/icon.png`}
-    alt="AI Recommendations"
-    className="w-6 h-6"
-  />
-</div>
-
+          <div className="p-2 rounded-lg backdrop-blur-md border border-white/10">
+            <img
+              src={`${window.location.origin}/icon.png`}
+              alt="AI Recommendations"
+              className="w-6 h-6"
+            />
+          </div>
           <div>
             <h2 className="md:text-xl text-lg font-semibold text-white">
               Created For You
@@ -230,14 +323,16 @@ const MatchingGenreSection = ({
 
         <div className="hidden md:flex items-center gap-2">
           <button
-            onClick={() => handleScroll('left')}
+            onClick={() => handleScrollArrows('left')}
             className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+            type="button"
           >
             <LuSquareChevronLeft />
           </button>
           <button
-            onClick={() => handleScroll('right')}
+            onClick={() => handleScrollArrows('right')}
             className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+            type="button"
           >
             <LuSquareChevronRight />
           </button>
@@ -257,14 +352,9 @@ const MatchingGenreSection = ({
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar"
           style={{ scrollSnapType: "x mandatory" }}
-          onScroll={(e) => {
-            const { scrollLeft, scrollWidth, clientWidth } = e.target;
-            if (scrollLeft + clientWidth >= scrollWidth - 10) {
-              handleLoadMore();
-            }
-          }}
+          onScroll={onHorizontalScroll}
         >
-          {songs.map((song, index) => (
+          {merged.map((song, index) => (
             <MatchingGenreSong
               key={`matching-song-${song._id}-${index}`}
               title={song.title}
@@ -273,7 +363,6 @@ const MatchingGenreSection = ({
               image={song.coverImage || song.album?.coverImage}
               duration={song.duration}
               genre={song.genre}
-              // Important: pass a node for price with stopPropagation and modal open
               price={getSongPriceDisplay(
                 song, 
                 currentUser, 
@@ -288,11 +377,15 @@ const MatchingGenreSection = ({
             />
           ))}
 
-          {status === "loading" && songs.length > 0 && (
+          {/* Loading spinner while appending more */}
+          {loadingMore && (
             <div className="flex-shrink-0 flex items-center justify-center min-w-[100px]">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           )}
+
+          {/* Sentinel for IntersectionObserver */}
+          <div ref={sentinelRef} className="w-1 h-1" />
         </div>
       </div>
     </section>

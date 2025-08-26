@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { FaTimes, FaMusic, FaCloudUploadAlt, FaSearch } from 'react-icons/fa';
+import { FaTimes, FaMusic, FaCloudUploadAlt } from 'react-icons/fa';
 import { MdAudiotrack } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
 import { getAlbumsByArtist } from '../../features/albums/albumsSlice';
 import { toast } from 'sonner';
+import FixedGenreSelector from './FixedGenreSelector';
 
 const SongFormModal = ({
   isOpen,
@@ -16,6 +17,61 @@ const SongFormModal = ({
   const dispatch = useDispatch();
   const [albums, setAlbums] = useState(initialAlbums);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Fixed, pre-seeded list of allowed genres
+const fixedGenres = [
+  // core electronic and experimental
+  'electronic',
+  'idm',
+  'ambient',
+  'experimental',
+  'avant garde',
+  'noise',
+  'sound art',
+  'soundscapes',
+  'electronica',
+  'field recordings',
+
+  // dance/electronic styles
+  'techno',
+  'electro',
+  'dance',
+  'ebm',
+  'industrial',
+
+  // cinematic and soundtrack
+  'soundtrack',
+
+  // downtempo and chill
+  'downtempo',
+  'chill',
+  'chillout',
+  'lofi',
+
+  // instruments/arrangements
+  'instrumental',
+  'piano',
+  'guitar',
+  'orchestral',
+  'cinematic',
+
+  // legacy/other
+  'classical',
+  'classical crossover',
+  'jazz',
+
+  // existing long-tail
+  'synthwave',
+  'house',
+  'trance',
+  'post-rock',
+  'shoegaze',
+  'drone',
+];
+
+
+
+  const [genresArray, setGenresArray] = useState([]);
 
   const [newSong, setNewSong] = useState({
     title: '',
@@ -50,9 +106,19 @@ const SongFormModal = ({
     album.title.toLowerCase().includes(searchTermAlbum.toLowerCase())
   );
 
+  // Initialize edit mode + genresArray from songToEdit
   useEffect(() => {
     if (songToEdit) {
       setIsEditMode(true);
+      const initialGenres = Array.isArray(songToEdit.genre)
+        ? songToEdit.genre
+        : (songToEdit.genre || '')
+            .split(',')
+            .map(g => g.trim())
+            .filter(Boolean);
+
+      setGenresArray(initialGenres);
+
       setNewSong({
         title: songToEdit.title,
         artist: songToEdit.artist?.name || '',
@@ -62,7 +128,7 @@ const SongFormModal = ({
         duration: songToEdit.duration || 0,
         coverImage: songToEdit.coverImage || null,
         audioFile: songToEdit.audioFile || null,
-        genre: Array.isArray(songToEdit.genre) ? songToEdit.genre.join(', ') : songToEdit.genre || '',
+        genre: initialGenres.join(', '),
         price: songToEdit.price || '',
         accessType: songToEdit.accessType || 'subscription',
         albumOnly: songToEdit.albumOnly || false,
@@ -70,8 +136,7 @@ const SongFormModal = ({
       });
       setSearchTermArtist(songToEdit.artist?.name || '');
       setSearchTermAlbum(songToEdit.album?.title || '');
-      
-      // Load albums for the artist if editing
+
       if (songToEdit.artist?._id) {
         dispatch(getAlbumsByArtist({ artistId: songToEdit.artist._id, limit: 100 }))
           .unwrap()
@@ -81,23 +146,29 @@ const SongFormModal = ({
       }
     } else {
       setIsEditMode(false);
+      setGenresArray([]);
     }
   }, [songToEdit, dispatch]);
 
+  // Fetch albums on artist change
   useEffect(() => {
     if (newSong.artistId) {
       dispatch(getAlbumsByArtist({ artistId: newSong.artistId, limit: 100 }))
         .unwrap()
-        .then((result) => {
-          setAlbums(result.albums);
-        })
-        .catch(() => {
-          setAlbums([]);
-        });
+        .then((result) => setAlbums(result.albums))
+        .catch(() => setAlbums([]));
     } else {
       setAlbums(initialAlbums);
     }
-  }, [newSong.artistId, dispatch]);
+  }, [newSong.artistId, dispatch, initialAlbums]);
+
+  // Reflect genresArray into newSong.genre (comma-separated)
+  useEffect(() => {
+    setNewSong(prev => ({
+      ...prev,
+      genre: genresArray.join(', ')
+    }));
+  }, [genresArray]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -140,9 +211,7 @@ const SongFormModal = ({
     setShowArtistDropdown(false);
   };
 
-  // ✅ ENHANCED: Auto-fill release date from selected album
   const handleAlbumSelect = (album) => {
-    // Format album release date to YYYY-MM-DD for input field
     const albumReleaseDate = album.releaseDate 
       ? new Date(album.releaseDate).toISOString().split('T')[0]
       : newSong.releaseDate;
@@ -151,13 +220,12 @@ const SongFormModal = ({
       ...prev,
       album: album.title,
       albumId: album._id,
-      releaseDate: albumReleaseDate, // ✅ Auto-fill release date from album
+      releaseDate: albumReleaseDate,
     }));
     
     setSearchTermAlbum(album.title);
     setShowAlbumDropdown(false);
 
-    // ✅ Show toast notification to user about auto-filled date
     if (album.releaseDate) {
       const formattedDate = new Date(album.releaseDate).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -180,14 +248,12 @@ const SongFormModal = ({
       return;
     }
 
-    // Only require audio file for new songs
     if (!isEditMode && !audioFile) {
       toast.error('Audio file is required');
       setIsSubmitting(false);
       return;
     }
 
-    // Validation for purchase-only songs
     if (accessType === 'purchase-only' && !albumOnly && (!price || parseFloat(price) <= 0)) {
       toast.error('Purchase-only songs must have a valid price (unless album-only)');
       setIsSubmitting(false);
@@ -202,21 +268,17 @@ const SongFormModal = ({
     formData.append('releaseDate', newSong.releaseDate);
     formData.append('accessType', newSong.accessType);
     formData.append('albumOnly', newSong.albumOnly);
-    
-    // FIXED: Always append price for purchase-only songs
+
     if (newSong.accessType === 'purchase-only') {
       if (newSong.albumOnly) {
-        // For album-only songs, set price to 0
         formData.append('price', 0);
       } else {
-        // For single purchase songs, use the entered price
         formData.append('price', parseFloat(newSong.price) || 0);
       }
     }
 
-    const genres = newSong.genre
-      ? newSong.genre.split(',').map((g) => g.trim()).filter((g) => g)
-      : [];
+    // Use genresArray to append genre[] accurately
+    const genres = Array.isArray(genresArray) ? genresArray : [];
     genres.forEach((g) => formData.append('genre[]', g));
 
     if (newSong.coverImage) formData.append('coverImage', newSong.coverImage);
@@ -230,6 +292,7 @@ const SongFormModal = ({
     }
   };
 
+  // Reset on close
   useEffect(() => {
     if (!isOpen) {
       setNewSong({
@@ -252,10 +315,11 @@ const SongFormModal = ({
       setShowArtistDropdown(false);
       setShowAlbumDropdown(false);
       setAlbums(initialAlbums);
+      setGenresArray([]);
       if (coverImageRef.current) coverImageRef.current.value = '';
       if (audioFileRef.current) audioFileRef.current.value = '';
     }
-  }, [isOpen]);
+  }, [isOpen, initialAlbums]);
 
   if (!isOpen) return null;
 
@@ -311,7 +375,18 @@ const SongFormModal = ({
                   <div
                     key={artist._id}
                     className="px-4 py-2 hover:bg-gray-600 cursor-pointer"
-                    onClick={() => handleArtistSelect(artist)}
+                    onClick={() => {
+                      setNewSong((prev) => ({
+                        ...prev,
+                        artist: artist.name,
+                        artistId: artist._id,
+                        album: '',
+                        albumId: '',
+                      }));
+                      setSearchTermArtist(artist.name);
+                      setSearchTermAlbum('');
+                      setShowArtistDropdown(false);
+                    }}
                   >
                     {artist.name}
                   </div>
@@ -323,9 +398,7 @@ const SongFormModal = ({
           {/* Album */}
           <div className="col-span-1 relative">
             <label className="text-gray-300">
-              Album 
-              {/* ✅ NEW: Visual indicator that release date will be auto-filled */}
-              <span className="text-xs text-blue-400 ml-1">(auto-fills release date)</span>
+              Album <span className="text-xs text-blue-400 ml-1">(auto-fills release date)</span>
             </label>
             <input
               type="text"
@@ -349,7 +422,6 @@ const SongFormModal = ({
                   >
                     <div className="flex justify-between items-center">
                       <span>{album.title}</span>
-                      {/* ✅ NEW: Show release date in dropdown */}
                       {album.releaseDate && (
                         <span className="text-xs text-gray-400">
                           {new Date(album.releaseDate).toLocaleDateString('en-US', {
@@ -380,7 +452,23 @@ const SongFormModal = ({
             </select>
           </div>
 
-          {/* Album Only Checkbox (Only for purchase-only) */}
+          {/* Release Date (moved next to Access Type) */}
+          <div className="col-span-1">
+            <label className="text-gray-300">
+              Release Date {newSong.albumId && (
+                <span className="text-xs text-green-400 ml-1">(from album)</span>
+              )}
+            </label>
+            <input
+              type="date"
+              name="releaseDate"
+              value={newSong.releaseDate}
+              onChange={handleChange}
+              className="w-full bg-gray-700 text-white px-4 py-2 rounded"
+            />
+          </div>
+
+          {/* Album Only Checkbox */}
           {newSong.accessType === 'purchase-only' && (
             <div className="col-span-1">
               <label className="text-gray-300 flex items-center">
@@ -396,7 +484,7 @@ const SongFormModal = ({
             </div>
           )}
 
-          {/* Price (Only for purchase-only and not albumOnly) */}
+          {/* Price */}
           {newSong.accessType === 'purchase-only' && !newSong.albumOnly && (
             <div className="col-span-1">
               <label className="text-gray-300">Price*</label>
@@ -413,37 +501,6 @@ const SongFormModal = ({
             </div>
           )}
 
-          {/* Genre */}
-          <div className="col-span-1">
-            <label className="text-gray-300">Genre (comma-separated)</label>
-            <input
-              type="text"
-              name="genre"
-              required
-              value={newSong.genre}
-              onChange={handleChange}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-            />
-          </div>
-
-          {/* Release Date */}
-          <div className="col-span-1">
-            <label className="text-gray-300">
-              Release Date 
-              {/* ✅ NEW: Visual indicator when date is auto-filled */}
-              {newSong.albumId && (
-                <span className="text-xs text-green-400 ml-1">(from album)</span>
-              )}
-            </label>
-            <input
-              type="date"
-              name="releaseDate"
-              value={newSong.releaseDate}
-              onChange={handleChange}
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-            />
-          </div>
-
           {/* Cover Image */}
           <div className="col-span-2">
             <label className="text-gray-300">Cover Image</label>
@@ -459,9 +516,7 @@ const SongFormModal = ({
                       alt="Preview"
                       className="h-32 w-32 object-cover rounded mb-2"
                     />
-                    <span className="text-sm text-gray-400">
-                      Current cover image
-                    </span>
+                    <span className="text-sm text-gray-400">Current cover image</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
@@ -470,9 +525,7 @@ const SongFormModal = ({
                       alt="Preview"
                       className="h-32 w-32 object-cover rounded mb-2"
                     />
-                    <span className="text-sm text-gray-400">
-                      {newSong.coverImage.name}
-                    </span>
+                    <span className="text-sm text-gray-400">{newSong.coverImage.name}</span>
                   </div>
                 )
               ) : (
@@ -505,16 +558,12 @@ const SongFormModal = ({
                 typeof newSong.audioFile === 'string' ? (
                   <div className="flex flex-col items-center">
                     <MdAudiotrack className="text-3xl text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-400">
-                      Current audio file
-                    </span>
+                    <span className="text-sm text-gray-400">Current audio file</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
                     <MdAudiotrack className="text-3xl text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-400">
-                      {newSong.audioFile.name}
-                    </span>
+                    <span className="text-sm text-gray-400">{newSong.audioFile.name}</span>
                   </div>
                 )
               ) : (
@@ -532,6 +581,21 @@ const SongFormModal = ({
                 disabled={isSubmitting}
               />
             </div>
+          </div>
+
+          {/* Genre: moved near bottom */}
+          <div className="col-span-2">
+            <label className="text-gray-300">Genre</label>
+            <FixedGenreSelector
+              value={genresArray}
+              onChange={setGenresArray}
+              options={fixedGenres}
+              disabled={isSubmitting}
+              maxTags={6}
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Select from predefined genres. Creation is disabled.
+            </p>
           </div>
 
           {/* Submit */}
