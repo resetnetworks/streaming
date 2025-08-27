@@ -17,6 +17,7 @@ import MatchingGenreSection from "../components/user/Home/MatchingGenreSection";
 import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
 import { resetPaymentState } from "../features/payments/paymentSlice";
+import GenreSection from "../components/user/Home/GenreSection";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -52,7 +53,6 @@ const Home = () => {
 
   const handleNavigateToArtist = () => {
     handleSubscribeModalClose();
-    console.log(modalArtist)
     if (modalArtist?.slug) {
       navigate(`/artist/${modalArtist.slug}`);
     }
@@ -76,7 +76,22 @@ const Home = () => {
           <NewTracksSection
             onPurchaseClick={handlePurchaseClick}
             onSubscribeRequired={(artist, type, data) => {
-              // Open modal for both subscription-gated play and purchase-only buy
+              setModalArtist(artist);
+              setModalType(type);   // "play" | "purchase"
+              setModalData(data);   // song object
+              setSubscribeModalOpen(true);
+            }}
+            processingPayment={processingPayment}
+            paymentLoading={paymentLoading}
+          />
+
+          <GenreSection />
+
+    {/* Matching Genre: UPDATED to pass modal + payment handlers */}
+          <MatchingGenreSection
+            onPurchaseClick={handlePurchaseClick}
+            onSubscribeRequired={(artist, type, data) => {
+              // Enables purchase modal for genre cards as well
               setModalArtist(artist);
               setModalType(type);   // "play" | "purchase"
               setModalData(data);   // song object
@@ -91,20 +106,10 @@ const Home = () => {
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
           />
+      
 
-          {/* Matching Genre: UPDATED to pass modal + payment handlers */}
-          <MatchingGenreSection
-            onPurchaseClick={handlePurchaseClick}
-            onSubscribeRequired={(artist, type, data) => {
-              // Enables purchase modal for genre cards as well
-              setModalArtist(artist);
-              setModalType(type);   // "play" | "purchase"
-              setModalData(data);   // song object
-              setSubscribeModalOpen(true);
-            }}
-            processingPayment={processingPayment}
-            paymentLoading={paymentLoading}
-          />
+
+
 
           <SimilarArtistSection
             onPurchaseClick={handlePurchaseClick}

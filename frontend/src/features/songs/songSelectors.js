@@ -16,7 +16,7 @@ export const selectLikedSongsTotal = (state) => state.songs?.likedSongs?.total |
 export const selectLikedSongsPage = (state) => state.songs?.likedSongs?.page || 1;
 export const selectLikedSongsPages = (state) => state.songs?.likedSongs?.pages || 1;
 
-// ✅ NEW: Matching genre songs selectors WITH CACHE (FIXED)
+// ✅ NEW: Matching genre songs selectors WITH CACHE (existing)
 export const selectMatchingGenreSongs = (state) => state.songs?.matchingGenreSongs?.songs || [];
 export const selectMatchingGenres = (state) => state.songs?.matchingGenreSongs?.matchingGenres || [];
 export const selectMatchingGenreSongsTotal = (state) => state.songs?.matchingGenreSongs?.total || 0;
@@ -30,9 +30,8 @@ export const selectCurrentPage = (state) => state.songs?.pagination?.page || 1;
 
 // Album and Artist selectors
 export const selectSongsByAlbum = (state, albumId) => state.songs?.songsByAlbum?.[albumId] || [];
-
 export const selectSongsByArtist = createSelector(
-  [selectSongsState, (_, artistId) => artistId],
+  [state => state.songs, (_, artistId) => artistId],
   (songs, artistId) => songs?.songsByArtist?.[artistId] || {}
 );
 
@@ -42,17 +41,6 @@ export const selectLastFetchTime = (state) => state.songs?.lastFetchTime || null
 export const selectCachedPages = (state) => state.songs?.cachedPages || [];
 export const selectCachedData = (state) => state.songs?.cachedData || {};
 
-// ✅ Cache selectors for full song list
-export const selectIsFullListCached = (state) => state.songs?.isFullListCached || false;
-export const selectFullListLastFetchTime = (state) => state.songs?.fullListLastFetchTime || null;
-
-// ✅ NEW: Cache selectors for matching genre songs
-export const selectIsMatchingGenreCached = (state) => state.songs?.isMatchingGenreCached || false;
-export const selectMatchingGenreLastFetchTime = (state) => state.songs?.matchingGenreLastFetchTime || null;
-export const selectMatchingGenreCachedPages = (state) => state.songs?.matchingGenreCachedPages || [];
-export const selectMatchingGenreCachedData = (state) => state.songs?.matchingGenreCachedData || {};
-
-// ✅ Cache utility selectors for paginated songs
 export const selectIsPageCached = (page) => (state) => {
   const cachedPages = state.songs?.cachedPages || [];
   return cachedPages.includes(page);
@@ -66,6 +54,8 @@ export const selectIsCacheValid = (state) => {
 };
 
 // ✅ Full list cache validity checker
+export const selectIsFullListCached = (state) => state.songs?.isFullListCached || false;
+export const selectFullListLastFetchTime = (state) => state.songs?.fullListLastFetchTime || null;
 export const selectIsFullListCacheValid = (state) => {
   const lastFetch = state.songs?.fullListLastFetchTime;
   if (!lastFetch) return false;
@@ -73,7 +63,12 @@ export const selectIsFullListCacheValid = (state) => {
   return Date.now() - lastFetch < cacheValidDuration;
 };
 
-// ✅ NEW: Matching genre cache utility selectors
+// ✅ NEW: Matching genre cache utility selectors (existing)
+export const selectIsMatchingGenreCached = (state) => state.songs?.isMatchingGenreCached || false;
+export const selectMatchingGenreLastFetchTime = (state) => state.songs?.matchingGenreLastFetchTime || null;
+export const selectMatchingGenreCachedPages = (state) => state.songs?.matchingGenreCachedPages || [];
+export const selectMatchingGenreCachedData = (state) => state.songs?.matchingGenreCachedData || {};
+
 export const selectIsMatchingGenrePageCached = (page) => (state) => {
   const cachedPages = state.songs?.matchingGenreCachedPages || [];
   return cachedPages.includes(page);
@@ -94,4 +89,33 @@ export const selectCachedPageData = (page) => (state) => {
 export const selectMatchingGenreCachedPageData = (page) => (state) => {
   const cachedData = state.songs?.matchingGenreCachedData || {};
   return cachedData[page] || null;
+};
+
+// ✅ NEW: Per-genre live selectors
+export const selectGenreSongsGenre = (state) => state.songs?.genreSongs?.genre || null;
+export const selectGenreSongs = (state) => state.songs?.genreSongs?.songs || [];
+export const selectGenreSongsTotal = (state) => state.songs?.genreSongs?.total || 0;
+export const selectGenreSongsPage = (state) => state.songs?.genreSongs?.page || 1;
+export const selectGenreSongsPages = (state) => state.songs?.genreSongs?.pages || 1;
+
+// ✅ NEW: Per-genre cache selectors
+export const selectGenreCacheState = (state) => state.songs?.genreCache || { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
+
+export const selectIsGenreCacheValid = (state) => {
+  const lastFetch = state.songs?.genreCache?.lastFetchTime;
+  if (!lastFetch) return false;
+  const cacheValidDuration = 5 * 60 * 1000; // 5 minutes
+  return Date.now() - lastFetch < cacheValidDuration;
+};
+
+export const selectIsGenrePageCached = (genre, page) => (state) => {
+  const g = (genre || '').toString().trim().toLowerCase();
+  const pages = state.songs?.genreCache?.cachedPagesByGenre?.[g] || [];
+  return pages.includes(page);
+};
+
+export const selectGenreCachedPageData = (genre, page) => (state) => {
+  const g = (genre || '').toString().trim().toLowerCase();
+  const data = state.songs?.genreCache?.cachedDataByGenre?.[g] || {};
+  return data[page] || null;
 };

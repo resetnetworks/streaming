@@ -153,6 +153,33 @@ export const fetchSongsByArtist = createAsyncThunk(
   }
 );
 
+// ✅ NEW: Fetch Songs By Genre with cache
+export const fetchSongsByGenre = createAsyncThunk(
+  'songs/fetchSongsByGenre',
+  async ({ genre, page = 1, limit = 20 }, thunkAPI) => {
+    try {
+      const res = await axios.get(`/songs/genre/${encodeURIComponent(genre)}?page=${page}&limit=${limit}`);
+      return {
+        genre,
+        songs: res.data.songs || [],
+        total: res.data.total || 0,
+        page: res.data.page || page,
+        pages: res.data.pages || 1,
+        pagination: {
+          page: res.data.page || page,
+          limit,
+          total: res.data.total || 0,
+          totalPages: res.data.pages || 1,
+        },
+      };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || 'Fetching songs by genre failed'
+      );
+    }
+  }
+);
+
 // ✅ ENHANCED Initial State with proper defaults and safety
 const initialState = {
   songs: [],
@@ -167,10 +194,19 @@ const initialState = {
     pages: 1,
   },
   
-  // ✅ NEW: Songs matching user genres WITH PROPER INITIALIZATION
+  // ✅ NEW: Songs matching user genres
   matchingGenreSongs: {
     songs: [],
     matchingGenres: [],
+    total: 0,
+    page: 1,
+    pages: 1,
+  },
+
+  // ✅ NEW: Songs by a specific genre (active view)
+  genreSongs: {
+    genre: null,
+    songs: [],
     total: 0,
     page: 1,
     pages: 1,
@@ -211,6 +247,13 @@ const initialState = {
     total: 0,
     totalPages: 0,
   },
+
+  // ✅ NEW: per-genre cache (multiple genres independently cached)
+  genreCache: {
+    lastFetchTime: null,
+    cachedPagesByGenre: {},     // { [genreLower]: number[] }
+    cachedDataByGenre: {},      // { [genreLower]: { [page]: { songs, pagination } } }
+  },
 };
 
 // ✅ Helper function to ensure object exists
@@ -239,6 +282,20 @@ const ensureMatchingGenreState = (state) => {
     state.matchingGenreCachedPages = [];
   }
 };
+
+// ✅ NEW: helpers for the per-genre cache branch
+const ensureGenreCacheState = (state) => {
+  if (!state.genreSongs) {
+    state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
+  }
+  if (!state.genreCache) {
+    state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
+  }
+  if (!state.genreCache.cachedPagesByGenre) state.genreCache.cachedPagesByGenre = {};
+  if (!state.genreCache.cachedDataByGenre) state.genreCache.cachedDataByGenre = {};
+};
+
+const normalizeGenreKey = (g) => (g || '').toString().trim().toLowerCase();
 
 // Slice
 const songSlice = createSlice({
@@ -329,7 +386,7 @@ const songSlice = createSlice({
       };
     },
     
-    // ✅ Clear all caches (INCLUDING MATCHING GENRE CACHE)
+    // ✅ Clear all caches (INCLUDING MATCHING GENRE + PER-GENRE CACHE)
     clearAllCaches: (state) => {
       // Clear regular paginated cache
       state.allSongs = [];
@@ -360,6 +417,10 @@ const songSlice = createSlice({
         total: 0,
         totalPages: 0,
       };
+      // Clear per-genre cache
+      ensureGenreCacheState(state);
+      state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
+      state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
     },
     
     setCachedData: (state, action) => {
@@ -381,7 +442,7 @@ const songSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Matching genre cache management with safety checks
+    // ✅ Matching genre cache management
     setMatchingGenreCachedData: (state, action) => {
       const { page, songs, pagination, matchingGenres } = action.payload;
       ensureMatchingGenreState(state);
@@ -414,6 +475,38 @@ const songSlice = createSlice({
     loadFullListFromCache: (state) => {
       state.status = 'succeeded';
     },
+
+    // ✅ NEW: per-genre cache management
+    setGenreCachedData: (state, action) => {
+      ensureGenreCacheState(state);
+      const { genre, page, songs, pagination } = action.payload;
+      const key = normalizeGenreKey(genre);
+
+      if (!state.genreCache.cachedDataByGenre[key]) state.genreCache.cachedDataByGenre[key] = {};
+      state.genreCache.cachedDataByGenre[key][page] = { songs: songs || [], pagination: pagination || {} };
+
+      if (!state.genreCache.cachedPagesByGenre[key]) state.genreCache.cachedPagesByGenre[key] = [];
+      if (!state.genreCache.cachedPagesByGenre[key].includes(page)) {
+        state.genreCache.cachedPagesByGenre[key].push(page);
+      }
+
+      state.genreCache.lastFetchTime = Date.now();
+    },
+
+    loadGenreFromCache: (state, action) => {
+      ensureGenreCacheState(state);
+      const { genre, page } = action.payload;
+      const key = normalizeGenreKey(genre);
+      const cached = state.genreCache.cachedDataByGenre[key]?.[page];
+      if (cached) {
+        state.genreSongs.genre = genre;
+        state.genreSongs.songs = cached.songs || [];
+        state.genreSongs.page = page;
+        state.genreSongs.pages = cached.pagination?.totalPages || 1;
+        state.genreSongs.total = cached.pagination?.total || 0;
+        state.status = 'succeeded';
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -433,6 +526,10 @@ const songSlice = createSlice({
         state.matchingGenreCachedPages = [];
         state.matchingGenreCachedData = {};
         state.matchingGenreLastFetchTime = null;
+
+        // also clear per-genre cache
+        state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
+        state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
       })
       
       .addCase(updateSong.fulfilled, (state, action) => {
@@ -454,7 +551,7 @@ const songSlice = createSlice({
         state.status = 'succeeded';
         state.message = 'Song updated successfully';
         
-        // ✅ Clear all caches when song is updated
+        // ✅ Clear caches
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
@@ -464,6 +561,10 @@ const songSlice = createSlice({
         state.matchingGenreCachedPages = [];
         state.matchingGenreCachedData = {};
         state.matchingGenreLastFetchTime = null;
+
+        // per-genre
+        state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
+        state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
       })
       
       .addCase(deleteSong.fulfilled, (state, action) => {
@@ -478,7 +579,7 @@ const songSlice = createSlice({
         state.status = 'succeeded';
         state.message = 'Song deleted successfully';
         
-        // ✅ Clear all caches when song is deleted
+        // ✅ Clear caches
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
@@ -488,6 +589,10 @@ const songSlice = createSlice({
         state.matchingGenreCachedPages = [];
         state.matchingGenreCachedData = {};
         state.matchingGenreLastFetchTime = null;
+
+        // per-genre
+        state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
+        state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
       })
       
       .addCase(fetchAllSongs.pending, (state) => {
@@ -570,13 +675,9 @@ const songSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchSongsMatchingUserGenres.fulfilled, (state, action) => {
-        
         const { songs, matchingGenres, total, page, pages, pagination } = action.payload;
-        
-        // ✅ SAFETY CHECK: Ensure all objects exist
         ensureMatchingGenreState(state);
         
-        // ✅ Safely update the state
         state.matchingGenreSongs.songs = songs || [];
         state.matchingGenreSongs.matchingGenres = matchingGenres || [];
         state.matchingGenreSongs.total = total || 0;
@@ -589,7 +690,6 @@ const songSlice = createSlice({
           totalPages: pages || 1,
         };
         
-        // ✅ Cache the matching genre data
         state.isMatchingGenreCached = true;
         state.matchingGenreLastFetchTime = Date.now();
         
@@ -633,6 +733,40 @@ const songSlice = createSlice({
         };
         state.status = 'succeeded';
       })
+
+      // ✅ NEW: per-genre fulfilled/rejected
+      .addCase(fetchSongsByGenre.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchSongsByGenre.fulfilled, (state, action) => {
+        ensureGenreCacheState(state);
+        const { genre, songs, total, page, pages, pagination } = action.payload;
+
+        state.genreSongs.genre = genre || null;
+        state.genreSongs.songs = songs || [];
+        state.genreSongs.total = total || 0;
+        state.genreSongs.page = page || 1;
+        state.genreSongs.pages = pages || 1;
+
+        const key = normalizeGenreKey(genre);
+        if (!state.genreCache.cachedDataByGenre[key]) state.genreCache.cachedDataByGenre[key] = {};
+        state.genreCache.cachedDataByGenre[key][page || 1] = {
+          songs: songs || [],
+          pagination: pagination || { page: page || 1, limit: 20, total: total || 0, totalPages: pages || 1 },
+        };
+        if (!state.genreCache.cachedPagesByGenre[key]) state.genreCache.cachedPagesByGenre[key] = [];
+        if (!state.genreCache.cachedPagesByGenre[key].includes(page || 1)) {
+          state.genreCache.cachedPagesByGenre[key].push(page || 1);
+        }
+        state.genreCache.lastFetchTime = Date.now();
+
+        state.status = 'succeeded';
+      })
+      .addCase(fetchSongsByGenre.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
       
       .addMatcher(
         (action) => action.type.startsWith('songs/') && action.type.endsWith('/pending'),
@@ -651,7 +785,6 @@ const songSlice = createSlice({
   },
 });
 
-// ✅ Exports (ADDED NEW MATCHING GENRE CACHE ACTIONS)
 export const { 
   clearSongMessage, 
   clearLikedSongs, 
@@ -665,7 +798,11 @@ export const {
   loadFromCache,
   setMatchingGenreCachedData,
   loadMatchingGenreFromCache,
-  loadFullListFromCache
+  loadFullListFromCache,
+
+  // NEW
+  setGenreCachedData,
+  loadGenreFromCache,
 } = songSlice.actions;
 
 export default songSlice.reducer;

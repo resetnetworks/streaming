@@ -1,0 +1,365 @@
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import {
+  fetchSongsByGenre,
+  setGenreCachedData,
+  loadGenreFromCache,
+} from "../features/songs/songSlice";
+import {
+  selectSongsStatus,
+  selectGenreSongs,
+  selectGenreSongsPages,
+  selectGenreSongsTotal,
+  selectIsGenreCacheValid,
+  selectIsGenrePageCached,
+  selectGenreCachedPageData,
+} from "../features/songs/songSelectors";
+import UserHeader from "../components/user/UserHeader";
+import GenreSongRow from "../components/user/GenreSongRow";
+import SubscribeModal from "../components/user/SubscribeModal";
+import LoadingOverlay from "../components/user/Home/LoadingOverlay";
+
+// Local static assets map for fallback titles (image removed)
+const genreAssets = {
+  electronic: { label: "Electronic" },
+  ambient: { label: "Ambient" },
+  idm: { label: "IDM" },
+  experimental: { label: "Experimental" },
+  "avant-garde": { label: "Avant Garde" },
+  noise: { label: "Noise" },
+  downtempo: { label: "Downtempo" },
+  soundtrack: { label: "Soundtrack" },
+  industrial: { label: "Industrial" },
+  ebm: { label: "EBM" },
+  electro: { label: "Electro" },
+  techno: { label: "Techno" },
+  dance: { label: "Dance" },
+  electronica: { label: "Electronica" },
+  "sound-art": { label: "Sound Art" },
+  jazz: { label: "Jazz" },
+  classical: { label: "Classical" },
+  "classical-crossover": { label: "Classical Crossover" },
+  soundscapes: { label: "Soundscapes" },
+  "field-recordings": { label: "Field Recordings" },
+};
+
+const toGenreKey = (v) =>
+  (v || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/%20/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]/g, "");
+
+const GenrePage = ({
+  onSubscribeRequired,
+  onPurchaseClick,
+  processingPayment,
+  paymentLoading,
+  onPlaySong,
+}) => {
+  const { genre: rawParam } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const currentUser = useSelector((s) => s.auth.user);
+
+  // Modal state
+  const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
+  const [modalArtist, setModalArtist] = useState(null);
+  const [modalType, setModalType] = useState(null); // "play" | "purchase" | "genre"
+  const [modalData, setModalData] = useState(null); // song or genre object
+
+  // Paging state
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const limit = 20;
+
+  const status = useSelector(selectSongsStatus);
+  const songs = useSelector(selectGenreSongs);
+  const totalPages = useSelector(selectGenreSongsPages);
+  const total = useSelector(selectGenreSongsTotal);
+
+  // Derive display title and header label
+  const { displayTitle, headerLabel } = useMemo(() => {
+    let decoded = "";
+    try {
+      decoded = decodeURIComponent(rawParam || "");
+    } catch {
+      decoded = rawParam || "";
+    }
+    const key = toGenreKey(decoded);
+
+    const fromStateTitle = location.state?.title;
+
+    const titleCase = decoded
+      .toLowerCase()
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+    const mapped = genreAssets[key];
+
+    return {
+      displayTitle: fromStateTitle || titleCase,
+      headerLabel: fromStateTitle || mapped?.label || titleCase,
+    };
+  }, [location.state, rawParam]);
+
+  // Cache selectors
+  const isCacheValid = useSelector(selectIsGenreCacheValid);
+  const isPageCached = useSelector(selectIsGenrePageCached(displayTitle, page));
+  const cachedPageData = useSelector(selectGenreCachedPageData(displayTitle, page));
+
+  // Reset page on genre change
+  useEffect(() => {
+    setPage(1);
+  }, [displayTitle]);
+
+  // Load page (cache-first)
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!displayTitle) return;
+
+      if (isPageCached && isCacheValid && cachedPageData) {
+        dispatch(loadGenreFromCache({ genre: displayTitle, page }));
+        return;
+      }
+
+      const result = await dispatch(
+        fetchSongsByGenre({ genre: displayTitle, page, limit })
+      ).unwrap();
+
+      if (cancelled) return;
+
+      dispatch(
+        setGenreCachedData({
+          genre: displayTitle,
+          page: result.page,
+          songs: result.songs,
+          pagination: result.pagination,
+        })
+      );
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [displayTitle, page, isPageCached, isCacheValid, cachedPageData, dispatch]);
+
+  const loadingInitial = status === "loading" && songs.length === 0;
+
+  // Modal helpers
+  const openSubscribeModal = useCallback((artist, type, data) => {
+    setModalArtist(artist);
+    setModalType(type);
+    setModalData(data);
+    setSubscribeModalOpen(true);
+  }, []);
+
+  const handleSubscribeModalClose = () => {
+    setSubscribeModalOpen(false);
+    setModalType(null);
+    setModalArtist(null);
+    setModalData(null);
+  };
+
+  const handleNavigateToArtist = () => {
+    handleSubscribeModalClose();
+    if (modalArtist?.slug) {
+      navigate(`/artist/${modalArtist.slug}`);
+    }
+  };
+
+  const handleRequireSubscribe = useCallback(
+    (artist, type, data) => {
+      openSubscribeModal(artist, type, data);
+      onSubscribeRequired?.(artist, type, data);
+    },
+    [onSubscribeRequired, openSubscribeModal]
+  );
+
+  const handlePurchase = useCallback(
+    (item) => {
+      onPurchaseClick?.(item);
+    },
+    [onPurchaseClick]
+  );
+
+  const handlePlay = useCallback(
+    (song) => {
+      if (onPlaySong) return onPlaySong(song);
+
+      const purchased = currentUser?.purchasedSongs?.includes(song._id);
+      const needsSub = song.accessType === "subscription";
+      const needsPurchase =
+        song.accessType === "purchase-only" && !purchased && song.price > 0;
+
+      if (needsSub) {
+        handleRequireSubscribe(song.artist, "play", song);
+        return;
+      }
+      if (needsPurchase) {
+        handleRequireSubscribe(song.artist, "purchase", song);
+        return;
+      }
+    },
+    [currentUser, onPlaySong, handleRequireSubscribe]
+  );
+
+  const getSeekTime = (song) => song.durationLabel || song.duration || "";
+
+  // Infinite scroll
+  const sentinelRef = useRef(null);
+  const canLoadMore = totalPages && page < totalPages;
+
+  useEffect(() => {
+    if (!canLoadMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        const entry = entries[0];
+        if (!entry.isIntersecting) return;
+        if (loadingMore) return;
+        if (status === "loading") return;
+
+        setLoadingMore(true);
+        const nextPage = page + 1;
+
+        try {
+          const result = await dispatch(
+            fetchSongsByGenre({ genre: displayTitle, page: nextPage, limit })
+          ).unwrap();
+
+          dispatch(
+            setGenreCachedData({
+              genre: displayTitle,
+              page: result.page,
+              songs: result.songs,
+              pagination: result.pagination,
+            })
+          );
+
+          setPage(nextPage);
+        } catch (e) {
+          // optional toast
+        } finally {
+          setLoadingMore(false);
+        }
+      },
+      { root: null, rootMargin: "200px 0px", threshold: 0 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [canLoadMore, displayTitle, dispatch, limit, loadingMore, page, status]);
+
+  return (
+    <>
+      <UserHeader />
+
+      {/* Full-width header with centered text and animated pattern */}
+      <div className="w-full">
+        <div className="relative w-full h-40 sm:h-52 md:h-64 lg:h-72 overflow-hidden bg-black flex items-center justify-center text-center">
+          {/* Subtle radial glow behind text */}
+          <div className="pointer-events-none absolute inset-0 opacity-50 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22)_0%,rgba(0,0,0,0.0)_55%)]" />
+          {/* Animated diagonal line pattern */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_2px,transparent_2px,transparent_8px)]"
+            style={{
+              animation: "patternPan 18s linear infinite",
+              backgroundSize: "auto",
+              backgroundPosition: "0 0",
+            }}
+          />
+          {/* Bottom blue fade (matches card vibe) */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-[#10153e8f] to-[#0E43CA]" />
+
+          {/* Centered title and count */}
+          <div className="relative z-10 px-4">
+            <h1 className="text-white font-semibold text-2xl sm:text-3xl md:text-4xl leading-tight">
+              {headerLabel}
+            </h1>
+            <p className="text-white/85 text-xs sm:text-sm mt-1">{total} tracks</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Inject keyframes for the mild motion */}
+      <style>{`
+        @keyframes patternPan {
+          0%   { transform: translate3d(0,0,0); }
+          50%  { transform: translate3d(-3%, -3%, 0); }
+          100% { transform: translate3d(0,0,0); }
+        }
+      `}</style>
+
+      {/* Content with padding */}
+      <div className="w-full px-4 py-4">
+        {loadingInitial ? (
+          <div className="space-y-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={`sk-${i}`} className="h-12 bg-gray-800 rounded animate-pulse" />
+            ))}
+          </div>
+        ) : songs.length === 0 ? (
+          <div className="text-center text-gray-400 py-12">No tracks found in this genre.</div>
+        ) : (
+          <>
+            <div className="divide-y divide-gray-800 rounded-lg overflow-hidden border border-gray-800">
+              {songs.map((song) => (
+                <GenreSongRow
+                  key={song._id}
+                  song={song}
+                  seekTime={getSeekTime(song)}
+                  isSelected={false}
+                  onPlay={(s) => handlePlay(s)}
+                  onSubscribeRequired={(artist, type, data) =>
+                    handleRequireSubscribe(artist, type, data)
+                  }
+                  onPurchaseClick={onPurchaseClick}
+                  processingPayment={processingPayment}
+                  paymentLoading={paymentLoading}
+                />
+              ))}
+            </div>
+
+            {/* Infinite scroll sentinel */}
+            {canLoadMore && (
+              <div ref={sentinelRef} className="w-full py-4 flex justify-center">
+                {loadingMore && <div className="w-40 h-8 bg-gray-800 rounded animate-pulse" />}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Overlay matching Home UX */}
+      {typeof processingPayment !== "undefined" &&
+        typeof paymentLoading !== "undefined" && (
+          <LoadingOverlay show={processingPayment || paymentLoading} />
+        )}
+
+      {/* Central subscribe/purchase modal */}
+      <SubscribeModal
+        open={subscribeModalOpen}
+        artist={modalArtist}
+        type={modalType}
+        itemData={modalData}
+        onClose={handleSubscribeModalClose}
+        onNavigate={() => {
+          handleSubscribeModalClose();
+          if (modalArtist?.slug) navigate(`/artist/${modalArtist.slug}`);
+        }}
+      />
+    </>
+  );
+};
+
+export default GenrePage;

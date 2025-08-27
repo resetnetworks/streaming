@@ -142,6 +142,17 @@ function App() {
                 }
               />
               <Route
+                path="/genre/:genre"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.Genre />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
                 path="/artists"
                 element={
                   <RedirectedProtectedRoute

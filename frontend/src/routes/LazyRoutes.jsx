@@ -20,6 +20,7 @@ export const PaymentHistory = lazy(() => import("../user/PaymentHistory"));
 export const DataDeletion = lazy(() => import("../user/DataDeletion"));
 export const PrivacyPolicy = lazy(() => import("../user/PrivacyPolicy"));
 export const SocialLoginCallback = lazy(() => import("../user/SocialLoginCallback"));
+export const Genre = lazy(() => import("../user/Genre"));
 
 
 // Admin pages routes
