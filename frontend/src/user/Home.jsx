@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,8 @@ import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
 import { resetPaymentState } from "../features/payments/paymentSlice";
 import GenreSection from "../components/user/Home/GenreSection";
+
+import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -58,6 +61,45 @@ const Home = () => {
     }
   };
 
+  // Central decision: show modal or bypass based on purchaseHistory
+  const handleSubscribeDecision = (artist, type, data) => {
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+
+    if (type === "purchase") {
+      if (alreadySubscribed) {
+        // Directly go to payment flow when the user already has artist-subscription
+        handlePurchaseClick(data);
+        return;
+      }
+      // Not subscribed -> open modal to subscribe + purchase
+      setModalArtist(artist);
+      setModalType(type);
+      setModalData(data);
+      setSubscribeModalOpen(true);
+      return;
+    }
+
+    if (type === "play") {
+      if (alreadySubscribed) {
+        // Allow play without modal
+        setSubscribeModalOpen(false);
+        return;
+      }
+      // Not subscribed -> show subscribe modal
+      setModalArtist(artist);
+      setModalType(type);
+      setModalData(data);
+      setSubscribeModalOpen(true);
+      return;
+    }
+
+    // Fallback: open modal if type is unknown
+    setModalArtist(artist);
+    setModalType(type);
+    setModalData(data);
+    setSubscribeModalOpen(true);
+  };
+
   return (
     <>
       <Helmet>
@@ -72,14 +114,11 @@ const Home = () => {
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
-          {/* New Tracks: already wired */}
+          {/* New Tracks */}
           <NewTracksSection
             onPurchaseClick={handlePurchaseClick}
             onSubscribeRequired={(artist, type, data) => {
-              setModalArtist(artist);
-              setModalType(type);   // "play" | "purchase"
-              setModalData(data);   // song object
-              setSubscribeModalOpen(true);
+              handleSubscribeDecision(artist, type, data);
             }}
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
@@ -87,15 +126,11 @@ const Home = () => {
 
           <GenreSection />
 
-    {/* Matching Genre: UPDATED to pass modal + payment handlers */}
+          {/* Matching Genre */}
           <MatchingGenreSection
             onPurchaseClick={handlePurchaseClick}
             onSubscribeRequired={(artist, type, data) => {
-              // Enables purchase modal for genre cards as well
-              setModalArtist(artist);
-              setModalType(type);   // "play" | "purchase"
-              setModalData(data);   // song object
-              setSubscribeModalOpen(true);
+              handleSubscribeDecision(artist, type, data);
             }}
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
@@ -106,18 +141,11 @@ const Home = () => {
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
           />
-      
-
-
-
 
           <SimilarArtistSection
             onPurchaseClick={handlePurchaseClick}
             onSubscribeRequired={(artist, type, data) => {
-              setModalArtist(artist);
-              setModalType(type);
-              setModalData(data);
-              setSubscribeModalOpen(true);
+              handleSubscribeDecision(artist, type, data);
             }}
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
@@ -126,10 +154,7 @@ const Home = () => {
           <AllTracksSection
             onPurchaseClick={handlePurchaseClick}
             onSubscribeRequired={(artist, type, data) => {
-              setModalArtist(artist);
-              setModalType(type);
-              setModalData(data);
-              setSubscribeModalOpen(true);
+              handleSubscribeDecision(artist, type, data);
             }}
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}

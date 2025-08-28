@@ -1,3 +1,4 @@
+// src/components/user/Home/NewTracksSection.jsx
 import React, { useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
@@ -9,6 +10,7 @@ import { useSongCache } from "../../../hooks/useSongCache";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import { setSelectedSong, play } from "../../../features/playback/playerSlice";
 import { handlePlaySong } from "../../../utills/songHelpers";
+import { hasArtistSubscriptionInPurchaseHistory } from "../../../utils/subscriptions"; // NEW
 
 const NewTracksSection = ({ 
   onPurchaseClick, 
@@ -49,6 +51,7 @@ const NewTracksSection = ({
   const onPlaySong = useCallback((song) => {
     const result = handlePlaySong(song, currentUser, dispatch);
     if (result.requiresSubscription) {
+      // Parent decides modal vs bypass using purchaseHistory rule
       onSubscribeRequired(song.artist, "play", song);
       toast.error("Subscribe to play this song!");
     }
@@ -143,7 +146,7 @@ const getSongPriceDisplay = (
   }
 
   if (song.accessType === "purchase-only" && song.price > 0) {
-    // Open modal instead of direct purchase; prevent bubbling to card click
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist); // NEW
     return (
       <button
         className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
@@ -153,7 +156,15 @@ const getSongPriceDisplay = (
         }`}
         onClick={(e) => {
           e.stopPropagation();
-          onSubscribeRequired?.(song.artist, "purchase", song);
+          if (processingPayment || paymentLoading) return;
+
+          if (alreadySubscribed) {
+            // Skip modal and go straight to payment flow
+            onPurchaseClick?.(song);
+          } else {
+            // Open subscribe modal
+            onSubscribeRequired?.(song.artist, "purchase", song);
+          }
         }}
         disabled={processingPayment || paymentLoading}
         type="button"
