@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import debounce from "lodash.debounce";
 
 const btnBase =
-  "action-button inline-flex items-center justify-center text-[10px] sm:text-xs h-7 w-[96px] px-2.5 rounded font-semibold leading-[14px] whitespace-nowrap disabled:bg-gray-600 transition-colors";
+  "action-button inline-flex items-center justify-center text-[10px] sm:text-xs h-7 w-[96px] px-2.5 rounded font-semibold leading-[14] whitespace-nowrap disabled:bg-gray-600 transition-colors";
 
 const AccessChip = ({
   song,
@@ -52,7 +52,7 @@ const AccessChip = ({
           if (processingPayment || paymentLoading) return;
 
           if (alreadySubscribed) {
-            onPurchaseClick?.(song, "song"); // direct payment
+            onPurchaseClick?.(song, "song"); // bypass modal
           } else {
             onSubscribeRequired?.(song.artist, "purchase", song);
           }
@@ -121,17 +121,12 @@ const GenreSongRow = ({
   const handleRowClick = (e) => {
     if (e.target.closest(".action-button")) return;
     if (needsSubscription) {
-      if (alreadySubscribed) {
-        // allow normal play
-        onPlay?.(song);
-        return;
-      }
       onSubscribeRequired?.(song.artist, "play", song);
       return;
     }
     if (needsPurchase) {
       if (alreadySubscribed) {
-        onPurchaseClick?.(song, "song");
+        onPurchaseClick?.(song, "song"); // pass type
       } else {
         onSubscribeRequired?.(song.artist, "purchase", song);
       }
