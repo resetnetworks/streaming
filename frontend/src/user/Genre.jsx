@@ -192,6 +192,11 @@ const GenrePage = ({
         song.accessType === "purchase-only" && !purchased && song.price > 0;
 
       if (needsSub) {
+        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+        if (alreadySubscribed) {
+          // allow play silently
+          return;
+        }
         handleRequireSubscribe(song.artist, "play", song);
         return;
       }
@@ -215,7 +220,7 @@ const GenrePage = ({
     const observer = new IntersectionObserver(
       async (entries) => {
         const entry = entries;
-        if (!entry.isIntersecting) return;
+        if (!entry?.isIntersecting) return;
         if (loadingMore) return;
         if (status === "loading") return;
 
@@ -309,7 +314,7 @@ const GenrePage = ({
                     onPlay={(s) => handlePlay(s)}
                     onSubscribeRequired={(artist, type, data) => {
                       if (type === "purchase" && alreadySubscribed) {
-                        onPurchaseClick?.(data, "song"); // pass type
+                        onPurchaseClick?.(data, "song");
                         return;
                       }
                       setModalArtist(artist);
@@ -317,7 +322,7 @@ const GenrePage = ({
                       setModalData(data);
                       setSubscribeModalOpen(true);
                     }}
-                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")} // pass type
+                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")}
                     processingPayment={processingPayment}
                     paymentLoading={paymentLoading}
                     purchased={purchased}
