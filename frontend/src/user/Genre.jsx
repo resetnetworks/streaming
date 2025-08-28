@@ -19,8 +19,8 @@ import UserHeader from "../components/user/UserHeader";
 import GenreSongRow from "../components/user/GenreSongRow";
 import SubscribeModal from "../components/user/SubscribeModal";
 import LoadingOverlay from "../components/user/Home/LoadingOverlay";
+import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 
-// Local static assets map for fallback titles (image removed)
 const genreAssets = {
   electronic: { label: "Electronic" },
   ambient: { label: "Ambient" },
@@ -83,7 +83,6 @@ const GenrePage = ({
   const totalPages = useSelector(selectGenreSongsPages);
   const total = useSelector(selectGenreSongsTotal);
 
-  // Derive display title and header label
   const { displayTitle, headerLabel } = useMemo(() => {
     let decoded = "";
     try {
@@ -183,13 +182,6 @@ const GenrePage = ({
     [onSubscribeRequired, openSubscribeModal]
   );
 
-  const handlePurchase = useCallback(
-    (item) => {
-      onPurchaseClick?.(item);
-    },
-    [onPurchaseClick]
-  );
-
   const handlePlay = useCallback(
     (song) => {
       if (onPlaySong) return onPlaySong(song);
@@ -211,8 +203,6 @@ const GenrePage = ({
     [currentUser, onPlaySong, handleRequireSubscribe]
   );
 
-  const getSeekTime = (song) => song.durationLabel || song.duration || "";
-
   // Infinite scroll
   const sentinelRef = useRef(null);
   const canLoadMore = totalPages && page < totalPages;
@@ -224,7 +214,7 @@ const GenrePage = ({
 
     const observer = new IntersectionObserver(
       async (entries) => {
-        const entry = entries[0];
+        const entry = entries;
         if (!entry.isIntersecting) return;
         if (loadingMore) return;
         if (status === "loading") return;
@@ -247,8 +237,7 @@ const GenrePage = ({
           );
 
           setPage(nextPage);
-        } catch (e) {
-          // optional toast
+        } catch {
         } finally {
           setLoadingMore(false);
         }
@@ -264,12 +253,10 @@ const GenrePage = ({
     <>
       <UserHeader />
 
-      {/* Full-width header with centered text and animated pattern */}
+      {/* Header */}
       <div className="w-full">
         <div className="relative w-full h-40 sm:h-52 md:h-64 lg:h-72 overflow-hidden bg-black flex items-center justify-center text-center">
-          {/* Subtle radial glow behind text */}
           <div className="pointer-events-none absolute inset-0 opacity-50 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22)_0%,rgba(0,0,0,0.0)_55%)]" />
-          {/* Animated diagonal line pattern */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_2px,transparent_2px,transparent_8px)]"
             style={{
@@ -278,10 +265,7 @@ const GenrePage = ({
               backgroundPosition: "0 0",
             }}
           />
-          {/* Bottom blue fade (matches card vibe) */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-[#10153e8f] to-[#0E43CA]" />
-
-          {/* Centered title and count */}
           <div className="relative z-10 px-4">
             <h1 className="text-white font-semibold text-2xl sm:text-3xl md:text-4xl leading-tight">
               {headerLabel}
@@ -291,7 +275,6 @@ const GenrePage = ({
         </div>
       </div>
 
-      {/* Inject keyframes for the mild motion */}
       <style>{`
         @keyframes patternPan {
           0%   { transform: translate3d(0,0,0); }
@@ -300,7 +283,7 @@ const GenrePage = ({
         }
       `}</style>
 
-      {/* Content with padding */}
+      {/* Content */}
       <div className="w-full px-4 py-4">
         {loadingInitial ? (
           <div className="space-y-2">
@@ -313,24 +296,37 @@ const GenrePage = ({
         ) : (
           <>
             <div className="divide-y divide-gray-800 rounded-lg overflow-hidden border border-gray-800">
-              {songs.map((song) => (
-                <GenreSongRow
-                  key={song._id}
-                  song={song}
-                  seekTime={getSeekTime(song)}
-                  isSelected={false}
-                  onPlay={(s) => handlePlay(s)}
-                  onSubscribeRequired={(artist, type, data) =>
-                    handleRequireSubscribe(artist, type, data)
-                  }
-                  onPurchaseClick={onPurchaseClick}
-                  processingPayment={processingPayment}
-                  paymentLoading={paymentLoading}
-                />
-              ))}
+              {songs.map((song) => {
+                const purchased = currentUser?.purchasedSongs?.includes(song._id);
+                const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+
+                return (
+                  <GenreSongRow
+                    key={song._id}
+                    song={song}
+                    seekTime={song.durationLabel || song.duration || ""}
+                    isSelected={false}
+                    onPlay={(s) => handlePlay(s)}
+                    onSubscribeRequired={(artist, type, data) => {
+                      if (type === "purchase" && alreadySubscribed) {
+                        onPurchaseClick?.(data, "song"); // pass type
+                        return;
+                      }
+                      setModalArtist(artist);
+                      setModalType(type);
+                      setModalData(data);
+                      setSubscribeModalOpen(true);
+                    }}
+                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")} // pass type
+                    processingPayment={processingPayment}
+                    paymentLoading={paymentLoading}
+                    purchased={purchased}
+                    alreadySubscribed={alreadySubscribed}
+                  />
+                );
+              })}
             </div>
 
-            {/* Infinite scroll sentinel */}
             {canLoadMore && (
               <div ref={sentinelRef} className="w-full py-4 flex justify-center">
                 {loadingMore && <div className="w-40 h-8 bg-gray-800 rounded animate-pulse" />}
@@ -340,13 +336,11 @@ const GenrePage = ({
         )}
       </div>
 
-      {/* Overlay matching Home UX */}
       {typeof processingPayment !== "undefined" &&
         typeof paymentLoading !== "undefined" && (
           <LoadingOverlay show={processingPayment || paymentLoading} />
         )}
 
-      {/* Central subscribe/purchase modal */}
       <SubscribeModal
         open={subscribeModalOpen}
         artist={modalArtist}
