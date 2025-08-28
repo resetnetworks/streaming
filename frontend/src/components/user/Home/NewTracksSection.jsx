@@ -143,7 +143,7 @@ const getSongPriceDisplay = (
   }
 
   if (song.accessType === "purchase-only" && song.price > 0) {
-    // Route through onSubscribeRequired so Home decides: subscribe modal or direct purchase
+    // Open modal instead of direct purchase; prevent bubbling to card click
     return (
       <button
         className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
