@@ -21,6 +21,9 @@ import SubscribeModal from "../components/user/SubscribeModal";
 import LoadingOverlay from "../components/user/Home/LoadingOverlay";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 
+// ✅ playerSlice import
+import { setSelectedSong, play } from "../features/playback/playerSlice";
+
 const genreAssets = {
   electronic: { label: "Electronic" },
   ambient: { label: "Ambient" },
@@ -58,7 +61,6 @@ const GenrePage = ({
   onPurchaseClick,
   processingPayment,
   paymentLoading,
-  onPlaySong,
 }) => {
   const { genre: rawParam } = useParams();
   const location = useLocation();
@@ -70,8 +72,8 @@ const GenrePage = ({
   // Modal state
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
-  const [modalType, setModalType] = useState(null); // "play" | "purchase" | "genre"
-  const [modalData, setModalData] = useState(null); // song or genre object
+  const [modalType, setModalType] = useState(null);
+  const [modalData, setModalData] = useState(null);
 
   // Paging state
   const [page, setPage] = useState(1);
@@ -91,17 +93,13 @@ const GenrePage = ({
       decoded = rawParam || "";
     }
     const key = toGenreKey(decoded);
-
     const fromStateTitle = location.state?.title;
-
     const titleCase = decoded
       .toLowerCase()
       .split(" ")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
-
     const mapped = genreAssets[key];
-
     return {
       displayTitle: fromStateTitle || titleCase,
       headerLabel: fromStateTitle || mapped?.label || titleCase,
@@ -153,13 +151,6 @@ const GenrePage = ({
   const loadingInitial = status === "loading" && songs.length === 0;
 
   // Modal helpers
-  const openSubscribeModal = useCallback((artist, type, data) => {
-    setModalArtist(artist);
-    setModalType(type);
-    setModalData(data);
-    setSubscribeModalOpen(true);
-  }, []);
-
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);
@@ -167,40 +158,38 @@ const GenrePage = ({
     setModalData(null);
   };
 
-  const handleNavigateToArtist = () => {
-    handleSubscribeModalClose();
-    if (modalArtist?.slug) {
-      navigate(`/artist/${modalArtist.slug}`);
-    }
-  };
+  const handleRequireSubscribe = useCallback((artist, type, data) => {
+    setModalArtist(artist);
+    setModalType(type);
+    setModalData(data);
+    setSubscribeModalOpen(true);
+    onSubscribeRequired?.(artist, type, data);
+  }, [onSubscribeRequired]);
 
-  const handleRequireSubscribe = useCallback(
-    (artist, type, data) => {
-      openSubscribeModal(artist, type, data);
-      onSubscribeRequired?.(artist, type, data);
-    },
-    [onSubscribeRequired, openSubscribeModal]
-  );
-
+  // ✅ Fixed Play handler
   const handlePlay = useCallback(
     (song) => {
-      if (onPlaySong) return onPlaySong(song);
-
       const purchased = currentUser?.purchasedSongs?.includes(song._id);
-      const needsSub = song.accessType === "subscription";
-      const needsPurchase =
-        song.accessType === "purchase-only" && !purchased && song.price > 0;
+      const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
 
-      if (needsSub) {
+      if (song.accessType === "subscription" && !alreadySubscribed) {
         handleRequireSubscribe(song.artist, "play", song);
         return;
       }
-      if (needsPurchase) {
-        handleRequireSubscribe(song.artist, "purchase", song);
+      if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
+        if (alreadySubscribed) {
+          onPurchaseClick?.(song, "song");
+        } else {
+          handleRequireSubscribe(song.artist, "purchase", song);
+        }
         return;
       }
+
+      // ✅ Play song
+      dispatch(setSelectedSong(song));
+      dispatch(play());
     },
-    [currentUser, onPlaySong, handleRequireSubscribe]
+    [currentUser, dispatch, handleRequireSubscribe, onPurchaseClick]
   );
 
   // Infinite scroll
@@ -213,11 +202,9 @@ const GenrePage = ({
     if (!el) return;
 
     const observer = new IntersectionObserver(
-      async (entries) => {
-        const entry = entries;
+      async ([entry]) => {
         if (!entry.isIntersecting) return;
-        if (loadingMore) return;
-        if (status === "loading") return;
+        if (loadingMore || status === "loading") return;
 
         setLoadingMore(true);
         const nextPage = page + 1;
@@ -237,12 +224,11 @@ const GenrePage = ({
           );
 
           setPage(nextPage);
-        } catch {
         } finally {
           setLoadingMore(false);
         }
       },
-      { root: null, rootMargin: "200px 0px", threshold: 0 }
+      { rootMargin: "200px 0px", threshold: 0 }
     );
 
     observer.observe(el);
@@ -257,14 +243,7 @@ const GenrePage = ({
       <div className="w-full">
         <div className="relative w-full h-40 sm:h-52 md:h-64 lg:h-72 overflow-hidden bg-black flex items-center justify-center text-center">
           <div className="pointer-events-none absolute inset-0 opacity-50 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22)_0%,rgba(0,0,0,0.0)_55%)]" />
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_2px,transparent_2px,transparent_8px)]"
-            style={{
-              animation: "patternPan 18s linear infinite",
-              backgroundSize: "auto",
-              backgroundPosition: "0 0",
-            }}
-          />
+          <div className="pointer-events-none absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_2px,transparent_2px,transparent_8px)]" />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-[#10153e8f] to-[#0E43CA]" />
           <div className="relative z-10 px-4">
             <h1 className="text-white font-semibold text-2xl sm:text-3xl md:text-4xl leading-tight">
@@ -274,14 +253,6 @@ const GenrePage = ({
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes patternPan {
-          0%   { transform: translate3d(0,0,0); }
-          50%  { transform: translate3d(-3%, -3%, 0); }
-          100% { transform: translate3d(0,0,0); }
-        }
-      `}</style>
 
       {/* Content */}
       <div className="w-full px-4 py-4">
@@ -306,18 +277,9 @@ const GenrePage = ({
                     song={song}
                     seekTime={song.durationLabel || song.duration || ""}
                     isSelected={false}
-                    onPlay={(s) => handlePlay(s)}
-                    onSubscribeRequired={(artist, type, data) => {
-                      if (type === "purchase" && alreadySubscribed) {
-                        onPurchaseClick?.(data, "song"); // pass type
-                        return;
-                      }
-                      setModalArtist(artist);
-                      setModalType(type);
-                      setModalData(data);
-                      setSubscribeModalOpen(true);
-                    }}
-                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")} // pass type
+                    onPlay={handlePlay}
+                    onSubscribeRequired={handleRequireSubscribe}
+                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")}
                     processingPayment={processingPayment}
                     paymentLoading={paymentLoading}
                     purchased={purchased}
@@ -336,10 +298,7 @@ const GenrePage = ({
         )}
       </div>
 
-      {typeof processingPayment !== "undefined" &&
-        typeof paymentLoading !== "undefined" && (
-          <LoadingOverlay show={processingPayment || paymentLoading} />
-        )}
+      <LoadingOverlay show={processingPayment || paymentLoading} />
 
       <SubscribeModal
         open={subscribeModalOpen}
