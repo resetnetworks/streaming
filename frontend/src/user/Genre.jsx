@@ -1,4 +1,3 @@
-// GenrePage.jsx
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
@@ -68,11 +67,13 @@ const GenrePage = ({
 
   const currentUser = useSelector((s) => s.auth.user);
 
+  // Modal state
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
 
+  // Paging state
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const limit = 20;
@@ -103,14 +104,17 @@ const GenrePage = ({
     };
   }, [location.state, rawParam]);
 
+  // Cache selectors
   const isCacheValid = useSelector(selectIsGenreCacheValid);
   const isPageCached = useSelector(selectIsGenrePageCached(displayTitle, page));
   const cachedPageData = useSelector(selectGenreCachedPageData(displayTitle, page));
 
+  // Reset page on genre change
   useEffect(() => {
     setPage(1);
   }, [displayTitle]);
 
+  // Load page (cache-first)
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -144,6 +148,7 @@ const GenrePage = ({
 
   const loadingInitial = status === "loading" && songs.length === 0;
 
+  // Modal helpers
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);
@@ -159,28 +164,33 @@ const GenrePage = ({
     onSubscribeRequired?.(artist, type, data);
   }, [onSubscribeRequired]);
 
-  // Play handler with gating and direct payment when subscribed
+  // Play handler: mirrors Home/NewTracks gating + direct purchase when subscribed
   const handlePlay = useCallback((song) => {
     const purchased = currentUser?.purchasedSongs?.includes(song._id);
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
 
+    // Subscription-only track and not subscribed -> ask to subscribe
     if (song.accessType === "subscription" && !alreadySubscribed) {
       handleRequireSubscribe(song.artist, "play", song);
       return;
     }
+
+    // Purchase-only and not purchased
     if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
       if (alreadySubscribed) {
-        onPurchaseClick?.(song, "song"); // open Razorpay like NewTracks
+        onPurchaseClick?.(song, "song"); // open Razorpay, same as NewTracks
       } else {
         handleRequireSubscribe(song.artist, "purchase", song);
       }
       return;
     }
 
+    // Allowed to play
     dispatch(setSelectedSong(song));
     dispatch(play());
   }, [currentUser, dispatch, handleRequireSubscribe, onPurchaseClick]);
 
+  // Infinite scroll
   const sentinelRef = useRef(null);
   const canLoadMore = totalPages && page < totalPages;
 
@@ -266,7 +276,19 @@ const GenrePage = ({
                     seekTime={song.durationLabel || song.duration || ""}
                     isSelected={false}
                     onPlay={handlePlay}
-                    onSubscribeRequired={handleRequireSubscribe}
+                    // If a child invokes subscribe-required for purchase and user is already subscribed,
+                    // bypass modal and call payment directly.
+                    onSubscribeRequired={(artist, type, data) => {
+                      const sub = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+                      if (type === "purchase" && sub) {
+                        onPurchaseClick?.(data, "song");
+                        return;
+                      }
+                      setModalArtist(artist);
+                      setModalType(type);
+                      setModalData(data);
+                      setSubscribeModalOpen(true);
+                    }}
                     onPurchaseClick={(item) => onPurchaseClick?.(item, "song")}
                     processingPayment={processingPayment}
                     paymentLoading={paymentLoading}

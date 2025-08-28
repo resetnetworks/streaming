@@ -1,4 +1,3 @@
-// GenreSongRow.jsx
 import React, { useCallback } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
@@ -43,19 +42,33 @@ const AccessChip = ({
   }
 
   if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
+    const priceNumber = Number(song.price);
+    const canPay = Number.isFinite(priceNumber) && priceNumber > 0;
     return (
       <button
         type="button"
         className={`${btnBase} bg-rose-600 hover:bg-rose-700 text-white`}
         onClick={(e) => {
           e.stopPropagation();
-          if (processingPayment || paymentLoading) return;
+
+          if (processingPayment || paymentLoading) {
+            toast.info("Payment already in progress...");
+            return;
+          }
+
+          if (!canPay) {
+            toast.error("Invalid price for this item");
+            return;
+          }
+
+          // If artist is already subscribed, bypass modal and open Razorpay
           if (alreadySubscribed) {
-            onPurchaseClick?.(song, "song"); // open Razorpay directly
+            onPurchaseClick?.(song, "song");
           } else {
             onSubscribeRequired?.(song.artist, "purchase", song);
           }
         }}
+        aria-label={`Buy for ₹${song.price}`}
       >
         Buy ₹{song.price}
       </button>
