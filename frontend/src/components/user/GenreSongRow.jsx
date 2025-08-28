@@ -44,6 +44,7 @@ const AccessChip = ({
   if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
     const priceNumber = Number(song.price);
     const canPay = Number.isFinite(priceNumber) && priceNumber > 0;
+
     return (
       <button
         type="button"
@@ -51,17 +52,19 @@ const AccessChip = ({
         onClick={(e) => {
           e.stopPropagation();
 
+          // Prevent duplicate opens
           if (processingPayment || paymentLoading) {
             toast.info("Payment already in progress...");
             return;
           }
 
+          // Ensure valid price is present
           if (!canPay) {
             toast.error("Invalid price for this item");
             return;
           }
 
-          // If artist is already subscribed, bypass modal and open Razorpay
+          // Bypass subscribe modal when already subscribed (exactly like NewTracks)
           if (alreadySubscribed) {
             onPurchaseClick?.(song, "song");
           } else {

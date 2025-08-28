@@ -67,13 +67,13 @@ const GenrePage = ({
 
   const currentUser = useSelector((s) => s.auth.user);
 
-  // Modal state
+  // Modal
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
 
-  // Paging state
+  // Paging
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const limit = 20;
@@ -104,17 +104,14 @@ const GenrePage = ({
     };
   }, [location.state, rawParam]);
 
-  // Cache selectors
   const isCacheValid = useSelector(selectIsGenreCacheValid);
   const isPageCached = useSelector(selectIsGenrePageCached(displayTitle, page));
   const cachedPageData = useSelector(selectGenreCachedPageData(displayTitle, page));
 
-  // Reset page on genre change
   useEffect(() => {
     setPage(1);
   }, [displayTitle]);
 
-  // Load page (cache-first)
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -148,7 +145,6 @@ const GenrePage = ({
 
   const loadingInitial = status === "loading" && songs.length === 0;
 
-  // Modal helpers
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);
@@ -164,28 +160,25 @@ const GenrePage = ({
     onSubscribeRequired?.(artist, type, data);
   }, [onSubscribeRequired]);
 
-  // Play handler: mirrors Home/NewTracks gating + direct purchase when subscribed
+  // Play gating + direct payment when subscribed (matches Home/NewTracks)
   const handlePlay = useCallback((song) => {
     const purchased = currentUser?.purchasedSongs?.includes(song._id);
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
 
-    // Subscription-only track and not subscribed -> ask to subscribe
     if (song.accessType === "subscription" && !alreadySubscribed) {
       handleRequireSubscribe(song.artist, "play", song);
       return;
     }
 
-    // Purchase-only and not purchased
     if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
       if (alreadySubscribed) {
-        onPurchaseClick?.(song, "song"); // open Razorpay, same as NewTracks
+        onPurchaseClick?.(song, "song");
       } else {
         handleRequireSubscribe(song.artist, "purchase", song);
       }
       return;
     }
 
-    // Allowed to play
     dispatch(setSelectedSong(song));
     dispatch(play());
   }, [currentUser, dispatch, handleRequireSubscribe, onPurchaseClick]);
@@ -276,8 +269,6 @@ const GenrePage = ({
                     seekTime={song.durationLabel || song.duration || ""}
                     isSelected={false}
                     onPlay={handlePlay}
-                    // If a child invokes subscribe-required for purchase and user is already subscribed,
-                    // bypass modal and call payment directly.
                     onSubscribeRequired={(artist, type, data) => {
                       const sub = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
                       if (type === "purchase" && sub) {
@@ -315,10 +306,18 @@ const GenrePage = ({
         artist={modalArtist}
         type={modalType}
         itemData={modalData}
-        onClose={handleSubscribeModalClose}
+        onClose={() => {
+          setSubscribeModalOpen(false);
+          setModalType(null);
+          setModalArtist(null);
+          setModalData(null);
+        }}
         onNavigate={() => {
-          handleSubscribeModalClose();
+          setSubscribeModalOpen(false);
+          setModalType(null);
           if (modalArtist?.slug) navigate(`/artist/${modalArtist.slug}`);
+          setModalArtist(null);
+          setModalData(null);
         }}
       />
     </>
