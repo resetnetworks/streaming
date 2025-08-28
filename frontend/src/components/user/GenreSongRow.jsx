@@ -1,3 +1,4 @@
+// GenreSongRow.jsx
 import React, { useCallback } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
@@ -9,11 +10,9 @@ import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
 
-// Common button base styles
 const btnBase =
-  "action-button inline-flex items-center justify-center text-[10px] sm:text-xs h-7 w-[96px] px-2.5 rounded font-semibold leading-[14] whitespace-nowrap disabled:bg-gray-600 transition-colors";
+  "action-button inline-flex items-center justify-center text-[10px] sm:text-xs h-7 w-[96px] px-2.5 rounded font-semibold leading-[14px] whitespace-nowrap disabled:bg-gray-600 transition-colors";
 
-// ✅ Access control chip (subscription / purchase / purchased / free)
 const AccessChip = ({
   song,
   purchased,
@@ -24,11 +23,7 @@ const AccessChip = ({
   paymentLoading,
 }) => {
   if (purchased) {
-    return (
-      <span className={`${btnBase} bg-emerald-600/80 text-white`}>
-        Purchased
-      </span>
-    );
+    return <span className={`${btnBase} bg-emerald-600/80 text-white`}>Purchased</span>;
   }
 
   if (song.accessType === "subscription") {
@@ -56,7 +51,7 @@ const AccessChip = ({
           e.stopPropagation();
           if (processingPayment || paymentLoading) return;
           if (alreadySubscribed) {
-            onPurchaseClick?.(song, "song"); // ✅ Razorpay open karega
+            onPurchaseClick?.(song, "song"); // open Razorpay directly
           } else {
             onSubscribeRequired?.(song.artist, "purchase", song);
           }
@@ -68,15 +63,12 @@ const AccessChip = ({
   }
 
   if (song.accessType === "purchase-only" && song.price === 0) {
-    return (
-      <span className={`${btnBase} bg-slate-600/80 text-white`}>Album</span>
-    );
+    return <span className={`${btnBase} bg-slate-600/80 text-white`}>Album</span>;
   }
 
   return <span className={`${btnBase} bg-teal-600/80 text-white`}>Free</span>;
 };
 
-// ✅ Main Row Component
 const GenreSongRow = ({
   song,
   img = song.coverImage || song.album?.coverImage || "/images/placeholder.png",
@@ -86,7 +78,7 @@ const GenreSongRow = ({
   isSelected,
   onPlay,
   onSubscribeRequired,
-  onPurchaseClick,
+  onPurchaseClick, // expects (item, "song")
   processingPayment,
   paymentLoading,
   purchased,
@@ -96,15 +88,12 @@ const GenreSongRow = ({
   const likedSongIds = useSelector(selectLikedSongIds);
   const isLiked = likedSongIds.includes(song._id);
 
-  // ✅ Debounced like toggle
   const debouncedLikeToggle = useCallback(
     debounce(async (songId, wasLiked) => {
       try {
         const resultAction = await dispatch(toggleLikeSong(songId));
         if (toggleLikeSong.fulfilled.match(resultAction)) {
-          toast.success(
-            wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
-          );
+          toast.success(wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs");
         } else {
           toast.error("Failed to update like");
         }
@@ -134,7 +123,7 @@ const GenreSongRow = ({
       } hover:bg-white/5 transition-colors group`}
       onClick={handleRowClick}
     >
-      {/* ✅ Left */}
+      {/* Left */}
       <div className="flex items-center min-w-0">
         <div className="relative">
           <img
@@ -151,6 +140,8 @@ const GenreSongRow = ({
               e.stopPropagation();
               onPlay?.(song);
             }}
+            title="Play"
+            aria-label="Play"
           >
             <RiPlayFill size={12} />
           </button>
@@ -161,7 +152,7 @@ const GenreSongRow = ({
         </div>
       </div>
 
-      {/* ✅ Middle */}
+      {/* Middle */}
       {isSelected ? (
         <div className="equalizer mr-2">
           <span className="equalizer-bar"></span>
@@ -173,15 +164,13 @@ const GenreSongRow = ({
         <div />
       )}
 
-      {/* ✅ Right */}
+      {/* Right */}
       <div className="flex gap-4 items-center">
-        {/* Duration */}
         <div className="flex items-center text-gray-300">
           <MdAccessTimeFilled className="text-base text-gray-500" />
           <span className="ml-2 text-sm">{seekTime}</span>
         </div>
 
-        {/* Like */}
         <button type="button" className="action-button" onClick={handleToggleLike}>
           {isLiked ? (
             <BsHeartFill className="text-red-600" />
@@ -190,16 +179,16 @@ const GenreSongRow = ({
           )}
         </button>
 
-        {/* More */}
         <FiMoreHorizontal
           className="action-button text-white text-lg"
           onClick={(e) => {
             e.stopPropagation();
             toast.info("More options coming soon");
           }}
+          title="More"
+          aria-label="More options"
         />
 
-        {/* ✅ Access Chip */}
         <AccessChip
           song={song}
           purchased={purchased}

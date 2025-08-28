@@ -1,3 +1,4 @@
+// GenrePage.jsx
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
@@ -20,8 +21,6 @@ import GenreSongRow from "../components/user/GenreSongRow";
 import SubscribeModal from "../components/user/SubscribeModal";
 import LoadingOverlay from "../components/user/Home/LoadingOverlay";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
-
-// ✅ playerSlice import
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 
 const genreAssets = {
@@ -69,13 +68,11 @@ const GenrePage = ({
 
   const currentUser = useSelector((s) => s.auth.user);
 
-  // Modal state
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
 
-  // Paging state
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const limit = 20;
@@ -106,17 +103,14 @@ const GenrePage = ({
     };
   }, [location.state, rawParam]);
 
-  // Cache selectors
   const isCacheValid = useSelector(selectIsGenreCacheValid);
   const isPageCached = useSelector(selectIsGenrePageCached(displayTitle, page));
   const cachedPageData = useSelector(selectGenreCachedPageData(displayTitle, page));
 
-  // Reset page on genre change
   useEffect(() => {
     setPage(1);
   }, [displayTitle]);
 
-  // Load page (cache-first)
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -150,7 +144,6 @@ const GenrePage = ({
 
   const loadingInitial = status === "loading" && songs.length === 0;
 
-  // Modal helpers
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);
@@ -166,31 +159,28 @@ const GenrePage = ({
     onSubscribeRequired?.(artist, type, data);
   }, [onSubscribeRequired]);
 
-  // ✅ Fixed Play handler
-  const handlePlay = useCallback(
-    (song) => {
-      const purchased = currentUser?.purchasedSongs?.includes(song._id);
-      const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+  // Play handler with gating and direct play when allowed
+  const handlePlay = useCallback((song) => {
+    const purchased = currentUser?.purchasedSongs?.includes(song._id);
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
 
-      if (song.accessType === "subscription" && !alreadySubscribed) {
-        handleRequireSubscribe(song.artist, "play", song);
-        return;
+    if (song.accessType === "subscription" && !alreadySubscribed) {
+      handleRequireSubscribe(song.artist, "play", song);
+      return;
+    }
+    if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
+      if (alreadySubscribed) {
+        onPurchaseClick?.(song, "song"); // open Razorpay like NewTracks
+      } else {
+        handleRequireSubscribe(song.artist, "purchase", song);
       }
-      if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
-        if (alreadySubscribed) {
-          onPurchaseClick?.(song, "song");
-        } else {
-          handleRequireSubscribe(song.artist, "purchase", song);
-        }
-        return;
-      }
+      return;
+    }
 
-      // ✅ Play song
-      dispatch(setSelectedSong(song));
-      dispatch(play());
-    },
-    [currentUser, dispatch, handleRequireSubscribe, onPurchaseClick]
-  );
+    // allowed to play
+    dispatch(setSelectedSong(song));
+    dispatch(play());
+  }, [currentUser, dispatch, handleRequireSubscribe, onPurchaseClick]);
 
   // Infinite scroll
   const sentinelRef = useRef(null);
