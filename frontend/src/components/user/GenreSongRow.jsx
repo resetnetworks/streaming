@@ -210,6 +210,7 @@ const GenreSongRow = ({
           purchased={purchased}
           alreadySubscribed={alreadySubscribed}
           onSubscribeRequired={onSubscribeRequired}
+          onPurchaseClick={onPurchaseClick}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />

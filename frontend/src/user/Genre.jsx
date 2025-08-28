@@ -263,30 +263,29 @@ const GenrePage = ({
                 const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
 
                 return (
-                 <GenreSongRow
-  key={song._id}
-  song={song}
-  seekTime={song.durationLabel || song.duration || ""}
-  isSelected={false}
-  onPlay={handlePlay}
-  onSubscribeRequired={(artist, type, data) => {
-    const sub = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
-    if (type === "purchase" && sub) {
-      onPurchaseClick?.(data, "song");
-      return;
-    }
-    setModalArtist(artist);
-    setModalType(type);
-    setModalData(data);
-    setSubscribeModalOpen(true);
-  }}
-   onPurchaseClick={onPurchaseClick} 
-  processingPayment={processingPayment}
-  paymentLoading={paymentLoading}
-  purchased={purchased}
-  alreadySubscribed={alreadySubscribed}
-/>
-
+                  <GenreSongRow
+                    key={song._id}
+                    song={song}
+                    seekTime={song.durationLabel || song.duration || ""}
+                    isSelected={false}
+                    onPlay={handlePlay}
+                    onSubscribeRequired={(artist, type, data) => {
+                      const sub = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+                      if (type === "purchase" && sub) {
+                        onPurchaseClick?.(data, "song");
+                        return;
+                      }
+                      setModalArtist(artist);
+                      setModalType(type);
+                      setModalData(data);
+                      setSubscribeModalOpen(true);
+                    }}
+                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")}
+                    processingPayment={processingPayment}
+                    paymentLoading={paymentLoading}
+                    purchased={purchased}
+                    alreadySubscribed={alreadySubscribed}
+                  />
                 );
               })}
             </div>
