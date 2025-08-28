@@ -51,7 +51,6 @@ const NewTracksSection = ({
   const onPlaySong = useCallback((song) => {
     const result = handlePlaySong(song, currentUser, dispatch);
     if (result.requiresSubscription) {
-      // Parent decides modal vs bypass using purchaseHistory rule
       onSubscribeRequired(song.artist, "play", song);
       toast.error("Subscribe to play this song!");
     }
@@ -128,7 +127,6 @@ const NewTracksSection = ({
   );
 };
 
-// Helper function for price display logic
 const getSongPriceDisplay = (
   song, 
   currentUser, 
@@ -146,7 +144,7 @@ const getSongPriceDisplay = (
   }
 
   if (song.accessType === "purchase-only" && song.price > 0) {
-    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist); // NEW
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
     return (
       <button
         className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
@@ -159,10 +157,9 @@ const getSongPriceDisplay = (
           if (processingPayment || paymentLoading) return;
 
           if (alreadySubscribed) {
-            // Skip modal and go straight to payment flow
-            onPurchaseClick?.(song);
+            // IMPORTANT: pass type explicitly
+            onPurchaseClick?.(song, "song");
           } else {
-            // Open subscribe modal
             onSubscribeRequired?.(song.artist, "purchase", song);
           }
         }}

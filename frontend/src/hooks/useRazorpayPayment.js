@@ -1,3 +1,4 @@
+// src/hooks/useRazorpayPayment.js
 import { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -41,13 +42,11 @@ export const useRazorpayPayment = () => {
         name: 'musicreset',
         description: `Purchase ${type}: ${item.title || item.name}`,
         image: `${window.location.origin}/icon.png`,
-        handler: function (response) {
+        handler: function () {
           if (currentRazorpayInstance) {
             try {
               currentRazorpayInstance.close();
-            } catch (e) {
-              // Razorpay instance already closed
-            }
+            } catch {}
           }
 
           if (type === "song") {
@@ -56,9 +55,7 @@ export const useRazorpayPayment = () => {
             dispatch(addPurchasedAlbum(item._id));
           }
 
-          toast.success(`Successfully purchased ${item.title || item.name}!`, {
-            duration: 5000,
-          });
+          toast.success(`Successfully purchased ${item.title || item.name}!`, { duration: 5000 });
           
           setProcessingPayment(false);
           setCurrentRazorpayInstance(null);
@@ -69,9 +66,7 @@ export const useRazorpayPayment = () => {
           email: currentUser?.email || '',
           contact: currentUser?.phone || ''
         },
-        theme: {
-          color: '#3b82f6'
-        },
+        theme: { color: '#3b82f6' },
         modal: {
           ondismiss: function() {
             toast.info('Payment cancelled');
@@ -85,7 +80,7 @@ export const useRazorpayPayment = () => {
       setCurrentRazorpayInstance(rzp);
       rzp.open();
 
-    } catch (error) {
+    } catch {
       toast.error('Failed to open payment gateway');
       setProcessingPayment(false);
       setCurrentRazorpayInstance(null);
@@ -124,11 +119,17 @@ export const useRazorpayPayment = () => {
       if (!scriptLoaded) {
         throw new Error("Failed to load Razorpay script");
       }
+
+      // Coerce price to a number (rupees) before sending to backend
+      const rupees = Number(item.price);
+      if (!Number.isFinite(rupees) || rupees <= 0) {
+        throw new Error("Invalid item price for payment");
+      }
       
       const result = await dispatch(initiateRazorpayItemPayment({
         itemType: type,
         itemId: item._id,
-        amount: item.price
+        amount: rupees // backend should convert to paise as per Razorpay docs
       })).unwrap();
 
       if (result.order) {
