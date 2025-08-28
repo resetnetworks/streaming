@@ -159,7 +159,7 @@ const GenrePage = ({
     onSubscribeRequired?.(artist, type, data);
   }, [onSubscribeRequired]);
 
-  // Play handler with gating and direct play when allowed
+  // Play handler with gating and direct payment when subscribed
   const handlePlay = useCallback((song) => {
     const purchased = currentUser?.purchasedSongs?.includes(song._id);
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
@@ -177,12 +177,10 @@ const GenrePage = ({
       return;
     }
 
-    // allowed to play
     dispatch(setSelectedSong(song));
     dispatch(play());
   }, [currentUser, dispatch, handleRequireSubscribe, onPurchaseClick]);
 
-  // Infinite scroll
   const sentinelRef = useRef(null);
   const canLoadMore = totalPages && page < totalPages;
 
