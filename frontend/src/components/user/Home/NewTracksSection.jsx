@@ -10,7 +10,7 @@ import { useSongCache } from "../../../hooks/useSongCache";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import { setSelectedSong, play } from "../../../features/playback/playerSlice";
 import { handlePlaySong } from "../../../utills/songHelpers";
-import { hasArtistSubscriptionInPurchaseHistory } from "../../../utils/subscriptions"; // NEW
+import { hasArtistSubscriptionInPurchaseHistory } from "../../../utills/subscriptions";
 
 const NewTracksSection = ({ 
   onPurchaseClick, 
