@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { LuSquareChevronRight } from "react-icons/lu";
+import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 
 import AlbumCard from "../AlbumCard";
@@ -43,21 +43,22 @@ const AlbumsSection = ({
       });
   }, [dispatch, albumsPage]);
 
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
+  const handleScroll = (direction = "right") => {
+    if (!scrollRef.current) return;
+    const scrollAmount = 200;
+    scrollRef.current.scrollBy({
+      left: direction === "right" ? scrollAmount : -scrollAmount,
+      behavior: "smooth",
+    });
   };
 
   const getAlbumPriceDisplay = (album) => {
     if (album.price === 0) {
       return "subs..";
     }
-    
     if (currentUser?.purchasedAlbums?.includes(album._id)) {
       return "Purchased";
     }
-    
     return (
       <button
         className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors ${
@@ -79,10 +80,28 @@ const AlbumsSection = ({
         <h2 className="md:text-xl text-lg font-semibold">
           new albums for you
         </h2>
-        <LuSquareChevronRight
-          className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
-          onClick={handleScroll}
-        />
+
+        {/* Back and Next buttons (desktop) */}
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            type="button"
+            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            onClick={() => handleScroll("left")}
+            aria-label="Scroll left"
+            title="Back"
+          >
+            <LuSquareChevronLeft />
+          </button>
+          <button
+            type="button"
+            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            onClick={() => handleScroll("right")}
+            aria-label="Scroll right"
+            title="Next"
+          >
+            <LuSquareChevronRight />
+          </button>
+        </div>
       </div>
       
       <div
@@ -93,7 +112,7 @@ const AlbumsSection = ({
           ? [...Array(7)].map((_, idx) => (
               <div
                 key={`playlist-skeleton-${idx}`}
-                className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper"
+                className="min-w=[160px] flex flex-col gap-2 skeleton-wrapper"
               >
                 <Skeleton height={160} width={160} className="rounded-xl" />
                 <Skeleton width={100} height={12} />

@@ -1,7 +1,7 @@
 import React, { useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { LuSquareChevronRight } from "react-icons/lu";
+import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 
@@ -28,10 +28,14 @@ const SimilarArtistSection = ({
   const randomArtist = useSelector(selectRandomArtist);
   const similarSongs = useSelector(selectRandomArtistSongs);
 
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
+  // updated to support both directions
+  const handleScroll = (direction = "right") => {
+    if (!scrollRef.current) return;
+    const scrollAmount = 200;
+    scrollRef.current.scrollBy({
+      left: direction === "right" ? scrollAmount : -scrollAmount,
+      behavior: "smooth",
+    });
   };
 
   const onPlaySong = useCallback((song) => {
@@ -47,7 +51,6 @@ const SimilarArtistSection = ({
       if (currentUser?.purchasedSongs?.includes(song._id)) {
         return "Purchased";
       }
-      
       return (
         <button
           className={`text-white text-xs px-2 py-1 rounded transition-colors ${
@@ -57,12 +60,12 @@ const SimilarArtistSection = ({
           }`}
           onClick={() => onPurchaseClick(song, "song")}
           disabled={processingPayment || paymentLoading}
+          type="button"
         >
           {processingPayment || paymentLoading ? "..." : `Buy for ₹${song.price}`}
         </button>
       );
     }
-    
     return "Subs..";
   };
 
@@ -103,9 +106,7 @@ const SimilarArtistSection = ({
           className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
         />
         <div>
-          <h2 className="text-blue-700 text-base leading-none">
-            similar to
-          </h2>
+          <h2 className="text-blue-700 text-base leading-none">similar to</h2>
           <p
             onClick={() => navigate(`/artist/${randomArtist.slug}`)}
             className="text-lg leading-none text-white hover:underline cursor-pointer"
@@ -113,16 +114,32 @@ const SimilarArtistSection = ({
             {randomArtist.name}
           </p>
         </div>
-        <LuSquareChevronRight
-          className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all ml-auto md:block hidden"
-          onClick={handleScroll}
-        />
+
+        {/* Back and Next buttons (desktop) */}
+        <div className="hidden md:flex items-center gap-2 ml-auto">
+          <button
+            type="button"
+            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            onClick={() => handleScroll("left")}
+            aria-label="Scroll left"
+            title="Back"
+          >
+            <LuSquareChevronLeft />
+          </button>
+          <button
+            type="button"
+            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            onClick={() => handleScroll("right")}
+            aria-label="Scroll right"
+            title="Next"
+          >
+            <LuSquareChevronRight />
+          </button>
+        </div>
       </div>
 
       {similarSongs.length === 0 ? (
-        <p className="text-gray-400 italic">
-          No songs available for this artist.
-        </p>
+        <p className="text-gray-400 italic">No songs available for this artist.</p>
       ) : (
         <div
           ref={scrollRef}

@@ -1,6 +1,6 @@
 import React, { useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { LuSquareChevronRight } from "react-icons/lu";
+import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 
@@ -29,18 +29,22 @@ const AllTracksSection = ({
     pagination,
     loadMore,
     hasMore
-  } = useSongCache("top", { limit: 20 }); // ✅ ab 20 songs per page
+  } = useSongCache("top", { limit: 20 });
 
   const { lastElementRef } = useInfiniteScroll({
     hasMore,
     loading: loading || loadingMore,
-    onLoadMore: loadMore   // ✅ fix: infinite scroll ab loadMore call karega
+    onLoadMore: loadMore
   });
 
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
+  // Updated: support both directions
+  const handleScroll = (direction = "right") => {
+    if (!scrollRef.current) return;
+    const scrollAmount = 200;
+    scrollRef.current.scrollBy({
+      left: direction === "right" ? scrollAmount : -scrollAmount,
+      behavior: "smooth",
+    });
   };
 
   const onPlaySong = useCallback((song) => {
@@ -51,7 +55,7 @@ const AllTracksSection = ({
     }
   }, [currentUser, dispatch, onSubscribeRequired]);
 
-  // ✅ chunk bana ke grid view ke liye
+  // grid columns
   const chunkSize = 5;
   const songColumns = [];
   for (let i = 0; i < topSongs.length; i += chunkSize) {
@@ -64,10 +68,28 @@ const AllTracksSection = ({
         <h2 className="md:text-xl text-lg font-semibold">
           all tracks for you
         </h2>
-        <LuSquareChevronRight
-          className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
-          onClick={handleScroll}
-        />
+
+        {/* Back and Next buttons (desktop) */}
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            type="button"
+            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            onClick={() => handleScroll("left")}
+            aria-label="Scroll left"
+            title="Back"
+          >
+            <LuSquareChevronLeft />
+          </button>
+          <button
+            type="button"
+            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            onClick={() => handleScroll("right")}
+            aria-label="Scroll right"
+            title="Next"
+          >
+            <LuSquareChevronRight />
+          </button>
+        </div>
       </div>
       
       <div
@@ -86,11 +108,7 @@ const AllTracksSection = ({
                       key={`top-picks-item-${i}`}
                       className="flex items-center gap-4 skeleton-wrapper"
                     >
-                      <Skeleton
-                        height={50}
-                        width={50}
-                        className="rounded-full"
-                      />
+                      <Skeleton height={50} width={50} className="rounded-full" />
                       <div className="flex flex-col gap-1">
                         <Skeleton width={120} height={14} />
                         <Skeleton width={80} height={12} />
@@ -102,11 +120,7 @@ const AllTracksSection = ({
             : songColumns.map((column, columnIndex) => (
                 <div
                   key={`column-${columnIndex}`}
-                  ref={
-                    columnIndex === songColumns.length - 1
-                      ? lastElementRef // ✅ last element observe ho raha hai
-                      : null
-                  }
+                  ref={columnIndex === songColumns.length - 1 ? lastElementRef : null}
                   className="flex flex-col gap-4 min-w-[400px]"
                 >
                   {column.map((song) => (
@@ -117,7 +131,7 @@ const AllTracksSection = ({
                       songName={song.title}
                       singerName={song.singer}
                       seekTime={formatDuration(song.duration)}
-                      onPlay={() => onPlaySong(song)}   // ✅ ab ye play karega
+                      onPlay={() => onPlaySong(song)}
                       isSelected={selectedSong?._id === song._id}
                     />
                   ))}
@@ -131,11 +145,7 @@ const AllTracksSection = ({
                   key={`loading-more-${i}`}
                   className="flex items-center gap-4 skeleton-wrapper"
                 >
-                  <Skeleton
-                    height={50}
-                    width={50}
-                    className="rounded-full"
-                  />
+                  <Skeleton height={50} width={50} className="rounded-full" />
                   <div className="flex flex-col gap-1">
                     <Skeleton width={120} height={14} />
                     <Skeleton width={80} height={12} />
