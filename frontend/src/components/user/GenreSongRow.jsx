@@ -6,6 +6,7 @@ import { RiPlayFill } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleLikeSong } from "../../features/auth/authSlice";
 import { selectLikedSongIds } from "../../features/auth/authSelectors";
+import { formatDuration } from "../../utills/helperFunctions";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
 
@@ -180,7 +181,7 @@ const GenreSongRow = ({
       <div className="flex gap-4 items-center">
         <div className="flex items-center text-gray-300">
           <MdAccessTimeFilled className="text-base text-gray-500" />
-          <span className="ml-2 text-sm">{seekTime}</span>
+          <span className="ml-2 text-sm">{formatDuration(seekTime)}</span>
         </div>
 
         <button type="button" className="action-button" onClick={handleToggleLike}>
