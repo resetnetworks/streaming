@@ -32,6 +32,7 @@ const AccessChip = ({
         className={`${btnBase} bg-indigo-600 hover:bg-indigo-700 text-white`}
         onClick={(e) => {
           e.stopPropagation();
+          console.log("[GENRE] chip Subscription click", { songId: song?._id }); // debug
           onSubscribeRequired?.(song.artist, "play", song);
         }}
         disabled={processingPayment || paymentLoading}
@@ -51,23 +52,31 @@ const AccessChip = ({
         className={`${btnBase} bg-rose-600 hover:bg-rose-700 text-white`}
         onClick={(e) => {
           e.stopPropagation();
+          console.log("[GENRE] chip Buy click", {
+            songId: song?._id,
+            price: song?.price,
+            processingPayment,
+            paymentLoading,
+            alreadySubscribed,
+          }); // debug
 
-          // Prevent duplicate opens
           if (processingPayment || paymentLoading) {
             toast.info("Payment already in progress...");
+            console.log("[GENRE] blocked: payment flags true"); // debug
             return;
           }
 
-          // Ensure valid price is present
           if (!canPay) {
             toast.error("Invalid price for this item");
+            console.log("[GENRE] blocked: invalid price", { price: song?.price }); // debug
             return;
           }
 
-          // Bypass subscribe modal when already subscribed (exactly like NewTracks)
           if (alreadySubscribed) {
+            console.log("[GENRE] calling onPurchaseClick(song,'song')"); // debug
             onPurchaseClick?.(song, "song");
           } else {
+            console.log("[GENRE] opening subscribe modal for purchase"); // debug
             onSubscribeRequired?.(song.artist, "purchase", song);
           }
         }}
@@ -124,11 +133,13 @@ const GenreSongRow = ({
     e.stopPropagation();
     e.preventDefault();
     if (!song?._id) return;
+    console.log("[GENRE] like toggle", { songId: song?._id, isLiked }); // debug
     debouncedLikeToggle(song._id, isLiked);
   };
 
   const handleRowClick = (e) => {
     if (e.target.closest(".action-button")) return;
+    console.log("[GENRE] row click → onPlay(song)", { songId: song?._id }); // debug
     onPlay?.(song);
   };
 
@@ -154,6 +165,7 @@ const GenreSongRow = ({
             className="action-button absolute -bottom-1 -right-1 bg-gray-200 text-black p-1 rounded-full opacity-0 group-hover:opacity-100 transition hover:scale-110"
             onClick={(e) => {
               e.stopPropagation();
+              console.log("[GENRE] play mini button → onPlay(song)", { songId: song?._id }); // debug
               onPlay?.(song);
             }}
             title="Play"
@@ -199,6 +211,7 @@ const GenreSongRow = ({
           className="action-button text-white text-lg"
           onClick={(e) => {
             e.stopPropagation();
+            console.log("[GENRE] more clicked", { songId: song?._id }); // debug
             toast.info("More options coming soon");
           }}
           title="More"

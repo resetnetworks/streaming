@@ -118,10 +118,12 @@ const GenrePage = ({
       if (!displayTitle) return;
 
       if (isPageCached && isCacheValid && cachedPageData) {
+        console.log("[GENRE] load from cache", { displayTitle, page }); // debug
         dispatch(loadGenreFromCache({ genre: displayTitle, page }));
         return;
       }
 
+      console.log("[GENRE] fetchSongsByGenre", { displayTitle, page, limit }); // debug
       const result = await dispatch(
         fetchSongsByGenre({ genre: displayTitle, page, limit })
       ).unwrap();
@@ -146,6 +148,7 @@ const GenrePage = ({
   const loadingInitial = status === "loading" && songs.length === 0;
 
   const handleSubscribeModalClose = () => {
+    console.log("[GENRE] close modal"); // debug
     setSubscribeModalOpen(false);
     setModalType(null);
     setModalArtist(null);
@@ -153,6 +156,11 @@ const GenrePage = ({
   };
 
   const handleRequireSubscribe = useCallback((artist, type, data) => {
+    console.log("[GENRE] require subscribe", {
+      artistId: artist?._id || artist?.id || artist?.slug,
+      type,
+      songId: data?._id,
+    }); // debug
     setModalArtist(artist);
     setModalType(type);
     setModalData(data);
@@ -160,10 +168,18 @@ const GenrePage = ({
     onSubscribeRequired?.(artist, type, data);
   }, [onSubscribeRequired]);
 
-  // Play gating + direct payment when subscribed (matches Home/NewTracks)
+  // Play gating + direct payment when subscribed
   const handlePlay = useCallback((song) => {
     const purchased = currentUser?.purchasedSongs?.includes(song._id);
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+
+    console.log("[GENRE] play click", {
+      songId: song?._id,
+      accessType: song?.accessType,
+      price: song?.price,
+      purchased,
+      alreadySubscribed,
+    }); // debug
 
     if (song.accessType === "subscription" && !alreadySubscribed) {
       handleRequireSubscribe(song.artist, "play", song);
@@ -172,6 +188,10 @@ const GenrePage = ({
 
     if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
       if (alreadySubscribed) {
+        console.log("[GENRE] purchase via play (bypass to payment)", {
+          songId: song?._id,
+          price: song?.price,
+        }); // debug
         onPurchaseClick?.(song, "song");
       } else {
         handleRequireSubscribe(song.artist, "purchase", song);
@@ -199,6 +219,7 @@ const GenrePage = ({
 
         setLoadingMore(true);
         const nextPage = page + 1;
+        console.log("[GENRE] infinite load next page", { nextPage }); // debug
 
         try {
           const result = await dispatch(
@@ -271,7 +292,13 @@ const GenrePage = ({
                     onPlay={handlePlay}
                     onSubscribeRequired={(artist, type, data) => {
                       const sub = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+                      console.log("[GENRE] onSubscribeRequired from row", {
+                        type,
+                        songId: data?._id,
+                        alreadySubscribed: sub,
+                      }); // debug
                       if (type === "purchase" && sub) {
+                        console.log("[GENRE] bypass modal to payment (onSubscribeRequired)"); // debug
                         onPurchaseClick?.(data, "song");
                         return;
                       }
@@ -280,7 +307,13 @@ const GenrePage = ({
                       setModalData(data);
                       setSubscribeModalOpen(true);
                     }}
-                    onPurchaseClick={(item) => onPurchaseClick?.(item, "song")}
+                    onPurchaseClick={(item) => {
+                      console.log("[GENRE] onPurchaseClick forwarded", {
+                        songId: item?._id,
+                        price: item?.price,
+                      }); // debug
+                      onPurchaseClick?.(item, "song");
+                    }}
                     processingPayment={processingPayment}
                     paymentLoading={paymentLoading}
                     purchased={purchased}
@@ -306,18 +339,10 @@ const GenrePage = ({
         artist={modalArtist}
         type={modalType}
         itemData={modalData}
-        onClose={() => {
-          setSubscribeModalOpen(false);
-          setModalType(null);
-          setModalArtist(null);
-          setModalData(null);
-        }}
+        onClose={handleSubscribeModalClose}
         onNavigate={() => {
-          setSubscribeModalOpen(false);
-          setModalType(null);
+          handleSubscribeModalClose();
           if (modalArtist?.slug) navigate(`/artist/${modalArtist.slug}`);
-          setModalArtist(null);
-          setModalData(null);
         }}
       />
     </>
