@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import UserHeader from "../components/user/UserHeader";
@@ -51,6 +51,21 @@ const loadRazorpayScript = () => {
   });
 };
 
+const cycleLabel = (c) => {
+  switch (c) {
+    case "1m":
+      return "Monthly";
+    case "3m":
+      return "3 Months";
+    case "6m":
+      return "6 Months";
+    case "12m":
+      return "12 Months";
+    default:
+      return c;
+  }
+};
+
 const Artist = () => {
   const { artistId } = useParams();
   const dispatch = useDispatch();
@@ -99,6 +114,32 @@ const Artist = () => {
 
   const songsObserverRef = useRef();
   const albumsObserverRef = useRef();
+
+  // Derive cycles from backend plans on each render
+  const availableCycles = useMemo(() => {
+    const plans = artist?.subscriptionPlans || [];
+    return plans
+      .map((p) => p?.cycle)
+      .filter(Boolean)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
+  }, [artist?.subscriptionPlans]);
+
+  // Choose current cycle without local state to avoid stale values
+  const currentCycle = useMemo(() => {
+    if (!availableCycles.length) return null;
+    return availableCycles.includes("1m") ? "1m" : availableCycles;
+  }, [availableCycles]);
+
+  const fullCycle = useMemo(() => {
+  const plans = artist?.subscriptionPlans || [];
+  const cycles = plans.map(p => p?.cycle).filter(Boolean);
+  if (!cycles.length) return null;
+
+  // Preferred order
+  const order = ["1m", "3m", "6m", "12m"];
+  const found = order.find(c => cycles.includes(c));
+  return found || cycles; // fall back to first available
+}, [artist?.subscriptionPlans]);
 
   const getArtistColor = (name) => {
     if (!name) return "bg-blue-600";
@@ -204,7 +245,7 @@ const Artist = () => {
         description: `Purchase ${item.title || item.name}`,
         image: `${window.location.origin}/icon.png`,
         order_id: orderResult.order.id,
-        handler: async function (response) {
+        handler: async function () {
           toast.success(`Successfully purchased ${item.title || item.name}!`);
           dispatch(fetchUserSubscriptions());
           setTimeout(() => {
@@ -222,11 +263,10 @@ const Artist = () => {
           userId: currentUser?._id,
           artistId: artist?._id,
         },
-        theme: {
-          color: "#3B82F6",
-        },
+        theme: { color: "#3B82F6" },
         modal: {
           ondismiss: function () {
+            console.warn("[Purchase] Razorpay modal dismissed");
             toast.error("Payment cancelled.");
             dispatch(resetPaymentState());
           },
@@ -246,6 +286,10 @@ const Artist = () => {
       toast.error("Artist info not loaded.");
       return;
     }
+    if (!currentCycle) {
+      toast.error("Subscription cycle unavailable.");
+      return;
+    }
 
     try {
       setSubscriptionLoading(true);
@@ -257,7 +301,10 @@ const Artist = () => {
       }
 
       const subscriptionResult = await dispatch(
-        initiateRazorpaySubscription(artist._id)
+        initiateRazorpaySubscription({
+          artistId: artist._id,
+          cycle: String(currentCycle),
+        })
       ).unwrap();
 
       if (!subscriptionResult.subscriptionId) {
@@ -269,9 +316,11 @@ const Artist = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         subscription_id: subscriptionResult.subscriptionId,
         name: "musicreset",
-        description: `Subscribe to ${artist.name}`,
+        description: `Subscribe to ${artist.name} (${cycleLabel(
+          subscriptionResult.cycle || currentCycle
+        )})`,
         image: `${window.location.origin}/icon.png`,
-        handler: async function (response) {
+        handler: async function () {
           toast.success(`Successfully subscribed to ${artist.name}!`);
           dispatch(fetchUserSubscriptions());
         },
@@ -284,12 +333,12 @@ const Artist = () => {
           artistId: artist._id,
           artistSlug: artistId,
           userId: currentUser?._id,
+          cycle: subscriptionResult.cycle || currentCycle,
         },
-        theme: {
-          color: "#3B82F6",
-        },
+        theme: { color: "#3B82F6" },
         modal: {
           ondismiss: function () {
+            console.warn("[Subscription] Razorpay modal dismissed");
             toast.error("Subscription cancelled.");
             dispatch(resetPaymentState());
           },
@@ -301,9 +350,7 @@ const Artist = () => {
     } catch (error) {
       console.error("Subscription error:", error);
       toast.error(
-        `Subscription failed: ${
-          error.message || "Failed to initiate subscription"
-        }`
+        `Subscription failed: ${error.message || "Failed to initiate subscription"}`
       );
     } finally {
       setSubscriptionLoading(false);
@@ -351,7 +398,7 @@ const Artist = () => {
       if (songsStatus === "loading") return;
       if (songsObserverRef.current) songsObserverRef.current.disconnect();
       songsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && songsPage < totalPages) {
+        if (entries?.isIntersecting && songsPage < totalPages) {
           setSongsPage((prev) => prev + 1);
         }
       });
@@ -365,7 +412,7 @@ const Artist = () => {
       if (albumsStatus === "loading" || !hasMoreAlbums) return;
       if (albumsObserverRef.current) albumsObserverRef.current.disconnect();
       albumsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMoreAlbums) {
+        if (entries?.isIntersecting && hasMoreAlbums) {
           setAlbumsPage((prev) => prev + 1);
         }
       });
@@ -439,10 +486,13 @@ const Artist = () => {
                     <FiMapPin className="mr-2 text-blue-600" />
                     <span>{artist?.location || "Unknown City"}</span>
                   </div>
-                  <div className="flex items-center gap-4 mt-3">
+
+                  {/* Subscribe/Cancel — cycle is derived from latest artist data */}
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
                     <span className="text-lg font-semibold text-blue-400">
-                      ₹{subscriptionPrice.toFixed(2)}/month
+                      ₹{subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
                     </span>
+
                     <button
                       onClick={handleSubscribe}
                       disabled={subscriptionLoading || paymentLoading}
@@ -457,12 +507,19 @@ const Artist = () => {
                             ? "bg-red-600 text-white hover:bg-red-700"
                             : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
+                      title={
+                        currentCycle
+                          ? `Cycle: ${cycleLabel(currentCycle)}`
+                          : "Cycle unavailable"
+                      }
                     >
                       {subscriptionLoading || paymentLoading
                         ? "Processing..."
                         : isSubscribed
                         ? "Cancel Subscription"
-                        : `Subscribe ₹${subscriptionPrice.toFixed(2)}/mo`}
+                        : currentCycle
+                        ? `Subscribe (${cycleLabel(currentCycle)})`
+                        : "Subscribe"}
                     </button>
                   </div>
                 </div>
@@ -642,14 +699,11 @@ const Artist = () => {
                   onPlay={() => handlePlaySong(song)}
                   isSelected={selectedSong?._id === song._id}
                   price={
-                    // First check if song is already purchased
                     currentUser?.purchasedSongs?.includes(song._id) ? (
                       "Purchased"
-                    ) : // Then check subscription songs first (they can have price = 0)
-                    song.accessType === "subscription" ? (
+                    ) : song.accessType === "subscription" ? (
                       "Subs.."
-                    ) : // Then check purchase-only songs with price > 0
-                    song.accessType === "purchase-only" && song.price > 0 ? (
+                    ) : song.accessType === "purchase-only" && song.price > 0 ? (
                       <button
                         className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
                           processingPayment || paymentLoading
@@ -663,11 +717,10 @@ const Artist = () => {
                           ? "..."
                           : `Buy ₹${song.price}`}
                       </button>
-                    ) : // Then check if it's a free album song (purchase-only with price = 0)
-                    song.accessType === "purchase-only" && song.price === 0 ? (
+                    ) : song.accessType === "purchase-only" &&
+                      song.price === 0 ? (
                       "album"
                     ) : (
-                      // Default case
                       "Free"
                     )
                   }
@@ -682,6 +735,7 @@ const Artist = () => {
           subscriptionPrice={subscriptionPrice}
           handleSubscribe={handleSubscribe}
           getArtistColor={getArtistColor}
+          currentCycle={cycleLabel(fullCycle)}
         />
 
         {paymentError && (

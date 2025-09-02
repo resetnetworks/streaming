@@ -6,6 +6,7 @@ const ArtistAboutSection = ({
   isSubscribed,
   subscriptionLoading,
   subscriptionPrice,
+  currentCycle,
   handleSubscribe,
   getArtistColor
 }) => {
@@ -64,7 +65,7 @@ const ArtistAboutSection = ({
                     )}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    ${subscriptionPrice.toFixed(2)} per month • Cancel anytime
+                    ₹{subscriptionPrice.toFixed(2)} per {currentCycle} • Cancel anytime
                   </p>
                 </div>
                 <button

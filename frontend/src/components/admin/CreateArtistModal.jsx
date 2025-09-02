@@ -18,6 +18,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     name: "",
     bio: "",
     subscriptionPrice: "0",
+    cycle: "",
     location: "",
   });
 
@@ -30,6 +31,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
         name: initialData.name || "",
         bio: initialData.bio || "",
         subscriptionPrice: initialData.subscriptionPrice?.toString() || "0",
+        cycle: initialData.cycle || "",
         location: initialData.location || "",
       });
       setImagePreview(initialData.image || null);
@@ -38,6 +40,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
         name: "",
         bio: "",
         subscriptionPrice: "0",
+        cycle: "",
         location: "",
       });
       setImage(null);
@@ -74,10 +77,17 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
       return;
     }
 
+    const isPaid = form.subscriptionPrice !== "0";
+    if (isPaid && !form.cycle) {
+      toast.error("Subscription cycle is required for paid plans");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("bio", form.bio);
     formData.append("subscriptionPrice", form.subscriptionPrice);
+    formData.append("cycle", isPaid ? form.cycle : "");
     formData.append("location", form.location);
     if (image) {
       formData.append("coverImage", image);
@@ -96,6 +106,8 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
       toast.error(err || "Failed to submit artist");
     }
   };
+
+  const isPaid = (form.subscriptionPrice || "0") !== "0";
 
   if (!isOpen) return null;
 
@@ -166,6 +178,28 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
               className="w-full border p-2 rounded bg-gray-800 border-gray-700 text-white"
               min="0"
             />
+          </div>
+
+          {/* Subscription Cycle */}
+          <div className="mb-4">
+            <label className="block font-medium mb-1 text-gray-300">
+              Subscription Cycle {isPaid ? "*" : "(optional for free)"}
+            </label>
+            <select
+              name="cycle"
+              value={form.cycle}
+              onChange={handleChange}
+              className="w-full border p-2 rounded bg-gray-800 border-gray-700 text-white"
+              disabled={!isPaid}
+            >
+              <option value="">
+                {isPaid ? "Select cycle" : "Disabled for free plans"}
+              </option>
+              <option value="1m">Monthly (1 month)</option>
+              <option value="3m">Quarterly (3 months)</option>
+              <option value="6m">Half-yearly (6 months)</option>
+              <option value="12m">Yearly (12 months)</option>
+            </select>
           </div>
 
           {/* Cover Image */}

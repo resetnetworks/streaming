@@ -20,7 +20,7 @@ export const initiateStripeItemPayment = createAsyncThunk(
   }
 );
 
-// 🎯 Song/Album Purchase (Razorpay) - NEW
+// 🎯 Song/Album Purchase (Razorpay)
 export const initiateRazorpayItemPayment = createAsyncThunk(
   'payment/initiateRazorpayItemPayment',
   async ({ itemType, itemId, amount }, { rejectWithValue }) => {
@@ -30,7 +30,7 @@ export const initiateRazorpayItemPayment = createAsyncThunk(
         itemId,
         amount,
       });
-      return response.data; // { success: true, order: razorpayOrder }
+      return response.data; // { success: true, order }
     } catch (error) {
       console.log(error.response?.data?.message || 'Razorpay payment failed');
       return rejectWithValue(error.response?.data || error.message);
@@ -62,7 +62,7 @@ export const confirmArtistStripeSubscription = createAsyncThunk(
         paymentMethodId,
         ...address, // line1, city, state, postal_code, country
       });
-      return response.data; // { clientSecret (optional), subscriptionId }
+      return response.data; // { clientSecret (optional), subscriptionId | transactionId }
     } catch (error) {
       console.log(error.response?.data?.message || 'Artist subscription failed');
       return rejectWithValue(error.response?.data || error.message);
@@ -70,13 +70,22 @@ export const confirmArtistStripeSubscription = createAsyncThunk(
   }
 );
 
-// 🎯 Artist Subscription (Razorpay) - NEW
+// 🎯 Artist Subscription (Razorpay) — with cycle
+// backend expects body: { cycle: "1m" | "3m" | "6m" | "12m" }
 export const initiateRazorpaySubscription = createAsyncThunk(
   'payment/initiateRazorpaySubscription',
-  async (artistId, { rejectWithValue }) => {
+  async ({ artistId, cycle }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(`/subscriptions/artist/${artistId}`);
-      return response.data; // { success: true, subscriptionId }
+      // Validate cycle on the client for a better UX
+      const validCycles = ['1m', '3m', '6m', '12m'];
+      if (!validCycles.includes(cycle)) {
+        return rejectWithValue({ message: 'Invalid subscription cycle. Use 1m, 3m, 6m, or 12m.' });
+      }
+
+      const response = await axiosInstance.post(`/subscriptions/artist/${artistId}`, {
+        cycle,
+      });
+      return response.data; // { success: true, subscriptionId, cycle }
     } catch (error) {
       console.log(error.response?.data?.message || 'Razorpay subscription failed');
       return rejectWithValue(error.response?.data || error.message);
@@ -90,7 +99,7 @@ export const cancelArtistSubscription = createAsyncThunk(
   async (artistId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.delete(`/subscriptions/artist/${artistId}`);
-      return response.data; // { success: true, message: "Subscription cancelled." }
+      return response.data; // { success: true, message }
     } catch (error) {
       console.log(error.response?.data?.message || 'Cancellation failed');
       return rejectWithValue(error.response?.data || error.message);
@@ -98,26 +107,31 @@ export const cancelArtistSubscription = createAsyncThunk(
   }
 );
 
+const initialState = {
+  loading: false,
+  error: null,
+  gateway: null, // 'stripe' | 'razorpay'
+
+  // Stripe specific
+  clientSecret: null,
+  transactionId: null,
+
+  // Razorpay specific
+  razorpayOrderId: null,
+  razorpayOrder: null,
+  razorpaySubscriptionId: null,
+
+  // General
+  cancelMessage: null,
+  paymentSuccess: false,
+
+  // Subscription UI/selection
+  currentCycle: null, // "1m" | "3m" | "6m" | "12m"
+};
+
 const paymentSlice = createSlice({
   name: 'payment',
-  initialState: {
-    loading: false,
-    error: null,
-    gateway: null, // 'stripe' | 'razorpay'
-    
-    // Stripe specific
-    clientSecret: null,
-    transactionId: null,
-    
-    // Razorpay specific
-    razorpayOrderId: null,
-    razorpayOrder: null,
-    razorpaySubscriptionId: null,
-    
-    // General
-    cancelMessage: null,
-    paymentSuccess: false,
-  },
+  initialState,
   reducers: {
     resetPaymentState: (state) => {
       state.loading = false;
@@ -130,12 +144,16 @@ const paymentSlice = createSlice({
       state.transactionId = null;
       state.cancelMessage = null;
       state.paymentSuccess = false;
+      state.currentCycle = null;
     },
     setPaymentGateway: (state, action) => {
       state.gateway = action.payload; // 'stripe' | 'razorpay'
     },
     setPaymentSuccess: (state, action) => {
       state.paymentSuccess = action.payload;
+    },
+    setSubscriptionCycle: (state, action) => {
+      state.currentCycle = action.payload; // "1m" | "3m" | "6m" | "12m"
     },
   },
   extraReducers: (builder) => {
@@ -158,7 +176,7 @@ const paymentSlice = createSlice({
         state.clientSecret = null;
       })
 
-      // 🎵 Razorpay Item Payment - NEW
+      // 🎵 Razorpay Item Payment
       .addCase(initiateRazorpayItemPayment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -212,15 +230,20 @@ const paymentSlice = createSlice({
         state.transactionId = null;
       })
 
-      // ✅ Razorpay Subscription - NEW
-      .addCase(initiateRazorpaySubscription.pending, (state) => {
+      // ✅ Razorpay Subscription — with cycle
+      .addCase(initiateRazorpaySubscription.pending, (state, action) => {
         state.loading = true;
         state.error = null;
         state.razorpaySubscriptionId = null;
+        // If caller passed cycle via meta.arg, reflect it for UI immediately
+        const arg = action.meta?.arg;
+        if (arg?.cycle) state.currentCycle = arg.cycle;
+        state.gateway = 'razorpay';
       })
       .addCase(initiateRazorpaySubscription.fulfilled, (state, action) => {
         state.loading = false;
         state.razorpaySubscriptionId = action.payload.subscriptionId;
+        state.currentCycle = action.payload.cycle || state.currentCycle;
         state.gateway = 'razorpay';
       })
       .addCase(initiateRazorpaySubscription.rejected, (state, action) => {
@@ -247,5 +270,11 @@ const paymentSlice = createSlice({
   },
 });
 
-export const { resetPaymentState, setPaymentGateway, setPaymentSuccess } = paymentSlice.actions;
+export const {
+  resetPaymentState,
+  setPaymentGateway,
+  setPaymentSuccess,
+  setSubscriptionCycle,
+} = paymentSlice.actions;
+
 export default paymentSlice.reducer;
