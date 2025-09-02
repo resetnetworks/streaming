@@ -422,7 +422,7 @@ const Artist = () => {
   );
 
   const songListView = showAllSongs ? artistSongs : artistSongs.slice(0, 5);
-  const subscriptionPrice = artist?.subscriptionPrice || 4.99;
+  const subscriptionPrice = artist?.subscriptionPlans[0].price || 4.99;
   const artistColor = getArtistColor(artist?.name);
 
   const renderArtistImage = (imageUrl, name, size = "w-20 h-20") =>
