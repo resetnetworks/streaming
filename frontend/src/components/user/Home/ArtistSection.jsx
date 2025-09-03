@@ -113,7 +113,7 @@ const ArtistCircle = forwardRef(function ArtistCircle(
 
     const cheapestPlan = sortedPlans[0];
     const label = cycleLabel(cheapestPlan.cycle);
-    return `$${cheapestPlan.price}/${label}`;
+    return `₹${cheapestPlan.price}/${label}`;
   }, [artist?.subscriptionPlans]);
 
   return (
