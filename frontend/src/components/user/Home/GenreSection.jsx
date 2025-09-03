@@ -68,7 +68,7 @@ const GenreSection = () => {
   };
 
   return (
-    <section className="w-full py-6">
+    <section className="w-full py-0">
       {/* Header with Back and Next */}
       <div className="w-full flex justify-between items-center mb-4">
         <h2 className="md:text-xl text-lg font-semibold text-white">Explore by Genre</h2>

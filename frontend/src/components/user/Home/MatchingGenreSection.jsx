@@ -244,7 +244,7 @@ const MatchingGenreSection = ({
   // Loading skeleton for very first load only
   if (!currentUser) {
     return (
-      <div className="w-full py-6">
+      <div className="w-full py-0">
         <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-700/30 rounded-xl p-6 text-center backdrop-blur-sm">
           <div className="text-white text-lg font-semibold mb-2">AI Personalized Music</div>
           <p className="text-gray-400">Please log in to see personalized song recommendations</p>
@@ -272,8 +272,8 @@ const MatchingGenreSection = ({
 
   if ((status === 'loading' && !hasInitialLoad) || (merged.length === 0 && status === 'loading')) {
     return (
-      <section className="w-full py-6">
-        <div className="w-full flex justify-between items-center mb-4">
+      <section className="w-full py-0">
+        <div className="w-full flex justify-between items-center mb-2">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg" />
             <div>
@@ -300,7 +300,7 @@ const MatchingGenreSection = ({
   }
 
   return (
-    <section className="w-full py-6">
+    <section className="w-full py-0">
       {/* Header */}
       <div className="w-full flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">

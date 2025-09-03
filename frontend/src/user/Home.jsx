@@ -19,7 +19,7 @@ import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
 import { resetPaymentState } from "../features/payments/paymentSlice";
 import GenreSection from "../components/user/Home/GenreSection";
-
+import ArtistSection from "../components/user/Home/ArtistSection";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 
 const Home = () => {
@@ -58,6 +58,11 @@ const Home = () => {
       navigate(`/artist/${modalArtist.slug}`);
     }
   };
+
+    const navigateToArtistDirect = (artist) => {
+    if (artist?.slug) navigate(`/artist/${artist.slug}`);
+  };
+  
 
   const handleSubscribeDecision = (artist, type, data) => {
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
@@ -118,6 +123,13 @@ const Home = () => {
           />
 
           <GenreSection />
+
+          <ArtistSection
+          title="Featured Artists"
+          currentUser={currentUser}
+          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
+          onNavigateArtist={navigateToArtistDirect}
+        />
 
           {/* Matching Genre */}
           <MatchingGenreSection
