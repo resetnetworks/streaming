@@ -95,7 +95,7 @@ const UserHeader = () => {
           </div>
 
           {open && (
-            <div className="absolute right-0 mt-3 w-52 bg-image rounded-xl border border-blue-500 shadow-[0_0_8px_1px_#3b82f6] z-50">
+            <div className="absolute right-0 mt-3 w-52 bg-gradient-to-b from-black to-blue-900 rounded-xl border border-blue-500 shadow-[0_0_8px_1px_#3b82f6] z-50">
               <ul className="py-2 text-sm text-gray-400">
                 <li
                   className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
