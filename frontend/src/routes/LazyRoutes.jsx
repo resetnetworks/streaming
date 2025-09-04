@@ -21,6 +21,7 @@ export const DataDeletion = lazy(() => import("../user/DataDeletion"));
 export const PrivacyPolicy = lazy(() => import("../user/PrivacyPolicy"));
 export const SocialLoginCallback = lazy(() => import("../user/SocialLoginCallback"));
 export const Genre = lazy(() => import("../user/Genre"));
+export const LandingPage = lazy(() => import("../user/LandingPage"));
 
 
 // Admin pages routes

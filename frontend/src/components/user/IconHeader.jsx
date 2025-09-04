@@ -8,7 +8,7 @@ const IconHeader = () => {
   return (
     <>
     <div className='w-full flex items-center flex-col'>
-    <img src={assets.reset_icon} className="w-10 py-3 block cursor-pointer" alt="reset studio icon" onClick={()=>{navigate("/")}}/>
+    <img src={assets.reset_icon} className="w-10 py-3 block cursor-pointer" alt="reset studio icon" onClick={()=>{navigate("/home")}}/>
     <div className="gradiant-line"></div>
     </div>
     </>
