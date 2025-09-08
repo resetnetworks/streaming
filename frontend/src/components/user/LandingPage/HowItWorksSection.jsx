@@ -1,0 +1,336 @@
+import React, { useRef, useEffect, useState } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { FaUsers, FaMusic, FaBroadcastTower, FaMicrophone } from 'react-icons/fa';
+
+// Accept the scrollContainerRef as a prop.
+const HowItWorksSection = ({ scrollContainerRef }) => {
+  const sectionRef = useRef(null);
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Tell useInView to use the passed ref as the scroll "root".
+  const isInView = useInView(sectionRef, {
+    root: scrollContainerRef,
+    once: true,
+    amount: 0.3
+  });
+
+  // Auto play video when in view
+  useEffect(() => {
+    const video = videoRef.current;
+
+    // Function to attempt playing the video
+    const attemptPlay = () => {
+      if (video) {
+        // Always try to mute first for autoplay
+        video.muted = true; 
+        const playPromise = video.play();
+
+        if (playPromise !== undefined) {
+          playPromise.then(_ => {
+            console.log("Video auto-play started successfully.");
+            setIsPlaying(true);
+          }).catch(error => {
+            console.log("Video auto-play prevented. User interaction might be required.", error);
+            setIsPlaying(false);
+          });
+        }
+      }
+    };
+
+    if (isInView) {
+      attemptPlay();
+    }
+
+    // Clean up function - pause video if component unmounts or leaves view
+    return () => {
+      if (video && !isInView) {
+        video.pause();
+        setIsPlaying(false);
+      }
+    };
+
+  }, [isInView]);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        duration: 0.8
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const videoVariants = {
+    hidden: { opacity: 0, scale: 0.9, rotateY: -15 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      rotateY: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const features = [
+    {
+      icon: FaMicrophone,
+      title: "Stream Live",
+      description: "Start streaming with professional audio quality"
+    },
+    {
+      icon: FaUsers,
+      title: "Build Audience",
+      description: "Connect with music lovers worldwide"
+    },
+    {
+      icon: FaMusic,
+      title: "Share Passion",
+      description: "Express your musical creativity freely"
+    }
+  ];
+
+  return (
+    <section 
+      ref={sectionRef}
+      className="relative min-h-screen overflow-hidden pb-10"
+    >
+      <div className='gradiant-line mb-7'></div>
+      
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1)_0%,transparent_70%)]"></div>
+      
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.3, 0.7, 0.3],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="container mx-auto px-6 lg:px-8 relative z-10">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          className="grid lg:grid-cols-2 gap-16 items-center"
+        >
+          {/* Left Content */}
+          <motion.div variants={itemVariants} className="space-y-8">
+            {/* Section Tag */}
+            <motion.div 
+              variants={itemVariants}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20"
+            >
+              <FaBroadcastTower className="text-blue-400 text-sm" />
+              <span className="text-blue-300 text-sm font-medium">How MusicReset Works</span>
+            </motion.div>
+
+            {/* Main Heading */}
+            <motion.div variants={itemVariants} className="space-y-4">
+              <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+                Stream Your Music 
+                <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text">
+                  Like a Pro
+                </span>
+              </h2>
+              <p className="text-xl text-slate-300 leading-relaxed">
+                Our platform makes it incredibly easy for DJs to share their passion with the world. 
+                Professional streaming tools, real-time interaction, and global reach - all in one place.
+              </p>
+            </motion.div>
+
+            {/* Description */}
+            <motion.div variants={itemVariants} className="space-y-6">
+              <p className="text-lg text-slate-400 leading-relaxed">
+                Whether you're a bedroom DJ or a professional artist, MusicReset provides everything 
+                you need to build your audience and share your unique sound. Our intuitive interface 
+                combined with powerful streaming technology ensures your music reaches listeners 
+                in crystal-clear quality.
+              </p>
+
+              {/* Features List */}
+              <div className="grid gap-4">
+                {features.map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    variants={itemVariants}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/30 transition-colors duration-300"
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <feature.icon className="text-blue-400 text-lg" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">{feature.title}</h4>
+                      <p className="text-slate-400 text-sm">{feature.description}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Right Video Section */}
+          <motion.div 
+            variants={videoVariants}
+            className="relative"
+          >
+            {/* Video Container with 3D Effect */}
+            <div className="relative group">
+              {/* Background Glow Effect */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              {/* Video Frame */}
+              <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 p-2 rounded-2xl border border-slate-700/50 shadow-2xl">
+                <div className="aspect-video rounded-xl overflow-hidden bg-slate-900 relative group-hover:scale-[1.02] transition-transform duration-500">
+                  {/* Video Element - Fixed attributes */}
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    controls={false}
+                    className="w-full h-full object-cover"
+                    poster="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                    onLoadedData={() => {
+                      console.log("Video loaded successfully");
+                    }}
+                    onError={(e) => {
+                      console.error("Video error:", e);
+                    }}
+                    style={{
+                      objectFit: 'cover',
+                      width: '100%',
+                      height: '100%'
+                    }}
+                  >
+                    <source src="/images/test.mp4" type="video/mp4" />
+                    <source src="/images/test.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+
+                  {/* Video Overlay Content */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex flex-col justify-end p-6 pointer-events-none">
+                    <div className="space-y-2">
+                      <h4 className="text-white font-semibold text-lg">Platform Overview</h4>
+                      <p className="text-slate-300 text-sm">See how easy it is to start streaming</p>
+                    </div>
+                  </div>
+
+                  {/* Live Indicator */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 px-3 py-1 rounded-full">
+                    <motion.div
+                      className="w-2 h-2 bg-white rounded-full"
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <span className="text-white text-xs font-medium">LIVE</span>
+                  </div>
+
+                  {/* Floating Elements */}
+                  <motion.div
+                    className="absolute top-4 right-4 w-3 h-3 bg-green-500 rounded-full"
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  <motion.div
+                    className="absolute top-4 right-12 w-2 h-2 bg-yellow-500 rounded-full"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Stats */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="absolute -right-6 top-1/2 transform -translate-y-1/2 bg-slate-800/90 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 shadow-xl"
+            >
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-blue-400">Live</div>
+                <div className="text-xs text-slate-400">Currently Streaming</div>
+                <div className="flex items-center gap-1 text-green-400 text-xs">
+                  <motion.div 
+                    className="w-2 h-2 bg-green-500 rounded-full" 
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  1.2K viewers
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Bottom Stats Section */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          className="mt-24 pt-12 border-t border-slate-800"
+        >
+          <motion.div variants={itemVariants} className="text-center mb-12">
+            <h3 className="text-2xl font-bold text-white mb-4">Join Thousands of DJs Worldwide</h3>
+            <p className="text-slate-400">Experience the future of music streaming</p>
+          </motion.div>
+
+          <motion.div 
+            variants={itemVariants}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          >
+            {[
+              { number: "25K+", label: "Hours Streamed" },
+              { number: "1.8M+", label: "Total Listeners" },
+              { number: "150+", label: "Countries" },
+              { number: "99.9%", label: "Uptime" }
+            ].map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl font-bold text-blue-400 mb-2">{stat.number}</div>
+                <div className="text-slate-400 text-sm">{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default HowItWorksSection;

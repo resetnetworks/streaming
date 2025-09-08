@@ -34,5 +34,11 @@ export const selectRazorpayOrder = (state) => state.payment?.razorpayOrder;
 export const selectRazorpayOrderId = (state) => state.payment?.razorpayOrderId;
 export const selectRazorpaySubscriptionId = (state) => state.payment?.razorpaySubscriptionId;
 
+// 🆕 PayPal selectors
+export const selectPaypalOrderId = (state) => state.payment?.paypalOrderId;
+export const selectPaypalOrder = (state) => state.payment?.paypalOrder;
+export const selectPaypalLinks = (state) => state.payment?.paypalLinks;
+export const selectPaypalCaptureResponse = (state) => state.payment?.paypalCaptureResponse;
+
 // General selectors
 export const selectCancelMessage = (state) => state.payment?.cancelMessage;

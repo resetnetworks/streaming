@@ -11,9 +11,9 @@ export const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) =>
 
 export const AdminRoute = ({ isAuthenticated, user, children }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.role !== "admin") return <Navigate to="/" replace />;
+  if (user?.role !== "admin") return <Navigate to="/home" replace />;
   return children;
 };
 
-export const PublicRoute = ({ isAuthenticated, children, redirectTo = "/" }) =>
+export const PublicRoute = ({ isAuthenticated, children, redirectTo = "/home" }) =>
   !isAuthenticated ? children : <Navigate to={redirectTo} replace />;

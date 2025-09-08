@@ -14,7 +14,6 @@ export const initiateStripeItemPayment = createAsyncThunk(
       });
       return response.data; // { clientSecret }
     } catch (error) {
-      console.log(error.response?.data?.message || 'Item payment failed');
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -32,7 +31,39 @@ export const initiateRazorpayItemPayment = createAsyncThunk(
       });
       return response.data; // { success: true, order }
     } catch (error) {
-      console.log(error.response?.data?.message || 'Razorpay payment failed');
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🆕 Song/Album Purchase (PayPal) - Create Order
+export const initiatePaypalItemPayment = createAsyncThunk(
+  'payment/initiatePaypalItemPayment',
+  async ({ itemType, itemId, amount, currency = 'USD' }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/payments/paypal/create-order`, {
+        itemType,
+        itemId,
+        amount,
+        currency,
+      });
+      return response.data; // { success: true, id, links }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🆕 Capture PayPal Order
+export const capturePaypalOrder = createAsyncThunk(
+  'payment/capturePaypalOrder',
+  async ({ orderId }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/payments/paypal/capture-order`, {
+        orderId,
+      });
+      return response.data; // { success: true, data }
+    } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -46,7 +77,6 @@ export const initiateStripeSetupIntent = createAsyncThunk(
       const response = await axiosInstance.post(`/subscriptions/setup-intent`);
       return response.data; // { clientSecret }
     } catch (error) {
-      console.log(error.response?.data?.message || 'Setup intent failed');
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -64,14 +94,12 @@ export const confirmArtistStripeSubscription = createAsyncThunk(
       });
       return response.data; // { clientSecret (optional), subscriptionId | transactionId }
     } catch (error) {
-      console.log(error.response?.data?.message || 'Artist subscription failed');
       return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
 
 // 🎯 Artist Subscription (Razorpay) — with cycle
-// backend expects body: { cycle: "1m" | "3m" | "6m" | "12m" }
 export const initiateRazorpaySubscription = createAsyncThunk(
   'payment/initiateRazorpaySubscription',
   async ({ artistId, cycle }, { rejectWithValue }) => {
@@ -87,7 +115,6 @@ export const initiateRazorpaySubscription = createAsyncThunk(
       });
       return response.data; // { success: true, subscriptionId, cycle }
     } catch (error) {
-      console.log(error.response?.data?.message || 'Razorpay subscription failed');
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -101,7 +128,6 @@ export const cancelArtistSubscription = createAsyncThunk(
       const response = await axiosInstance.delete(`/subscriptions/artist/${artistId}`);
       return response.data; // { success: true, message }
     } catch (error) {
-      console.log(error.response?.data?.message || 'Cancellation failed');
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -110,7 +136,7 @@ export const cancelArtistSubscription = createAsyncThunk(
 const initialState = {
   loading: false,
   error: null,
-  gateway: null, // 'stripe' | 'razorpay'
+  gateway: null, // 'stripe' | 'razorpay' | 'paypal'
 
   // Stripe specific
   clientSecret: null,
@@ -120,6 +146,12 @@ const initialState = {
   razorpayOrderId: null,
   razorpayOrder: null,
   razorpaySubscriptionId: null,
+
+  // 🆕 PayPal specific
+  paypalOrderId: null,
+  paypalOrder: null,
+  paypalLinks: null,
+  paypalCaptureResponse: null,
 
   // General
   cancelMessage: null,
@@ -142,12 +174,16 @@ const paymentSlice = createSlice({
       state.razorpayOrder = null;
       state.razorpaySubscriptionId = null;
       state.transactionId = null;
+      state.paypalOrderId = null;
+      state.paypalOrder = null;
+      state.paypalLinks = null;
+      state.paypalCaptureResponse = null;
       state.cancelMessage = null;
       state.paymentSuccess = false;
       state.currentCycle = null;
     },
     setPaymentGateway: (state, action) => {
-      state.gateway = action.payload; // 'stripe' | 'razorpay'
+      state.gateway = action.payload; // 'stripe' | 'razorpay' | 'paypal'
     },
     setPaymentSuccess: (state, action) => {
       state.paymentSuccess = action.payload;
@@ -193,6 +229,48 @@ const paymentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.razorpayOrder = null;
+      })
+
+      // 🆕 PayPal Item Payment
+      .addCase(initiatePaypalItemPayment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.paypalOrder = null;
+        state.paypalOrderId = null;
+        state.paypalLinks = null;
+        state.gateway = 'paypal';
+      })
+      .addCase(initiatePaypalItemPayment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paypalOrderId = action.payload.id;
+        state.paypalOrder = action.payload;
+        state.paypalLinks = action.payload.links;
+        state.gateway = 'paypal';
+      })
+      .addCase(initiatePaypalItemPayment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.paypalOrder = null;
+        state.paypalOrderId = null;
+        state.paypalLinks = null;
+      })
+
+      // 🆕 PayPal Capture Order
+      .addCase(capturePaypalOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.paypalCaptureResponse = null;
+      })
+      .addCase(capturePaypalOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paypalCaptureResponse = action.payload.data;
+        state.paymentSuccess = true;
+      })
+      .addCase(capturePaypalOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.paypalCaptureResponse = null;
+        state.paymentSuccess = false;
       })
 
       // 💳 Stripe Setup Intent

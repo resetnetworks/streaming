@@ -1,9 +1,10 @@
 import React, { useRef, useMemo, useState, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { FaPlayCircle, FaUser, FaHome, FaMusic, FaHeadphones, FaMicrophone, FaVolumeUp, FaWaveSquare } from 'react-icons/fa';
+import { FaPlayCircle, FaHeadphones, FaMicrophone, FaWaveSquare } from 'react-icons/fa';
 import '../styles/LandingPage.css';
 import Header from '../components/user/LandingPage/Header';
+import HowItWorksSection from '../components/user/LandingPage/HowItWorksSection';
 
 // Professional Minimal Particles
 const ProfessionalParticles = () => {
@@ -42,7 +43,6 @@ const ProfessionalParticles = () => {
     for (let i = 0; i < currentPositions.length; i += 3) {
       const initialX = initialPositions[i];
       const initialY = initialPositions[i + 1];
-      const initialZ = initialPositions[i + 2];
       
       const currentX = currentPositions[i];
       const currentY = currentPositions[i + 1];
@@ -110,11 +110,14 @@ const ProfessionalParticles = () => {
 
 // Main Landing Page Component
 const LandingPage = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // Create a ref for the main scrollable container.
+  const scrollContainerRef = useRef(null);
+
   return (
-    <div className="landing-page-container">
+    // Attach the ref to your main container div.
+    <div ref={scrollContainerRef} className="landing-page-container">
       <div className="landing-canvas-background">
         <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
           <Suspense fallback={null}>
@@ -131,7 +134,7 @@ const LandingPage = () => {
       <Header/>
       
       <div className="landing-content-overlay">
-        <div className="landing-hero-content">
+        <div className="landing-hero-content sm:mt-14 mt-6">
           <h1 className="landing-hero-title">
             <span>STREAM</span>
             <span className="accent">YOUR</span>
@@ -139,7 +142,6 @@ const LandingPage = () => {
           </h1>
           
           <div className="landing-hero-subtitle">
-            <FaVolumeUp className="landing-volume-icon" />
             <span>Professional DJ Streaming Platform</span>
           </div>
           
@@ -147,25 +149,6 @@ const LandingPage = () => {
             Connect with music lovers worldwide. Stream live DJ sets, 
             build your audience, and share your passion with the world.
           </p>
-          
-          <div className="landing-cta-container">
-            <div className="button-wrapper">
-              <button 
-                className="custom-button landing-primary-btn"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                <FaPlayCircle className="mr-2" />
-                {isPlaying ? 'Stop Stream' : 'Start Streaming'}
-              </button>
-            </div>
-            
-            <div className="searchbar-button-wrapper">
-              <button className="searchbar-button landing-secondary-btn">
-                <FaHeadphones className="mr-2" />
-                Browse Music
-              </button>
-            </div>
-          </div>
           
           <div className="landing-features-container">
             <div className="player-wrapper">
@@ -193,8 +176,6 @@ const LandingPage = () => {
             </div>
           </div>
           
-          <div className="gradiant-line my-8"></div>
-          
           <div className="landing-stats-container">
             <div className="landing-stat">
               <span className="landing-stat-number">15K+</span>
@@ -211,6 +192,8 @@ const LandingPage = () => {
           </div>
         </div>
       </div>
+
+      <HowItWorksSection scrollContainerRef={scrollContainerRef} />
     </div>
   );
 };

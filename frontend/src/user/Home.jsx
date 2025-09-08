@@ -14,6 +14,7 @@ import AllTracksSection from "../components/user/Home/AllTracksSection";
 import LoadingOverlay from "../components/user/Home/LoadingOverlay";
 import SubscribeModal from "../components/user/SubscribeModal";
 import MatchingGenreSection from "../components/user/Home/MatchingGenreSection";
+import PaymentMethodModal from "../components/user/PaymentMethodModal"; // 🆕 New import
 
 import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
@@ -34,7 +35,13 @@ const Home = () => {
   const { 
     handlePurchaseClick, 
     processingPayment, 
-    paymentLoading 
+    paymentLoading,
+    
+    // 🆕 Payment method selection states
+    showPaymentOptions,
+    pendingPayment,
+    handlePaymentMethodSelect,
+    closePaymentOptions
   } = useRazorpayPayment();
 
   const currentUser = useSelector((state) => state.auth.user);
@@ -59,10 +66,9 @@ const Home = () => {
     }
   };
 
-    const navigateToArtistDirect = (artist) => {
+  const navigateToArtistDirect = (artist) => {
     if (artist?.slug) navigate(`/artist/${artist.slug}`);
   };
-  
 
   const handleSubscribeDecision = (artist, type, data) => {
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
@@ -125,11 +131,11 @@ const Home = () => {
           <GenreSection />
 
           <ArtistSection
-          title="Featured Artists"
-          currentUser={currentUser}
-          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
-          onNavigateArtist={navigateToArtistDirect}
-        />
+            title="Featured Artists"
+            currentUser={currentUser}
+            onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
+            onNavigateArtist={navigateToArtistDirect}
+          />
 
           {/* Matching Genre */}
           <MatchingGenreSection
@@ -176,6 +182,15 @@ const Home = () => {
         itemData={modalData}
         onClose={handleSubscribeModalClose}
         onNavigate={handleNavigateToArtist}
+      />
+
+      {/* 🆕 Payment Method Selection Modal */}
+      <PaymentMethodModal
+        open={showPaymentOptions}
+        onClose={closePaymentOptions}
+        onSelectMethod={handlePaymentMethodSelect}
+        item={pendingPayment?.item}
+        itemType={pendingPayment?.itemType}
       />
     </>
   );

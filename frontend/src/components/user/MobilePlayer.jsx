@@ -363,7 +363,7 @@ const MobilePlayer = () => {
   {/* Artwork */}
   <div
     ref={artworkRef}
-    className={`relative ${isArtworkExpanded ? "w-72 h-72" : "w-64 h-64"} rounded-full border-4 border-blue-500 shadow-lg transition-all duration-500 mb-8 overflow-hidden cursor-pointer`}
+    className={`relative ${isArtworkExpanded ? "w-72 h-72" : "w-64 h-64"} rounded-xl border-4 border-blue-500 shadow-lg transition-all duration-500 mb-8 overflow-hidden cursor-pointer`}
     onClick={toggleArtworkSize}
     style={{
       boxShadow: "0 0 30px rgba(59, 130, 246, 0.7)",

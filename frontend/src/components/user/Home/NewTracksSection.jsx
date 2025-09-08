@@ -56,6 +56,20 @@ const NewTracksSection = ({
     }
   }, [currentUser, dispatch, onSubscribeRequired]);
 
+  // 🆕 Purchase click handler with debug
+  const handlePurchaseButtonClick = useCallback((song, e) => {
+    e.stopPropagation();
+
+
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+
+    if (alreadySubscribed) {
+      onPurchaseClick?.(song, "song");
+    } else {
+      onSubscribeRequired?.(song.artist, "purchase", song);
+    }
+  }, [currentUser, onPurchaseClick, onSubscribeRequired, processingPayment, paymentLoading]);
+
   return (
     <>
       {/* Header with Back and Next */}
@@ -104,7 +118,7 @@ const NewTracksSection = ({
                 price={getSongPriceDisplay(
                   song, 
                   currentUser, 
-                  onPurchaseClick, 
+                  handlePurchaseButtonClick, // 🆕 Updated function
                   onSubscribeRequired, 
                   processingPayment, 
                   paymentLoading
@@ -127,10 +141,11 @@ const NewTracksSection = ({
   );
 };
 
+// 🆕 Updated getSongPriceDisplay function
 const getSongPriceDisplay = (
   song, 
   currentUser, 
-  onPurchaseClick, 
+  onPurchaseButtonClick, // 🆕 Updated parameter name
   onSubscribeRequired, 
   processingPayment, 
   paymentLoading
@@ -144,7 +159,6 @@ const getSongPriceDisplay = (
   }
 
   if (song.accessType === "purchase-only" && song.price > 0) {
-    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
     return (
       <button
         className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
@@ -152,17 +166,7 @@ const getSongPriceDisplay = (
             ? "bg-gray-500 cursor-not-allowed"
             : "bg-indigo-600 hover:bg-indigo-700"
         }`}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (processingPayment || paymentLoading) return;
-
-          if (alreadySubscribed) {
-            // IMPORTANT: pass type explicitly
-            onPurchaseClick?.(song, "song");
-          } else {
-            onSubscribeRequired?.(song.artist, "purchase", song);
-          }
-        }}
+        onClick={(e) => onPurchaseButtonClick(song, e)} // 🆕 Simplified call
         disabled={processingPayment || paymentLoading}
         type="button"
       >

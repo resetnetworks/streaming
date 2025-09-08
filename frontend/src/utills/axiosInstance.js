@@ -1,15 +1,12 @@
 // src/utils/axiosInstance.js
 import axios from "axios";
 
-
-
 // ✅ Create axios instance
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
   withCredentials: true, // ✅ Send cookies (needed for cookie-based auth)
   timeout: 300000,
 });
-
 
 // ✅ Helper function to get token from cookie
 const getTokenFromCookie = () => {
@@ -24,7 +21,6 @@ const getTokenFromCookie = () => {
   return null;
 };
 
-
 // ✅ NEW: Helper function to clear all cookies
 const clearAllCookies = () => {
   if (typeof document === 'undefined') return;
@@ -37,7 +33,6 @@ const clearAllCookies = () => {
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
   }
 };
-
 
 // ✅ NEW: Comprehensive auth data clearing function
 const clearAllAuthData = () => {
@@ -63,9 +58,7 @@ const clearAllAuthData = () => {
   
   // ✅ Remove Authorization header from axios defaults
   delete axiosInstance.defaults.headers.common["Authorization"];
-  
 };
-
 
 // ✅ ENHANCED: Attach token on each request with Authorization header
 axiosInstance.interceptors.request.use(
@@ -81,7 +74,6 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-
     // ✅ NEW: Set Authorization header if token exists
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -92,22 +84,25 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-
-// ✅ ENHANCED: Global response error handling with comprehensive token expiry detection
+// ✅ ENHANCED: Global response error handling with PayPal exception
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    console.error("Axios interceptor caught error:", error);
     
+    const originalRequest = error.config;
     const errorStatus = error.response?.status;
     const errorMessage = error.response?.data?.message || error.message;
     
-    // ✅ ENHANCED: Comprehensive token expiry detection
+    // 🔑 NEW: PayPal specific error handling - DON'T logout user
+    if (originalRequest?.url?.includes('/paypal/')) {
+      return Promise.reject(error);
+    }
+    
+    // ✅ ENHANCED: Comprehensive token expiry detection (for non-PayPal requests)
     const isTokenExpired = (
       errorStatus === 401 ||          // Unauthorized
-       // Server error (database issues)
       error.code === 'ECONNREFUSED' ||  // Database connection refused
       error.code === 'ENOTFOUND' ||     // Database not found
       error.message?.includes('Network Error') ||
@@ -120,7 +115,6 @@ axiosInstance.interceptors.response.use(
     );
     
     if (isTokenExpired) {
-      console.warn("🚫 Token expired or invalid — clearing all auth data");
       
       // ✅ Clear all auth data immediately
       clearAllAuthData();
@@ -139,7 +133,6 @@ axiosInstance.interceptors.response.use(
       
       // Only redirect if not already on auth page and not on public pages
       if (!isOnAuthPage && !isOnPublicPage) {
-        
         // Clear URL and redirect to login
         window.history.replaceState(null, '', '/login');
         window.location.href = '/login';
@@ -154,6 +147,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-
 export default axiosInstance;
-
