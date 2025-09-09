@@ -19,6 +19,13 @@ export const selectCachedData = (state) => state.artists.cachedData;
 export const selectIsFullListCached = (state) => state.artists.isFullListCached;
 export const selectFullListLastFetchTime = (state) => state.artists.fullListLastFetchTime;
 
+// ✅ NEW: Subscriber Count Selectors
+export const selectSubscriberCounts = (state) => state.artists.subscriberCounts;
+export const selectSubscriberCountLoading = (state) => state.artists.subscriberCountLoading;
+export const selectSubscriberCountError = (state) => state.artists.subscriberCountError;
+export const selectArtistSubscriberCount = (artistId) => (state) => 
+  state.artists.subscriberCounts[artistId] || null;
+
 // ✅ Cache utility selectors
 export const selectIsPageCached = (page) => (state) => {
   return state.artists.cachedPages.includes(page);
@@ -41,4 +48,12 @@ export const selectIsFullListCacheValid = (state) => {
 
 export const selectCachedPageData = (page) => (state) => {
   return state.artists.cachedData[page] || null;
+};
+
+// ✅ NEW: Subscriber count cache validity
+export const selectIsSubscriberCountValid = (artistId) => (state) => {
+  const data = state.artists.subscriberCounts[artistId];
+  if (!data || !data.lastUpdated) return false;
+  const cacheValidDuration = 2 * 60 * 1000; // 2 minutes for subscriber count
+  return Date.now() - data.lastUpdated < cacheValidDuration;
 };

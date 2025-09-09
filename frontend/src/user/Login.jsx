@@ -35,13 +35,13 @@ const Login = () => {
       .unwrap()
       .then(() => {
         toast.success("Login successful");
-        navigate("/");
+        navigate("/home");
       })
       .catch((err) => {
         if (err?.response?.status === 429) {
-          toast.error("Too many requests. Please wait a few seconds.");
+          toast.error("Too many requests. Please wait a few minuts.");
         } else {
-          toast.error(err?.message || "Login failed. Please check credentials.");
+          toast.error(err);
         }
       });
   };

@@ -6,8 +6,14 @@ import SongList from "../components/user/SongList";
 import RecentPlays from "../components/user/RecentPlays";
 import { FiMapPin } from "react-icons/fi";
 import { LuSquareChevronRight } from "react-icons/lu";
-import { fetchArtistBySlug } from "../features/artists/artistsSlice";
-import { selectSelectedArtist } from "../features/artists/artistsSelectors";
+import { HiUsers } from "react-icons/hi";
+import { 
+  fetchArtistBySlug,
+  fetchSubscriberCount,
+} from "../features/artists/artistsSlice";
+import { selectSelectedArtist,  selectArtistSubscriberCount,
+  selectSubscriberCountLoading,
+  selectIsSubscriberCountValid } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 import { getAlbumsByArtist } from "../features/albums/albumsSlice";
@@ -66,12 +72,47 @@ const cycleLabel = (c) => {
   }
 };
 
+// Format number with K, M, B suffixes
+const formatSubscriberCount = (count) => {
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  } else if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  } else {
+    return count?.toString() || "0";
+  }
+};
+
+// Custom hook for live incrementing subscriber count
+const useLiveSubscriberCount = (initialCount, isInView) => {
+  const [count, setCount] = useState(initialCount || 0);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (isInView && !hasStarted && initialCount > 0) {
+      setHasStarted(true);
+      setCount(initialCount);
+      
+      // Start live increments after initial load
+      const liveInterval = setInterval(() => {
+        setCount(prev => prev + Math.floor(Math.random() * 3) + 1); // Random increment 1-3
+      }, 3000); // Every 3 seconds
+
+      return () => clearInterval(liveInterval);
+    }
+  }, [isInView, hasStarted, initialCount]);
+
+  return count;
+};
+
 const Artist = () => {
   const { artistId } = useParams();
   const dispatch = useDispatch();
   const recentScrollRef = useRef(null);
   const singlesScrollRef = useRef(null);
   const navigate = useNavigate();
+  const [isInView, setIsInView] = useState(false);
+  const heroSectionRef = useRef(null);
 
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
@@ -82,6 +123,21 @@ const Artist = () => {
   const artistSongsData = useSelector(
     (state) => selectSongsByArtist(state, artistId),
     shallowEqual
+  );
+
+  // ✅ NEW: Subscriber count selectors
+  const subscriberData = useSelector(state => 
+    selectArtistSubscriberCount(artist?._id)(state)
+  );
+  const subscriberCountLoading = useSelector(selectSubscriberCountLoading);
+  const isSubscriberCountValid = useSelector(state => 
+    selectIsSubscriberCountValid(artist?._id)(state)
+  );
+
+  // Live subscriber count with animation
+  const liveSubscriberCount = useLiveSubscriberCount(
+    subscriberData?.activeSubscribers, 
+    isInView
   );
 
   const paymentLoading = useSelector(selectPaymentLoading);
@@ -115,6 +171,22 @@ const Artist = () => {
   const songsObserverRef = useRef();
   const albumsObserverRef = useRef();
 
+  // Intersection Observer for hero section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.3 }
+    );
+
+    if (heroSectionRef.current) {
+      observer.observe(heroSectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   // Derive cycles from backend plans on each render
   const availableCycles = useMemo(() => {
     const plans = artist?.subscriptionPlans || [];
@@ -127,19 +199,19 @@ const Artist = () => {
   // Choose current cycle without local state to avoid stale values
   const currentCycle = useMemo(() => {
     if (!availableCycles.length) return null;
-    return availableCycles.includes("1m") ? "1m" : availableCycles;
+    return availableCycles.includes("1m") ? "1m" : availableCycles[0];
   }, [availableCycles]);
 
   const fullCycle = useMemo(() => {
-  const plans = artist?.subscriptionPlans || [];
-  const cycles = plans.map(p => p?.cycle).filter(Boolean);
-  if (!cycles.length) return null;
+    const plans = artist?.subscriptionPlans || [];
+    const cycles = plans.map(p => p?.cycle).filter(Boolean);
+    if (!cycles.length) return null;
 
-  // Preferred order
-  const order = ["1m", "3m", "6m", "12m"];
-  const found = order.find(c => cycles.includes(c));
-  return found || cycles; // fall back to first available
-}, [artist?.subscriptionPlans]);
+    // Preferred order
+    const order = ["1m", "3m", "6m", "12m"];
+    const found = order.find(c => cycles.includes(c));
+    return found || cycles[0]; // fall back to first available
+  }, [artist?.subscriptionPlans]);
 
   const getArtistColor = (name) => {
     if (!name) return "bg-blue-600";
@@ -172,6 +244,13 @@ const Artist = () => {
       dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
     }
   }, [dispatch, artistId]);
+
+  // ✅ NEW: Fetch subscriber count when artist is loaded
+  useEffect(() => {
+    if (artist?._id && (!subscriberData || !isSubscriberCountValid)) {
+      dispatch(fetchSubscriberCount(artist._id));
+    }
+  }, [dispatch, artist?._id, subscriberData, isSubscriberCountValid]);
 
   useEffect(() => {
     dispatch(resetPaymentState());
@@ -323,6 +402,8 @@ const Artist = () => {
         handler: async function () {
           toast.success(`Successfully subscribed to ${artist.name}!`);
           dispatch(fetchUserSubscriptions());
+          // Refresh subscriber count after successful subscription
+          dispatch(fetchSubscriberCount(artist._id));
         },
         prefill: {
           name: currentUser?.name || "",
@@ -373,6 +454,8 @@ const Artist = () => {
       try {
         await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
         dispatch(fetchUserSubscriptions());
+        // Refresh subscriber count after unsubscription
+        dispatch(fetchSubscriberCount(artist._id));
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         console.error("Unsubscribe error:", error);
@@ -398,7 +481,7 @@ const Artist = () => {
       if (songsStatus === "loading") return;
       if (songsObserverRef.current) songsObserverRef.current.disconnect();
       songsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries?.isIntersecting && songsPage < totalPages) {
+        if (entries[0]?.isIntersecting && songsPage < totalPages) {
           setSongsPage((prev) => prev + 1);
         }
       });
@@ -412,7 +495,7 @@ const Artist = () => {
       if (albumsStatus === "loading" || !hasMoreAlbums) return;
       if (albumsObserverRef.current) albumsObserverRef.current.disconnect();
       albumsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries?.isIntersecting && hasMoreAlbums) {
+        if (entries[0]?.isIntersecting && hasMoreAlbums) {
           setAlbumsPage((prev) => prev + 1);
         }
       });
@@ -459,78 +542,103 @@ const Artist = () => {
     <>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        <div className="relative h-80 w-full">
-          {artist ? (
-            <>
-              {artist.image ? (
-                <img
-                  src={artist.image}
-                  className="w-full h-full object-cover opacity-80"
-                  alt="Artist Background"
-                />
+       <div ref={heroSectionRef} className="relative h-80 w-full">
+  {artist ? (
+    <>
+      {artist.image ? (
+        <img
+          src={artist.image}
+          className="w-full h-full object-cover opacity-80"
+          alt="Artist Background"
+        />
+      ) : (
+        <div className={`w-full h-full ${artistColor} opacity-80`} />
+      )}
+      <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/70 to-transparent z-20" />
+      <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
+        {renderArtistImage(artist?.image, artist?.name)}
+        <div>
+          <p className="text-sm lowercase tracking-widest text-gray-200">
+            Artist
+          </p>
+          <h1 className="text-3xl md:text-4xl font-bold mt-1">
+            {artist?.name || "Unknown Artist"}
+          </h1>
+          <div className="flex items-center gap-3">
+          <div className="flex items-center mt-1 text-gray-300 text-sm">
+            <FiMapPin className="mr-2 text-blue-400" />
+            <span>{artist?.location || "Unknown City"}</span>
+          </div>
+          <div className="flex items-center mt-1 text-gray-300 text-sm">
+            <HiUsers className="mr-2 text-blue-400" />
+            <span className="flex items-center gap-2">
+              {subscriberCountLoading ? (
+                <Skeleton width={60} height={16} />
               ) : (
-                <div className={`w-full h-full ${artistColor} opacity-80`} />
+                <>
+                  <span className="font-bold text-blue-400">
+                    {formatSubscriberCount(liveSubscriberCount)}
+                  </span>
+                  <span>subscribers</span>
+                </>
               )}
-              <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
-              <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
-                {renderArtistImage(artist?.image, artist?.name)}
-                <div>
-                  <p className="text-sm lowercase tracking-widest text-gray-200">
-                    Artist
-                  </p>
-                  <h1 className="text-3xl md:text-4xl font-bold mt-1">
-                    {artist?.name || "Unknown Artist"}
-                  </h1>
-                  <div className="flex items-center mt-1 text-gray-300 text-sm">
-                    <FiMapPin className="mr-2 text-blue-600" />
-                    <span>{artist?.location || "Unknown City"}</span>
-                  </div>
+            </span>
+          </div>
+          </div>
+          <div className="flex items-center gap-4 mt-3 flex-wrap">
+            <span className="text-lg font-semibold text-blue-400">
+              ₹{subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
+            </span>
 
-                  {/* Subscribe/Cancel — cycle is derived from latest artist data */}
-                  <div className="flex items-center gap-4 mt-3 flex-wrap">
-                    <span className="text-lg font-semibold text-blue-400">
-                      ₹{subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
-                    </span>
+            <button
+              onClick={handleSubscribe}
+              disabled={subscriptionLoading || paymentLoading}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
+                ${
+                  subscriptionLoading || paymentLoading
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
+                }
+                ${
+                  isSubscribed
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              title={
+                currentCycle
+                  ? `Cycle: ${cycleLabel(currentCycle)}`
+                  : "Cycle unavailable"
+              }
+            >
+              {subscriptionLoading || paymentLoading
+                ? "Processing..."
+                : isSubscribed
+                ? "Cancel Subscription"
+                : currentCycle
+                ? `Subscribe`
+                : "Subscribe"}
+            </button>
+          </div>
 
-                    <button
-                      onClick={handleSubscribe}
-                      disabled={subscriptionLoading || paymentLoading}
-                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
-                        ${
-                          subscriptionLoading || paymentLoading
-                            ? "opacity-70 cursor-not-allowed"
-                            : ""
-                        }
-                        ${
-                          isSubscribed
-                            ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
-                      title={
-                        currentCycle
-                          ? `Cycle: ${cycleLabel(currentCycle)}`
-                          : "Cycle unavailable"
-                      }
-                    >
-                      {subscriptionLoading || paymentLoading
-                        ? "Processing..."
-                        : isSubscribed
-                        ? "Cancel Subscription"
-                        : currentCycle
-                        ? `Subscribe (${cycleLabel(currentCycle)})`
-                        : "Subscribe"}
-                    </button>
-                  </div>
-                </div>
+          {/* Revenue Display (for artist only) */}
+          {subscriberData?.totalRevenue > 0 &&
+            currentUser?._id === artist?._id && (
+              <div className="mt-2 text-xs text-gray-400">
+                Total Revenue: ₹{subscriberData.totalRevenue.toFixed(2)}
               </div>
-            </>
-          ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <Skeleton width={200} height={40} />
-            </div>
-          )}
+            )}
         </div>
+      </div>
+    </>
+  ) : (
+    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+      <Skeleton width={200} height={40} />
+    </div>
+  )}
+      </div>
+
 
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>

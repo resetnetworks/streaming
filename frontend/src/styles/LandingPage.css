@@ -217,25 +217,6 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-/* Scrollbar Styling */
-.landing-page-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.landing-page-container::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
-}
-
-.landing-page-container::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.6);
-  border-radius: 4px;
-}
-
-.landing-page-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.8);
-}
-
 /* Responsive Design */
 @media (max-width: 1024px) {
   .landing-features-container {
@@ -296,14 +277,6 @@
     gap: 0.5rem;
   }
   
-  .landing-stats-container {
-    flex-direction: column;
-    gap: 2rem;
-  }
-  
-  .landing-stat-number {
-    font-size: 2.2rem;
-  }
   
   .landing-equalizer-container {
     flex-direction: column;

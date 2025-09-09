@@ -138,6 +138,24 @@ export const searchArtists = createAsyncThunk(
   }
 );
 
+// ✅ NEW: Fetch Subscriber Count Thunk
+export const fetchSubscriberCount = createAsyncThunk(
+  "artists/fetchSubscriberCount",
+  async (artistId, thunkAPI) => {
+    try {
+      const res = await axios.get(`/admin/dashboard/subscriber-count/${artistId}`);
+      return {
+        artistId,
+        ...res.data
+      };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch subscriber count"
+      );
+    }
+  }
+);
+
 // Slice
 const artistSlice = createSlice({
   name: "artists",
@@ -170,6 +188,11 @@ const artistSlice = createSlice({
     // ✅ Cache system properties for full artist list (no pagination)
     isFullListCached: false,
     fullListLastFetchTime: null,
+
+    // ✅ NEW: Subscriber Count State
+    subscriberCounts: {}, // { artistId: { activeSubscribers: number, totalRevenue: number } }
+    subscriberCountLoading: false,
+    subscriberCountError: null,
   },
   reducers: {
     clearSelectedArtist: (state) => {
@@ -232,6 +255,14 @@ const artistSlice = createSlice({
     loadFullListFromCache: (state) => {
       // Data is already in fullArtistList, just update loading state
       state.loading = false;
+    },
+    // ✅ NEW: Clear subscriber count data
+    clearSubscriberCount: (state, action) => {
+      if (action.payload) {
+        delete state.subscriberCounts[action.payload];
+      } else {
+        state.subscriberCounts = {};
+      }
     },
   },
   extraReducers: (builder) => {
@@ -349,6 +380,8 @@ const artistSlice = createSlice({
         state.cachedData = {};
         state.isFullListCached = false;
         state.fullListLastFetchTime = null;
+        // ✅ Clear subscriber count for deleted artist
+        delete state.subscriberCounts[action.payload];
       })
       .addCase(deleteArtist.rejected, (state, action) => {
         state.loading = false;
@@ -382,6 +415,25 @@ const artistSlice = createSlice({
       .addCase(searchArtists.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // ✅ NEW: Subscriber Count Cases
+      .addCase(fetchSubscriberCount.pending, (state) => {
+        state.subscriberCountLoading = true;
+        state.subscriberCountError = null;
+      })
+      .addCase(fetchSubscriberCount.fulfilled, (state, action) => {
+        state.subscriberCountLoading = false;
+        const { artistId, activeSubscribers, totalRevenue } = action.payload;
+        state.subscriberCounts[artistId] = {
+          activeSubscribers,
+          totalRevenue,
+          lastUpdated: Date.now()
+        };
+      })
+      .addCase(fetchSubscriberCount.rejected, (state, action) => {
+        state.subscriberCountLoading = false;
+        state.subscriberCountError = action.payload;
       });
   },
 });
@@ -393,7 +445,8 @@ export const {
   clearAllCaches, 
   setCachedData, 
   loadFromCache,
-  loadFullListFromCache 
+  loadFullListFromCache,
+  clearSubscriberCount
 } = artistSlice.actions;
 
 export default artistSlice.reducer;

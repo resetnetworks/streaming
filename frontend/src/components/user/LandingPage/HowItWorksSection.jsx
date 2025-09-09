@@ -2,11 +2,39 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { FaUsers, FaMusic, FaBroadcastTower, FaMicrophone } from 'react-icons/fa';
 
+// Counter component for animated numbers
+const Counter = ({ value, suffix = "", duration = 2 }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef();
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      let start = 0;
+      const end = parseInt(value.replace(/\D/g, ""));
+      const incrementTime = (duration * 1000) / end;
+      
+      const timer = setInterval(() => {
+        start += 1;
+        setCount(start);
+        if (start >= end) clearInterval(timer);
+      }, incrementTime);
+
+      return () => clearInterval(timer);
+    }
+  }, [isInView, value, duration]);
+
+  return (
+    <div ref={ref} className="text-3xl font-bold text-blue-400 mb-2">
+      {count}{suffix}
+    </div>
+  );
+};
+
 // Accept the scrollContainerRef as a prop.
 const HowItWorksSection = ({ scrollContainerRef }) => {
   const sectionRef = useRef(null);
   const videoRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   // Tell useInView to use the passed ref as the scroll "root".
   const isInView = useInView(sectionRef, {
@@ -15,42 +43,22 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
     amount: 0.3
   });
 
-  // Auto play video when in view
+  // Simplified useEffect for autoplay
   useEffect(() => {
-    const video = videoRef.current;
-
-    // Function to attempt playing the video
-    const attemptPlay = () => {
+    if (isInView) {
+      const video = videoRef.current;
       if (video) {
-        // Always try to mute first for autoplay
-        video.muted = true; 
+        video.muted = true; // Ensure it's muted for autoplay
         const playPromise = video.play();
 
-        if (playPromise !== undefined) {
-          playPromise.then(_ => {
-            console.log("Video auto-play started successfully.");
-            setIsPlaying(true);
-          }).catch(error => {
-            console.log("Video auto-play prevented. User interaction might be required.", error);
-            setIsPlaying(false);
-          });
+        if (playPromise) {
+            playPromise.catch(error => {
+                console.error("Video autoplay was prevented by the browser:", error);
+            });
         }
       }
-    };
-
-    if (isInView) {
-      attemptPlay();
     }
-
-    // Clean up function - pause video if component unmounts or leaves view
-    return () => {
-      if (video && !isInView) {
-        video.pause();
-        setIsPlaying(false);
-      }
-    };
-
-  }, [isInView]);
+  }, [isInView]); // This effect depends only on isInView changing.
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -106,6 +114,14 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
     }
   ];
 
+  // Stats data
+  const stats = [
+    { number: "25", suffix: "K+", label: "Hours Streamed" },
+    { number: "1.8", suffix: "M+", label: "Total Listeners" },
+    { number: "150", suffix: "+", label: "Countries" },
+    { number: "99.9", suffix: "%", label: "Uptime" }
+  ];
+
   return (
     <section 
       ref={sectionRef}
@@ -145,10 +161,10 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="grid lg:grid-cols-2 gap-16 items-center"
+          className="grid lg:grid-cols-5 gap-16 items-center"
         >
-          {/* Left Content */}
-          <motion.div variants={itemVariants} className="space-y-8">
+          {/* CHANGE 2: The left content now takes up 2 of the 5 columns */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
             {/* Section Tag */}
             <motion.div 
               variants={itemVariants}
@@ -176,9 +192,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             <motion.div variants={itemVariants} className="space-y-6">
               <p className="text-lg text-slate-400 leading-relaxed">
                 Whether you're a bedroom DJ or a professional artist, MusicReset provides everything 
-                you need to build your audience and share your unique sound. Our intuitive interface 
-                combined with powerful streaming technology ensures your music reaches listeners 
-                in crystal-clear quality.
+                you need to build your audience and share your unique sound.
               </p>
 
               {/* Features List */}
@@ -202,10 +216,10 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             </motion.div>
           </motion.div>
 
-          {/* Right Video Section */}
+          {/* CHANGE 3: The right video section now takes up 3 of the 5 columns, making it larger */}
           <motion.div 
             variants={videoVariants}
-            className="relative"
+            className="relative lg:col-span-3"
           >
             {/* Video Container with 3D Effect */}
             <div className="relative group">
@@ -215,7 +229,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
               {/* Video Frame */}
               <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 p-2 rounded-2xl border border-slate-700/50 shadow-2xl">
                 <div className="aspect-video rounded-xl overflow-hidden bg-slate-900 relative group-hover:scale-[1.02] transition-transform duration-500">
-                  {/* Video Element - Fixed attributes */}
+                  {/* Video Element */}
                   <video
                     ref={videoRef}
                     autoPlay
@@ -225,7 +239,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                     preload="auto"
                     controls={false}
                     className="w-full h-full object-cover"
-                    poster="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
                     onLoadedData={() => {
                       console.log("Video loaded successfully");
                     }}
@@ -238,8 +251,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                       height: '100%'
                     }}
                   >
-                    <source src="/images/test.mp4" type="video/mp4" />
-                    <source src="/images/test.mp4" type="video/mp4" />
+                    <source src="/images/tes.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
 
@@ -249,16 +261,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                       <h4 className="text-white font-semibold text-lg">Platform Overview</h4>
                       <p className="text-slate-300 text-sm">See how easy it is to start streaming</p>
                     </div>
-                  </div>
-
-                  {/* Live Indicator */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 px-3 py-1 rounded-full">
-                    <motion.div
-                      className="w-2 h-2 bg-white rounded-full"
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    <span className="text-white text-xs font-medium">LIVE</span>
                   </div>
 
                   {/* Floating Elements */}
@@ -275,27 +277,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                 </div>
               </div>
             </div>
-
-            {/* Floating Stats */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
-              transition={{ delay: 0.8, duration: 0.6 }}
-              className="absolute -right-6 top-1/2 transform -translate-y-1/2 bg-slate-800/90 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 shadow-xl"
-            >
-              <div className="text-center space-y-2">
-                <div className="text-2xl font-bold text-blue-400">Live</div>
-                <div className="text-xs text-slate-400">Currently Streaming</div>
-                <div className="flex items-center gap-1 text-green-400 text-xs">
-                  <motion.div 
-                    className="w-2 h-2 bg-green-500 rounded-full" 
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  1.2K viewers
-                </div>
-              </div>
-            </motion.div>
           </motion.div>
         </motion.div>
 
@@ -315,14 +296,9 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             variants={itemVariants}
             className="grid grid-cols-2 md:grid-cols-4 gap-8"
           >
-            {[
-              { number: "25K+", label: "Hours Streamed" },
-              { number: "1.8M+", label: "Total Listeners" },
-              { number: "150+", label: "Countries" },
-              { number: "99.9%", label: "Uptime" }
-            ].map((stat, index) => (
+            {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl font-bold text-blue-400 mb-2">{stat.number}</div>
+                <Counter value={stat.number} suffix={stat.suffix} duration={2} />
                 <div className="text-slate-400 text-sm">{stat.label}</div>
               </div>
             ))}

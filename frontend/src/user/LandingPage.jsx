@@ -1,10 +1,13 @@
-import React, { useRef, useMemo, useState, Suspense } from 'react';
+import React, { useRef, useMemo, useState, Suspense, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { FaPlayCircle, FaHeadphones, FaMicrophone, FaWaveSquare } from 'react-icons/fa';
 import '../styles/LandingPage.css';
 import Header from '../components/user/LandingPage/Header';
+import HeroSection from '../components/user/LandingPage/HeroSection';
 import HowItWorksSection from '../components/user/LandingPage/HowItWorksSection';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 // Professional Minimal Particles
 const ProfessionalParticles = () => {
@@ -110,13 +113,19 @@ const ProfessionalParticles = () => {
 
 // Main Landing Page Component
 const LandingPage = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const navigate = useNavigate();
 
-  // Create a ref for the main scrollable container.
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/home");
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Create a ref for the main scrollable container
   const scrollContainerRef = useRef(null);
 
   return (
-    // Attach the ref to your main container div.
     <div ref={scrollContainerRef} className="landing-page-container">
       <div className="landing-canvas-background">
         <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
@@ -131,68 +140,8 @@ const LandingPage = () => {
         </Canvas>
       </div>
       
-      <Header/>
-      
-      <div className="landing-content-overlay">
-        <div className="landing-hero-content sm:mt-14 mt-6">
-          <h1 className="landing-hero-title">
-            <span>STREAM</span>
-            <span className="accent">YOUR</span>
-            <span>BEATS</span>
-          </h1>
-          
-          <div className="landing-hero-subtitle">
-            <span>Professional DJ Streaming Platform</span>
-          </div>
-          
-          <p className="landing-hero-description">
-            Connect with music lovers worldwide. Stream live DJ sets, 
-            build your audience, and share your passion with the world.
-          </p>
-          
-          <div className="landing-features-container">
-            <div className="player-wrapper">
-              <div className="player-card landing-feature-card">
-                <FaMicrophone className="text-3xl mb-3 text-blue-400" />
-                <h3 className="text-lg font-bold mb-2">Live Streaming</h3>
-                <p className="text-sm opacity-80">Broadcast HD quality music to global audience</p>
-              </div>
-            </div>
-            
-            <div className="player-wrapper">
-              <div className="player-card landing-feature-card">
-                <FaHeadphones className="text-3xl mb-3 text-blue-400" />
-                <h3 className="text-lg font-bold mb-2">Interactive Chat</h3>
-                <p className="text-sm opacity-80">Connect with listeners in real-time</p>
-              </div>
-            </div>
-            
-            <div className="player-wrapper">
-              <div className="player-card landing-feature-card">
-                <FaWaveSquare className="text-3xl mb-3 text-blue-400" />
-                <h3 className="text-lg font-bold mb-2">Pro Tools</h3>
-                <p className="text-sm opacity-80">Advanced mixing and effects</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="landing-stats-container">
-            <div className="landing-stat">
-              <span className="landing-stat-number">15K+</span>
-              <span className="landing-stat-label">Active DJs</span>
-            </div>
-            <div className="landing-stat">
-              <span className="landing-stat-number">2M+</span>
-              <span className="landing-stat-label">Listeners</span>
-            </div>
-            <div className="landing-stat">
-              <span className="landing-stat-number">24/7</span>
-              <span className="landing-stat-label">Live Music</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <Header />
+      <HeroSection scrollContainerRef={scrollContainerRef} />
       <HowItWorksSection scrollContainerRef={scrollContainerRef} />
     </div>
   );

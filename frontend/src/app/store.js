@@ -1,3 +1,4 @@
+// src/store/store.js
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer, persistStore } from 'redux-persist';
@@ -61,9 +62,35 @@ export const store = configureStore({
 // ✅ Persistor
 export const persistor = persistStore(store);
 
+// ✅ IMPORTANT: Make persistor globally available for axiosInstance
+if (typeof window !== 'undefined') {
+  window.__PERSISTOR__ = persistor;
+  window.store = store;
+}
+
 // ✅ Utility to manually clear player cache
 export const clearPlayerCache = () => {
   storage.removeItem('persist:player');
+};
+
+// ✅ ENHANCED: Complete logout function for manual use
+export const completeLogout = async () => {
+  try {
+    // Purge all persisted data
+    await persistor.purge();
+    await persistor.flush();
+    
+    // Clear specific keys
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Redirect to login
+    window.location.replace('/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+    localStorage.clear();
+    window.location.replace('/login');
+  }
 };
 
 // ✅ Dev-only helper to purge cache manually from console
@@ -71,6 +98,7 @@ if (process.env.NODE_ENV === 'development') {
   window.clearReduxCache = () => {
     persistor.purge().then(() => {
       clearPlayerCache();
+      localStorage.clear();
     });
   };
 }

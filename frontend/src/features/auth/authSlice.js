@@ -55,6 +55,8 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
   localStorage.removeItem("subscribedArtists");
+   localStorage.clear();
+  sessionStorage.clear();
 };
 
 // ====================
@@ -117,9 +119,10 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     localStorage.removeItem("user");
     delete axios.defaults.headers.common["Authorization"];
     
-    const errorMessage = err.response?.data?.message || 
+     const errorMessage = err.response?.data?.msg || 
+                        err.response?.data?.error ||
                         err.message || 
-                        "Registration failed";
+                        "Login failed";
     
     return thunkAPI.rejectWithValue(errorMessage);
   }
@@ -152,7 +155,11 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
     return user;
     
   } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+        const errorMessage = err.response?.data?.msg || 
+                        err.response?.data?.error ||
+                        err.message || 
+                        "Login failed";
+    return thunkAPI.rejectWithValue(errorMessage);
   }
 });
 

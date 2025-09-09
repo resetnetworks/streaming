@@ -77,7 +77,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
-            <Route path="/landing-page" element={<Pages.LandingPage />} />
+            <Route path="/" element={<Pages.LandingPage />} />
             <Route path="/help" element={<Pages.Help />} />
             <Route path="/data-deletion" element={<Pages.DataDeletion />} />
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
@@ -132,7 +132,7 @@ function App() {
             {/* User Layout Protected Routes */}
             <Route element={<UserLayout />}>
               <Route
-                path="/"
+                path="/home"
                 element={
                   <RedirectedProtectedRoute
                     isAuthenticated={isAuthenticated}
