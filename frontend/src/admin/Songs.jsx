@@ -59,8 +59,9 @@ const Songs = () => {
   // ✅ NEW: Track modal submission state to prevent multiple submissions
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isPageCached = useSelector(selectIsPageCached(currentPage)) || false;
-  const cachedPageData = useSelector(selectCachedPageData(currentPage)) || null;
+  // ✅ FIXED: Correct parameterized selector usage
+  const isPageCached = useSelector(state => selectIsPageCached(currentPage)(state)) || false;
+  const cachedPageData = useSelector(state => selectCachedPageData(currentPage)(state)) || null;
   const cachedPages = useSelector(selectCachedPages) || [];
   const isCacheValid = useSelector(selectIsCacheValid) || false;
 
@@ -74,19 +75,21 @@ const Songs = () => {
   }, [pagination?.page]);
 
   useEffect(() => {
-    const isCachedForCurrentLimit = isPageCached && cachedPageData && 
-      cachedPageData.pagination?.limit === itemsPerPage;
+    const loadData = async () => {
+      try {
+        const isCachedForCurrentLimit = isPageCached && cachedPageData && 
+          cachedPageData.pagination?.limit === itemsPerPage;
 
-    if (isCachedForCurrentLimit && isCacheValid) {
-      dispatch(loadFromCache(currentPage));
-    } else {
-      dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }))
-        .then((res) => {
-          if (res.payload?.songs) {
+        if (isCachedForCurrentLimit && isCacheValid) {
+          dispatch(loadFromCache(currentPage));
+        } else {
+          const result = await dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+          
+          if (result.payload?.songs) {
             dispatch(setCachedData({
               page: currentPage,
-              songs: res.payload.songs,
-              pagination: res.payload.pagination || { 
+              songs: result.payload.songs,
+              pagination: result.payload.pagination || { 
                 page: currentPage, 
                 limit: itemsPerPage, 
                 total: 0, 
@@ -94,8 +97,14 @@ const Songs = () => {
               }
             }));
           }
-        });
-    }
+        }
+      } catch (error) {
+        console.error('Error loading songs data:', error);
+        toast.error('Failed to load songs');
+      }
+    };
+
+    loadData();
   }, [dispatch, currentPage, itemsPerPage, isPageCached, cachedPageData, isCacheValid]);
 
   const handleDelete = async (songId) => {
@@ -120,9 +129,6 @@ const Songs = () => {
     setEditingSong(song);
     setIsModalOpen(true);
   };
-
-
-
 
   // ✅ FIXED: Background upload handler with proper state management
   const handleAddOrUpdateSong = async (formData) => {

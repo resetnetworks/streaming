@@ -27,46 +27,27 @@ const fixedGenres = [
   'experimental',
   'avant garde',
   'noise',
-  'sound art',
-  'soundscapes',
-  'electronica',
-  'field recordings',
-
-  // dance/electronic styles
-  'techno',
-  'electro',
-  'dance',
-  'ebm',
+  'downtempo',
+  'soundtrack',
   'industrial',
+  'ebm',
+  'electro',
+  'techno',
+  'dance',
+  'electronica',
+  'sound art',
 
   // cinematic and soundtrack
-  'soundtrack',
-
-  // downtempo and chill
-  'downtempo',
-  'chill',
-  'chillout',
-  'lofi',
-
-  // instruments/arrangements
-  'instrumental',
-  'piano',
-  'guitar',
-  'orchestral',
-  'cinematic',
-
-  // legacy/other
-  'classical',
-  'classical crossover',
   'jazz',
 
-  // existing long-tail
-  'synthwave',
-  'house',
-  'trance',
-  'post-rock',
-  'shoegaze',
-  'drone',
+  // downtempo and chill
+  'classical',
+  'classical crossover',
+  'soundscape',
+  'field recordings',
+
+  // instruments/arrangements
+  'noise',
 ];
 
 
