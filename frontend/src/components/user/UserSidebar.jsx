@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
 import { selectAllSongs } from "../../features/songs/songSelectors.js";  // Adjust path as needed
 
 const menuItems = [
-  { name: "home", icon: <RxDashboard />, path: "/" },
+  { name: "home", icon: <RxDashboard />, path: "/home" },
   { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "search", icon: <FiSearch />, path: "/search" },
   { name: "purchases", icon: <FaShoppingCart />, path: "/purchases" },

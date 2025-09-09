@@ -8,7 +8,7 @@ import {
 } from "react-icons/rx";
 import { FaShoppingCart } from "react-icons/fa";
 const menuItems = [
-  { name: "Home", icon: <RxDashboard size={24} />, path: "/" },
+  { name: "Home", icon: <RxDashboard size={24} />, path: "/home" },
   { name: "artists", icon: <FaRegUser />, path: "/artists" },
   { name: "Search", icon: <RxMagnifyingGlass size={24} />, path: "/search" },
   { name: "purchases", icon: <FaShoppingCart size={20} />, path: "/purchases" },
