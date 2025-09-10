@@ -164,7 +164,7 @@ const MatchingGenreSection = ({
     setPageLoaded(new Set());
     setCurrentPage(1);
     setHasInitialLoad(false);
-  }, [currentUser]);
+  }, [currentUser._id]);
 
   useEffect(() => {
     loadPage(currentPage);
@@ -362,7 +362,6 @@ const MatchingGenreSection = ({
               album={song.album}
               image={song.coverImage || song.album?.coverImage}
               duration={song.duration}
-              genre={song.genre}
               price={getSongPriceDisplay(
                 song, 
                 currentUser, 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaMusic, FaPlus, FaSearch, FaAngleLeft, FaAngleRight, FaAngleDoubleLeft, FaAngleDoubleRight, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
@@ -53,61 +53,75 @@ const Songs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  // ✅ Background upload tracking
+  // Background upload tracking
   const [backgroundUploads, setBackgroundUploads] = useState([]);
   
-  // ✅ NEW: Track modal submission state to prevent multiple submissions
+  // Track modal submission state to prevent multiple submissions
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ FIXED: Correct parameterized selector usage
-  const isPageCached = useSelector(state => selectIsPageCached(currentPage)(state)) || false;
-  const cachedPageData = useSelector(state => selectCachedPageData(currentPage)(state)) || null;
+  // ✅ Use useRef to track if data has been loaded for current page/limit combination
+  const loadedRef = useRef(new Set());
+
+  // ✅ COMPLETELY FIXED: Remove problematic selectors that cause infinite loops
   const cachedPages = useSelector(selectCachedPages) || [];
-  const isCacheValid = useSelector(selectIsCacheValid) || false;
 
   // Generate unique ID for uploads
   const generateUploadId = () => `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+  // ✅ FIXED: Completely remove the problematic first useEffect
+  // The pagination sync should only happen when pagination actually changes from Redux
   useEffect(() => {
-    if (pagination?.page && pagination.page !== currentPage) {
+    // Only sync if pagination page is different and it's a valid change
+    if (pagination?.page && pagination.page !== currentPage && pagination.page > 0) {
       setCurrentPage(pagination.page);
     }
   }, [pagination?.page]);
 
+  // ✅ FIXED: Simplified data loading effect without problematic dependencies
   useEffect(() => {
+    const loadKey = `${currentPage}-${itemsPerPage}`;
+    
+    // Prevent duplicate loads
+    if (loadedRef.current.has(loadKey)) {
+      return;
+    }
+
     const loadData = async () => {
       try {
-        const isCachedForCurrentLimit = isPageCached && cachedPageData && 
-          cachedPageData.pagination?.limit === itemsPerPage;
+        // Mark as loading to prevent duplicate requests
+        loadedRef.current.add(loadKey);
 
-        if (isCachedForCurrentLimit && isCacheValid) {
-          dispatch(loadFromCache(currentPage));
-        } else {
-          const result = await dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
-          
-          if (result.payload?.songs) {
-            dispatch(setCachedData({
-              page: currentPage,
-              songs: result.payload.songs,
-              pagination: result.payload.pagination || { 
-                page: currentPage, 
-                limit: itemsPerPage, 
-                total: 0, 
-                totalPages: 1 
-              }
-            }));
-          }
+        const result = await dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+        
+        if (result.payload?.songs) {
+          dispatch(setCachedData({
+            page: currentPage,
+            songs: result.payload.songs,
+            pagination: result.payload.pagination || { 
+              page: currentPage, 
+              limit: itemsPerPage, 
+              total: 0, 
+              totalPages: 1 
+            }
+          }));
         }
       } catch (error) {
+        // Remove from loaded set on error so it can be retried
+        loadedRef.current.delete(loadKey);
         console.error('Error loading songs data:', error);
         toast.error('Failed to load songs');
       }
     };
 
     loadData();
-  }, [dispatch, currentPage, itemsPerPage, isPageCached, cachedPageData, isCacheValid]);
+  }, [dispatch, currentPage, itemsPerPage]);
 
-  const handleDelete = async (songId) => {
+  // ✅ Clean up loaded ref when items per page changes
+  useEffect(() => {
+    loadedRef.current.clear();
+  }, [itemsPerPage]);
+
+  const handleDelete = useCallback(async (songId) => {
     const confirm = window.confirm("Are you sure you want to delete this song?");
     if (!confirm) return;
     
@@ -115,24 +129,39 @@ const Songs = () => {
       await dispatch(deleteSong(songId)).unwrap();
       toast.success('Song deleted successfully');
       
+      // Clear the loaded cache for current page since data changed
+      const loadKey = `${currentPage}-${itemsPerPage}`;
+      loadedRef.current.delete(loadKey);
+      
       if (songs.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       } else {
-        dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+        // Reload current page
+        const result = await dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+        if (result.payload?.songs) {
+          dispatch(setCachedData({
+            page: currentPage,
+            songs: result.payload.songs,
+            pagination: result.payload.pagination || { 
+              page: currentPage, 
+              limit: itemsPerPage, 
+              total: 0, 
+              totalPages: 1 
+            }
+          }));
+        }
       }
     } catch (error) {
       toast.error(error?.message || 'Failed to delete song');
     }
-  };
+  }, [dispatch, songs.length, currentPage, itemsPerPage]);
 
-  const handleEdit = (song) => {
+  const handleEdit = useCallback((song) => {
     setEditingSong(song);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // ✅ FIXED: Background upload handler with proper state management
-  const handleAddOrUpdateSong = async (formData) => {
-    // ✅ Prevent multiple submissions
+  const handleAddOrUpdateSong = useCallback(async (formData) => {
     if (isSubmitting) {
       console.log('Already submitting, ignoring duplicate submission');
       return;
@@ -142,24 +171,36 @@ const Songs = () => {
 
     try {
       if (editingSong) {
-        // For updates, keep the modal open until completion
         await dispatch(updateSong({ id: editingSong._id, formData })).unwrap();
         toast.success('Song updated successfully');
         
-        // ✅ Reset states after successful update
         setIsModalOpen(false);
         setEditingSong(null);
         setIsSubmitting(false);
         
-        dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+        // Clear cache and reload current page
+        const loadKey = `${currentPage}-${itemsPerPage}`;
+        loadedRef.current.delete(loadKey);
+        
+        const result = await dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+        if (result.payload?.songs) {
+          dispatch(setCachedData({
+            page: currentPage,
+            songs: result.payload.songs,
+            pagination: result.payload.pagination || { 
+              page: currentPage, 
+              limit: itemsPerPage, 
+              total: 0, 
+              totalPages: 1 
+            }
+          }));
+        }
       } else {
-        // For new songs, start background upload
         const uploadId = generateUploadId();
         const songTitle = formData.get('title') || 'New Song';
         const audioFile = formData.get('audioFile');
         const fileSize = audioFile?.size || 0;
         
-        // Add to background uploads
         setBackgroundUploads(prev => [...prev, {
           id: uploadId,
           title: songTitle,
@@ -170,12 +211,10 @@ const Songs = () => {
           startTime: Date.now()
         }]);
 
-        // ✅ Close modal and reset states immediately for new songs
         setIsModalOpen(false);
         setEditingSong(null);
-        setIsSubmitting(false); // ✅ Reset submission state immediately
+        setIsSubmitting(false);
 
-        // Simulate progress updates
         const progressInterval = setInterval(() => {
           setBackgroundUploads(prev => 
             prev.map(upload => {
@@ -196,14 +235,11 @@ const Songs = () => {
           );
         }, 500);
 
-        // ✅ Start upload in background (async, don't wait for it)
         dispatch(createSong(formData))
           .unwrap()
           .then((result) => {
-            // Clear progress interval
             clearInterval(progressInterval);
             
-            // Update upload status to success
             setBackgroundUploads(prev => 
               prev.map(upload => 
                 upload.id === uploadId 
@@ -217,21 +253,34 @@ const Songs = () => {
               )
             );
 
-            // Refresh current page if we're on page 1
             if (currentPage === 1) {
-              dispatch(fetchAllSongs({ page: currentPage, limit: itemsPerPage }));
+              // Clear cache and reload page 1
+              const loadKey = `1-${itemsPerPage}`;
+              loadedRef.current.delete(loadKey);
+              
+              dispatch(fetchAllSongs({ page: 1, limit: itemsPerPage })).then((result) => {
+                if (result.payload?.songs) {
+                  dispatch(setCachedData({
+                    page: 1,
+                    songs: result.payload.songs,
+                    pagination: result.payload.pagination || { 
+                      page: 1, 
+                      limit: itemsPerPage, 
+                      total: 0, 
+                      totalPages: 1 
+                    }
+                  }));
+                }
+              });
             }
 
-            // Remove from background uploads after delay
             setTimeout(() => {
               setBackgroundUploads(prev => prev.filter(upload => upload.id !== uploadId));
             }, 5000);
           })
           .catch((error) => {
-            // Clear progress interval
             clearInterval(progressInterval);
             
-            // Update upload status to error
             setBackgroundUploads(prev => 
               prev.map(upload => 
                 upload.id === uploadId 
@@ -240,81 +289,79 @@ const Songs = () => {
               )
             );
 
-            // Update toast to error
             toast.error(`Failed to upload "${songTitle}": ${error?.message || 'Unknown error'}`, {
               id: uploadId,
               duration: 5000
             });
 
-            // Remove from background uploads after delay
             setTimeout(() => {
               setBackgroundUploads(prev => prev.filter(upload => upload.id !== uploadId));
             }, 8000);
           });
       }
     } catch (error) {
-      setIsSubmitting(false); // ✅ Reset submission state on error
+      setIsSubmitting(false);
       
       if (editingSong) {
         toast.error(error?.message || 'Failed to save song');
       }
     }
-  };
+  }, [isSubmitting, editingSong, dispatch, currentPage, itemsPerPage]);
 
-  // Helper function to format upload speed
-  const formatUploadSpeed = (bytesPerSecond) => {
+  const formatUploadSpeed = useCallback((bytesPerSecond) => {
     if (bytesPerSecond < 1024) return `${Math.round(bytesPerSecond)} B/s`;
     if (bytesPerSecond < 1024 * 1024) return `${Math.round(bytesPerSecond / 1024)} KB/s`;
     return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
-  };
+  }, []);
 
-  // ✅ FIXED: Reset submission state when closing modal
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setEditingSong(null);
-    setIsSubmitting(false); // ✅ Reset submission state
-  };
+    setIsSubmitting(false);
+  }, []);
 
-  // ✅ FIXED: Reset submission state when opening modal for new song
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = useCallback(() => {
     setEditingSong(null);
-    setIsSubmitting(false); // ✅ Reset submission state
+    setIsSubmitting(false);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // Rest of your existing methods remain the same...
-  const goToPage = (page) => {
+  const goToPage = useCallback((page) => {
     if (page >= 1 && page <= (pagination?.totalPages || 1)) {
       setCurrentPage(page);
     }
-  };
+  }, [pagination?.totalPages]);
 
-  const nextPage = () => {
+  const nextPage = useCallback(() => {
     if (currentPage < (pagination?.totalPages || 1)) {
       setCurrentPage(currentPage + 1);
     }
-  };
+  }, [currentPage, pagination?.totalPages]);
 
-  const prevPage = () => {
+  const prevPage = useCallback(() => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
-  };
+  }, [currentPage]);
 
-  const handleItemsPerPageChange = (e) => {
+  const handleItemsPerPageChange = useCallback((e) => {
     const newLimit = Number(e.target.value);
     setItemsPerPage(newLimit);
     setCurrentPage(1);
     dispatch(clearCache());
-  };
+    // Clear our local cache too
+    loadedRef.current.clear();
+  }, [dispatch]);
 
-  const filteredSongs = (songs || []).filter(song =>
-    song?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    song?.artist?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    song?.album?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSongs = useMemo(() => {
+    return (songs || []).filter(song =>
+      song?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      song?.artist?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      song?.album?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [songs, searchTerm]);
 
-  const getPageNumbers = () => {
+  const getPageNumbers = useMemo(() => {
     const pages = [];
     const maxVisiblePages = 5;
     const totalPages = pagination?.totalPages || 1;
@@ -352,7 +399,7 @@ const Songs = () => {
     }
     
     return pages;
-  };
+  }, [currentPage, pagination?.totalPages]);
 
   return (
     <div className="p-6">
@@ -407,7 +454,6 @@ const Songs = () => {
             />
           </div>
 
-          {/* ✅ FIXED: Use the new handler */}
           <button
             onClick={handleOpenAddModal}
             disabled={isSubmitting}
@@ -514,7 +560,7 @@ const Songs = () => {
                   <FaAngleLeft />
                 </button>
 
-                {getPageNumbers().map((page, index) => (
+                {getPageNumbers.map((page, index) => (
                   <button
                     key={index}
                     onClick={() => typeof page === 'number' ? goToPage(page) : null}
@@ -557,7 +603,6 @@ const Songs = () => {
         </>
       )}
 
-      {/* ✅ FIXED: Pass isSubmitting to modal to prevent form resubmission */}
       <SongFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -565,7 +610,7 @@ const Songs = () => {
         artists={artists}
         initialAlbums={albums}
         songToEdit={editingSong}
-        isSubmitting={isSubmitting} // ✅ Pass submission state to modal
+        isSubmitting={isSubmitting}
       />
     </div>
   );

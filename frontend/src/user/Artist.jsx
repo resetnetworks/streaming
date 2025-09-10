@@ -5,7 +5,7 @@ import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
 import RecentPlays from "../components/user/RecentPlays";
 import { FiMapPin } from "react-icons/fi";
-import { LuSquareChevronRight } from "react-icons/lu";
+import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import { HiUsers } from "react-icons/hi";
 import { 
   fetchArtistBySlug,
@@ -42,6 +42,7 @@ import {
   selectRazorpaySubscriptionId,
   selectPaymentError,
 } from "../features/payments/paymentSelectors";
+import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -83,15 +84,31 @@ const formatSubscriberCount = (count) => {
   }
 };
 
-// Custom hook for live incrementing subscriber count
-const useLiveSubscriberCount = (initialCount, isInView) => {
-  const [count, setCount] = useState(initialCount || 0);
+// ✅ FIXED: Custom hook for live incrementing subscriber count with proper reset
+const useLiveSubscriberCount = (initialCount, isInView, artistId) => {
+  const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+  const [currentArtistId, setCurrentArtistId] = useState(null);
+
+  // ✅ Reset count when artist changes
+  useEffect(() => {
+    if (artistId !== currentArtistId) {
+      setCount(initialCount || 0);
+      setHasStarted(false);
+      setCurrentArtistId(artistId);
+    }
+  }, [artistId, currentArtistId, initialCount]);
+
+  // ✅ Update count when initialCount changes for the same artist
+  useEffect(() => {
+    if (artistId === currentArtistId && initialCount !== undefined) {
+      setCount(initialCount);
+    }
+  }, [initialCount, artistId, currentArtistId]);
 
   useEffect(() => {
-    if (isInView && !hasStarted && initialCount > 0) {
+    if (isInView && !hasStarted && initialCount > 0 && artistId === currentArtistId) {
       setHasStarted(true);
-      setCount(initialCount);
       
       // Start live increments after initial load
       const liveInterval = setInterval(() => {
@@ -100,7 +117,7 @@ const useLiveSubscriberCount = (initialCount, isInView) => {
 
       return () => clearInterval(liveInterval);
     }
-  }, [isInView, hasStarted, initialCount]);
+  }, [isInView, hasStarted, initialCount, artistId, currentArtistId]);
 
   return count;
 };
@@ -134,10 +151,11 @@ const Artist = () => {
     selectIsSubscriberCountValid(artist?._id)(state)
   );
 
-  // Live subscriber count with animation
+  // ✅ FIXED: Live subscriber count with proper artist ID tracking
   const liveSubscriberCount = useLiveSubscriberCount(
     subscriberData?.activeSubscribers, 
-    isInView
+    isInView,
+    artist?._id // Pass artist ID to track changes
   );
 
   const paymentLoading = useSelector(selectPaymentLoading);
@@ -168,9 +186,6 @@ const Artist = () => {
   const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
   const [showAllSongs, setShowAllSongs] = useState(false);
 
-  const songsObserverRef = useRef();
-  const albumsObserverRef = useRef();
-
   // Intersection Observer for hero section
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -186,6 +201,19 @@ const Artist = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  // Infinite scroll hooks
+  const { lastElementRef: songsLastRef } = useInfiniteScroll({
+    hasMore: songsPage < totalPages,
+    loading: songsStatus === "loading",
+    onLoadMore: () => setSongsPage(prev => prev + 1)
+  });
+
+  const { lastElementRef: albumsLastRef } = useInfiniteScroll({
+    hasMore: hasMoreAlbums && albumsPage < artistAlbumPagination.totalPages,
+    loading: albumsStatus === "loading",
+    onLoadMore: () => setAlbumsPage(prev => prev + 1)
+  });
 
   // Derive cycles from backend plans on each render
   const availableCycles = useMemo(() => {
@@ -236,8 +264,17 @@ const Artist = () => {
     loadRazorpayScript();
   }, []);
 
+  // ✅ FIXED: Reset state when artistId changes
   useEffect(() => {
     if (artistId) {
+      // Reset pagination states
+      setSongsPage(1);
+      setAlbumsPage(1);
+      setShowAllSongs(false);
+      setHasMoreAlbums(true);
+      setAlbumsStatus("idle");
+      
+      // Fetch new artist data
       dispatch(fetchArtistBySlug(artistId));
       dispatch(fetchUserSubscriptions());
       dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 }));
@@ -245,12 +282,13 @@ const Artist = () => {
     }
   }, [dispatch, artistId]);
 
-  // ✅ NEW: Fetch subscriber count when artist is loaded
+  // ✅ FIXED: Fetch subscriber count when artist is loaded with proper dependency
   useEffect(() => {
-    if (artist?._id && (!subscriberData || !isSubscriberCountValid)) {
+    if (artist?._id) {
+      // Always fetch fresh subscriber count for new artist
       dispatch(fetchSubscriberCount(artist._id));
     }
-  }, [dispatch, artist?._id, subscriberData, isSubscriberCountValid]);
+  }, [dispatch, artist?._id]);
 
   useEffect(() => {
     dispatch(resetPaymentState());
@@ -291,8 +329,9 @@ const Artist = () => {
     dispatch(play());
   };
 
-  const handleScroll = (ref) => {
-    ref?.current?.scrollBy({ left: 200, behavior: "smooth" });
+  const handleScroll = (ref, direction = "right") => {
+    const scrollAmount = direction === "right" ? 200 : -200;
+    ref?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
   const handleRazorpayItemPurchase = async (item, itemType) => {
@@ -476,34 +515,6 @@ const Artist = () => {
     handleRazorpayItemPurchase(item, type);
   };
 
-  const songsLastRef = useCallback(
-    (node) => {
-      if (songsStatus === "loading") return;
-      if (songsObserverRef.current) songsObserverRef.current.disconnect();
-      songsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries[0]?.isIntersecting && songsPage < totalPages) {
-          setSongsPage((prev) => prev + 1);
-        }
-      });
-      if (node) songsObserverRef.current.observe(node);
-    },
-    [songsStatus, songsPage, totalPages]
-  );
-
-  const albumsLastRef = useCallback(
-    (node) => {
-      if (albumsStatus === "loading" || !hasMoreAlbums) return;
-      if (albumsObserverRef.current) albumsObserverRef.current.disconnect();
-      albumsObserverRef.current = new IntersectionObserver((entries) => {
-        if (entries[0]?.isIntersecting && hasMoreAlbums) {
-          setAlbumsPage((prev) => prev + 1);
-        }
-      });
-      if (node) albumsObserverRef.current.observe(node);
-    },
-    [albumsStatus, hasMoreAlbums]
-  );
-
   const songListView = showAllSongs ? artistSongs : artistSongs.slice(0, 5);
   const subscriptionPrice = artist?.subscriptionPlans?.[0]?.price ?? 4.99;
   const artistColor = getArtistColor(artist?.name);
@@ -573,18 +584,13 @@ const Artist = () => {
           </div>
           <div className="flex items-center mt-1 text-gray-300 text-sm">
             <HiUsers className="mr-2 text-blue-400" />
-            <span className="flex items-center gap-2">
-              {subscriberCountLoading ? (
-                <Skeleton width={60} height={16} />
-              ) : (
-                <>
-                  <span className="font-bold text-blue-400">
-                    {formatSubscriberCount(liveSubscriberCount)}
-                  </span>
-                  <span>subscribers</span>
-                </>
-              )}
-            </span>
+          <span className="flex items-center gap-2">
+  <span className="font-bold text-blue-400">
+    {formatSubscriberCount(liveSubscriberCount)}
+  </span>
+  <span>subscribers</span>
+</span>
+
           </div>
           </div>
           <div className="flex items-center gap-4 mt-3 flex-wrap">
@@ -639,7 +645,6 @@ const Artist = () => {
   )}
       </div>
 
-
         <div className="flex justify-between mt-6 px-6 text-lg text-white">
           <h2>All Songs</h2>
           {artistSongs.length > 5 && (
@@ -668,9 +673,10 @@ const Artist = () => {
             ))
           ) : (
             <>
-              {songListView.map((song) => (
+              {songListView.map((song, idx) => (
                 <SongList
                   key={song._id}
+                  ref={idx === songListView.length - 1 && showAllSongs ? songsLastRef : null}
                   songId={song._id}
                   img={
                     song.coverImage
@@ -710,9 +716,13 @@ const Artist = () => {
               Page {artistAlbumPagination.page} of{" "}
               {artistAlbumPagination.totalPages}
             </span>
+            <LuSquareChevronLeft
+              className="text-white cursor-pointer hover:text-blue-800 text-lg"
+              onClick={() => handleScroll(recentScrollRef, "left")}
+            />
             <LuSquareChevronRight
-              className="text-white cursor-pointer hover:text-blue-800 text-2xl"
-              onClick={() => handleScroll(recentScrollRef)}
+              className="text-white cursor-pointer hover:text-blue-800 text-lg"
+              onClick={() => handleScroll(recentScrollRef, "right")}
             />
           </div>
         </div>
@@ -730,9 +740,10 @@ const Artist = () => {
               ))
             ) : artistAlbums.length > 0 ? (
               <>
-                {artistAlbums.map((album) => (
+                {artistAlbums.map((album, idx) => (
                   <AlbumCard
                     key={album._id}
+                    ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
                     tag={`#${album.title || "music"}`}
                     artists={album.artist?.name || "Various Artists"}
                     image={album.coverImage || "/images/placeholder.png"}
@@ -777,10 +788,16 @@ const Artist = () => {
 
         <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
           <h2>Singles</h2>
-          <LuSquareChevronRight
-            className="text-white cursor-pointer hover:text-blue-800 text-2xl"
-            onClick={() => handleScroll(singlesScrollRef)}
-          />
+          <div className="flex items-center gap-2">
+            <LuSquareChevronLeft
+              className="text-white cursor-pointer hover:text-blue-800 text-lg"
+              onClick={() => handleScroll(singlesScrollRef, "left")}
+            />
+            <LuSquareChevronRight
+              className="text-white cursor-pointer hover:text-blue-800 text-lg"
+              onClick={() => handleScroll(singlesScrollRef, "right")}
+            />
+          </div>
         </div>
         <div
           ref={singlesScrollRef}

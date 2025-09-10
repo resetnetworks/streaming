@@ -45,9 +45,6 @@ const fixedGenres = [
   'classical crossover',
   'soundscape',
   'field recordings',
-
-  // instruments/arrangements
-  'noise',
 ];
 
 

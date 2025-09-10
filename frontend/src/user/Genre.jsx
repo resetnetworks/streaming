@@ -1,4 +1,4 @@
-// src/pages/GenrePage.jsx (updated)
+// src/pages/GenrePage.jsx (corrected pagination)
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import {
   fetchSongsByGenre,
   setGenreCachedData,
   loadGenreFromCache,
+  clearGenreSongs, // Add this action
 } from "../features/songs/songSlice";
 import {
   selectSongsStatus,
@@ -23,6 +24,7 @@ import LoadingOverlay from "../components/user/Home/LoadingOverlay";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
+import {useInfiniteScroll} from "../hooks/useInfiniteScroll";
 
 const genreAssets = {
   electronic: { label: "Electronic" },
@@ -61,32 +63,33 @@ const GenrePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const currentUser = useSelector((s) => s.auth.user);
-
+  
   // Use the same Razorpay hook as Home
   const {
-    handlePurchaseClick,      // (item, "song" | "album")
+    handlePurchaseClick,
     processingPayment,
     paymentLoading,
   } = useRazorpayPayment();
-
+  
   // Modal state
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
-  const [modalType, setModalType] = useState(null); // "play" | "purchase"
+  const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
-
-  // Paging
-  const [page, setPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const limit = 20;
-
+  
+  // Redux selectors
   const status = useSelector(selectSongsStatus);
   const songs = useSelector(selectGenreSongs);
   const totalPages = useSelector(selectGenreSongsPages);
   const total = useSelector(selectGenreSongsTotal);
-
+  
   const { displayTitle, headerLabel } = useMemo(() => {
     let decoded = "";
     try {
@@ -108,46 +111,100 @@ const GenrePage = () => {
     };
   }, [location.state, rawParam]);
 
-  const isCacheValid = useSelector(selectIsGenreCacheValid);
-  const isPageCached = useSelector(selectIsGenrePageCached(displayTitle, page));
-  const cachedPageData = useSelector(selectGenreCachedPageData(displayTitle, page));
-
+  // Reset state when genre changes
   useEffect(() => {
-    setPage(1);
-  }, [displayTitle]);
+    setCurrentPage(1);
+    setHasInitialLoad(false);
+    setIsLoadingMore(false);
+    // Clear existing songs when genre changes
+    dispatch(clearGenreSongs());
+  }, [displayTitle, dispatch]);
 
+  // Load initial page
   useEffect(() => {
+    if (!displayTitle || hasInitialLoad) return;
+    
     let cancelled = false;
-    const run = async () => {
-      if (!displayTitle) return;
-
-      if (isPageCached && isCacheValid && cachedPageData) {
-        dispatch(loadGenreFromCache({ genre: displayTitle, page }));
-        return;
+    
+    const loadInitialData = async () => {
+      try {
+        const result = await dispatch(
+          fetchSongsByGenre({ 
+            genre: displayTitle, 
+            page: 1, 
+            limit,
+            append: false // First load, don't append
+          })
+        ).unwrap();
+        
+        if (cancelled) return;
+        
+        dispatch(
+          setGenreCachedData({
+            genre: displayTitle,
+            page: 1,
+            songs: result.songs,
+            pagination: result.pagination,
+          })
+        );
+        
+        setHasInitialLoad(true);
+      } catch (error) {
+        console.error("Failed to load initial genre data:", error);
       }
+    };
 
+    loadInitialData();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [displayTitle, hasInitialLoad, dispatch, limit]);
+
+  // Load more function for infinite scroll
+  const loadMore = useCallback(async () => {
+    if (!displayTitle || isLoadingMore || !hasInitialLoad) return;
+    if (currentPage >= totalPages) return;
+
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+
+    try {
       const result = await dispatch(
-        fetchSongsByGenre({ genre: displayTitle, page, limit })
+        fetchSongsByGenre({ 
+          genre: displayTitle, 
+          page: nextPage, 
+          limit,
+          append: true // Append to existing songs
+        })
       ).unwrap();
-
-      if (cancelled) return;
-
+      
       dispatch(
         setGenreCachedData({
           genre: displayTitle,
-          page: result.page,
+          page: nextPage,
           songs: result.songs,
           pagination: result.pagination,
         })
       );
-    };
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [displayTitle, page, isPageCached, isCacheValid, cachedPageData, dispatch]);
+      
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error("Failed to load more songs:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [displayTitle, currentPage, totalPages, isLoadingMore, hasInitialLoad, dispatch, limit]);
 
-  const loadingInitial = status === "loading" && songs.length === 0;
+  // Infinite scroll setup
+  const hasMore = totalPages > 0 && currentPage < totalPages;
+  const { lastElementRef } = useInfiniteScroll({
+    hasMore,
+    loading: isLoadingMore || status === "loading",
+    onLoadMore: loadMore,
+  });
+
+  const loadingInitial = (status === "loading" && !hasInitialLoad) || (!hasInitialLoad && songs.length === 0);
 
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
@@ -159,10 +216,8 @@ const GenrePage = () => {
   const handleSubscribeDecision = useCallback(
     (artist, type, data) => {
       const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
-
       if (type === "purchase") {
         if (alreadySubscribed) {
-          // Directly open Razorpay for songs when subscribed
           handlePurchaseClick(data, "song");
           return;
         }
@@ -172,7 +227,6 @@ const GenrePage = () => {
         setSubscribeModalOpen(true);
         return;
       }
-
       if (type === "play") {
         if (alreadySubscribed) {
           setSubscribeModalOpen(false);
@@ -184,7 +238,6 @@ const GenrePage = () => {
         setSubscribeModalOpen(true);
         return;
       }
-
       setModalArtist(artist);
       setModalType(type);
       setModalData(data);
@@ -193,17 +246,15 @@ const GenrePage = () => {
     [currentUser, handlePurchaseClick]
   );
 
-  // Play gating + direct payment when subscribed
   const handlePlay = useCallback(
     (song) => {
       const purchased = currentUser?.purchasedSongs?.includes(song._id);
       const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
-
+      
       if (song.accessType === "subscription" && !alreadySubscribed) {
         handleSubscribeDecision(song.artist, "play", song);
         return;
       }
-
       if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
         if (alreadySubscribed) {
           handlePurchaseClick(song, "song");
@@ -212,60 +263,16 @@ const GenrePage = () => {
         }
         return;
       }
-
       dispatch(setSelectedSong(song));
       dispatch(play());
     },
     [currentUser, dispatch, handleSubscribeDecision, handlePurchaseClick]
   );
 
-  // Infinite scroll
-  const sentinelRef = useRef(null);
-  const canLoadMore = totalPages && page < totalPages;
-
-  useEffect(() => {
-    if (!canLoadMore) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      async ([entry]) => {
-        if (!entry.isIntersecting) return;
-        if (loadingMore || status === "loading") return;
-
-        setLoadingMore(true);
-        const nextPage = page + 1;
-
-        try {
-          const result = await dispatch(
-            fetchSongsByGenre({ genre: displayTitle, page: nextPage, limit })
-          ).unwrap();
-
-          dispatch(
-            setGenreCachedData({
-              genre: displayTitle,
-              page: result.page,
-              songs: result.songs,
-              pagination: result.pagination,
-            })
-          );
-
-          setPage(nextPage);
-        } finally {
-          setLoadingMore(false);
-        }
-      },
-      { rootMargin: "200px 0px", threshold: 0 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [canLoadMore, displayTitle, dispatch, limit, loadingMore, page, status]);
-
   return (
     <>
       <UserHeader />
-
+      
       {/* Header */}
       <div className="w-full">
         <div className="relative w-full h-40 sm:h-52 md:h-64 lg:h-72 overflow-hidden bg-black flex items-center justify-center text-center">
@@ -294,37 +301,50 @@ const GenrePage = () => {
         ) : (
           <>
             <div className="divide-y divide-gray-800 rounded-lg overflow-hidden border border-gray-800">
-              {songs.map((song) => {
+              {songs.map((song, index) => {
                 const purchased = currentUser?.purchasedSongs?.includes(song._id);
                 const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
-
+                
+                // Apply lastElementRef to the last item for infinite scroll
+                const isLastItem = index === songs.length - 1;
+                
                 return (
-                  <GenreSongRow
+                  <div
                     key={song._id}
-                    song={song}
-                    seekTime={song.durationLabel || song.duration || ""}
-                    isSelected={false}
-                    onPlay={handlePlay}
-                    onSubscribeRequired={(artist, type, data) => {
-                      // mirror Home behavior
-                      handleSubscribeDecision(artist, type, data);
-                    }}
-                    onPurchaseClick={(item) => {
-                      // Always pass explicit type "song"
-                      handlePurchaseClick(item, "song");
-                    }}
-                    processingPayment={processingPayment}
-                    paymentLoading={paymentLoading}
-                    purchased={purchased}
-                    alreadySubscribed={alreadySubscribed}
-                  />
+                    ref={isLastItem ? lastElementRef : null}
+                  >
+                    <GenreSongRow
+                      song={song}
+                      seekTime={song.durationLabel || song.duration || ""}
+                      isSelected={false}
+                      onPlay={handlePlay}
+                      onSubscribeRequired={(artist, type, data) => {
+                        handleSubscribeDecision(artist, type, data);
+                      }}
+                      onPurchaseClick={(item) => {
+                        handlePurchaseClick(item, "song");
+                      }}
+                      processingPayment={processingPayment}
+                      paymentLoading={paymentLoading}
+                      purchased={purchased}
+                      alreadySubscribed={alreadySubscribed}
+                    />
+                  </div>
                 );
               })}
             </div>
-
-            {canLoadMore && (
-              <div ref={sentinelRef} className="w-full py-4 flex justify-center">
-                {loadingMore && <div className="w-40 h-8 bg-gray-800 rounded animate-pulse" />}
+            
+            {/* Loading indicator for more items */}
+            {isLoadingMore && (
+              <div className="w-full py-4 flex justify-center">
+                <div className="w-40 h-8 bg-gray-800 rounded animate-pulse" />
+              </div>
+            )}
+            
+            {/* End of list indicator */}
+            {hasInitialLoad && !hasMore && songs.length > 0 && (
+              <div className="text-center text-gray-500 py-8 text-sm">
+                You've reached the end of the list
               </div>
             )}
           </>
@@ -332,13 +352,13 @@ const GenrePage = () => {
       </div>
 
       <LoadingOverlay show={processingPayment || paymentLoading} />
-
+      
       <SubscribeModal
         open={subscribeModalOpen}
         artist={modalArtist}
         type={modalType}
         itemData={modalData}
-        onClose={() => setSubscribeModalOpen(false)}
+        onClose={handleSubscribeModalClose}
         onNavigate={() => {
           setSubscribeModalOpen(false);
           if (modalArtist?.slug) navigate(`/artist/${modalArtist.slug}`);

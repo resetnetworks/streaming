@@ -3,7 +3,7 @@ import { RiPlayFill, RiPauseFill } from "react-icons/ri";
 
 const MatchingGenreSong = React.forwardRef(
   (
-    { title, artist, image, album, duration, genre, price, onPlay, isPlaying, isSelected },
+    { title, artist, image, album, duration, price, onPlay, isPlaying, isSelected },
     ref
   ) => {
     const truncatedTitle = title?.length > 12 ? title.slice(0, 12) + "…" : title;
@@ -36,11 +36,6 @@ const MatchingGenreSong = React.forwardRef(
             alt={title}
             className="w-full h-full object-cover"
           />
-
-          {/* Genre Badge */}
-          <div className="absolute top-2 left-2 bg-black/50 text-blue-300 text-[10px] font-medium px-2 py-0.5 rounded-full">
-            {genre?.[0] || "Music"}
-          </div>
 
           {/* Hover Overlay with Center Play/Pause Btn */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
