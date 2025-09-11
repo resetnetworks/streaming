@@ -14,7 +14,8 @@ import {
 import { fetchAllArtists } from "../features/artists/artistsSlice";
 import { selectAllArtists } from "../features/artists/artistsSelectors";
 
-import { setSelectedSong, play } from "../features/playback/playerSlice";
+// ✅ UPDATED IMPORTS - Add setPlaybackContext
+import { setSelectedSong, play, setPlaybackContext } from "../features/playback/playerSlice";
 import { formatDuration } from "../utills/helperFunctions";
 
 // ✅ ADD RAZORPAY IMPORTS
@@ -75,7 +76,15 @@ export default function Album() {
     dispatch(resetPaymentState());
   }, [dispatch]);
 
+  // ✅ UPDATED PLAY SONG HANDLER - SET ALBUM CONTEXT
   const handlePlaySong = (song) => {
+    // Set album playback context when playing from album
+    dispatch(setPlaybackContext({
+      type: 'album',
+      id: album._id,
+      songs: songs // All songs in this album
+    }));
+    
     dispatch(setSelectedSong(song));
     dispatch(play());
   };
@@ -440,7 +449,6 @@ export default function Album() {
                   </div>
                 </div>
               ))}
-
             </>
           )}
         </div>

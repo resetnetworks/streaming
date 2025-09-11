@@ -8,6 +8,12 @@ const initialState = {
   volume: loadInitialVolume(),
   lastSelectedAt: null,
   forceRefreshToken: null, // For cache busting
+  // ✅ NEW: Add playback context
+  playbackContext: {
+    type: 'all', // 'all' | 'album' | 'artist' | 'playlist'
+    id: null,    // album id, artist id, etc.
+    songs: []    // songs in current context
+  }
 };
 
 // Helper: Load volume from localStorage
@@ -52,6 +58,18 @@ const playerSlice = createSlice({
         console.warn("Failed to persist volume", e);
       }
     },
+    // ✅ NEW: Set playback context
+    setPlaybackContext(state, action) {
+      state.playbackContext = action.payload;
+    },
+    // ✅ NEW: Clear playback context
+    clearPlaybackContext(state) {
+      state.playbackContext = {
+        type: 'all',
+        id: null,
+        songs: []
+      };
+    },
     resetPlayerState(state) {
       return {
         ...initialState,
@@ -72,6 +90,8 @@ export const {
   setCurrentTime,
   setDuration,
   setVolume,
+  setPlaybackContext,    // ✅ NEW export
+  clearPlaybackContext,  // ✅ NEW export
   resetPlayerState,
   forceRefresh,
 } = playerSlice.actions;

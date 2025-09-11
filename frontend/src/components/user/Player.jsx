@@ -14,6 +14,7 @@ import {
   setCurrentTime,
   setDuration,
   setVolume,
+  clearPlaybackContext,  // ✅ NEW IMPORT
 } from "../../features/playback/playerSlice";
 import { toggleLikeSong } from "../../features/auth/authSlice";
 import { selectLikedSongIds } from "../../features/auth/authSelectors";
@@ -53,32 +54,50 @@ const Player = () => {
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
   
+  // ✅ NEW: Get playback context
+  const playbackContext = useSelector((state) => state.player.playbackContext);
 
   const [open, setOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [playbackError, setPlaybackError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  
 
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
-  
 
   const currentSong = selectedSong || null;
 
+  // ✅ NEW: Use context songs instead of all songs
+  const contextSongs = playbackContext.songs.length > 0 
+    ? playbackContext.songs 
+    : songs; // fallback to all songs
+
   const currentIndex = currentSong
-    ? songs.findIndex((s) => s._id === currentSong._id)
+    ? contextSongs.findIndex((s) => s._id === currentSong._id)
     : -1;
 
   const nextSongs =
     currentIndex !== -1
-      ? songs.slice(currentIndex + 1, currentIndex + 5)
-      : songs.slice(0, 4);
+      ? contextSongs.slice(currentIndex + 1, currentIndex + 5)
+      : contextSongs.slice(0, 4);
 
   // NEW (✅)
   const likedSongIds = useSelector(selectLikedSongIds);
   const isLiked = currentSong ? likedSongIds.includes(currentSong._id) : false;
+
+  // ✅ NEW: Smart Context Detection - Auto-exit when song doesn't belong to current context (SILENT)
+  useEffect(() => {
+    if (playbackContext.type !== 'all' && currentSong && playbackContext.songs.length > 0) {
+      const songInContext = playbackContext.songs.some(song => song._id === currentSong._id);
+      
+      if (!songInContext) {
+        // Song doesn't belong to current context, switch to library mode silently
+        dispatch(clearPlaybackContext());
+        console.log("Auto-switched to library playback - song not in current context");
+      }
+    }
+  }, [currentSong?._id, playbackContext.type, playbackContext.songs, dispatch]);
 
   // Fetch stream URL when song changes
   useEffect(() => {
@@ -89,10 +108,10 @@ const Player = () => {
 
   // Initialize with first song if none selected
   useEffect(() => {
-    if (!selectedSong && songs.length > 0) {
-      dispatch(setSelectedSong(songs[0].id));
+    if (!selectedSong && contextSongs.length > 0) {
+      dispatch(setSelectedSong(contextSongs[0]));
     }
-  }, [selectedSong, songs, dispatch]);
+  }, [selectedSong, contextSongs, dispatch]);
 
   // Main HLS player initialization - FIXED VERSION
   useEffect(() => {
@@ -152,7 +171,6 @@ const Player = () => {
     });
   }
 });
-
 
           hls.attachMedia(video);
           hlsRef.current = hls;
@@ -239,8 +257,6 @@ useEffect(() => {
   }
 }, [streamError?.songId]);
 
-
-
   const handleTogglePlay = async () => {
     const video = videoRef.current;
     if (!video || !currentSong) return;
@@ -268,20 +284,22 @@ useEffect(() => {
     setIsMuted(!isMuted);
   };
 
+  // ✅ UPDATED: Use context songs for navigation
   const handleNext = () => {
-    if (!currentSong || songs.length === 0) return;
-    const nextIndex = (currentIndex + 1) % songs.length;
-    dispatch(setSelectedSong(songs[nextIndex]));
+    if (!currentSong || contextSongs.length === 0) return;
+    const nextIndex = (currentIndex + 1) % contextSongs.length;
+    dispatch(setSelectedSong(contextSongs[nextIndex]));
     dispatch(play());
   };
 
+  // ✅ UPDATED: Use context songs for navigation
   const handlePrev = () => {
-    if (!currentSong || songs.length === 0) return;
+    if (!currentSong || contextSongs.length === 0) return;
     if (currentTime > 3) {
       handleSeekChange(0);
     } else {
-      const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-      dispatch(setSelectedSong(songs[prevIndex].id));
+      const prevIndex = (currentIndex - 1 + contextSongs.length) % contextSongs.length;
+      dispatch(setSelectedSong(contextSongs[prevIndex]));
       dispatch(play());
     }
   };
@@ -304,7 +322,13 @@ useEffect(() => {
     if (currentSong?._id) dispatch(toggleLikeSong(currentSong._id));
   };
 
-  if (!currentSong || songs.length === 0) {
+  // ✅ NEW: Handle next songs click
+  const handleNextSongClick = (song) => {
+    dispatch(setSelectedSong(song));
+    dispatch(play());
+  };
+
+  if (!currentSong || contextSongs.length === 0) {
     return (
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="ml-3">
@@ -455,12 +479,9 @@ useEffect(() => {
                   <div
                     key={song._id}
                     className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
-                      song._id === selectedSong ? "bg-blue-800/40" : ""
+                      song._id === selectedSong?._id ? "bg-blue-800/40" : ""
                     }`}
-                    onClick={() => {
-                      dispatch(setSelectedSong(song));
-                      dispatch(play());
-                    }}
+                    onClick={() => handleNextSongClick(song)}
                   >
                     <div className="flex items-center gap-3">
                       <img
