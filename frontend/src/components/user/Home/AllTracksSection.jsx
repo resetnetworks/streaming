@@ -66,7 +66,7 @@ const AllTracksSection = ({
     <>
       <div className="w-full flex justify-between items-center">
         <h2 className="md:text-xl text-lg font-semibold">
-          all tracks for you
+          trending singles
         </h2>
 
         {/* Back and Next buttons (desktop) */}

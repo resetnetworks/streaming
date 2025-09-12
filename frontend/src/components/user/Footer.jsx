@@ -90,7 +90,7 @@ const Footer = () => {
       <a
         key={name}
         href={link}
-        className="block text-gray-300 hover:text-[#3b82f6] transition-all duration-300 hover:translate-x-2 transform"
+        className="block text-gray-300 hover:text-[#3b82f6] transition-all duration-300"
         style={{ fontFamily: 'Jura' }}
       >
         {name}
@@ -108,13 +108,13 @@ const Footer = () => {
   </h3>
   <div className="space-y-4">
     {[
-      { icon: FaShieldAlt, name: 'SSL Encryption', color: 'hover:text-green-400'},
-      { icon: FaLock, name: 'DRM Protection', color: 'hover:text-blue-400',},
-      { icon: FaUserShield, name: 'Privacy Shield', color: 'hover:text-purple-400'},
-    ].map(({ icon: Icon, name, color, description }) => (
+      { icon: FaShieldAlt, name: 'SSL Encryption'},
+      { icon: FaLock, name: 'DRM Protection'},
+      { icon: FaUserShield, name: 'Privacy Shield'},
+    ].map(({ icon: Icon, name, description }) => (
       <div key={name} className="subscription-wrapper w-full">
         <div
-          className={`subscription-card w-full p-3 flex items-center space-x-3 text-gray-300 ${color} transition-all duration-300 transform group cursor-pointer`}
+          className={`subscription-card w-full p-3 flex items-center space-x-3 text-gray-300 transform group cursor-pointer`}
           style={{ fontFamily: 'Jura' }}
         >
           <Icon className="text-xl group-hover:scale-110 transition-transform" />
@@ -139,12 +139,11 @@ const Footer = () => {
            <div className="space-y-4 text-sm">
   {[
     { icon: FaEnvelope, text: 'contact@reset93.net', href: 'mailto:contact@reset93.net' },
-    { icon: FaPhone, text: '+918392077241', href: 'tel:+918392077241' },
   ].map(({ icon: Icon, text, href }, index) => (
     <div key={index} className="player-wrapper w-full">
       <a 
         href={href}
-        className="player-card p-3 flex items-center space-x-3 text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 transform"
+        className="player-card p-3 flex items-center space-x-3 text-gray-300 hover:text-white transform"
       >
         <Icon className="text-[#3b82f6]" />
         <span style={{ fontFamily: 'Jura' }}>{text}</span>
@@ -193,9 +192,9 @@ const Footer = () => {
               </span>
             </div>
             <div className="flex space-x-6 text-sm text-gray-400" style={{ fontFamily: 'Jura' }}>
-              <a href="privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</a>
-              <a href="data-deletion" className="hover:text-[#3b82f6] transition-colors">Data Deletion</a>
-              <a href="help" className="hover:text-[#3b82f6] transition-colors">Support</a>
+              <a href="/privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</a>
+              <a href="/data-deletion" className="hover:text-[#3b82f6] transition-colors">Data Deletion</a>
+              <a href="/help" className="hover:text-[#3b82f6] transition-colors">Support</a>
             </div>
           </div>
         </div>

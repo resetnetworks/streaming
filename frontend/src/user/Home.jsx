@@ -118,12 +118,9 @@ const Home = () => {
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
-          {/* New Tracks */}
-          <NewTracksSection
+
+            <AlbumsSection
             onPurchaseClick={handlePurchaseClick}
-            onSubscribeRequired={(artist, type, data) => {
-              handleSubscribeDecision(artist, type, data);
-            }}
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
           />
@@ -143,12 +140,6 @@ const Home = () => {
             onSubscribeRequired={(artist, type, data) => {
               handleSubscribeDecision(artist, type, data);
             }}
-            processingPayment={processingPayment}
-            paymentLoading={paymentLoading}
-          />
-
-          <AlbumsSection
-            onPurchaseClick={handlePurchaseClick}
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
           />
