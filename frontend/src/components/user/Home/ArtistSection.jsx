@@ -23,7 +23,7 @@ import {
   selectIsPageCached,
 } from "../../../features/artists/artistsSelectors";
 
-// --- NEW: Helper function inspired by your Artists.jsx to format plan cycles ---
+// --- Helper: format plan cycle ---
 const cycleLabel = (c) => {
   switch (String(c)) {
     case "1m":
@@ -33,13 +33,13 @@ const cycleLabel = (c) => {
     case "6m":
       return "6m";
     case "12m":
-      return "yr"; // Using 'yr' is shorter for the UI
+      return "yr";
     default:
       return c || "";
   }
 };
 
-// Lazy image component (No changes)
+// Lazy image component
 const LazyImg = ({ src, alt, className }) => {
   const imgRef = useRef(null);
   const [loadedSrc, setLoadedSrc] = useState(null);
@@ -94,26 +94,34 @@ const ArtistCircle = forwardRef(function ArtistCircle(
   { artist, onClick },
   ref
 ) {
-  // --- MODIFIED: This logic now finds the cheapest plan instead of just the monthly one ---
   const priceDisplay = useMemo(() => {
     const plans = artist?.subscriptionPlans;
     if (!plans || plans.length === 0) {
       return "Free";
     }
 
-    // Filter for valid plans with a price and sort them to find the cheapest
+    // Filter valid plans that have a basePrice
     const sortedPlans = plans
-      .filter((p) => p && typeof p.price === "number")
-      .sort((a, b) => a.price - b.price);
+      .filter(
+        (p) =>
+          p?.basePrice &&
+          typeof p.basePrice.amount === "number" &&
+          p.basePrice.amount > 0
+      )
+      .sort((a, b) => a.basePrice.amount - b.basePrice.amount);
 
-    // If no valid plans are left after filtering, show Free
     if (sortedPlans.length === 0) {
       return "Free";
     }
 
     const cheapestPlan = sortedPlans[0];
     const label = cycleLabel(cheapestPlan.cycle);
-    return `₹${cheapestPlan.price}/${label}`;
+
+    // Format with currency (default fallback to ₹ if not provided)
+    const currencySymbol =
+      cheapestPlan.basePrice.currency === "USD" ? "$" : "₹";
+
+    return `${currencySymbol}${cheapestPlan.basePrice.amount}/${label}`;
   }, [artist?.subscriptionPlans]);
 
   return (
@@ -145,7 +153,7 @@ const ArtistCircle = forwardRef(function ArtistCircle(
   );
 });
 
-// Main Section Component with Advanced Caching Logic (No other changes needed here)
+// Main Section Component
 const ArtistSection = ({ title = "Featured Artists", onNavigateArtist }) => {
   const dispatch = useDispatch();
 

@@ -9,10 +9,12 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 
+
 const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
   const dispatch = useDispatch();
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
+
 
   const [form, setForm] = useState({
     name: "",
@@ -22,8 +24,10 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     location: "",
   });
 
+
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
 
   useEffect(() => {
     if (initialData) {
@@ -48,12 +52,14 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     }
   }, [initialData]);
 
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files;
     setImage(file);
     if (file) {
       const reader = new FileReader();
@@ -64,24 +70,29 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     }
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
 
     if (!form.name.trim()) {
       toast.error("Artist name is required");
       return;
     }
 
+
     if (form.location.trim().length < 2) {
       toast.error("Location must be at least 2 characters");
       return;
     }
+
 
     const isPaid = form.subscriptionPrice !== "0";
     if (isPaid && !form.cycle) {
       toast.error("Subscription cycle is required for paid plans");
       return;
     }
+
 
     const formData = new FormData();
     formData.append("name", form.name);
@@ -92,6 +103,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     if (image) {
       formData.append("coverImage", image);
     }
+
 
     try {
       if (initialData) {
@@ -107,11 +119,15 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     }
   };
 
+
   const isPaid = (form.subscriptionPrice || "0") !== "0";
+
 
   if (!isOpen) return null;
 
+
   const mode = initialData ? "Edit" : "Create";
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
@@ -125,7 +141,9 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
           </button>
         </div>
 
+
         {error && <p className="text-red-500 mb-4">{error}</p>}
+
 
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           {/* Name */}
@@ -141,6 +159,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
             />
           </div>
 
+
           {/* Bio */}
           <div className="mb-4">
             <label className="block font-medium mb-1 text-gray-300">Bio</label>
@@ -152,6 +171,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
               rows="4"
             />
           </div>
+
 
           {/* Location */}
           <div className="mb-4">
@@ -167,18 +187,30 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
             />
           </div>
 
-          {/* Subscription Price */}
+
+          {/* Subscription Price with USD symbol */}
           <div className="mb-4">
-            <label className="block font-medium mb-1 text-gray-300">Subscription Price</label>
-            <input
-              type="number"
-              name="subscriptionPrice"
-              value={form.subscriptionPrice}
-              onChange={handleChange}
-              className="w-full border p-2 rounded bg-gray-800 border-gray-700 text-white"
-              min="0"
-            />
+            <label className="block font-medium mb-1 text-gray-300">Subscription Price (USD)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-medium">
+                $
+              </span>
+              <input
+                type="number"
+                name="subscriptionPrice"
+                value={form.subscriptionPrice}
+                onChange={handleChange}
+                className="w-full border p-2 pl-8 rounded bg-gray-800 border-gray-700 text-white"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                USD
+              </span>
+            </div>
           </div>
+
 
           {/* Subscription Cycle */}
           <div className="mb-4">
@@ -201,6 +233,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
               <option value="12m">Yearly (12 months)</option>
             </select>
           </div>
+
 
           {/* Cover Image */}
           <div className="mb-6">
@@ -237,6 +270,7 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
             </div>
           </div>
 
+
           {/* Submit */}
           <button
             type="submit"
@@ -250,5 +284,6 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     </div>
   );
 };
+
 
 export default CreateArtistModal;

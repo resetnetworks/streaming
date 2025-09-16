@@ -120,7 +120,74 @@ export const initiateRazorpaySubscription = createAsyncThunk(
   }
 );
 
-// ❌ Cancel Artist Subscription (DELETE)
+// 🆕 PayPal Artist Subscription - Create Subscription
+export const initiatePaypalSubscription = createAsyncThunk(
+  'payment/initiatePaypalSubscription',
+  async ({ artistId, cycle, currency = 'USD' }, { rejectWithValue }) => {
+    try {
+      // Validate cycle on the client for a better UX
+      const validCycles = ['1m', '3m', '6m', '12m'];
+      if (!validCycles.includes(cycle)) {
+        return rejectWithValue({ message: 'Invalid subscription cycle. Use 1m, 3m, 6m, or 12m.' });
+      }
+
+      const response = await axiosInstance.post(`/subscriptions/paypal/artist/${artistId}`, {
+        cycle,
+        currency,
+      });
+      return response.data; // { success: true, subscriptionId, approveUrl, cycle }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🆕 Activate PayPal Subscription after approval
+export const activatePaypalSubscription = createAsyncThunk(
+  'payment/activatePaypalSubscription',
+  async ({ subscriptionId, artistId, userId }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/subscriptions/paypal/activate`, {
+        subscriptionId,
+        artistId,
+        userId,
+      });
+      return response.data; // { success: true, subscription, message }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🆕 Get PayPal Subscription Details
+export const getPaypalSubscriptionDetails = createAsyncThunk(
+  'payment/getPaypalSubscriptionDetails',
+  async ({ subscriptionId }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/subscriptions/paypal/${subscriptionId}`);
+      return response.data; // { success: true, subscription }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// 🆕 Cancel PayPal Subscription
+export const cancelPaypalSubscription = createAsyncThunk(
+  'payment/cancelPaypalSubscription',
+  async ({ subscriptionId, reason = 'User requested cancellation' }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/subscriptions/paypal/${subscriptionId}/cancel`, {
+        reason,
+      });
+      return response.data; // { success: true, message }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// ❌ Cancel Artist Subscription (DELETE) - Universal
 export const cancelArtistSubscription = createAsyncThunk(
   'payment/cancelArtistSubscription',
   async (artistId, { rejectWithValue }) => {
@@ -147,18 +214,27 @@ const initialState = {
   razorpayOrder: null,
   razorpaySubscriptionId: null,
 
-  // 🆕 PayPal specific
+  // PayPal specific
   paypalOrderId: null,
   paypalOrder: null,
   paypalLinks: null,
   paypalCaptureResponse: null,
+  
+  // 🆕 PayPal Subscription specific
+  paypalSubscriptionId: null,
+  paypalSubscription: null,
+  paypalApproveUrl: null,
+  paypalSubscriptionStatus: null, // 'APPROVAL_PENDING', 'APPROVED', 'ACTIVE', 'SUSPENDED', 'CANCELLED', 'EXPIRED'
+  paypalActivationResponse: null,
 
   // General
   cancelMessage: null,
   paymentSuccess: false,
+  subscriptionSuccess: false,
 
   // Subscription UI/selection
   currentCycle: null, // "1m" | "3m" | "6m" | "12m"
+  currentCurrency: 'USD', // For PayPal subscriptions
 };
 
 const paymentSlice = createSlice({
@@ -178,9 +254,16 @@ const paymentSlice = createSlice({
       state.paypalOrder = null;
       state.paypalLinks = null;
       state.paypalCaptureResponse = null;
+      state.paypalSubscriptionId = null;
+      state.paypalSubscription = null;
+      state.paypalApproveUrl = null;
+      state.paypalSubscriptionStatus = null;
+      state.paypalActivationResponse = null;
       state.cancelMessage = null;
       state.paymentSuccess = false;
+      state.subscriptionSuccess = false;
       state.currentCycle = null;
+      state.currentCurrency = 'USD';
     },
     setPaymentGateway: (state, action) => {
       state.gateway = action.payload; // 'stripe' | 'razorpay' | 'paypal'
@@ -188,8 +271,25 @@ const paymentSlice = createSlice({
     setPaymentSuccess: (state, action) => {
       state.paymentSuccess = action.payload;
     },
+    setSubscriptionSuccess: (state, action) => {
+      state.subscriptionSuccess = action.payload;
+    },
     setSubscriptionCycle: (state, action) => {
       state.currentCycle = action.payload; // "1m" | "3m" | "6m" | "12m"
+    },
+    setSubscriptionCurrency: (state, action) => {
+      state.currentCurrency = action.payload; // For PayPal subscriptions
+    },
+    // 🆕 PayPal subscription specific actions
+    setPaypalSubscriptionStatus: (state, action) => {
+      state.paypalSubscriptionStatus = action.payload;
+    },
+    clearPaypalSubscriptionData: (state) => {
+      state.paypalSubscriptionId = null;
+      state.paypalSubscription = null;
+      state.paypalApproveUrl = null;
+      state.paypalSubscriptionStatus = null;
+      state.paypalActivationResponse = null;
     },
   },
   extraReducers: (builder) => {
@@ -300,12 +400,14 @@ const paymentSlice = createSlice({
         state.loading = false;
         state.transactionId = action.payload.transactionId || null;
         state.clientSecret = action.payload.clientSecret || null;
+        state.subscriptionSuccess = true;
         state.gateway = 'stripe';
       })
       .addCase(confirmArtistStripeSubscription.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.transactionId = null;
+        state.subscriptionSuccess = false;
       })
 
       // ✅ Razorpay Subscription — with cycle
@@ -322,15 +424,98 @@ const paymentSlice = createSlice({
         state.loading = false;
         state.razorpaySubscriptionId = action.payload.subscriptionId;
         state.currentCycle = action.payload.cycle || state.currentCycle;
+        state.subscriptionSuccess = true;
         state.gateway = 'razorpay';
       })
       .addCase(initiateRazorpaySubscription.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.razorpaySubscriptionId = null;
+        state.subscriptionSuccess = false;
       })
 
-      // ❌ Cancel Subscription
+      // 🆕 PayPal Subscription Creation
+      .addCase(initiatePaypalSubscription.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+        state.paypalSubscriptionId = null;
+        state.paypalApproveUrl = null;
+        state.paypalSubscriptionStatus = null;
+        // Set cycle and currency from the request
+        const arg = action.meta?.arg;
+        if (arg?.cycle) state.currentCycle = arg.cycle;
+        if (arg?.currency) state.currentCurrency = arg.currency;
+        state.gateway = 'paypal';
+      })
+      .addCase(initiatePaypalSubscription.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paypalSubscriptionId = action.payload.subscriptionId;
+        state.paypalApproveUrl = action.payload.approveUrl;
+        state.paypalSubscriptionStatus = 'APPROVAL_PENDING';
+        state.currentCycle = action.payload.cycle || state.currentCycle;
+        state.gateway = 'paypal';
+      })
+      .addCase(initiatePaypalSubscription.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.paypalSubscriptionId = null;
+        state.paypalApproveUrl = null;
+        state.paypalSubscriptionStatus = null;
+      })
+
+      // 🆕 PayPal Subscription Activation
+      .addCase(activatePaypalSubscription.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.paypalActivationResponse = null;
+      })
+      .addCase(activatePaypalSubscription.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paypalActivationResponse = action.payload;
+        state.paypalSubscription = action.payload.subscription;
+        state.paypalSubscriptionStatus = action.payload.subscription?.status || 'ACTIVE';
+        state.subscriptionSuccess = true;
+      })
+      .addCase(activatePaypalSubscription.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.paypalActivationResponse = null;
+        state.subscriptionSuccess = false;
+      })
+
+      // 🆕 Get PayPal Subscription Details
+      .addCase(getPaypalSubscriptionDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPaypalSubscriptionDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paypalSubscription = action.payload.subscription;
+        state.paypalSubscriptionStatus = action.payload.subscription?.status;
+      })
+      .addCase(getPaypalSubscriptionDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // 🆕 Cancel PayPal Subscription
+      .addCase(cancelPaypalSubscription.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.cancelMessage = null;
+      })
+      .addCase(cancelPaypalSubscription.fulfilled, (state, action) => {
+        state.loading = false;
+        state.cancelMessage = action.payload.message || 'PayPal subscription cancelled successfully';
+        state.paypalSubscriptionStatus = 'CANCELLED';
+      })
+      .addCase(cancelPaypalSubscription.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.cancelMessage = null;
+      })
+
+      // ❌ Cancel Artist Subscription (Universal)
       .addCase(cancelArtistSubscription.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -339,6 +524,11 @@ const paymentSlice = createSlice({
       .addCase(cancelArtistSubscription.fulfilled, (state, action) => {
         state.loading = false;
         state.cancelMessage = action.payload.message || 'Subscription cancelled';
+        
+        // Reset subscription-specific data based on current gateway
+        if (state.gateway === 'paypal') {
+          state.paypalSubscriptionStatus = 'CANCELLED';
+        }
       })
       .addCase(cancelArtistSubscription.rejected, (state, action) => {
         state.loading = false;
@@ -352,7 +542,11 @@ export const {
   resetPaymentState,
   setPaymentGateway,
   setPaymentSuccess,
+  setSubscriptionSuccess,
   setSubscriptionCycle,
+  setSubscriptionCurrency,
+  setPaypalSubscriptionStatus,
+  clearPaypalSubscriptionData,
 } = paymentSlice.actions;
 
 export default paymentSlice.reducer;

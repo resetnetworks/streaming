@@ -11,7 +11,7 @@ import {
   fetchArtistBySlug,
   fetchSubscriberCount,
 } from "../features/artists/artistsSlice";
-import { selectSelectedArtist,  selectArtistSubscriberCount,
+import { selectSelectedArtist, selectArtistSubscriberCount,
   selectSubscriberCountLoading,
   selectIsSubscriberCountValid } from "../features/artists/artistsSelectors";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
@@ -32,31 +32,19 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "sonner";
 import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice";
 import {
-  initiateRazorpayItemPayment,
-  initiateRazorpaySubscription,
   resetPaymentState,
 } from "../features/payments/paymentSlice";
 import {
   selectPaymentLoading,
-  selectRazorpayOrder,
-  selectRazorpaySubscriptionId,
   selectPaymentError,
 } from "../features/payments/paymentSelectors";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
-
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
+// 🆕 Import the new subscription hook and modal
+import { useSubscriptionPayment } from "../hooks/useSubscriptionPayment";
+import SubscriptionMethodModal from "../components/user/SubscriptionMethodModal";
+// 🆕 Import the new payment gateway hook and modal for item purchases
+import { usePaymentGateway } from "../hooks/usePaymentGateway";
+import PaymentMethodModal from "../components/user/PaymentMethodModal";
 
 const cycleLabel = (c) => {
   switch (c) {
@@ -131,6 +119,24 @@ const Artist = () => {
   const [isInView, setIsInView] = useState(false);
   const heroSectionRef = useRef(null);
 
+  // 🆕 Use the new subscription payment hook
+  const {
+    showSubscriptionOptions,
+    pendingSubscription,
+    openSubscriptionOptions,
+    handleSubscriptionMethodSelect,
+    closeSubscriptionOptions
+  } = useSubscriptionPayment();
+
+  // 🆕 Use the new payment gateway hook for item purchases
+  const {
+    showPaymentOptions,
+    pendingPayment,
+    openPaymentOptions,
+    handlePaymentMethodSelect,
+    closePaymentOptions
+  } = usePaymentGateway();
+
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
   const artist = useSelector(selectSelectedArtist);
@@ -159,8 +165,6 @@ const Artist = () => {
   );
 
   const paymentLoading = useSelector(selectPaymentLoading);
-  const razorpayOrder = useSelector(selectRazorpayOrder);
-  const razorpaySubscriptionId = useSelector(selectRazorpaySubscriptionId);
   const paymentError = useSelector(selectPaymentError);
   const [processingPayment, setProcessingPayment] = useState(false);
 
@@ -260,10 +264,6 @@ const Artist = () => {
     return colors[hash % colors.length];
   };
 
-  useEffect(() => {
-    loadRazorpayScript();
-  }, []);
-
   // ✅ FIXED: Reset state when artistId changes
   useEffect(() => {
     if (artistId) {
@@ -334,149 +334,7 @@ const Artist = () => {
     ref?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
-  const handleRazorpayItemPurchase = async (item, itemType) => {
-    try {
-      const isScriptLoaded = await loadRazorpayScript();
-      if (!isScriptLoaded) {
-        toast.error("Failed to load payment gateway. Please try again.");
-        return;
-      }
-
-      const orderResult = await dispatch(
-        initiateRazorpayItemPayment({
-          itemType,
-          itemId: item._id,
-          amount: item.price,
-        })
-      ).unwrap();
-
-      if (!orderResult.order) {
-        toast.error("Failed to create payment order. Please try again.");
-        return;
-      }
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: orderResult.order.amount,
-        currency: orderResult.order.currency || "INR",
-        name: "musicreset",
-        description: `Purchase ${item.title || item.name}`,
-        image: `${window.location.origin}/icon.png`,
-        order_id: orderResult.order.id,
-        handler: async function () {
-          toast.success(`Successfully purchased ${item.title || item.name}!`);
-          dispatch(fetchUserSubscriptions());
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        },
-        prefill: {
-          name: currentUser?.name || "",
-          email: currentUser?.email || "",
-          contact: currentUser?.phone || "",
-        },
-        notes: {
-          itemType,
-          itemId: item._id,
-          userId: currentUser?._id,
-          artistId: artist?._id,
-        },
-        theme: { color: "#3B82F6" },
-        modal: {
-          ondismiss: function () {
-            console.warn("[Purchase] Razorpay modal dismissed");
-            toast.error("Payment cancelled.");
-            dispatch(resetPaymentState());
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      console.error("Purchase error:", error);
-      toast.error(error.message || "Failed to initiate purchase");
-    }
-  };
-
-  const handleRazorpaySubscription = async () => {
-    if (!artist?._id) {
-      toast.error("Artist info not loaded.");
-      return;
-    }
-    if (!currentCycle) {
-      toast.error("Subscription cycle unavailable.");
-      return;
-    }
-
-    try {
-      setSubscriptionLoading(true);
-
-      const isScriptLoaded = await loadRazorpayScript();
-      if (!isScriptLoaded) {
-        toast.error("Failed to load payment gateway. Please try again.");
-        return;
-      }
-
-      const subscriptionResult = await dispatch(
-        initiateRazorpaySubscription({
-          artistId: artist._id,
-          cycle: String(currentCycle),
-        })
-      ).unwrap();
-
-      if (!subscriptionResult.subscriptionId) {
-        toast.error("Failed to create subscription. Please try again.");
-        return;
-      }
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        subscription_id: subscriptionResult.subscriptionId,
-        name: "musicreset",
-        description: `Subscribe to ${artist.name} (${cycleLabel(
-          subscriptionResult.cycle || currentCycle
-        )})`,
-        image: `${window.location.origin}/icon.png`,
-        handler: async function () {
-          toast.success(`Successfully subscribed to ${artist.name}!`);
-          dispatch(fetchUserSubscriptions());
-          // Refresh subscriber count after successful subscription
-          dispatch(fetchSubscriberCount(artist._id));
-        },
-        prefill: {
-          name: currentUser?.name || "",
-          email: currentUser?.email || "",
-          contact: currentUser?.phone || "",
-        },
-        notes: {
-          artistId: artist._id,
-          artistSlug: artistId,
-          userId: currentUser?._id,
-          cycle: subscriptionResult.cycle || currentCycle,
-        },
-        theme: { color: "#3B82F6" },
-        modal: {
-          ondismiss: function () {
-            console.warn("[Subscription] Razorpay modal dismissed");
-            toast.error("Subscription cancelled.");
-            dispatch(resetPaymentState());
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      console.error("Subscription error:", error);
-      toast.error(
-        `Subscription failed: ${error.message || "Failed to initiate subscription"}`
-      );
-    } finally {
-      setSubscriptionLoading(false);
-    }
-  };
-
+  // 🆕 REPLACED: New subscription handler using modal
   const handleSubscribe = async () => {
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
@@ -507,16 +365,20 @@ const Artist = () => {
         setSubscriptionLoading(false);
       }
     } else {
-      await handleRazorpaySubscription();
+      // 🆕 Open subscription modal instead of direct Razorpay
+      const subscriptionPrice = artist?.subscriptionPlans?.[0]?.basePrice?.amount ?? 4.99;
+      openSubscriptionOptions(artist, currentCycle, subscriptionPrice);
     }
   };
 
+  // 🆕 REPLACED: New item purchase handler using modal
   const handlePurchaseClick = (item, type) => {
-    handleRazorpayItemPurchase(item, type);
+    // Open payment method selection modal instead of direct Razorpay
+    openPaymentOptions(item, type);
   };
 
   const songListView = showAllSongs ? artistSongs : artistSongs.slice(0, 5);
-  const subscriptionPrice = artist?.subscriptionPlans?.[0]?.price ?? 4.99;
+  const subscriptionPrice = artist?.subscriptionPlans?.[0]?.basePrice?.amount ?? 4.99;
   const artistColor = getArtistColor(artist?.name);
 
   const renderArtistImage = (imageUrl, name, size = "w-20 h-20") =>
@@ -595,7 +457,7 @@ const Artist = () => {
           </div>
           <div className="flex items-center gap-4 mt-3 flex-wrap">
             <span className="text-lg font-semibold text-blue-400">
-              ₹{subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
+              ${subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
             </span>
 
             <button
@@ -632,7 +494,7 @@ const Artist = () => {
           {subscriberData?.totalRevenue > 0 &&
             currentUser?._id === artist?._id && (
               <div className="mt-2 text-xs text-gray-400">
-                Total Revenue: ₹{subscriberData.totalRevenue.toFixed(2)}
+                Total Revenue: ${subscriberData.totalRevenue.toFixed(2)}
               </div>
             )}
         </div>
@@ -760,7 +622,7 @@ const Artist = () => {
                         >
                           {paymentLoading
                             ? "Processing..."
-                            : `Buy for ₹${album.price}`}
+                            : `Buy for $${album.price}`}
                         </button>
                       )
                     }
@@ -876,6 +738,25 @@ const Artist = () => {
             </button>
           </div>
         )}
+
+        {/* 🆕 Add the Subscription Method Modal */}
+        <SubscriptionMethodModal
+          open={showSubscriptionOptions}
+          onClose={closeSubscriptionOptions}
+          onSelectMethod={handleSubscriptionMethodSelect}
+          artist={pendingSubscription?.artist}
+          cycle={pendingSubscription?.cycle}
+          subscriptionPrice={pendingSubscription?.subscriptionPrice}
+        />
+
+        {/* 🆕 Add the Payment Method Modal for Item Purchases */}
+        <PaymentMethodModal
+          open={showPaymentOptions}
+          onClose={closePaymentOptions}
+          onSelectMethod={handlePaymentMethodSelect}
+          item={pendingPayment?.item}
+          itemType={pendingPayment?.itemType}
+        />
       </SkeletonTheme>
     </>
   );

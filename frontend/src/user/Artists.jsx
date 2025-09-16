@@ -1,3 +1,4 @@
+// src/pages/Artists.jsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllArtists, loadFromCache } from "../features/artists/artistsSlice";
@@ -23,25 +24,31 @@ import { HiSpeakerWave } from "react-icons/hi2";
 const cycleLabel = (c) => {
   switch (String(c)) {
     case "1m":
-      return "m";
+      return "Monthly";
     case "3m":
-      return "3m";
+      return "3 Months";
     case "6m":
-      return "6m";
+      return "6 Months";
     case "12m":
-      return "12m";
+      return "Yearly";
     default:
       return c || "";
   }
 };
 
-// Optional: INR formatting
-const formatINR = (amount) => {
-  if (typeof amount !== "number") return amount;
+// Format price based on currency
+const formatPrice = (amount, currency) => {
+  if (typeof amount !== "number") return "";
   try {
-    return new Intl.NumberFormat("en-IN").format(amount);
+    if (currency === "INR") {
+      return `₹${new Intl.NumberFormat("en-IN").format(amount)}`;
+    } else if (currency === "USD") {
+      return `$${new Intl.NumberFormat("en-US").format(amount)}`;
+    } else {
+      return `${amount} ${currency}`;
+    }
   } catch {
-    return amount.toString();
+    return `${amount} ${currency}`;
   }
 };
 
@@ -74,25 +81,14 @@ const Artists = () => {
       }
       setInitialFetchDone(true);
     }
-  }, [dispatch, initialFetchDone, currentPage, isPageCached, cachedPageData]); // [3]
-
-  // Handle browser refresh
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Intentionally left as no-op; caching strategy handled in store/component lifecycle
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []); // [3]
+  }, [dispatch, initialFetchDone, currentPage, isPageCached, cachedPageData]);
 
   // Navigation handler
   const handleArtistClick = (slug) => {
     if (slug) {
       navigate(`/artist/${slug}`);
     }
-  }; // [3]
+  };
 
   // Enhanced pagination handlers with cache
   const handlePrevPage = () => {
@@ -106,7 +102,7 @@ const Artists = () => {
         dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
       }
     }
-  }; // [3]
+  };
 
   const handleNextPage = () => {
     if (pagination.page < pagination.totalPages) {
@@ -119,7 +115,7 @@ const Artists = () => {
         dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
       }
     }
-  }; // [3]
+  };
 
   const handlePageClick = (pageNumber) => {
     if (pageNumber !== pagination.page) {
@@ -131,7 +127,7 @@ const Artists = () => {
         dispatch(fetchAllArtists({ page: pageNumber, limit: 12 }));
       }
     }
-  }; // [3]
+  };
 
   // Get artist gradient
   const getArtistGradient = (index) => {
@@ -144,13 +140,13 @@ const Artists = () => {
       "from-pink-500 to-rose-500",
     ];
     return gradients[index % gradients.length];
-  }; // [3]
+  };
 
   // Get artist name initial
   const getArtistInitial = (name) => {
     if (!name || typeof name !== "string") return "A";
     return name.charAt(0).toUpperCase();
-  }; // [3]
+  };
 
   // Generate page numbers for pagination
   const generatePageNumbers = () => {
@@ -171,7 +167,7 @@ const Artists = () => {
       }
     }
     return pages;
-  }; // [3]
+  };
 
   return (
     <>
@@ -238,9 +234,6 @@ const Artists = () => {
                     ? artist.subscriptionPlans.filter(Boolean)
                     : [];
 
-                  const hasPlans = plans.length > 0;
-                  const fallbackPrice = artist.subscriptionPrice; // legacy single price per month
-
                   return (
                     <div
                       key={artist._id}
@@ -278,33 +271,27 @@ const Artists = () => {
 
                           {/* Subscription badges */}
                           <div className="flex flex-wrap gap-2 justify-center">
-                            {hasPlans
-                              ? plans.map((p, idx) => {
-                                  const c = p?.cycle;
-                                  const readable = cycleLabel(c);
-                                  const priceNum = typeof p?.price === "number" ? p.price : null;
-                                  if (!c || priceNum == null) return null;
-                                  return (
-                                    <span
-                                      key={`${artist._id}-plan-${idx}-${c}`}
-                                      className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium"
-                                      title={`${readable}`}
-                                    >
-                                      ₹{formatINR(priceNum)}/{readable}
-                                    </span>
-                                  );
-                                })
-                              : fallbackPrice != null
-                              ? (
-                                <span className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium">
-                                  ₹{formatINR(Number(fallbackPrice))}/Monthly
-                                </span>
-                              )
-                              : (
-                                <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs text-green-300 font-medium">
-                                  FREE
-                                </span>
-                              )}
+                            {plans.length > 0 ? (
+                              plans.map((p, idx) => {
+                                const c = p?.cycle;
+                                const readable = cycleLabel(c);
+                                const amount = p?.basePrice?.amount;
+                                const currency = p?.basePrice?.currency;
+                                if (!c || amount == null) return null;
+                                return (
+                                  <span
+                                    key={`${artist._id}-plan-${idx}-${c}`}
+                                    className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium"
+                                  >
+                                    {formatPrice(amount, currency)}/{readable}
+                                  </span>
+                                );
+                              })
+                            ) : (
+                              <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs text-green-300 font-medium">
+                                FREE
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

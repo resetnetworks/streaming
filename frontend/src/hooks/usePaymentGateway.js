@@ -1,6 +1,6 @@
 // src/hooks/usePaymentGateway.js
 import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux'; // useSelector को इम्पोर्ट करें
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   initiateRazorpayItemPayment,
   initiatePaypalItemPayment,
@@ -10,8 +10,7 @@ import { toast } from 'sonner';
 
 export const usePaymentGateway = () => {
   const dispatch = useDispatch();
-  // Redux स्टोर से उपयोगकर्ता की जानकारी प्राप्त करें
-  const currentUser = useSelector((state) => state.auth.user); // अपने state के स्ट्रक्चर के अनुसार इसे बदलें
+  const currentUser = useSelector((state) => state.auth.user);
 
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [pendingPayment, setPendingPayment] = useState(null);
