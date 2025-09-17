@@ -5,34 +5,21 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
+import PaymentMethodModal from "../components/user/PaymentMethodModal"; // ✅ Added import
 import {
   fetchUnifiedSearchResults,
   clearSearchResults,
 } from "../features/search/searchSlice";
 import { fetchAllSongs } from "../features/songs/songSlice";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
-import { initiateRazorpayItemPayment, resetPaymentState } from "../features/payments/paymentSlice";
+import { resetPaymentState } from "../features/payments/paymentSlice";
 import {
   selectPaymentLoading,
   selectPaymentError,
 } from "../features/payments/paymentSelectors";
-import { addPurchasedSong, addPurchasedAlbum } from "../features/auth/authSlice";
+import { usePaymentGateway } from "../hooks/usePaymentGateway"; // ✅ Use the hook from Home
+import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { toast } from "sonner";
-
-// Razorpay Script Loader
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
 
 // ✅ Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -62,11 +49,7 @@ const Search = () => {
   const [query, setQuery] = useState(searchParams.get('q') || '');
   
   // ✅ Debounced query for auto-search
-  const debouncedQuery = useDebounce(query, 400); // 300ms delay
-
-  // Payment processing states
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
+  const debouncedQuery = useDebounce(query, 400); // 400ms delay
 
   const { results, loading, error } = useSelector((state) => state.search);
   const trendingSongs = useSelector((state) => state.songs.songs);
@@ -77,10 +60,17 @@ const Search = () => {
   const paymentLoading = useSelector(selectPaymentLoading);
   const paymentError = useSelector(selectPaymentError);
 
+  // ✅ Use Payment Gateway Hook (same as Home page)
+  const {
+    showPaymentOptions,
+    pendingPayment,
+    openPaymentOptions,
+    handlePaymentMethodSelect,
+    closePaymentOptions
+  } = usePaymentGateway();
+
   useEffect(() => {
     dispatch(fetchAllSongs());
-    // Load Razorpay script on component mount
-    loadRazorpayScript();
   }, [dispatch]);
 
   // Clear payment state on mount
@@ -133,134 +123,40 @@ const Search = () => {
     dispatch(play());
   };
 
-  // Razorpay Purchase Handler (keeping existing code)
-  const handlePurchaseClick = async (item, type) => {
+  // ✅ Updated Purchase Handler with Payment Method Selection
+  const handlePurchaseClick = useCallback((item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
       navigate("/login");
       return;
     }
 
-    if (paymentLoading || processingPayment) {
+    if (paymentLoading) {
       toast.info("Payment already in progress...");
       return;
     }
 
-    try {
-      setProcessingPayment(true);
+    // ✅ Check subscription status for songs
+    if (type === "song" && item.accessType === "purchase-only") {
+      const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, item.artist);
       
-      // Load Razorpay script first
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error("Failed to load Razorpay script");
+      if (!alreadySubscribed) {
+        toast.error("You need to subscribe to this artist first!");
+        navigate(`/artist/${item.artist?.slug}`);
+        return;
       }
-      
-      // Dispatch Razorpay order creation
-      const result = await dispatch(initiateRazorpayItemPayment({
-        itemType: type,
-        itemId: item._id,
-        amount: item.price
-      })).unwrap();
-
-      if (result.order) {
-        await handleRazorpayCheckout(result.order, item, type);
-      } else {
-        throw new Error("Failed to create payment order");
-      }
-    } catch (error) {
-      toast.error(error.message || 'Failed to initiate payment');
-      setProcessingPayment(false);
     }
-  };
 
-  // Handle Razorpay Checkout with proper success handling (keeping existing code)
-  const handleRazorpayCheckout = async (order, item, type) => {
-    try {
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.id,
-        name: 'musicreset',
-        description: `Purchase ${type}: ${item.title || item.name}`,
-        image: `${window.location.origin}/icon.png`,
-        handler: function (response) {
-          // Immediately close modal and show success
-          if (currentRazorpayInstance) {
-            try {
-              currentRazorpayInstance.close();
-            } catch (e) {
-              // Razorpay instance already closed
-            }
-          }
-
-          // ✅ IMMEDIATELY UPDATE REDUX STATE
-          if (type === "song") {
-            dispatch(addPurchasedSong(item._id));
-          } else if (type === "album") {
-            dispatch(addPurchasedAlbum(item._id));
-          }
-
-          // Show success message
-          toast.success(`Successfully purchased ${item.title || item.name}!`, {
-            duration: 5000,
-          });
-          
-          // Reset states
-          setProcessingPayment(false);
-          setCurrentRazorpayInstance(null);
-          dispatch(resetPaymentState());
-        },
-        prefill: {
-          name: currentUser?.name || '',
-          email: currentUser?.email || '',
-          contact: currentUser?.phone || ''
-        },
-        theme: {
-          color: '#3b82f6'
-        },
-        modal: {
-          ondismiss: function() {
-            toast.info('Payment cancelled');
-            setProcessingPayment(false);
-            setCurrentRazorpayInstance(null);
-          }
-        },
-        error: function(error) {
-          toast.error('Payment failed. Please try again.');
-          setProcessingPayment(false);
-          setCurrentRazorpayInstance(null);
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-      setCurrentRazorpayInstance(rzp);
-      
-      rzp.on('payment.success', function (response) {
-        // Additional success handling if needed
-      });
-
-      rzp.on('payment.error', function (error) {
-        toast.error('Payment failed. Please try again.');
-        setProcessingPayment(false);
-        setCurrentRazorpayInstance(null);
-      });
-
-      rzp.open();
-
-    } catch (error) {
-      toast.error('Failed to open payment gateway');
-      setProcessingPayment(false);
-      setCurrentRazorpayInstance(null);
-    }
-  };
+    // ✅ Open payment method selection modal
+    openPaymentOptions(item, type);
+  }, [currentUser, paymentLoading, navigate, openPaymentOptions]);
 
   const getRandomItems = (arr, count) => {
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   };
 
-  // Updated function with new price logic (keeping existing code)
+  // ✅ Updated function with payment method selection
   const getSongPriceComponent = (song) => {
     return (
       // First check if song is already purchased
@@ -273,16 +169,17 @@ const Search = () => {
       song.accessType === "purchase-only" && song.price > 0 ? (
         <button
           className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
-            processingPayment || paymentLoading
+            paymentLoading
               ? "bg-gray-500 cursor-not-allowed"
               : "bg-indigo-600 hover:bg-indigo-700"
           }`}
-          onClick={() => handlePurchaseClick(song, "song")}
-          disabled={processingPayment || paymentLoading}
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePurchaseClick(song, "song");
+          }}
+          disabled={paymentLoading}
         >
-          {processingPayment || paymentLoading
-            ? "..."
-            : `Buy ₹${song.price}`}
+          {paymentLoading ? "..." : `Buy ₹${song.price}`}
         </button>
       ) : // Then check if it's a free album song (purchase-only with price = 0)
       song.accessType === "purchase-only" && song.price === 0 ? (
@@ -293,7 +190,7 @@ const Search = () => {
     );
   };
 
-  // Function to get price component for albums (keeping existing code)
+  // ✅ Updated function with payment method selection
   const getAlbumPriceComponent = (album) => {
     if (album.price === 0) {
       return "subs..";
@@ -303,14 +200,17 @@ const Search = () => {
       return (
         <button
           className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded transition-colors ${
-            processingPayment || paymentLoading
+            paymentLoading
               ? "bg-gray-500 cursor-not-allowed"
               : "bg-indigo-600 hover:bg-indigo-700"
           }`}
-          onClick={() => handlePurchaseClick(album, "album")}
-          disabled={processingPayment || paymentLoading}
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePurchaseClick(album, "album");
+          }}
+          disabled={paymentLoading}
         >
-          {processingPayment || paymentLoading ? "..." : `₹${album.price}`}
+          {paymentLoading ? "..." : `₹${album.price}`}
         </button>
       );
     }
@@ -454,8 +354,8 @@ const Search = () => {
           )}
         </div>
 
-        {/* Loading Overlay - keeping existing code */}
-        {(processingPayment || paymentLoading) && (
+        {/* ✅ Loading Overlay - Updated */}
+        {paymentLoading && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -494,6 +394,15 @@ const Search = () => {
           }
         `}</style>
       </div>
+
+      {/* ✅ Payment Method Selection Modal */}
+      <PaymentMethodModal
+        open={showPaymentOptions}
+        onClose={closePaymentOptions}
+        onSelectMethod={handlePaymentMethodSelect}
+        item={pendingPayment?.item}
+        itemType={pendingPayment?.itemType}
+      />
     </>
   );
 };
