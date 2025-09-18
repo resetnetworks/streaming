@@ -192,9 +192,10 @@ const Footer = () => {
               </span>
             </div>
             <div className="flex space-x-6 text-sm text-gray-400" style={{ fontFamily: 'Jura' }}>
-              <a href="/privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</a>
-              <a href="/data-deletion" className="hover:text-[#3b82f6] transition-colors">Data Deletion</a>
-              <a href="/help" className="hover:text-[#3b82f6] transition-colors">Support</a>
+              <Link to="/privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</Link>
+              <Link to="/data-deletion" className="hover:text-[#3b82f6] transition-colors">Data Deletion</Link>
+              <Link to="/help" className="hover:text-[#3b82f6] transition-colors">Support</Link>
+              <Link to="/terms-and-conditions" className="hover:text-[#3b82f6] transition-colors">Terms & Conditions</Link>
             </div>
           </div>
         </div>

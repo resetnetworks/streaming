@@ -7,6 +7,7 @@ import {
   fetchArtistRevenue,
   fetchSubscriberCount,
 } from '../features/payments/adminPaymentSlice';
+import { SiVelog } from 'react-icons/si';
 
 const ArtistPayments = () => {
   const dispatch = useDispatch();
@@ -28,22 +29,51 @@ const ArtistPayments = () => {
     dispatch(fetchSubscriberCount(artistId));
   }, [dispatch, artistId]);
 
-  // Filter only paid transactions
-  const paidTransactions = transactions?.filter((txn) => txn.status === 'paid') || [];
+  // console.log(transactions, revenueBreakdown, subscriberCount, totalRevenue);
+
+  // ✅ Safe filter with null checks
+  const paidTransactions = transactions?.filter((txn) => 
+    txn && txn.status === 'paid'
+  ) || [];
 
   // Calculate artist and platform revenue
   const platformCut = 0.15;
   const artistCut = 0.85;
 
+  // ✅ Safe calculation with null checks and default values
   const platformRevenueFromTransactions = paidTransactions.reduce(
-    (sum, txn) => sum + txn.amount * platformCut,
+    (sum, txn) => {
+      // ✅ Check if txn and txn.amount exist and are valid numbers
+      const amount = (txn && typeof txn.amount === 'number') ? txn.amount : 0;
+      return sum + (amount * platformCut);
+    },
     0
   );
 
   const artistRevenueFromTransactions = paidTransactions.reduce(
-    (sum, txn) => sum + txn.amount * artistCut,
+    (sum, txn) => {
+      // ✅ Check if txn and txn.amount exist and are valid numbers
+      const amount = (txn && typeof txn.amount === 'number') ? txn.amount : 0;
+      return sum + (amount * artistCut);
+    },
     0
   );
+
+  // ✅ Safe formatting helper function
+  const safeFormatCurrency = (value) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0.00';
+    }
+    return Number(value).toFixed(2);
+  };
+
+  // ✅ Safe number conversion helper
+  const safeNumber = (value) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return 0;
+    }
+    return Number(value);
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
@@ -60,7 +90,7 @@ const ArtistPayments = () => {
             <div className="bg-slate-800 rounded-xl shadow-md p-4">
               <p className="text-sm text-slate-400">Artist Revenue (85%)</p>
               <p className="text-xl font-bold text-green-400">
-                ₹{artistRevenueFromTransactions.toFixed(2)}
+                ₹{safeFormatCurrency(artistRevenueFromTransactions)}
               </p>
             </div>
 
@@ -68,14 +98,16 @@ const ArtistPayments = () => {
             <div className="bg-slate-800 rounded-xl shadow-md p-4">
               <p className="text-sm text-slate-400">Platform Revenue (15%)</p>
               <p className="text-xl font-bold text-yellow-400">
-                ₹{platformRevenueFromTransactions.toFixed(2)}
+                ₹{safeFormatCurrency(platformRevenueFromTransactions)}
               </p>
             </div>
 
             {/* Subscribers */}
             <div className="bg-slate-800 rounded-xl shadow-md p-4">
               <p className="text-sm text-slate-400">Active Subscribers</p>
-              <p className="text-xl font-bold text-blue-400">{subscriberCount ?? 0}</p>
+              <p className="text-xl font-bold text-blue-400">
+                {safeNumber(subscriberCount)}
+              </p>
             </div>
           </div>
 
@@ -83,11 +115,17 @@ const ArtistPayments = () => {
           <div className="bg-slate-800 rounded-xl shadow-md p-4 mb-8">
             <p className="text-sm text-slate-400 mb-2">Revenue Breakdown</p>
             <ul className="text-xs space-y-1">
-              <li>Songs: ₹{revenueBreakdown.songRevenue?.toFixed(2) || '0.00'}</li>
-              <li>Albums: ₹{revenueBreakdown.albumRevenue?.toFixed(2) || '0.00'}</li>
-              <li>Subscriptions: ₹{revenueBreakdown.subscriptionRevenue?.toFixed(2) || '0.00'}</li>
+              <li>
+                Songs: ₹{safeFormatCurrency(revenueBreakdown?.songRevenue)}
+              </li>
+              <li>
+                Albums: ₹{safeFormatCurrency(revenueBreakdown?.albumRevenue)}
+              </li>
+              <li>
+                Subscriptions: ₹{safeFormatCurrency(revenueBreakdown?.subscriptionRevenue)}
+              </li>
               <li className="mt-2 text-slate-300 font-medium">
-                Total Revenue (100%): ₹{totalRevenue?.toFixed(2) || '0.00'}
+                Total Revenue (100%): ₹{safeFormatCurrency(totalRevenue)}
               </li>
             </ul>
           </div>
@@ -110,24 +148,34 @@ const ArtistPayments = () => {
                 <tbody>
                   {paidTransactions.length ? (
                     paidTransactions.map((txn) => {
-                      const fee = txn.amount * platformCut;
+                      // ✅ Safe calculation with null checks
+                      if (!txn || !txn._id) return null;
+                      
+                      const amount = safeNumber(txn.amount);
+                      const fee = amount * platformCut;
+                      
                       return (
                         <tr key={txn._id} className="border-t border-slate-700 hover:bg-slate-700/50">
-                          <td className="px-4 py-2">{txn.itemType}</td>
+                          <td className="px-4 py-2">{txn.itemType || '-'}</td>
                           <td className="px-4 py-2">{txn.itemId || '-'}</td>
-                          <td className="px-4 py-2">₹{txn.amount.toFixed(2)}</td>
-                          <td className="px-4 py-2 text-yellow-400">₹{fee.toFixed(2)}</td>
+                          <td className="px-4 py-2">₹{safeFormatCurrency(amount)}</td>
+                          <td className="px-4 py-2 text-yellow-400">
+                            ₹{safeFormatCurrency(fee)}
+                          </td>
                           <td className="px-4 py-2">
-                            {new Date(txn.createdAt).toLocaleDateString()}
+                            {txn.createdAt ? 
+                              new Date(txn.createdAt).toLocaleDateString() : 
+                              '-'
+                            }
                           </td>
                           <td className="px-4 py-2">
                             <span className="px-2 py-1 rounded text-xs bg-green-500 text-white">
-                              {txn.status}
+                              {txn.status || 'unknown'}
                             </span>
                           </td>
                         </tr>
                       );
-                    })
+                    }).filter(Boolean) // ✅ Remove any null entries
                   ) : (
                     <tr>
                       <td colSpan="6" className="text-center p-4 text-slate-400">

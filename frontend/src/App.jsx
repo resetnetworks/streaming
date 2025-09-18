@@ -76,6 +76,7 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
+            <Route path="/terms-and-conditions" element={<Pages.TermsAndConditions />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route path="/" element={<Pages.LandingPage />} />
             <Route path="/help" element={<Pages.Help />} />

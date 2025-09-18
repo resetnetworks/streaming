@@ -48,17 +48,17 @@
 
 /* Hero Title */
 .landing-hero-title {
-  font-size: 5rem;
+  font-size: 4rem;
   font-weight: 900;
   margin-bottom: 1.5rem;
   text-transform: uppercase;
-  letter-spacing: 6px;
+  letter-spacing: 4px;
   line-height: 0.9;
   font-family: "Jura", sans-serif;
 }
 
 .landing-hero-title span {
-  display: inline-block;
+  display: block;
   opacity: 0;
   transform: translateY(40px);
   animation: landing-reveal-text 0.8s forwards;

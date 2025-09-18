@@ -10,14 +10,13 @@ import {
   fetchUnifiedSearchResults,
   clearSearchResults,
 } from "../features/search/searchSlice";
-import { fetchAllSongs } from "../features/songs/songSlice";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
 import { resetPaymentState } from "../features/payments/paymentSlice";
 import {
   selectPaymentLoading,
   selectPaymentError,
 } from "../features/payments/paymentSelectors";
-import { usePaymentGateway } from "../hooks/usePaymentGateway"; // ✅ Use the hook from Home
+import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { toast } from "sonner";
 
@@ -52,7 +51,6 @@ const Search = () => {
   const debouncedQuery = useDebounce(query, 400); // 400ms delay
 
   const { results, loading, error } = useSelector((state) => state.search);
-  const trendingSongs = useSelector((state) => state.songs.songs);
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
   
@@ -68,10 +66,6 @@ const Search = () => {
     handlePaymentMethodSelect,
     closePaymentOptions
   } = usePaymentGateway();
-
-  useEffect(() => {
-    dispatch(fetchAllSongs());
-  }, [dispatch]);
 
   // Clear payment state on mount
   useEffect(() => {
@@ -150,11 +144,6 @@ const Search = () => {
     // ✅ Open payment method selection modal
     openPaymentOptions(item, type);
   }, [currentUser, paymentLoading, navigate, openPaymentOptions]);
-
-  const getRandomItems = (arr, count) => {
-    const shuffled = [...arr].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  };
 
   // ✅ Updated function with payment method selection
   const getSongPriceComponent = (song) => {
@@ -258,30 +247,21 @@ const Search = () => {
           )}
         </div>
 
-        {/* Result Section - keeping existing code */}
+        {/* Result Section - Updated to remove "Discover" section */}
         <div className="flex flex-col items-start mt-10 px-6">
           {loading && <p className="text-white mt-4">Loading...</p>}
           {error && <p className="text-red-400 mt-4">{error}</p>}
 
+          {/* ✅ REMOVED: Discover New Songs section - now shows nothing when empty */}
           {!query.trim() ? (
-            <>
-              <h2 className="text-white text-lg mt-6 mb-2">
-                Discover New Songs, Artists And Albums
-              </h2>
-              <div className="flex flex-wrap gap-6">
-                {getRandomItems(trendingSongs, 10).map((song) => (
-                  <RecentPlays
-                    key={song._id}
-                    title={song.title}
-                    price={getSongPriceComponent(song)}
-                    singer={song.artist?.name || "Unknown Artist"}
-                    image={song.coverImage || "/images/placeholder.png"}
-                    onPlay={() => handlePlaySong(song)}
-                    isSelected={selectedSong?._id === song._id}
-                  />
-                ))}
+            // ✅ Clean empty state with just a simple message or nothing
+            <div className="w-full text-center py-20">
+              <div className="text-gray-400 space-y-2">
+                <FiSearch className="mx-auto text-4xl mb-4 text-gray-500" />
+                <p className="text-lg">Start typing to search</p>
+                <p className="text-sm text-gray-500">Find your favorite songs, artists, and albums</p>
               </div>
-            </>
+            </div>
           ) : (
             <>
               {/* Songs */}
@@ -348,7 +328,13 @@ const Search = () => {
                 results?.artists?.length === 0 &&
                 results?.albums?.length === 0 && 
                 debouncedQuery.trim() !== '' && (
-                  <p className="text-white/70 mt-8">No results found for "{debouncedQuery}".</p>
+                  <div className="w-full text-center py-20">
+                    <div className="text-gray-400 space-y-2">
+                      <FiSearch className="mx-auto text-4xl mb-4 text-gray-500" />
+                      <p className="text-lg">No results found for "{debouncedQuery}"</p>
+                      <p className="text-sm text-gray-500">Try different keywords or check your spelling</p>
+                    </div>
+                  </div>
                 )}
             </>
           )}

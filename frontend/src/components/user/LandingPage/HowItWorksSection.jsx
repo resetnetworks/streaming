@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { FaUsers, FaMusic, FaBroadcastTower, FaMicrophone } from 'react-icons/fa';
+import { FaUsers, FaMusic, FaBroadcastTower, FaPlay } from 'react-icons/fa';
 
 // Counter component for animated numbers
 const Counter = ({ value, suffix = "", duration = 2 }) => {
@@ -98,19 +98,19 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
 
   const features = [
     {
-      icon: FaMicrophone,
-      title: "Stream Live",
-      description: "Start streaming with professional audio quality"
+      icon: FaPlay,
+      title: "On Demand Streaming",
+      description: "Instantly stream your favorite Music On Demand, Anytime, Anywhere"
     },
     {
       icon: FaUsers,
-      title: "Build Audience",
-      description: "Connect with music lovers worldwide"
+      title: "Build your Audience and Fanbase",
+      description: "Connect with music lovers and audiophiles worldwide"
     },
     {
       icon: FaMusic,
-      title: "Share Passion",
-      description: "Express your musical creativity freely"
+      title: "Increased Fan to Artist Ratio",
+      description: "Boost artist reach with a higher fan-to-artist ratio, building stronger connections"
     }
   ];
 
@@ -177,22 +177,20 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             {/* Main Heading */}
             <motion.div variants={itemVariants} className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-                Stream Your Music 
-                <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text">
-                  Like a Pro
+                Instantly stream your favorite 
+                <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text leading-3 md:leading-[1.2]">
+                  Music On Demand, Anytime, Anywhere
                 </span>
               </h2>
               <p className="text-xl text-slate-300 leading-relaxed">
-                Our platform makes it incredibly easy for DJs to share their passion with the world. 
-                Professional streaming tools, real-time interaction, and global reach - all in one place.
+                By creating a niche streaming platform within the realm of ambient and instrumental music, we'll be leveraging the situation by enabling a more dedicated fanbase, community; thereby exponentially increasing artist to fan reach as well as significantly increase royalties.
               </p>
             </motion.div>
 
             {/* Description */}
             <motion.div variants={itemVariants} className="space-y-6">
               <p className="text-lg text-slate-400 leading-relaxed">
-                Whether you're a bedroom DJ or a professional artist, MusicReset provides everything 
-                you need to build your audience and share your unique sound.
+                We are open to all kinds of music that falls into the instrumental, classical music, orchestral music, film scores, field recordings, soundscapes, electroacoustic, music concrète, avant-garde experimental, ambient, drone, electronic, industrial, IDM, drum'n'bass, techno or other DIY instruments, and/or any genre under the sun, You Name it.
               </p>
 
               {/* Features List */}
@@ -288,7 +286,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
           className="mt-24 pt-12 border-t border-slate-800"
         >
           <motion.div variants={itemVariants} className="text-center mb-12">
-            <h3 className="text-2xl font-bold text-white mb-4">Join Thousands of DJs Worldwide</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Join Thousands of Music Lovers Worldwide</h3>
             <p className="text-slate-400">Experience the future of music streaming</p>
           </motion.div>
 

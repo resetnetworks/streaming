@@ -1,5 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet";
+import IconHeader from "../components/user/IconHeader";
 
 const DataDeletion = () => {
   return (
@@ -13,7 +14,8 @@ const DataDeletion = () => {
         />
         <meta name="keywords" content="musicreset, data deletion, account removal, privacy, personal data, delete account, music streaming privacy" />
       </Helmet>
-
+      <div className="bg-gray-950">
+      <IconHeader />
       <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center px-4">
         <div className="max-w-2xl w-full bg-gray-800 rounded-2xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-blue-400 mb-6 text-center">
@@ -59,6 +61,7 @@ const DataDeletion = () => {
             . Please note that you must send the request using your own registered email address.
           </p>
         </div>
+      </div>
       </div>
     </>
   );

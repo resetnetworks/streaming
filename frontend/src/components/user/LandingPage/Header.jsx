@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../../../assets/assets";
-import { FaHome, FaMusic, FaHeadphones } from "react-icons/fa";
+import { FaHome, FaMusic, FaHeadphones, FaQuestionCircle, FaShieldAlt, FaFileContract } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
 // --- Data for Navigation Links (DRY Principle) ---
 const navLinks = [
-  { href: "#home", text: "Home", icon: <FaHome /> },
-  { href: "#discover", text: "Discover", icon: <FaMusic /> },
-  { href: "#listen", text: "Listen", icon: <FaHeadphones /> },
+  { href: "/privacy-policy", text: "Privacy Policy", icon: <FaShieldAlt />, type: "route" },
+  { href: "/terms-and-conditions", text: "Terms", icon: <FaFileContract />, type: "route" },
+  { href: "/help", text: "Help", icon: <FaQuestionCircle />, type: "route" },
 ];
 
 const Header = () => {
@@ -25,12 +25,20 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Function for smooth scrolling
-  const handleNavClick = (e, href) => {
+  // Function for navigation - handles both routes and scroll
+  const handleNavClick = (e, href, type) => {
     e.preventDefault();
-    document.querySelector(href)?.scrollIntoView({
-      behavior: "smooth",
-    });
+    
+    if (type === "route") {
+      // Navigate to route
+      navigate(href);
+    } else {
+      // Smooth scroll to section
+      document.querySelector(href)?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+    
     // Close mobile menu on click
     setIsMenuOpen(false);
   };
@@ -90,13 +98,14 @@ const Header = () => {
               <motion.a
                 key={link.text}
                 href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
+                onClick={(e) => handleNavClick(e, link.href, link.type)}
                 className="flex items-center gap-2 text-slate-300 hover:text-white font-medium px-4 py-2 rounded-full transition-all duration-300 hover:bg-blue-500/10"
                 whileHover={{ y: -3 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 {link.icon}
-                <span>{link.text}</span>
+                <span className="hidden lg:inline">{link.text}</span>
+                <span className="lg:hidden">{link.text.split(' ')[0]}</span> {/* Show only first word on smaller screens */}
               </motion.a>
             ))}
           </nav>
@@ -165,11 +174,12 @@ const Header = () => {
             className="md:hidden fixed top-0 right-0 w-full h-screen bg-slate-900/95 backdrop-blur-xl z-40"
           >
             <div className="flex flex-col items-center justify-center h-full gap-8">
+              {/* Navigation Links */}
               {navLinks.map((link, i) => (
                 <motion.a
                   key={link.text}
                   href={link.href}
-                  onClick={(e) => handleNavClick(e, link.href)}
+                  onClick={(e) => handleNavClick(e, link.href, link.type)}
                   className="flex items-center gap-3 text-2xl text-slate-300 hover:text-blue-400 font-medium transition-colors"
                   custom={i}
                   variants={mobileLinkVariants}
@@ -181,18 +191,31 @@ const Header = () => {
                 </motion.a>
               ))}
 
+              {/* Action Buttons for Mobile */}
               <div className="flex flex-col gap-6 mt-12 w-3/4 max-w-xs">
-                 <motion.button
-                  onClick={() => { navigate("/login"); setIsMenuOpen(false); }}
+                <motion.button
+                  onClick={() => { 
+                    navigate("/login"); 
+                    setIsMenuOpen(false); 
+                  }}
                   className="w-full py-3 text-lg font-semibold text-slate-300 rounded-full border border-slate-600 hover:text-white hover:bg-slate-700/50 transition-all duration-300"
-                  variants={mobileLinkVariants} custom={navLinks.length} initial="hidden" animate="visible"
+                  variants={mobileLinkVariants} 
+                  custom={navLinks.length} 
+                  initial="hidden" 
+                  animate="visible"
                 >
                   Login
                 </motion.button>
                 <motion.button
-                  onClick={() => { navigate("/register"); setIsMenuOpen(false); }}
+                  onClick={() => { 
+                    navigate("/register"); 
+                    setIsMenuOpen(false); 
+                  }}
                   className="w-full py-3 text-lg font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-500 shadow-lg shadow-blue-500/30 transition-all duration-300"
-                  variants={mobileLinkVariants} custom={navLinks.length + 1} initial="hidden" animate="visible"
+                  variants={mobileLinkVariants} 
+                  custom={navLinks.length + 1} 
+                  initial="hidden" 
+                  animate="visible"
                 >
                   Register
                 </motion.button>
