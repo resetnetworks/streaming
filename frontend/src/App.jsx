@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
 import { getMyProfile } from "./features/auth/authSlice";
 import UserLayout from "./components/user/UserLayout";
+import PayPalSuccessHandler from "./components/PayPalSuccessHandler";
 import {
   selectIsAuthenticated,
   selectAuthStatus,
@@ -76,6 +77,10 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
+            <Route 
+              path="/paypal-success" 
+              element={<PayPalSuccessHandler />} 
+            />
             <Route path="/terms-and-conditions" element={<Pages.TermsAndConditions />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route path="/" element={<Pages.LandingPage />} />

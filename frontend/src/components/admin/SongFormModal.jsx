@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { FaTimes, FaMusic, FaCloudUploadAlt } from 'react-icons/fa';
+import { RiPriceTag3Fill } from 'react-icons/ri';
 import { MdAudiotrack } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
 import { getAlbumsByArtist } from '../../features/albums/albumsSlice';
@@ -19,35 +20,33 @@ const SongFormModal = ({
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Fixed, pre-seeded list of allowed genres
-const fixedGenres = [
-  // core electronic and experimental
-  'electronic',
-  'idm',
-  'ambient',
-  'experimental',
-  'avant garde',
-  'noise',
-  'downtempo',
-  'soundtrack',
-  'industrial',
-  'ebm',
-  'electro',
-  'techno',
-  'dance',
-  'electronica',
-  'sound art',
+  const fixedGenres = [
+    // core electronic and experimental
+    'electronic',
+    'idm',
+    'ambient',
+    'experimental',
+    'avant garde',
+    'noise',
+    'downtempo',
+    'soundtrack',
+    'industrial',
+    'ebm',
+    'electro',
+    'techno',
+    'dance',
+    'electronica',
+    'sound art',
 
-  // cinematic and soundtrack
-  'jazz',
+    // cinematic and soundtrack
+    'jazz',
 
-  // downtempo and chill
-  'classical',
-  'classical crossover',
-  'soundscape',
-  'field recordings',
-];
-
-
+    // downtempo and chill
+    'classical',
+    'classical crossover',
+    'soundscape',
+    'field recordings',
+  ];
 
   const [genresArray, setGenresArray] = useState([]);
 
@@ -61,7 +60,7 @@ const fixedGenres = [
     coverImage: null,
     audioFile: null,
     genre: '',
-    price: '',
+    price: { currency: 'USD', amount: 0 },
     accessType: 'subscription',
     albumOnly: false,
     releaseDate: new Date().toISOString().split('T')[0],
@@ -97,6 +96,24 @@ const fixedGenres = [
 
       setGenresArray(initialGenres);
 
+      // Parse the price from backend format - similar to album form
+      let priceData = { currency: 'USD', amount: 0 };
+      
+      if (songToEdit.basePrice) {
+        priceData = {
+          currency: songToEdit.basePrice.currency || 'USD',
+          amount: songToEdit.basePrice.amount || 0
+        };
+      } else if (songToEdit.price) {
+        // Handle case where price might be a simple number
+        priceData = {
+          currency: 'USD',
+          amount: typeof songToEdit.price === 'object' 
+            ? songToEdit.price.amount 
+            : songToEdit.price
+        };
+      }
+
       setNewSong({
         title: songToEdit.title,
         artist: songToEdit.artist?.name || '',
@@ -107,7 +124,7 @@ const fixedGenres = [
         coverImage: songToEdit.coverImage || null,
         audioFile: songToEdit.audioFile || null,
         genre: initialGenres.join(', '),
-        price: songToEdit.price || '',
+        price: priceData,
         accessType: songToEdit.accessType || 'subscription',
         albumOnly: songToEdit.albumOnly || false,
         releaseDate: songToEdit.releaseDate || new Date().toISOString().split('T')[0],
@@ -150,10 +167,21 @@ const fixedGenres = [
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setNewSong((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    
+    if (name === 'priceAmount') {
+      setNewSong((prev) => ({
+        ...prev,
+        price: {
+          ...prev.price,
+          amount: parseFloat(value) || 0
+        }
+      }));
+    } else {
+      setNewSong((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -232,7 +260,7 @@ const fixedGenres = [
       return;
     }
 
-    if (accessType === 'purchase-only' && !albumOnly && (!price || parseFloat(price) <= 0)) {
+    if (accessType === 'purchase-only' && !albumOnly && (!price.amount || parseFloat(price.amount) <= 0)) {
       toast.error('Purchase-only songs must have a valid price (unless album-only)');
       setIsSubmitting(false);
       return;
@@ -243,15 +271,18 @@ const fixedGenres = [
     formData.append('artist', newSong.artistId);
     if (newSong.albumId) formData.append('album', newSong.albumId);
     formData.append('duration', newSong.duration);
-    formData.append('releaseDate', newSong.releaseDate);
+    formData.append('releaseDate', new Date(newSong.releaseDate).toISOString());
     formData.append('accessType', newSong.accessType);
     formData.append('albumOnly', newSong.albumOnly);
 
+    // Fix: Send price as nested object structure using bracket notation - similar to album form
     if (newSong.accessType === 'purchase-only') {
       if (newSong.albumOnly) {
-        formData.append('price', 0);
+        formData.append('basePrice[amount]', 0);
+        formData.append('basePrice[currency]', newSong.price.currency);
       } else {
-        formData.append('price', parseFloat(newSong.price) || 0);
+        formData.append('basePrice[amount]', newSong.price.amount);
+        formData.append('basePrice[currency]', newSong.price.currency);
       }
     }
 
@@ -283,7 +314,7 @@ const fixedGenres = [
         coverImage: null,
         audioFile: null,
         genre: '',
-        price: '',
+        price: { currency: 'USD', amount: 0 },
         accessType: 'subscription',
         albumOnly: false,
         releaseDate: new Date().toISOString().split('T')[0],
@@ -329,6 +360,7 @@ const fixedGenres = [
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -343,28 +375,19 @@ const fixedGenres = [
                 setShowArtistDropdown(true);
               }}
               onFocus={() => setShowArtistDropdown(true)}
+              onBlur={() => setTimeout(() => setShowArtistDropdown(false), 150)}
               placeholder="Search artist..."
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
               required
+              disabled={isSubmitting}
             />
-            {showArtistDropdown && filteredArtists.length > 0 && (
+            {showArtistDropdown && filteredArtists.length > 0 && !isSubmitting && (
               <div className="absolute z-10 w-full mt-1 bg-gray-700 rounded shadow max-h-60 overflow-auto">
                 {filteredArtists.map((artist) => (
                   <div
                     key={artist._id}
                     className="px-4 py-2 hover:bg-gray-600 cursor-pointer"
-                    onClick={() => {
-                      setNewSong((prev) => ({
-                        ...prev,
-                        artist: artist.name,
-                        artistId: artist._id,
-                        album: '',
-                        albumId: '',
-                      }));
-                      setSearchTermArtist(artist.name);
-                      setSearchTermAlbum('');
-                      setShowArtistDropdown(false);
-                    }}
+                    onClick={() => handleArtistSelect(artist)}
                   >
                     {artist.name}
                   </div>
@@ -386,11 +409,12 @@ const fixedGenres = [
                 setShowAlbumDropdown(true);
               }}
               onFocus={() => setShowAlbumDropdown(true)}
+              onBlur={() => setTimeout(() => setShowAlbumDropdown(false), 150)}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-              disabled={!newSong.artistId}
+              disabled={!newSong.artistId || isSubmitting}
               placeholder={!newSong.artistId ? "Select artist first" : ""}
             />
-            {showAlbumDropdown && filteredAlbums.length > 0 && (
+            {showAlbumDropdown && filteredAlbums.length > 0 && !isSubmitting && (
               <div className="absolute z-10 w-full mt-1 bg-gray-700 rounded shadow max-h-60 overflow-auto">
                 {filteredAlbums.map((album) => (
                   <div
@@ -424,6 +448,7 @@ const fixedGenres = [
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
               required
+              disabled={isSubmitting}
             >
               <option value="subscription">Subscription</option>
               <option value="purchase-only">Purchase Only</option>
@@ -443,6 +468,7 @@ const fixedGenres = [
               value={newSong.releaseDate}
               onChange={handleChange}
               className="w-full bg-gray-700 text-white px-4 py-2 rounded"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -456,6 +482,7 @@ const fixedGenres = [
                   checked={newSong.albumOnly}
                   onChange={handleChange}
                   className="mr-2"
+                  disabled={isSubmitting}
                 />
                 Album Only (cannot be purchased individually)
               </label>
@@ -465,17 +492,23 @@ const fixedGenres = [
           {/* Price */}
           {newSong.accessType === 'purchase-only' && !newSong.albumOnly && (
             <div className="col-span-1">
-              <label className="text-gray-300">Price*</label>
-              <input
-                type="number"
-                name="price"
-                value={newSong.price}
-                onChange={handleChange}
-                className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-                step="0.01"
-                min="0"
-                required
-              />
+              <label className="text-gray-300">Price (USD)*</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <RiPriceTag3Fill className="text-gray-400" />
+                </div>
+                <input
+                  type="number"
+                  name="priceAmount"
+                  value={newSong.price.amount}
+                  onChange={handleChange}
+                  className="w-full bg-gray-700 text-white px-4 py-2 pl-10 rounded"
+                  step="0.01"
+                  min="0"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           )}
 

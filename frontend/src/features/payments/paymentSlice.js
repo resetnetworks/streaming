@@ -22,12 +22,13 @@ export const initiateStripeItemPayment = createAsyncThunk(
 // 🎯 Song/Album Purchase (Razorpay)
 export const initiateRazorpayItemPayment = createAsyncThunk(
   'payment/initiateRazorpayItemPayment',
-  async ({ itemType, itemId, amount }, { rejectWithValue }) => {
+  async ({ itemType, itemId, amount,currency }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post(`/payments/razorpay/create-order`, {
         itemType,
         itemId,
         amount,
+        currency,
       });
       return response.data; // { success: true, order }
     } catch (error) {

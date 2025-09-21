@@ -22,11 +22,12 @@ import {
 } from '../../../features/songs/songSelectors';
 
 import { handlePlaySong } from "../../../utills/songHelpers";
+import CurrencySelectionModal from '../CurrencySelectionModal';
 
 const getSongPriceDisplay = (
   song, 
   currentUser, 
-  onPurchaseClick, 
+  onSongPurchaseClick, 
   onSubscribeRequired, 
   processingPayment, 
   paymentLoading
@@ -37,7 +38,7 @@ const getSongPriceDisplay = (
   if (song.accessType === "subscription") {
     return <span className="text-blue-300 text-xs font-semibold">Subs..</span>;
   }
-  if (song.accessType === "purchase-only" && song.price > 0) {
+  if (song.accessType === "purchase-only" && song?.basePrice?.amount > 0) {
     return (
       <button
         className={`text-white text-xs mt-2 px-3 py-1 rounded-full transition-colors ${
@@ -47,16 +48,16 @@ const getSongPriceDisplay = (
         }`}
         onClick={(e) => {
           e.stopPropagation();
-          onSubscribeRequired?.(song.artist, "purchase", song);
+          onSongPurchaseClick(song);
         }}
         disabled={processingPayment || paymentLoading}
         type="button"
       >
-        {processingPayment || paymentLoading ? "..." : `Buy ₹${song.price}`}
+        {processingPayment || paymentLoading ? "..." : `Buy $${song?.basePrice?.amount}`}
       </button>
     );
   }
-  if (song.accessType === "purchase-only" && song.price === 0) {
+  if (song.accessType === "purchase-only" && song?.basePrice?.amount === 0) {
     return <span className="text-blue-300 text-xs font-semibold">album</span>;
   }
   return <span className="text-blue-300 text-xs font-semibold">Free</span>;
@@ -77,6 +78,10 @@ const MatchingGenreSection = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
+  // Fix: Currency selection modal states - different variable name
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedSongForPurchase, setSelectedSongForPurchase] = useState(null);
+
   // Preserve scroll position across renders/appends
   const pendingScrollLeftRef = useRef(null);
 
@@ -91,11 +96,70 @@ const MatchingGenreSection = ({
   const pagination = useSelector(selectMatchingGenrePagination);
 
   const currentUser = useSelector((state) => state.auth.user);
-  const selectedSong = useSelector((state) => state.player.selectedSong);
+  // Fix: Different variable name to avoid conflict
+  const currentlyPlayingSong = useSelector((state) => state.player.selectedSong);
 
   const isCacheValid = useSelector(selectIsMatchingGenreCacheValid);
   const isPageCached = useSelector(selectIsMatchingGenrePageCached(currentPage));
   const cachedPageData = useSelector(selectMatchingGenreCachedPageData(currentPage));
+
+  // Currency helper functions
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
+      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
+      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
+      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
+    };
+    return symbols[currency] || currency;
+  };
+
+  const getAvailableCurrencies = (song) => {
+    if (!song.basePrice || !song.convertedPrices) return [];
+    
+    const currencies = [
+      { currency: song.basePrice.currency, amount: song.basePrice.amount, isBaseCurrency: true },
+      ...song.convertedPrices.map(price => ({
+        currency: price.currency, amount: price.amount, isBaseCurrency: false
+      }))
+    ];
+    
+    return currencies;
+  };
+
+  // Handle song purchase with currency selection
+  const handleSongPurchaseClick = (song) => {
+    const availableCurrencies = getAvailableCurrencies(song);
+    
+    if (availableCurrencies.length > 1) {
+      setSelectedSongForPurchase(song);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      onPurchaseClick(song, "song", {
+        currency: currency.currency, 
+        amount: currency.amount, 
+        symbol: getCurrencySymbol(currency.currency)
+      });
+    }
+  };
+
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (selectedSongForPurchase && selectedCurrency) {
+      onPurchaseClick(selectedSongForPurchase, "song", {
+        currency: selectedCurrency.currency, 
+        amount: selectedCurrency.amount, 
+        symbol: getCurrencySymbol(selectedCurrency.currency)
+      });
+    }
+    setSelectedSongForPurchase(null);
+  };
+
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setSelectedSongForPurchase(null);
+  };
 
   // Unique by _id helper
   const mergeUnique = useCallback((prev, next) => {
@@ -300,94 +364,105 @@ const MatchingGenreSection = ({
   }
 
   return (
-    <section className="w-full py-0">
-      {/* Header */}
-      <div className="w-full flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg backdrop-blur-md border border-white/10">
-            <img
-              src={`${window.location.origin}/icon.png`}
-              alt="AI Recommendations"
-              className="w-6 h-6"
-            />
-          </div>
-          <div>
-            <h2 className="md:text-xl text-lg font-semibold text-white">
-              Created For You
-            </h2>
-            <p className="text-gray-400 text-sm">
-              Based on your music taste • {matchingGenres?.slice(0, 3).join(', ') || 'Loading...'}
-            </p>
-          </div>
-        </div>
-
-        <div className="hidden md:flex items-center gap-2">
-          <button
-            onClick={() => handleScrollArrows('left')}
-            className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
-            type="button"
-          >
-            <LuSquareChevronLeft />
-          </button>
-          <button
-            onClick={() => handleScrollArrows('right')}
-            className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
-            type="button"
-          >
-            <LuSquareChevronRight />
-          </button>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="flex items-center gap-2 mb-6">
-        <BsSoundwave className="text-blue-400 text-lg animate-pulse" />
-        <div className="flex-1 h-px bg-gradient-to-r from-blue-500/30 via-indigo-500/50 to-blue-500/30" />
-        <BsSoundwave className="text-blue-400 text-lg animate-pulse" />
-      </div>
-
-      {/* Songs */}
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar"
-          style={{ scrollSnapType: "x mandatory" }}
-          onScroll={onHorizontalScroll}
-        >
-          {merged.map((song, index) => (
-            <MatchingGenreSong
-              key={`matching-song-${song._id}-${index}`}
-              title={song.title}
-              artist={song.artist}
-              album={song.album}
-              image={song.coverImage || song.album?.coverImage}
-              duration={song.duration}
-              price={getSongPriceDisplay(
-                song, 
-                currentUser, 
-                onPurchaseClick, 
-                onSubscribeRequired, 
-                processingPayment, 
-                paymentLoading
-              )}
-              onPlay={() => onPlaySong(song)}
-              isPlaying={selectedSong?._id === song._id}
-              isSelected={selectedSong?._id === song._id}
-            />
-          ))}
-
-          {/* Loading spinner while appending more */}
-          {loadingMore && (
-            <div className="flex-shrink-0 flex items-center justify-center min-w-[100px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <>
+      <section className="w-full py-0">
+        {/* Header */}
+        <div className="w-full flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg backdrop-blur-md border border-white/10">
+              <img
+                src={`${window.location.origin}/icon.png`}
+                alt="AI Recommendations"
+                className="w-6 h-6"
+              />
             </div>
-          )}
+            <div>
+              <h2 className="md:text-xl text-lg font-semibold text-white">
+                Created For You
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Based on your music taste • {matchingGenres?.slice(0, 3).join(', ') || 'Loading...'}
+              </p>
+            </div>
+          </div>
 
-          {/* Sentinel for IntersectionObserver */}
-          <div ref={sentinelRef} className="w-1 h-1" />
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => handleScrollArrows('left')}
+              className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+              type="button"
+            >
+              <LuSquareChevronLeft />
+            </button>
+            <button
+              onClick={() => handleScrollArrows('right')}
+              className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+              type="button"
+            >
+              <LuSquareChevronRight />
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
+
+        {/* Divider */}
+        <div className="flex items-center gap-2 mb-6">
+          <BsSoundwave className="text-blue-400 text-lg animate-pulse" />
+          <div className="flex-1 h-px bg-gradient-to-r from-blue-500/30 via-indigo-500/50 to-blue-500/30" />
+          <BsSoundwave className="text-blue-400 text-lg animate-pulse" />
+        </div>
+
+        {/* Songs */}
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar"
+            style={{ scrollSnapType: "x mandatory" }}
+            onScroll={onHorizontalScroll}
+          >
+            {merged.map((song, index) => (
+              <MatchingGenreSong
+                key={`matching-song-${song._id}-${index}`}
+                title={song.title}
+                artist={song.artist}
+                album={song.album}
+                image={song.coverImage || song.album?.coverImage}
+                duration={song.duration}
+                price={getSongPriceDisplay(
+                  song, 
+                  currentUser, 
+                  handleSongPurchaseClick, 
+                  onSubscribeRequired, 
+                  processingPayment, 
+                  paymentLoading
+                )}
+                onPlay={() => onPlaySong(song)}
+                isPlaying={currentlyPlayingSong?._id === song._id}
+                isSelected={currentlyPlayingSong?._id === song._id}
+              />
+            ))}
+
+            {/* Loading spinner while appending more */}
+            {loadingMore && (
+              <div className="flex-shrink-0 flex items-center justify-center min-w-[100px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+
+            {/* Sentinel for IntersectionObserver */}
+            <div ref={sentinelRef} className="w-1 h-1" />
+          </div>
+        </div>
+      </section>
+
+      {/* Currency Selection Modal */}
+      <CurrencySelectionModal
+        open={showCurrencyModal}
+        onClose={handleCloseCurrencyModal}
+        onSelectCurrency={handleCurrencySelect}
+        item={selectedSongForPurchase}
+        itemType="song"
+      />
+    </>
   );
 };
 

@@ -112,14 +112,15 @@ const ArtistSinglesSection = ({ artistId, currentUser, onPurchaseClick }) => {
                     "Purchased"
                   ) : song.accessType === "subscription" ? (
                     "Subs.."
-                  ) : song.accessType === "purchase-only" && song.price > 0 ? (
+                  ) : song.accessType === "purchase-only" && song?.basePrice?.amount > 0 ? (
                     <button
                       className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors bg-indigo-600 hover:bg-indigo-700"
                       onClick={() => onPurchaseClick(song, "song")}
                     >
-                      Buy ₹{song.price}
+                  
+                      Buy ₹{song?.basePrice?.amount}
                     </button>
-                  ) : song.accessType === "purchase-only" && song.price === 0 ? (
+                  ) : song.accessType === "purchase-only" && song?.basePrice?.amount === 0 ? (
                     "album"
                   ) : (
                     "Free"
@@ -127,6 +128,7 @@ const ArtistSinglesSection = ({ artistId, currentUser, onPurchaseClick }) => {
                 }
               />
             ))}
+            {console.log(artistSongs)}
       </div>
     </>
   );

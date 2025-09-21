@@ -68,7 +68,7 @@ const AdminSongCard = ({ song, onDelete, onEdit }) => {
             Access: <span className="text-white">{song.accessType === 'purchase-only' ? 'Purchase Only' : 'Subscription'}</span>
             {song.accessType === 'purchase-only' && (
               <span className="ml-3 flex items-center">
-                <RiPriceTag3Fill className="mr-1" /> ${song.price?.toFixed(2)}
+                <RiPriceTag3Fill className="mr-1" /> ${song.basePrice?.amount?.toFixed(2)}
               </span>
             )}
           </div>

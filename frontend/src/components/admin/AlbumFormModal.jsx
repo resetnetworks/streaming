@@ -22,7 +22,7 @@ const AlbumFormModal = ({
     artistId: '',
     coverImage: null,
     releaseDate: new Date().toISOString().split('T')[0],
-    price: 0,
+    price: { currency: 'USD', amount: 0 },
     accessType: 'subscription',
     coverImageUrl: '',
     genre: ''
@@ -34,6 +34,24 @@ const AlbumFormModal = ({
 
   useEffect(() => {
     if (initialData && isOpen) {
+      // Parse the price from backend format
+      let priceData = { currency: 'USD', amount: 0 };
+      
+      if (initialData.basePrice) {
+        priceData = {
+          currency: initialData.basePrice.currency || 'USD',
+          amount: initialData.basePrice.amount || 0
+        };
+      } else if (initialData.price) {
+        // Handle case where price might be a simple number
+        priceData = {
+          currency: 'USD',
+          amount: typeof initialData.price === 'object' 
+            ? initialData.price.amount 
+            : initialData.price
+        };
+      }
+
       setNewAlbum({
         title: initialData.title || '',
         description: initialData.description || '',
@@ -43,7 +61,7 @@ const AlbumFormModal = ({
         releaseDate: initialData.releaseDate
           ? new Date(initialData.releaseDate).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
-        price: initialData.price || 0,
+        price: priceData,
         accessType: initialData.accessType || 'subscription',
         coverImageUrl: initialData.coverImage || '',
         genre: Array.isArray(initialData.genre)
@@ -59,7 +77,7 @@ const AlbumFormModal = ({
         artistId: '',
         coverImage: null,
         releaseDate: new Date().toISOString().split('T')[0],
-        price: 0,
+        price: { currency: 'USD', amount: 0 },
         accessType: 'subscription',
         coverImageUrl: '',
         genre: ''
@@ -74,10 +92,21 @@ const AlbumFormModal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewAlbum((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'priceAmount') {
+      setNewAlbum((prev) => ({
+        ...prev,
+        price: {
+          ...prev.price,
+          amount: parseFloat(value) || 0
+        }
+      }));
+    } else {
+      setNewAlbum((prev) => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -108,12 +137,13 @@ const AlbumFormModal = ({
     formData.append('title', newAlbum.title);
     formData.append('description', newAlbum.description);
     formData.append('artist', newAlbum.artistId);
-    formData.append('releaseDate', newAlbum.releaseDate);
+    formData.append('releaseDate', new Date(newAlbum.releaseDate).toISOString());
     formData.append('accessType', newAlbum.accessType);
     formData.append('genre', newAlbum.genre);
 
     if (newAlbum.accessType === 'purchase-only') {
-      formData.append('price', parseFloat(newAlbum.price));
+      // Append price as a JSON string
+      formData.append('basePrice', JSON.stringify(newAlbum.price));
     }
 
     if (newAlbum.coverImage) {
@@ -266,20 +296,21 @@ const AlbumFormModal = ({
             {/* Price */}
             {newAlbum.accessType === 'purchase-only' && (
               <div>
-                <label className="block text-gray-300 mb-2">Price*</label>
+                <label className="block text-gray-300 mb-2">Price (USD)*</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <RiPriceTag3Fill className="text-gray-400" />
                   </div>
                   <input
                     type="number"
-                    name="price"
-                    value={newAlbum.price}
+                    name="priceAmount"
+                    value={newAlbum.price.amount}
                     onChange={handleChange}
                     min="0"
                     step="0.01"
                     className="w-full bg-gray-700 text-white px-4 py-2 pl-10 rounded"
                     required
+                    
                   />
                 </div>
               </div>

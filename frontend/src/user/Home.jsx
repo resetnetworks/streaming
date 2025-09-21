@@ -14,9 +14,10 @@ import AllTracksSection from "../components/user/Home/AllTracksSection";
 import LoadingOverlay from "../components/user/Home/LoadingOverlay";
 import SubscribeModal from "../components/user/SubscribeModal";
 import MatchingGenreSection from "../components/user/Home/MatchingGenreSection";
-import PaymentMethodModal from "../components/user/PaymentMethodModal"; // 🆕 New import
+import PaymentMethodModal from "../components/user/PaymentMethodModal";
 
-import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
+// ✅ Updated import to use new hook with currency support
+import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../features/artists/artistsSlice";
 import { resetPaymentState } from "../features/payments/paymentSlice";
 import GenreSection from "../components/user/Home/GenreSection";
@@ -32,17 +33,19 @@ const Home = () => {
   const [modalType, setModalType] = useState(null); // "play" | "purchase"
   const [modalData, setModalData] = useState(null); // song or item
 
+  // ✅ Separate loading states for actual payment processing
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  // ✅ Updated to use new payment gateway hook with currency support
   const { 
-    handlePurchaseClick, 
-    processingPayment, 
-    paymentLoading,
-    
-    // 🆕 Payment method selection states
     showPaymentOptions,
     pendingPayment,
-    handlePaymentMethodSelect,
-    closePaymentOptions
-  } = useRazorpayPayment();
+    openPaymentOptions,
+    handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
+    closePaymentOptions,
+    getPaymentDisplayInfo
+  } = usePaymentGateway();
 
   const currentUser = useSelector((state) => state.auth.user);
 
@@ -68,6 +71,41 @@ const Home = () => {
 
   const navigateToArtistDirect = (artist) => {
     if (artist?.slug) navigate(`/artist/${artist.slug}`);
+  };
+
+  // ✅ Updated purchase handler to support currency data
+  const handlePurchaseClick = (item, itemType, currencyData = null) => {
+    // Reset processing states before opening payment modal
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    openPaymentOptions(item, itemType, currencyData);
+  };
+
+  // ✅ Wrapper for payment method selection with loading states
+  const handlePaymentMethodSelect = async (gateway) => {
+    try {
+      setProcessingPayment(true);
+      setPaymentLoading(true);
+      
+      // Call the original payment method select
+      await originalHandlePaymentMethodSelect(gateway);
+      
+    } catch (error) {
+      console.error('Payment method selection error:', error);
+    } finally {
+      // Reset loading states after payment processing
+      setTimeout(() => {
+        setProcessingPayment(false);
+        setPaymentLoading(false);
+      }, 1000);
+    }
+  };
+
+  // ✅ Enhanced close handler
+  const handleClosePaymentOptions = () => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    closePaymentOptions();
   };
 
   const handleSubscribeDecision = (artist, type, data) => {
@@ -119,8 +157,9 @@ const Home = () => {
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-4">
 
-            <AlbumsSection
-            onPurchaseClick={handlePurchaseClick}
+          {/* ✅ Updated AlbumsSection with proper loading states */}
+          <AlbumsSection
+            onPurchaseClick={handlePurchaseClick} // Now supports currency data
             processingPayment={processingPayment}
             paymentLoading={paymentLoading}
           />
@@ -163,7 +202,8 @@ const Home = () => {
           />
         </div>
 
-        <LoadingOverlay show={processingPayment || paymentLoading} />
+        {/* ✅ Only show loading overlay when actually processing payment */}
+        <LoadingOverlay show={processingPayment && paymentLoading} />
       </SkeletonTheme>
 
       <SubscribeModal
@@ -175,13 +215,15 @@ const Home = () => {
         onNavigate={handleNavigateToArtist}
       />
 
-      {/* 🆕 Payment Method Selection Modal */}
+      {/* ✅ Enhanced Payment Method Selection Modal with proper handlers */}
       <PaymentMethodModal
         open={showPaymentOptions}
-        onClose={closePaymentOptions}
-        onSelectMethod={handlePaymentMethodSelect}
+        onClose={handleClosePaymentOptions} // Use enhanced close handler
+        onSelectMethod={handlePaymentMethodSelect} // Use wrapper with loading states
         item={pendingPayment?.item}
         itemType={pendingPayment?.itemType}
+        currencyData={pendingPayment?.currencyData} // ✅ Pass currency data
+        getPaymentDisplayInfo={getPaymentDisplayInfo} // ✅ Pass helper function
       />
     </>
   );

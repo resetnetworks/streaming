@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
@@ -7,6 +7,7 @@ import Skeleton from "react-loading-skeleton";
 import AlbumCard from "../AlbumCard";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import { fetchAllAlbums } from "../../../features/albums/albumsSlice";
+import CurrencySelectionModal from "../CurrencySelectionModal";
 
 const AlbumsSection = ({ 
   onPurchaseClick, 
@@ -19,6 +20,8 @@ const AlbumsSection = ({
   
   const [albumsPage, setAlbumsPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
 
   const currentUser = useSelector((state) => state.auth.user);
   const albumsStatus = useSelector((state) => state.albums.loading);
@@ -52,26 +55,100 @@ const AlbumsSection = ({
     });
   };
 
-  const getAlbumPriceDisplay = (album) => {
-    if (album.price === 0) {
-      return "subs..";
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
+      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
+      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
+      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
+    };
+    return symbols[currency] || currency;
+  };
+
+  const getAvailableCurrencies = (album) => {
+    if (!album.basePrice || !album.convertedPrices) return [];
+    
+    const currencies = [
+      { currency: album.basePrice.currency, amount: album.basePrice.amount, isBaseCurrency: true },
+      ...album.convertedPrices.map(price => ({
+        currency: price.currency, amount: price.amount, isBaseCurrency: false
+      }))
+    ];
+    
+    return currencies;
+  };
+
+  const handleAlbumPurchaseClick = (album) => {
+    const availableCurrencies = getAvailableCurrencies(album);
+    
+    if (availableCurrencies.length > 1) {
+      setSelectedAlbum(album);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      onPurchaseClick(album, "album", {
+        currency: currency.currency, amount: currency.amount, symbol: getCurrencySymbol(currency.currency)
+      });
     }
+  };
+
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (selectedAlbum && selectedCurrency) {
+      onPurchaseClick(selectedAlbum, "album", {
+        currency: selectedCurrency.currency, amount: selectedCurrency.amount, symbol: getCurrencySymbol(selectedCurrency.currency)
+      });
+    }
+    setSelectedAlbum(null);
+  };
+
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setSelectedAlbum(null);
+  };
+  
+  // <-- YAHAN CHANGE KIYA GAYA HAI
+  const getAlbumPriceDisplay = (album) => {
+    // Priority 1: Agar user ne album pehle se khareed liya hai
     if (currentUser?.purchasedAlbums?.includes(album._id)) {
       return "Purchased";
     }
-    return (
-      <button
-        className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors ${
-          processingPayment || paymentLoading
-            ? "bg-gray-500 cursor-not-allowed"
-            : "bg-indigo-600 hover:bg-indigo-700"
-        }`}
-        onClick={() => onPurchaseClick(album, "album")}
-        disabled={processingPayment || paymentLoading}
-      >
-        {processingPayment || paymentLoading ? "..." : `Buy ₹${album.price}`}
-      </button>
-    );
+
+    // Priority 2: Agar access type 'subscription' hai
+    if (album.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Priority 3: Agar access type 'purchase-only' hai
+    if (album.accessType === "purchase-only") {
+      // Check karein ki price valid hai aur 0 se zyada hai
+      if (album.basePrice && album.basePrice.amount > 0) {
+        const basePrice = album.basePrice;
+        const symbol = getCurrencySymbol(basePrice.currency);
+        
+        return (
+          <button
+            className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors relative ${
+              processingPayment || paymentLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+            onClick={() => handleAlbumPurchaseClick(album)}
+            disabled={processingPayment || paymentLoading}
+          >
+            {processingPayment || paymentLoading ? "..." : `Buy ${symbol}${basePrice.amount}`}
+          </button>
+        );
+      }
+      
+      // Agar purchase-only hai lekin price 0 hai, to "Free" dikhayein
+      if (album.basePrice && album.basePrice.amount === 0) {
+        return "Free";
+      }
+    }
+
+    // Agar koi bhi condition match nahi hoti, to kuch na dikhayein
+    return null;
   };
 
   return (
@@ -80,8 +157,6 @@ const AlbumsSection = ({
         <h2 className="md:text-xl text-lg font-semibold">
           new albums for you
         </h2>
-
-        {/* Back and Next buttons (desktop) */}
         <div className="hidden md:flex items-center gap-2">
           <button
             type="button"
@@ -111,8 +186,8 @@ const AlbumsSection = ({
         {albumsStatus && allAlbums.length === 0
           ? [...Array(7)].map((_, idx) => (
               <div
-                key={`playlist-skeleton-${idx}`}
-                className="min-w=[160px] flex flex-col gap-2 skeleton-wrapper"
+                key={`album-skeleton-${idx}`}
+                className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper"
               >
                 <Skeleton height={160} width={160} className="rounded-xl" />
                 <Skeleton width={100} height={12} />
@@ -133,13 +208,21 @@ const AlbumsSection = ({
               </div>
             ))}
         
-        {loadingMore && albumsPage < albumsTotalPages ? (
+        {loadingMore && albumsPage < albumsTotalPages && (
           <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
             <Skeleton height={160} width={160} className="rounded-xl" />
             <Skeleton width={100} height={12} />
           </div>
-        ) : null}
+        )}
       </div>
+
+     <CurrencySelectionModal
+        open={showCurrencyModal}
+        onClose={handleCloseCurrencyModal}
+        onSelectCurrency={handleCurrencySelect}
+        item={selectedAlbum}
+        itemType="album"
+      />
     </>
   );
 };

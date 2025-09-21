@@ -111,7 +111,8 @@ const ArtistAlbumsSection = ({ artistId, currentUser, onPurchaseClick }) => {
                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded disabled:opacity-50"
                         onClick={() => onPurchaseClick(album, "album")}
                       >
-                        Buy for $${album.price}
+                        Buy for ${album?.basePrice?.amount}
+                        
                       </button>
                     )
                   }

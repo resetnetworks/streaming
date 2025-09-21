@@ -175,17 +175,20 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             </motion.div>
 
             {/* Main Heading */}
-            <motion.div variants={itemVariants} className="space-y-4">
-              <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-                Instantly stream your favorite 
-                <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text leading-3 md:leading-[1.2]">
-                  Music On Demand, Anytime, Anywhere
-                </span>
-              </h2>
-              <p className="text-xl text-slate-300 leading-relaxed">
-                By creating a niche streaming platform within the realm of ambient and instrumental music, we'll be leveraging the situation by enabling a more dedicated fanbase, community; thereby exponentially increasing artist to fan reach as well as significantly increase royalties.
-              </p>
-            </motion.div>
+
+<motion.div variants={itemVariants} className="space-y-4">
+  <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+    Instantly stream your favorite 
+    <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text leading-tight">
+      <span className="block sm:inline">Music On Demand,</span>
+      <span className="block sm:inline sm:ml-2">Anytime, Anywhere</span>
+    </span>
+  </h2>
+  <p className="text-xl text-slate-300 leading-relaxed">
+    By creating a niche streaming platform within the realm of ambient and instrumental music, we'll be leveraging the situation by enabling a more dedicated fanbase, community; thereby exponentially increasing artist to fan reach as well as significantly increase royalties.
+  </p>
+</motion.div>
+
 
             {/* Description */}
             <motion.div variants={itemVariants} className="space-y-6">
