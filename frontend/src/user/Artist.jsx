@@ -32,6 +32,10 @@ const Artist = () => {
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   
+  // ✅ Add loading states for payments
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  
   const artist = useSelector(selectSelectedArtist);
   const paymentError = useSelector(selectPaymentError);
   const currentUser = useSelector((state) => state.auth.user);
@@ -44,12 +48,14 @@ const Artist = () => {
     closeSubscriptionOptions
   } = useSubscriptionPayment();
   
+  // ✅ Updated to use payment gateway hook with currency support
   const {
     showPaymentOptions,
     pendingPayment,
     openPaymentOptions,
-    handlePaymentMethodSelect,
-    closePaymentOptions
+    handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
+    closePaymentOptions,
+    getPaymentDisplayInfo // ✅ Add this helper function
   } = usePaymentGateway();
 
   useEffect(() => {
@@ -92,6 +98,41 @@ const Artist = () => {
     setSubscriptionLoading(false);
   };
 
+  // ✅ Updated purchase handler to support currency data
+  const handlePurchaseClick = (item, itemType, currencyData = null) => {
+    // Reset processing states before opening payment modal
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    openPaymentOptions(item, itemType, currencyData);
+  };
+
+  // ✅ Wrapper for payment method selection with loading states
+  const handlePaymentMethodSelect = async (gateway) => {
+    try {
+      setProcessingPayment(true);
+      setPaymentLoading(true);
+      
+      // Call the original payment method select
+      await originalHandlePaymentMethodSelect(gateway);
+      
+    } catch (error) {
+      console.error('Payment method selection error:', error);
+    } finally {
+      // Reset loading states after payment processing
+      setTimeout(() => {
+        setProcessingPayment(false);
+        setPaymentLoading(false);
+      }, 1000);
+    }
+  };
+
+  // ✅ Enhanced close handler
+  const handleClosePaymentOptions = () => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    closePaymentOptions();
+  };
+
   return (
     <>
       <UserHeader />
@@ -110,16 +151,22 @@ const Artist = () => {
         
         <ArtistSongsSection artistId={artistId} artist={artist} />
         
+        {/* ✅ Updated ArtistAlbumsSection with proper currency support */}
         <ArtistAlbumsSection
           artistId={artistId}
           currentUser={currentUser}
-          onPurchaseClick={openPaymentOptions}
+          onPurchaseClick={handlePurchaseClick} // Now supports currency data
+          processingPayment={processingPayment}
+          paymentLoading={paymentLoading}
         />
         
+        {/* ✅ Updated ArtistSinglesSection with proper currency support */}
         <ArtistSinglesSection
           artistId={artistId}
           currentUser={currentUser}
-          onPurchaseClick={openPaymentOptions}
+          onPurchaseClick={handlePurchaseClick} // Now supports currency data
+          processingPayment={processingPayment}
+          paymentLoading={paymentLoading}
         />
         
         <ArtistAboutSection
@@ -145,12 +192,15 @@ const Artist = () => {
           subscriptionPrice={pendingSubscription?.subscriptionPrice}
         />
         
+        {/* ✅ Enhanced PaymentMethodModal with currency data support */}
         <PaymentMethodModal
           open={showPaymentOptions}
-          onClose={closePaymentOptions}
-          onSelectMethod={handlePaymentMethodSelect}
+          onClose={handleClosePaymentOptions} // Use enhanced close handler
+          onSelectMethod={handlePaymentMethodSelect} // Use wrapper with loading states
           item={pendingPayment?.item}
           itemType={pendingPayment?.itemType}
+          currencyData={pendingPayment?.currencyData} // ✅ Pass currency data
+          getPaymentDisplayInfo={getPaymentDisplayInfo} // ✅ Pass helper function
         />
       </SkeletonTheme>
     </>

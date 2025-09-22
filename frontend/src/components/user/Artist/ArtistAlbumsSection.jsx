@@ -11,14 +11,24 @@ import {
   selectArtistAlbumPagination,
 } from "../../../features/albums/albumsSelector";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
+import CurrencySelectionModal from "../CurrencySelectionModal";
 
-const ArtistAlbumsSection = ({ artistId, currentUser, onPurchaseClick }) => {
+const ArtistAlbumsSection = ({ 
+  artistId, 
+  currentUser, 
+  onPurchaseClick, 
+  processingPayment, 
+  paymentLoading 
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const recentScrollRef = useRef(null);
+  
   const [albumsPage, setAlbumsPage] = useState(1);
   const [albumsStatus, setAlbumsStatus] = useState("idle");
   const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState(null);
 
   const artistAlbums = useSelector(selectArtistAlbums);
   const artistAlbumPagination = useSelector(selectArtistAlbumPagination);
@@ -61,6 +71,107 @@ const ArtistAlbumsSection = ({ artistId, currentUser, onPurchaseClick }) => {
     recentScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
+  // Currency helper functions - same as AlbumsSection
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
+      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
+      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
+      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
+    };
+    return symbols[currency] || currency;
+  };
+
+  const getAvailableCurrencies = (album) => {
+    if (!album.basePrice || !album.convertedPrices) return [];
+    
+    const currencies = [
+      { currency: album.basePrice.currency, amount: album.basePrice.amount, isBaseCurrency: true },
+      ...album.convertedPrices.map(price => ({
+        currency: price.currency, amount: price.amount, isBaseCurrency: false
+      }))
+    ];
+    
+    return currencies;
+  };
+
+  const handleAlbumPurchaseClick = (album) => {
+    const availableCurrencies = getAvailableCurrencies(album);
+    
+    if (availableCurrencies.length > 1) {
+      setSelectedAlbum(album);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      onPurchaseClick(album, "album", {
+        currency: currency.currency, 
+        amount: currency.amount, 
+        symbol: getCurrencySymbol(currency.currency)
+      });
+    }
+  };
+
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (selectedAlbum && selectedCurrency) {
+      onPurchaseClick(selectedAlbum, "album", {
+        currency: selectedCurrency.currency, 
+        amount: selectedCurrency.amount, 
+        symbol: getCurrencySymbol(selectedCurrency.currency)
+      });
+    }
+    setSelectedAlbum(null);
+  };
+
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setSelectedAlbum(null);
+  };
+
+  // Album price display logic - same as AlbumsSection
+  const getAlbumPriceDisplay = (album) => {
+    // Priority 1: Agar user ne album pehle se khareed liya hai
+    if (currentUser?.purchasedAlbums?.includes(album._id)) {
+      return "Purchased";
+    }
+
+    // Priority 2: Agar access type 'subscription' hai
+    if (album.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Priority 3: Agar access type 'purchase-only' hai
+    if (album.accessType === "purchase-only") {
+      // Check karein ki price valid hai aur 0 se zyada hai
+      if (album.basePrice && album.basePrice.amount > 0) {
+        const basePrice = album.basePrice;
+        const symbol = getCurrencySymbol(basePrice.currency);
+        
+        return (
+          <button
+            className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors relative ${
+              processingPayment || paymentLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+            onClick={() => handleAlbumPurchaseClick(album)}
+            disabled={processingPayment || paymentLoading}
+          >
+            {processingPayment || paymentLoading ? "..." : `Buy ${symbol}${basePrice.amount}`}
+          </button>
+        );
+      }
+      
+      // Agar purchase-only hai lekin price 0 hai, to "Free" dikhayein
+      if (album.basePrice && album.basePrice.amount === 0) {
+        return "Free";
+      }
+    }
+
+    // Agar koi bhi condition match nahi hoti, to kuch na dikhayein
+    return null;
+  };
+
   return (
     <>
       <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
@@ -101,21 +212,7 @@ const ArtistAlbumsSection = ({ artistId, currentUser, onPurchaseClick }) => {
                   tag={`#${album.title || "music"}`}
                   artists={album.artist?.name || "Various Artists"}
                   image={album.coverImage || "/images/placeholder.png"}
-                  price={
-                    album.price === 0 ? (
-                      "subs.."
-                    ) : currentUser?.purchasedAlbums?.includes(album._id) ? (
-                      "Purchased"
-                    ) : (
-                      <button
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2 py-1 rounded disabled:opacity-50"
-                        onClick={() => onPurchaseClick(album, "album")}
-                      >
-                        Buy for ${album?.basePrice?.amount}
-                        
-                      </button>
-                    )
-                  }
+                  price={getAlbumPriceDisplay(album)}
                   onClick={() => navigate(`/album/${album.slug}`)}
                 />
               ))}
@@ -133,6 +230,15 @@ const ArtistAlbumsSection = ({ artistId, currentUser, onPurchaseClick }) => {
           )}
         </div>
       </div>
+
+      {/* Currency Selection Modal */}
+      <CurrencySelectionModal
+        open={showCurrencyModal}
+        onClose={handleCloseCurrencyModal}
+        onSelectCurrency={handleCurrencySelect}
+        item={selectedAlbum}
+        itemType="album"
+      />
     </>
   );
 };

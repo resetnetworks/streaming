@@ -41,6 +41,24 @@ const PaymentHistory = () => {
       year: 'numeric',
     });
 
+  // Currency symbol mapping
+  const getCurrencySymbol = useCallback((currency) => {
+    const symbols = {
+      USD: '$',
+      GBP: '£',
+      JPY: '¥',
+      INR: '₹',
+      EUR: '€'
+    };
+    return symbols[currency] || currency;
+  }, []);
+
+  // Format price with currency symbol
+  const formatPrice = useCallback((price, currency) => {
+    const symbol = getCurrencySymbol(currency);
+    return `${symbol}${price}`;
+  }, [getCurrencySymbol]);
+
   const resolveName = useCallback(
     (p) => {
       if (p.itemType === 'song')
@@ -52,29 +70,28 @@ const PaymentHistory = () => {
     [songs, albums]
   );
 
-const filtered = useMemo(() => {
-  const sorted = [...history].sort(
-    (a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt)
-  );
+  const filtered = useMemo(() => {
+    const sorted = [...history].sort(
+      (a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt)
+    );
 
-  return sorted.filter((p) => {
-    const name = resolveName(p).toLowerCase();
-    const q = search.toLowerCase();
+    return sorted.filter((p) => {
+      const name = resolveName(p).toLowerCase();
+      const q = search.toLowerCase();
 
-    const matchSearch =
-      name.includes(q) || p.paymentId.toLowerCase().includes(q);
+      const matchSearch =
+        name.includes(q) || p.paymentId.toLowerCase().includes(q);
 
-    const matchType =
-      typeFilter === 'all'
-        ? true
-        : typeFilter === 'subscription'
-        ? p.itemType === 'artist-subscription'
-        : p.itemType === typeFilter;
+      const matchType =
+        typeFilter === 'all'
+          ? true
+          : typeFilter === 'subscription'
+          ? p.itemType === 'artist-subscription'
+          : p.itemType === typeFilter;
 
-    return matchSearch && matchType;
-  });
-}, [history, resolveName, search, typeFilter]);
-
+      return matchSearch && matchType;
+    });
+  }, [history, resolveName, search, typeFilter]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
@@ -154,7 +171,7 @@ const filtered = useMemo(() => {
 
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-sm">
-                        ₹{p.price}
+                        {formatPrice(p.price, p.currency)}
                       </span>
                       {expanded === p._id ? (
                         <FiChevronUp className="text-slate-400" />
@@ -182,7 +199,11 @@ const filtered = useMemo(() => {
                       </div>
                       <div>
                         <span className="text-slate-400">Amount</span>
-                        <p className="text-slate-200">₹{p.price}</p>
+                        <p className="text-slate-200">{formatPrice(p.price, p.currency)}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Currency</span>
+                        <p className="text-slate-200 uppercase">{p.currency}</p>
                       </div>
                     </div>
                   )}

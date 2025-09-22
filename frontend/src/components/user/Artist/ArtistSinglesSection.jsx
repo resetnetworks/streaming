@@ -1,5 +1,5 @@
 // src/components/user/Artist/ArtistSinglesSection.jsx
-import React, { useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
@@ -7,6 +7,7 @@ import RecentPlays from "../RecentPlays";
 import { selectSongsByArtist } from "../../../features/songs/songSelectors";
 import { setSelectedSong, play } from "../../../features/playback/playerSlice";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
+import CurrencySelectionModal from "../CurrencySelectionModal";
 
 const getArtistColor = (name) => {
   if (!name) return "bg-blue-600";
@@ -18,11 +19,21 @@ const getArtistColor = (name) => {
   return colors[hash % colors.length];
 };
 
-const ArtistSinglesSection = ({ artistId, currentUser, onPurchaseClick }) => {
+const ArtistSinglesSection = ({ 
+  artistId, 
+  currentUser, 
+  onPurchaseClick, 
+  processingPayment, 
+  paymentLoading 
+}) => {
   const dispatch = useDispatch();
   const singlesScrollRef = useRef(null);
 
-  const selectedSong = useSelector((state) => state.player.selectedSong);
+  // Currency modal states
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedSong, setSelectedSongForPurchase] = useState(null);
+
+  const currentSelectedSong = useSelector((state) => state.player.selectedSong);
   const artistSongsData = useSelector(
     (state) => selectSongsByArtist(state, artistId),
     shallowEqual
@@ -48,6 +59,107 @@ const ArtistSinglesSection = ({ artistId, currentUser, onPurchaseClick }) => {
   const handleScroll = (direction = "right") => {
     const scrollAmount = direction === "right" ? 200 : -200;
     singlesScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
+  };
+
+  // Currency helper functions - same as AlbumsSection
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
+      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
+      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
+      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
+    };
+    return symbols[currency] || currency;
+  };
+
+  const getAvailableCurrencies = (song) => {
+    if (!song.basePrice || !song.convertedPrices) return [];
+    
+    const currencies = [
+      { currency: song.basePrice.currency, amount: song.basePrice.amount, isBaseCurrency: true },
+      ...song.convertedPrices.map(price => ({
+        currency: price.currency, amount: price.amount, isBaseCurrency: false
+      }))
+    ];
+    
+    return currencies;
+  };
+
+  const handleSongPurchaseClick = (song) => {
+    const availableCurrencies = getAvailableCurrencies(song);
+    
+    if (availableCurrencies.length > 1) {
+      setSelectedSongForPurchase(song);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      onPurchaseClick(song, "song", {
+        currency: currency.currency, 
+        amount: currency.amount, 
+        symbol: getCurrencySymbol(currency.currency)
+      });
+    }
+  };
+
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (selectedSong && selectedCurrency) {
+      onPurchaseClick(selectedSong, "song", {
+        currency: selectedCurrency.currency, 
+        amount: selectedCurrency.amount, 
+        symbol: getCurrencySymbol(selectedCurrency.currency)
+      });
+    }
+    setSelectedSongForPurchase(null);
+  };
+
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setSelectedSongForPurchase(null);
+  };
+
+  // Song price display logic
+  const getSongPriceDisplay = (song) => {
+    // Priority 1: Agar user ne song pehle se khareed liya hai
+    if (currentUser?.purchasedSongs?.includes(song._id)) {
+      return "Purchased";
+    }
+
+    // Priority 2: Agar access type 'subscription' hai
+    if (song.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Priority 3: Agar access type 'purchase-only' hai
+    if (song.accessType === "purchase-only") {
+      // Check karein ki price valid hai aur 0 se zyada hai
+      if (song.basePrice && song.basePrice.amount > 0) {
+        const basePrice = song.basePrice;
+        const symbol = getCurrencySymbol(basePrice.currency);
+        
+        return (
+          <button
+            className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors relative ${
+              processingPayment || paymentLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+            onClick={() => handleSongPurchaseClick(song)}
+            disabled={processingPayment || paymentLoading}
+          >
+            {processingPayment || paymentLoading ? "..." : `Buy ${symbol}${basePrice.amount}`}
+          </button>
+        );
+      }
+      
+      // Agar purchase-only hai lekin price 0 hai, to "album" dikhayein (part of album)
+      if (song.basePrice && song.basePrice.amount === 0) {
+        return "album";
+      }
+    }
+
+    // Default case
+    return "Free";
   };
 
   const renderCoverImage = (imageUrl, title, size = "w-full h-40", artistName) => {
@@ -106,30 +218,20 @@ const ArtistSinglesSection = ({ artistId, currentUser, onPurchaseClick }) => {
                     : renderCoverImage(null, song.title, "w-full h-40", song.artist?.name)
                 }
                 onPlay={() => handlePlaySong(song)}
-                isSelected={selectedSong?._id === song._id}
-                price={
-                  currentUser?.purchasedSongs?.includes(song._id) ? (
-                    "Purchased"
-                  ) : song.accessType === "subscription" ? (
-                    "Subs.."
-                  ) : song.accessType === "purchase-only" && song?.basePrice?.amount > 0 ? (
-                    <button
-                      className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors bg-indigo-600 hover:bg-indigo-700"
-                      onClick={() => onPurchaseClick(song, "song")}
-                    >
-                  
-                      Buy ₹{song?.basePrice?.amount}
-                    </button>
-                  ) : song.accessType === "purchase-only" && song?.basePrice?.amount === 0 ? (
-                    "album"
-                  ) : (
-                    "Free"
-                  )
-                }
+                isSelected={currentSelectedSong?._id === song._id}
+                price={getSongPriceDisplay(song)}
               />
             ))}
-            {console.log(artistSongs)}
       </div>
+
+      {/* Currency Selection Modal */}
+      <CurrencySelectionModal
+        open={showCurrencyModal}
+        onClose={handleCloseCurrencyModal}
+        onSelectCurrency={handleCurrencySelect}
+        item={selectedSong}
+        itemType="song"
+      />
     </>
   );
 };
