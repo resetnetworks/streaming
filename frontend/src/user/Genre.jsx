@@ -6,7 +6,7 @@ import {
   fetchSongsByGenre,
   setGenreCachedData,
   loadGenreFromCache,
-  clearGenreSongs, // Add this action
+  clearGenreSongs,
 } from "../features/songs/songSlice";
 import {
   selectSongsStatus,
@@ -21,10 +21,11 @@ import UserHeader from "../components/user/UserHeader";
 import GenreSongRow from "../components/user/GenreSongRow";
 import SubscribeModal from "../components/user/SubscribeModal";
 import LoadingOverlay from "../components/user/Home/LoadingOverlay";
+import PaymentMethodModal from "../components/user/PaymentMethodModal";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { setSelectedSong, play } from "../features/playback/playerSlice";
-import { useRazorpayPayment } from "../hooks/useRazorpayPayment";
-import {useInfiniteScroll} from "../hooks/useInfiniteScroll";
+import { usePaymentGateway } from "../hooks/usePaymentGateway"; // Updated hook
+import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 
 const genreAssets = {
   electronic: { label: "Electronic" },
@@ -65,12 +66,19 @@ const GenrePage = () => {
   const dispatch = useDispatch();
   const currentUser = useSelector((s) => s.auth.user);
   
-  // Use the same Razorpay hook as Home
-  const {
-    handlePurchaseClick,
-    processingPayment,
-    paymentLoading,
-  } = useRazorpayPayment();
+  // ✅ Updated to use payment gateway hook with currency support
+  const { 
+    showPaymentOptions,
+    pendingPayment,
+    openPaymentOptions,
+    handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
+    closePaymentOptions,
+    getPaymentDisplayInfo
+  } = usePaymentGateway();
+  
+  // ✅ Separate loading states for actual payment processing
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   
   // Modal state
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
@@ -116,7 +124,6 @@ const GenrePage = () => {
     setCurrentPage(1);
     setHasInitialLoad(false);
     setIsLoadingMore(false);
-    // Clear existing songs when genre changes
     dispatch(clearGenreSongs());
   }, [displayTitle, dispatch]);
 
@@ -133,7 +140,7 @@ const GenrePage = () => {
             genre: displayTitle, 
             page: 1, 
             limit,
-            append: false // First load, don't append
+            append: false
           })
         ).unwrap();
         
@@ -175,7 +182,7 @@ const GenrePage = () => {
           genre: displayTitle, 
           page: nextPage, 
           limit,
-          append: true // Append to existing songs
+          append: true
         })
       ).unwrap();
       
@@ -211,6 +218,38 @@ const GenrePage = () => {
     setModalType(null);
     setModalArtist(null);
     setModalData(null);
+  };
+
+  // ✅ Updated purchase handler to support currency data
+  const handlePurchaseClick = (item, itemType, currencyData = null) => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    openPaymentOptions(item, itemType, currencyData);
+  };
+
+  // ✅ Wrapper for payment method selection with loading states
+  const handlePaymentMethodSelect = async (gateway) => {
+    try {
+      setProcessingPayment(true);
+      setPaymentLoading(true);
+      
+      await originalHandlePaymentMethodSelect(gateway);
+      
+    } catch (error) {
+      console.error('Payment method selection error:', error);
+    } finally {
+      setTimeout(() => {
+        setProcessingPayment(false);
+        setPaymentLoading(false);
+      }, 1000);
+    }
+  };
+
+  // ✅ Enhanced close handler
+  const handleClosePaymentOptions = () => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    closePaymentOptions();
   };
 
   const handleSubscribeDecision = useCallback(
@@ -305,7 +344,6 @@ const GenrePage = () => {
                 const purchased = currentUser?.purchasedSongs?.includes(song._id);
                 const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
                 
-                // Apply lastElementRef to the last item for infinite scroll
                 const isLastItem = index === songs.length - 1;
                 
                 return (
@@ -321,9 +359,7 @@ const GenrePage = () => {
                       onSubscribeRequired={(artist, type, data) => {
                         handleSubscribeDecision(artist, type, data);
                       }}
-                      onPurchaseClick={(item) => {
-                        handlePurchaseClick(item, "song");
-                      }}
+                      onPurchaseClick={handlePurchaseClick} // Now supports currency data
                       processingPayment={processingPayment}
                       paymentLoading={paymentLoading}
                       purchased={purchased}
@@ -334,14 +370,12 @@ const GenrePage = () => {
               })}
             </div>
             
-            {/* Loading indicator for more items */}
             {isLoadingMore && (
               <div className="w-full py-4 flex justify-center">
                 <div className="w-40 h-8 bg-gray-800 rounded animate-pulse" />
               </div>
             )}
             
-            {/* End of list indicator */}
             {hasInitialLoad && !hasMore && songs.length > 0 && (
               <div className="text-center text-gray-500 py-8 text-sm">
                 You've reached the end of the list
@@ -363,6 +397,17 @@ const GenrePage = () => {
           setSubscribeModalOpen(false);
           if (modalArtist?.slug) navigate(`/artist/${modalArtist.slug}`);
         }}
+      />
+
+      {/* ✅ Enhanced Payment Method Modal with currency data support */}
+      <PaymentMethodModal
+        open={showPaymentOptions}
+        onClose={handleClosePaymentOptions}
+        onSelectMethod={handlePaymentMethodSelect}
+        item={pendingPayment?.item}
+        itemType={pendingPayment?.itemType}
+        currencyData={pendingPayment?.currencyData} // ✅ Pass currency data
+        getPaymentDisplayInfo={getPaymentDisplayInfo} // ✅ Pass helper function
       />
     </>
   );

@@ -147,6 +147,7 @@ const ArtistAlbumsSection = ({
         const basePrice = album.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
         
+        
         return (
           <button
             className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors relative ${

@@ -44,7 +44,7 @@ const ArtistPayments = () => {
   const platformRevenueFromTransactions = paidTransactions.reduce(
     (sum, txn) => {
       // ✅ Check if txn and txn.amount exist and are valid numbers
-      const amount = (txn && typeof txn.amount === 'number') ? txn.amount : 0;
+      const amount = (txn && typeof txn.amountInUSD === 'number') ? txn.amountInUSD : 0;
       return sum + (amount * platformCut);
     },
     0
@@ -53,7 +53,7 @@ const ArtistPayments = () => {
   const artistRevenueFromTransactions = paidTransactions.reduce(
     (sum, txn) => {
       // ✅ Check if txn and txn.amount exist and are valid numbers
-      const amount = (txn && typeof txn.amount === 'number') ? txn.amount : 0;
+      const amount = (txn && typeof txn.amountInUSD === 'number') ? txn.amountInUSD : 0;
       return sum + (amount * artistCut);
     },
     0
@@ -90,7 +90,7 @@ const ArtistPayments = () => {
             <div className="bg-slate-800 rounded-xl shadow-md p-4">
               <p className="text-sm text-slate-400">Artist Revenue (85%)</p>
               <p className="text-xl font-bold text-green-400">
-                ₹{safeFormatCurrency(artistRevenueFromTransactions)}
+                ${safeFormatCurrency(artistRevenueFromTransactions)}
               </p>
             </div>
 
@@ -98,7 +98,7 @@ const ArtistPayments = () => {
             <div className="bg-slate-800 rounded-xl shadow-md p-4">
               <p className="text-sm text-slate-400">Platform Revenue (15%)</p>
               <p className="text-xl font-bold text-yellow-400">
-                ₹{safeFormatCurrency(platformRevenueFromTransactions)}
+                ${safeFormatCurrency(platformRevenueFromTransactions)}
               </p>
             </div>
 
@@ -116,16 +116,16 @@ const ArtistPayments = () => {
             <p className="text-sm text-slate-400 mb-2">Revenue Breakdown</p>
             <ul className="text-xs space-y-1">
               <li>
-                Songs: ₹{safeFormatCurrency(revenueBreakdown?.songRevenue)}
+                Songs: ${safeFormatCurrency(revenueBreakdown?.songRevenue)}
               </li>
               <li>
-                Albums: ₹{safeFormatCurrency(revenueBreakdown?.albumRevenue)}
+                Albums: ${safeFormatCurrency(revenueBreakdown?.albumRevenue)}
               </li>
               <li>
-                Subscriptions: ₹{safeFormatCurrency(revenueBreakdown?.subscriptionRevenue)}
+                Subscriptions: ${safeFormatCurrency(revenueBreakdown?.subscriptionRevenue)}
               </li>
               <li className="mt-2 text-slate-300 font-medium">
-                Total Revenue (100%): ₹{safeFormatCurrency(totalRevenue)}
+                Total Revenue (100%): ${safeFormatCurrency(totalRevenue)}
               </li>
             </ul>
           </div>
@@ -151,16 +151,16 @@ const ArtistPayments = () => {
                       // ✅ Safe calculation with null checks
                       if (!txn || !txn._id) return null;
                       
-                      const amount = safeNumber(txn.amount);
+                      const amount = safeNumber(txn.amountInUSD);
                       const fee = amount * platformCut;
                       
                       return (
                         <tr key={txn._id} className="border-t border-slate-700 hover:bg-slate-700/50">
                           <td className="px-4 py-2">{txn.itemType || '-'}</td>
                           <td className="px-4 py-2">{txn.itemId || '-'}</td>
-                          <td className="px-4 py-2">₹{safeFormatCurrency(amount)}</td>
+                          <td className="px-4 py-2">${safeFormatCurrency(amount)}</td>
                           <td className="px-4 py-2 text-yellow-400">
-                            ₹{safeFormatCurrency(fee)}
+                            ${safeFormatCurrency(fee)}
                           </td>
                           <td className="px-4 py-2">
                             {txn.createdAt ? 

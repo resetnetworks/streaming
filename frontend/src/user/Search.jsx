@@ -5,7 +5,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import UserHeader from "../components/user/UserHeader";
 import RecentPlays from "../components/user/RecentPlays";
 import AlbumCard from "../components/user/AlbumCard";
-import PaymentMethodModal from "../components/user/PaymentMethodModal"; // ✅ Added import
+import PaymentMethodModal from "../components/user/PaymentMethodModal"; 
+import CurrencySelectionModal from "../components/user/CurrencySelectionModal";
 import {
   fetchUnifiedSearchResults,
   clearSearchResults,
@@ -19,6 +20,14 @@ import {
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { toast } from "sonner";
+
+// ✅ Import Currency Utilities
+import { 
+  getCurrencySymbol, 
+  getAvailableCurrencies, 
+  formatPriceWithSymbol,
+  hasMultipleCurrencies 
+} from "../utills/currencyUtils";
 
 // ✅ Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -49,6 +58,11 @@ const Search = () => {
   
   // ✅ Debounced query for auto-search
   const debouncedQuery = useDebounce(query, 400); // 400ms delay
+
+  // ✅ Currency modal states
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemType, setSelectedItemType] = useState(null);
 
   const { results, loading, error } = useSelector((state) => state.search);
   const selectedSong = useSelector((state) => state.player.selectedSong);
@@ -117,7 +131,9 @@ const Search = () => {
     dispatch(play());
   };
 
-  // ✅ Updated Purchase Handler with Payment Method Selection
+  // ✅ REMOVED: Local currency functions - now using utilities
+
+  // ✅ Updated Purchase Handler with Currency Utilities
   const handlePurchaseClick = useCallback((item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
@@ -141,68 +157,138 @@ const Search = () => {
       }
     }
 
-    // ✅ Open payment method selection modal
-    openPaymentOptions(item, type);
+    // ✅ Using utility function to check multiple currencies
+    if (hasMultipleCurrencies(item)) {
+      // Show currency selection modal first
+      setSelectedItem(item);
+      setSelectedItemType(type);
+      setShowCurrencyModal(true);
+    } else {
+      // Direct payment with single currency
+      const availableCurrencies = getAvailableCurrencies(item);
+      if (availableCurrencies.length === 1) {
+        const currency = availableCurrencies[0];
+        const currencyData = {
+          currency: currency.currency, 
+          amount: currency.amount, 
+          symbol: getCurrencySymbol(currency.currency) // ✅ Using utility
+        };
+        openPaymentOptions(item, type, currencyData);
+      }
+    }
   }, [currentUser, paymentLoading, navigate, openPaymentOptions]);
 
-  // ✅ Updated function with payment method selection
-  const getSongPriceComponent = (song) => {
-    return (
-      // First check if song is already purchased
-      currentUser?.purchasedSongs?.includes(song._id) ? (
-        "Purchased"
-      ) : // Then check subscription songs first (they can have price = 0)
-      song.accessType === "subscription" ? (
-        "Subs.."
-      ) : // Then check purchase-only songs with price > 0
-      song.accessType === "purchase-only" && song.price > 0 ? (
-        <button
-          className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
-            paymentLoading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePurchaseClick(song, "song");
-          }}
-          disabled={paymentLoading}
-        >
-          {paymentLoading ? "..." : `Buy ₹${song.price}`}
-        </button>
-      ) : // Then check if it's a free album song (purchase-only with price = 0)
-      song.accessType === "purchase-only" && song.price === 0 ? (
-        "album"
-      ) : (
-        "Free"
-      )
-    );
+  // ✅ Handle currency selection with utility
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (selectedItem && selectedItemType && selectedCurrency) {
+      const currencyData = {
+        currency: selectedCurrency.currency, 
+        amount: selectedCurrency.amount, 
+        symbol: getCurrencySymbol(selectedCurrency.currency) // ✅ Using utility
+      };
+      openPaymentOptions(selectedItem, selectedItemType, currencyData);
+    }
+    setSelectedItem(null);
+    setSelectedItemType(null);
   };
 
-  // ✅ Updated function with payment method selection
-  const getAlbumPriceComponent = (album) => {
-    if (album.price === 0) {
-      return "subs..";
-    } else if (currentUser?.purchasedAlbums?.includes(album._id)) {
+  // ✅ Handle closing currency modal
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setSelectedItem(null);
+    setSelectedItemType(null);
+  };
+
+  // ✅ Updated Song Price Display Logic using utilities
+  const getSongPriceComponent = (song) => {
+    // Priority 1: Already purchased
+    if (currentUser?.purchasedSongs?.includes(song._id)) {
       return "Purchased";
-    } else {
-      return (
-        <button
-          className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded transition-colors ${
-            paymentLoading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePurchaseClick(album, "album");
-          }}
-          disabled={paymentLoading}
-        >
-          {paymentLoading ? "..." : `₹${album.price}`}
-        </button>
-      );
     }
+
+    // Priority 2: Subscription songs
+    if (song.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Priority 3: Purchase-only songs with price > 0
+    if (song.accessType === "purchase-only") {
+      if (song.basePrice && song.basePrice.amount > 0) {
+        // ✅ Using formatPriceWithSymbol utility
+        const formattedPrice = formatPriceWithSymbol(song.basePrice.amount, song.basePrice.currency);
+        
+        return (
+          <button
+            className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors ${
+              paymentLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePurchaseClick(song, "song");
+            }}
+            disabled={paymentLoading}
+          >
+            {paymentLoading ? "..." : `Buy ${formattedPrice}`}
+          </button>
+        );
+      }
+      
+      // Purchase-only with price 0 (part of album)
+      if (song.basePrice && song.basePrice.amount === 0) {
+        return "album";
+      }
+    }
+
+    // Default case
+    return "Free";
+  };
+
+  // ✅ Updated Album Price Display Logic using utilities
+  const getAlbumPriceComponent = (album) => {
+    // Priority 1: Already purchased
+    if (currentUser?.purchasedAlbums?.includes(album._id)) {
+      return "Purchased";
+    }
+
+    // Priority 2: Subscription albums
+    if (album.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Priority 3: Purchase-only albums
+    if (album.accessType === "purchase-only") {
+      if (album.basePrice && album.basePrice.amount > 0) {
+        // ✅ Using formatPriceWithSymbol utility
+        const formattedPrice = formatPriceWithSymbol(album.basePrice.amount, album.basePrice.currency);
+        
+        return (
+          <button
+            className={`text-white sm:text-xs text-[10px] sm:px-2 px-1 sm:mt-0 py-1 rounded transition-colors ${
+              paymentLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePurchaseClick(album, "album");
+            }}
+            disabled={paymentLoading}
+          >
+            {paymentLoading ? "..." : `Buy ${formattedPrice}`}
+          </button>
+        );
+      }
+
+      // Purchase-only with price 0
+      if (album.basePrice && album.basePrice.amount === 0) {
+        return "Free";
+      }
+    }
+
+    return null;
   };
 
   return (
@@ -381,13 +467,23 @@ const Search = () => {
         `}</style>
       </div>
 
-      {/* ✅ Payment Method Selection Modal */}
+      {/* ✅ Currency Selection Modal - Opens First */}
+      <CurrencySelectionModal
+        open={showCurrencyModal}
+        onClose={handleCloseCurrencyModal}
+        onSelectCurrency={handleCurrencySelect}
+        item={selectedItem}
+        itemType={selectedItemType}
+      />
+
+      {/* ✅ Payment Method Selection Modal - Opens After Currency Selection */}
       <PaymentMethodModal
         open={showPaymentOptions}
         onClose={closePaymentOptions}
         onSelectMethod={handlePaymentMethodSelect}
         item={pendingPayment?.item}
         itemType={pendingPayment?.itemType}
+        currencyData={pendingPayment?.currencyData}
       />
     </>
   );

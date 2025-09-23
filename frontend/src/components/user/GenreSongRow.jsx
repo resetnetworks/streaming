@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
@@ -9,6 +9,7 @@ import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { formatDuration } from "../../utills/helperFunctions";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
+import CurrencySelectionModal from "./CurrencySelectionModal";
 
 const btnBase =
   "action-button inline-flex items-center justify-center text-[10px] sm:text-xs h-7 w-[96px] px-2.5 rounded font-semibold leading-[14px] whitespace-nowrap disabled:bg-gray-600 transition-colors";
@@ -22,64 +23,177 @@ const AccessChip = ({
   processingPayment,
   paymentLoading,
 }) => {
+  // Currency modal states
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [selectedSong, setSelectedSong] = useState(null);
+
+  // Currency helper functions
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
+      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
+      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
+      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
+    };
+    return symbols[currency] || currency;
+  };
+
+  const getAvailableCurrencies = (song) => {
+    if (!song.basePrice || !song.convertedPrices) return [];
+    
+    const currencies = [
+      { currency: song.basePrice.currency, amount: song.basePrice.amount, isBaseCurrency: true },
+      ...song.convertedPrices.map(price => ({
+        currency: price.currency, amount: price.amount, isBaseCurrency: false
+      }))
+    ];
+    
+    return currencies;
+  };
+
+  const handleSongPurchaseClick = (song) => {
+    const availableCurrencies = getAvailableCurrencies(song);
+    
+    if (availableCurrencies.length > 1) {
+      setSelectedSong(song);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      onPurchaseClick?.(song, "song", {
+        currency: currency.currency, 
+        amount: currency.amount, 
+        symbol: getCurrencySymbol(currency.currency)
+      });
+    }
+  };
+
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (selectedSong && selectedCurrency) {
+      onPurchaseClick?.(selectedSong, "song", {
+        currency: selectedCurrency.currency, 
+        amount: selectedCurrency.amount, 
+        symbol: getCurrencySymbol(selectedCurrency.currency)
+      });
+    }
+    setSelectedSong(null);
+  };
+
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setSelectedSong(null);
+  };
+
   if (purchased) {
-    return <span className={`${btnBase} bg-emerald-600/80 text-white`}>Purchased</span>;
+    return (
+      <>
+        <span className={`${btnBase} bg-emerald-600/80 text-white`}>Purchased</span>
+        <CurrencySelectionModal
+          open={showCurrencyModal}
+          onClose={handleCloseCurrencyModal}
+          onSelectCurrency={handleCurrencySelect}
+          item={selectedSong}
+          itemType="song"
+        />
+      </>
+    );
   }
 
   if (song.accessType === "subscription") {
     return (
-      <button
-        type="button"
-        className={`${btnBase} bg-indigo-600 hover:bg-indigo-700 text-white`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSubscribeRequired?.(song.artist, "play", song);
-        }}
-        disabled={processingPayment || paymentLoading}
-      >
-        Subscription
-      </button>
+      <>
+        <button
+          type="button"
+          className={`${btnBase} bg-indigo-600 hover:bg-indigo-700 text-white`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSubscribeRequired?.(song.artist, "play", song);
+          }}
+          disabled={processingPayment || paymentLoading}
+        >
+          Subscription
+        </button>
+        <CurrencySelectionModal
+          open={showCurrencyModal}
+          onClose={handleCloseCurrencyModal}
+          onSelectCurrency={handleCurrencySelect}
+          item={selectedSong}
+          itemType="song"
+        />
+      </>
     );
   }
 
-  if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
-    const priceNumber = Number(song.price);
+  if (song.accessType === "purchase-only" && song?.basePrice?.amount > 0 && !purchased) {
+    const priceNumber = Number(song?.basePrice?.amount);
     const canPay = Number.isFinite(priceNumber) && priceNumber > 0;
+    const symbol = getCurrencySymbol(song?.basePrice?.currency);
 
     return (
-      <button
-        type="button"
-        className={`${btnBase} bg-rose-600 hover:bg-rose-700 text-white`}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (processingPayment || paymentLoading) {
-            toast.info("Payment already in progress...");
-            return;
-          }
+      <>
+        <button
+          type="button"
+          className={`${btnBase} bg-rose-600 hover:bg-rose-700 text-white`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (processingPayment || paymentLoading) {
+              toast.info("Payment already in progress...");
+              return;
+            }
 
-          if (!canPay) {
-            toast.error("Invalid price for this item");
-            return;
-          }
+            if (!canPay) {
+              toast.error("Invalid price for this item");
+              return;
+            }
 
-          if (alreadySubscribed) {
-            onPurchaseClick?.(song, "song");
-          } else {
-            onSubscribeRequired?.(song.artist, "purchase", song);
-          }
-        }}
-        aria-label={`Buy for ₹${song.price}`}
-      >
-        Buy ₹{song.price}
-      </button>
+            if (alreadySubscribed) {
+              handleSongPurchaseClick(song);
+            } else {
+              onSubscribeRequired?.(song.artist, "purchase", song);
+            }
+          }}
+          aria-label={`Buy for ${symbol}${song?.basePrice?.amount}`}
+        >
+          Buy {symbol}{song?.basePrice?.amount}
+        </button>
+        <CurrencySelectionModal
+          open={showCurrencyModal}
+          onClose={handleCloseCurrencyModal}
+          onSelectCurrency={handleCurrencySelect}
+          item={selectedSong}
+          itemType="song"
+        />
+      </>
     );
   }
 
-  if (song.accessType === "purchase-only" && song.price === 0) {
-    return <span className={`${btnBase} bg-slate-600/80 text-white`}>Album</span>;
+  if (song.accessType === "purchase-only" && song?.basePrice?.amount === 0) {
+    return (
+      <>
+        <span className={`${btnBase} bg-slate-600/80 text-white`}>Album</span>
+        <CurrencySelectionModal
+          open={showCurrencyModal}
+          onClose={handleCloseCurrencyModal}
+          onSelectCurrency={handleCurrencySelect}
+          item={selectedSong}
+          itemType="song"
+        />
+      </>
+    );
   }
 
-  return <span className={`${btnBase} bg-teal-600/80 text-white`}>Free</span>;
+  return (
+    <>
+      <span className={`${btnBase} bg-teal-600/80 text-white`}>Free</span>
+      <CurrencySelectionModal
+        open={showCurrencyModal}
+        onClose={handleCloseCurrencyModal}
+        onSelectCurrency={handleCurrencySelect}
+        item={selectedSong}
+        itemType="song"
+      />
+    </>
+  );
 };
 
 const GenreSongRow = ({
@@ -91,7 +205,7 @@ const GenreSongRow = ({
   isSelected,
   onPlay,
   onSubscribeRequired,
-  onPurchaseClick, // expects (item, "song")
+  onPurchaseClick, // Now expects (item, "song", currencyData)
   processingPayment,
   paymentLoading,
   purchased,
