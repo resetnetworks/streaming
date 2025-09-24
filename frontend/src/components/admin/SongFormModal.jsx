@@ -254,6 +254,12 @@ const SongFormModal = ({
       return;
     }
 
+    if(!genresArray || genresArray.length === 0) {
+      toast.error('Please select at least one genre');
+      setIsSubmitting(false);
+      return;
+    }
+
     if (!isEditMode && !audioFile) {
       toast.error('Audio file is required');
       setIsSubmitting(false);
@@ -598,6 +604,7 @@ const SongFormModal = ({
           <div className="col-span-2">
             <label className="text-gray-300">Genre</label>
             <FixedGenreSelector
+              
               value={genresArray}
               onChange={setGenresArray}
               options={fixedGenres}

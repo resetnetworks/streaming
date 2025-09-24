@@ -1,14 +1,17 @@
-import React from 'react'
+import React, { use } from 'react'
 import { assets } from '../../assets/assets'
-import { useNavigate } from 'react-router-dom'
+import useNavigation from '../../hooks/useAuthNavigation'
 
 const IconHeader = () => {
+  const {navigateToHome} = useNavigation();
 
-  const navigate = useNavigate()
+  function handleClick(){
+   
+  }
   return (
     <>
     <div className='w-full flex items-center flex-col'>
-    <img src={assets.reset_icon} className="w-10 py-3 block cursor-pointer" alt="reset studio icon" onClick={()=>{navigate("/home")}}/>
+    <img src={assets.reset_icon} className="w-10 py-3 block cursor-pointer" alt="reset studio icon" onClick={navigateToHome}/>
     <div className="gradiant-line"></div>
     </div>
     </>

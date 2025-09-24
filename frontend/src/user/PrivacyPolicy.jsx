@@ -1,14 +1,19 @@
 // src/pages/PrivacyPolicy.jsx
 import React, { useState } from "react";
-import { Helmet } from "react-helmet";
+import PageSEO from "../components/SEO/PageSEO";
 import { FiChevronDown, FiChevronRight, FiShield, FiLock, FiHome } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
+import useNavigation from "../hooks/useAuthNavigation";
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
   const [expandedSection, setExpandedSection] = useState(null);
+  const {navigateToHome} = useNavigation();
+
+
+
 
   const toggleSection = (sectionId) => {
     setExpandedSection(expandedSection === sectionId ? null : sectionId);
@@ -124,15 +129,13 @@ Note: If you request data deletion, make sure you send the request using your ow
 
   return (
     <>
-      <Helmet>
-        <title>Privacy Policy | musicreset</title>
-        <meta name="robots" content="index, follow" />
-        <meta
-          name="description"
-          content="Learn how musicreset collects, uses, and protects your personal data while you stream ambient, instrumental, and experimental music."
-        />
-      </Helmet>
-      
+    <PageSEO 
+    title="Privacy Policy - Reset Streaming Platform | MusicReset"
+    description="Learn how MusicReset collects, uses, and protects your personal data. Understand your privacy rights and our commitment to data security."
+    url="https://musicreset.com/privacy-policy"
+    />
+
+
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         
@@ -162,7 +165,7 @@ Note: If you request data deletion, make sure you send the request using your ow
 
               {/* Back to Home Button */}
               <button
-                onClick={() => navigate('/home')}
+                onClick={navigateToHome}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 hover:border-blue-400/50 rounded-xl text-blue-300 hover:text-blue-200 transition-all duration-300"
               >
                 <FiHome className="w-4 h-4" />

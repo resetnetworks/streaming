@@ -133,7 +133,7 @@ const FavouriteGen = () => {
         localStorage.removeItem('justRegistered');
         localStorage.removeItem('registrationTime');
         if (user?.preferredGenres?.length > 0) {
-          navigate("/");
+          navigate("/home");
           return;
         }
       }
@@ -159,7 +159,7 @@ const FavouriteGen = () => {
     // If user has genres and not just registered, redirect to home
     // This prevents showing genre page every time for existing users
     if (!justRegistered && user?.preferredGenres?.length > 0) {
-      navigate("/");
+      navigate("/home");
       return;
     }
 

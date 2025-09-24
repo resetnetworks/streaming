@@ -73,14 +73,12 @@ function App() {
   return (
     <Elements stripe={stripePromise}>
       <BrowserRouter>
+      {/* paypal success handler */}
+      {isAuthenticated && <PayPalSuccessHandler />}
         <Suspense fallback={<Loader />}>
           <Routes>
             {/* Public Routes */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
-            <Route 
-              path="/paypal-success" 
-              element={<PayPalSuccessHandler />} 
-            />
             <Route path="/terms-and-conditions" element={<Pages.TermsAndConditions />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route path="/" element={<Pages.LandingPage />} />
