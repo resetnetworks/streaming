@@ -87,7 +87,7 @@ const HeroSection = ({ scrollContainerRef }) => {
           >
             <span className="flex items-center gap-3">
               <FaHeadphones className="text-sm group-hover:scale-110 transition-transform" />
-              Watch Demo
+              sign up as an artist
             </span>
           </motion.button>
         </motion.div>
