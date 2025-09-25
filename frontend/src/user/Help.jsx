@@ -37,7 +37,7 @@ const Help = () => {
       questions: [
         {
           q: "How do I cancel my subscription?",
-          a: "To cancel your subscription, click on your profile and go to Manage Subscription. From there, find the subscription you want to cancel and click the Cancel button."
+          a: "To cancel your subscription, go to your purchases and select the artist you want to cancel. Then, click the red ‘Cancel’ button.."
         },
         {
           q: "Can I change my plan?",
@@ -73,8 +73,8 @@ const Help = () => {
   return (
     <>
      <PageSEO
-        title="Help & Support - Reset Streaming Platform | MusicReset"
-        description="Get help with account access, subscriptions, streaming issues, and more on the official support center for musicreset."
+        title="Help & Support - Reset Streaming Platform | Reset Music"
+        description="Get help with account access, subscriptions, streaming issues, and more on the official support center for Reset Music."
         url="https://musicreset.com/help" 
      />
       

@@ -130,8 +130,8 @@ Note: If you request data deletion, make sure you send the request using your ow
   return (
     <>
     <PageSEO 
-    title="Privacy Policy - Reset Streaming Platform | MusicReset"
-    description="Learn how MusicReset collects, uses, and protects your personal data. Understand your privacy rights and our commitment to data security."
+    title="Privacy Policy - Reset Streaming Platform | Reset Music"
+    description="Learn how Reset Music collects, uses, and protects your personal data. Understand your privacy rights and our commitment to data security."
     url="https://musicreset.com/privacy-policy"
     />
 

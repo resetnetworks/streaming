@@ -2,8 +2,8 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 
 const PageSEO = ({ 
-  title = "Reset Streaming Platform - MusicReset | Instrumental Music",
-  description = "Reset Streaming Platform by MusicReset - Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles. Multi-currency support with monthly subscriptions.",
+  title = "Reset Streaming Platform - Reset Music | Instrumental Music",
+  description = "Reset Streaming Platform by Reset Music - Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles. Multi-currency support with monthly subscriptions.",
   url = "https://musicreset.com",
   type = "website"
 }) => {
@@ -12,23 +12,28 @@ const PageSEO = ({
       {/* Primary SEO Tags */}
       <title>{title}</title>
       <meta name="description" content={description} />
-      <meta name="keywords" content="reset streaming platform, musicreset, ambient music streaming, instrumental music platform, experimental music, electronic music, classical music, sound design, audiophile platform, IDM, drone, techno, electroacoustic" />
+      <meta name="keywords" content="reset streaming platform, musicreset, reset music, ambient music streaming, instrumental music platform, experimental music, electronic music, classical music, sound design, audiophile platform, IDM, drone, techno, electroacoustic" />
       <meta name="robots" content="index, follow" />
-      <meta name="author" content="MusicReset" />
+      <meta name="author" content="Reset Music" />
       
-      {/* Open Graph Tags for Social Media */}
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:type" content={type} />
-      <meta property="og:url" content={url} />
-      <meta property="og:site_name" content="Reset Streaming Platform - MusicReset" />
-      <meta property="og:locale" content="en_US" />
-      
-      {/* Twitter Card Tags */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:site" content="@musicreset" />
+     {/* Open Graph Tags for Social Media */}
+    <meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={url} />
+<meta property="og:site_name" content="Reset Streaming Platform - Reset Music" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content="https://musicreset.com/icon.png" />
+<meta property="og:image:alt" content="Reset Streaming Platform - Reset Music" />
+
+{/* Twitter Card Tags */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:site" content="@musicreset" />
+<meta name="twitter:image" content="https://musicreset.com/icon.png" />
+<meta name="twitter:image:alt" content="Reset Streaming Platform - Reset Music" />
+
       
       {/* Additional SEO Tags */}
       <meta name="theme-color" content="#3b82f6" />
@@ -42,7 +47,7 @@ const PageSEO = ({
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          "name": "Reset Streaming Platform - MusicReset",
+          "name": "Reset Streaming Platform - Reset Music",
           "description": description,
           "url": url,
           "potentialAction": {
@@ -61,8 +66,8 @@ const PageSEO = ({
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          "name": "Reset Streaming Platform - MusicReset",
-          "description": "Reset Streaming Platform by MusicReset for next generation musicians, sound designers, listeners and audiophiles",
+          "name": "Reset Streaming Platform - Reset Music",
+          "description": "Reset Streaming Platform by Reset Music for next generation musicians, sound designers, listeners and audiophiles",
           "url": url,
           "logo": "https://musicreset.com/icon.png",
           "foundingDate": "2025",

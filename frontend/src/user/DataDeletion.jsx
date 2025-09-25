@@ -1,19 +1,15 @@
 import React from "react";
-import { Helmet } from "react-helmet";
+import PageSEO from "../components/SEO/PageSEO";
 import IconHeader from "../components/user/IconHeader";
 
 const DataDeletion = () => {
   return (
     <>
-      <Helmet>
-        <title>Data Deletion | MUSICRESET RESET MUSIC STREAMING PLATFORM</title>
-        <meta name="robots" content="index, follow" />
-        <meta
-          name="description"
-          content="Follow instructions to request account and data deletion from MUSICRESET. Learn how to securely remove your personal information."
-        />
-        <meta name="keywords" content="musicreset, data deletion, account removal, privacy, personal data, delete account, music streaming privacy" />
-      </Helmet>
+     <PageSEO 
+        title="Data Deletion Instructions - Reset Streaming Platform | Reset Music"
+        description="Instructions for deleting your account and data from Reset Music if you signed in using Facebook or Google. Contact us for support."
+        url="https://musicreset.com/data-deletion"
+      />
       <div className="bg-gray-950">
       <IconHeader />
       <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center px-4">

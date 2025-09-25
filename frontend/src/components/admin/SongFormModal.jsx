@@ -336,6 +336,33 @@ const SongFormModal = ({
     }
   }, [isOpen, initialAlbums]);
 
+  const handlePriceFocus = (e) => {
+  // If the current value is 0, clear it when user focuses
+  if (parseFloat(e.target.value) === 0) {
+    setNewSong((prev) => ({
+      ...prev,
+      price: {
+        ...prev.price,
+        amount: ''
+      }
+    }));
+  }
+};
+
+const handlePriceBlur = (e) => {
+  // If field is empty when user leaves, set it back to 0
+  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+    setNewSong((prev) => ({
+      ...prev,
+      price: {
+        ...prev.price,
+        amount: 0
+      }
+    }));
+  }
+};
+
+
   if (!isOpen) return null;
 
   return (
@@ -508,6 +535,8 @@ const SongFormModal = ({
                   name="priceAmount"
                   value={newSong.price.amount}
                   onChange={handleChange}
+                  onFocus={handlePriceFocus}
+                  onBlur={handlePriceBlur}
                   className="w-full bg-gray-700 text-white px-4 py-2 pl-10 rounded"
                   step="0.01"
                   min="0"

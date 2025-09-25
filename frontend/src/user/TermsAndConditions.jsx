@@ -128,8 +128,8 @@ const TermsAndConditions = () => {
   return (
     <>
       <PageSEO 
-        title="Terms and Conditions - Reset Streaming Platform | MusicReset"
-        description="Read the Terms and Conditions for using the Reset Music Streaming Platform by MusicReset. Understand your rights and responsibilities and more."
+        title="Terms and Conditions - Reset Streaming Platform | Reset Music"
+        description="Read the Terms and Conditions for using the Reset Music Streaming Platform by Reset Music. Understand your rights and responsibilities and more."
         url="https://musicreset.com/terms-and-conditions"
       />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">

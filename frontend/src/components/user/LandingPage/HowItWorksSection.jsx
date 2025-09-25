@@ -208,7 +208,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                       <feature.icon className="text-blue-400 text-lg" />
                     </div>
                     <div>
-                      <h4 className="text-white font-semibold mb-1">{feature.title}</h4>
+                      <h3 className="text-white font-semibold mb-1">{feature.title}</h3>
                       <p className="text-slate-400 text-sm">{feature.description}</p>
                     </div>
                   </motion.div>
@@ -259,7 +259,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                   {/* Video Overlay Content */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex flex-col justify-end p-6 pointer-events-none">
                     <div className="space-y-2">
-                      <h4 className="text-white font-semibold text-lg">Platform Overview</h4>
+                      <h3 className="text-white font-semibold text-lg">Platform Overview</h3>
                       <p className="text-slate-300 text-sm">See how easy it is to start streaming</p>
                     </div>
                   </div>

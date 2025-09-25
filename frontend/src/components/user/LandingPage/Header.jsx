@@ -88,7 +88,7 @@ const Header = () => {
               alt="reset studio icon"
             />
             <span className="text-xl font-bold text-white ml-2 tracking-wider group-hover:text-blue-400 transition-colors">
-              musicreset
+              reset music
             </span>
           </motion.div>
 

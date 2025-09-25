@@ -155,6 +155,33 @@ const AlbumFormModal = ({
     onSubmit(formData);
   };
 
+  const handlePriceFocus = (e) => {
+  // If the current value is 0, clear it when user focuses
+  if (parseFloat(e.target.value) === 0) {
+    setNewAlbum((prev) => ({
+      ...prev,
+      price: {
+        ...prev.price,
+        amount: ''
+      }
+    }));
+  }
+};
+
+const handlePriceBlur = (e) => {
+  // If field is empty when user leaves, set it back to 0
+  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
+    setNewAlbum((prev) => ({
+      ...prev,
+      price: {
+        ...prev.price,
+        amount: 0
+      }
+    }));
+  }
+};
+
+
   if (!isOpen) return null;
 
   return (
@@ -294,27 +321,29 @@ const AlbumFormModal = ({
             </div>
 
             {/* Price */}
-            {newAlbum.accessType === 'purchase-only' && (
-              <div>
-                <label className="block text-gray-300 mb-2">Price (USD)*</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <RiPriceTag3Fill className="text-gray-400" />
-                  </div>
-                  <input
-                    type="number"
-                    name="priceAmount"
-                    value={newAlbum.price.amount}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full bg-gray-700 text-white px-4 py-2 pl-10 rounded"
-                    required
-                    
-                  />
-                </div>
-              </div>
-            )}
+{newAlbum.accessType === 'purchase-only' && (
+  <div>
+    <label className="block text-gray-300 mb-2">Price (USD)*</label>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+        <RiPriceTag3Fill className="text-gray-400" />
+      </div>
+      <input
+        type="number"
+        name="priceAmount"
+        value={newAlbum.price.amount}
+        onChange={handleChange}
+        onFocus={handlePriceFocus}
+        onBlur={handlePriceBlur}
+        min="0"
+        step="0.01"
+        className="w-full bg-gray-700 text-white px-4 py-2 pl-10 rounded"
+        required
+      />
+    </div>
+  </div>
+)}
+
 
             {/* Genre */}
             <div>
