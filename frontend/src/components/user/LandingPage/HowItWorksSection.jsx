@@ -116,10 +116,10 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
 
   // Stats data
   const stats = [
-    { number: "25", suffix: "K+", label: "Hours Streamed" },
-    { number: "1.8", suffix: "M+", label: "Total Listeners" },
-    { number: "150", suffix: "+", label: "Countries" },
-    { number: "99.9", suffix: "%", label: "Uptime" }
+    { number: "500", suffix: "+", label: "Hours Streamed" },
+    { number: "150", suffix: "+", label: "Song Available" },
+    { number: "200", suffix: "+", label: "Countries" },
+    { number: "99", suffix: "%", label: "Uptime" }
   ];
 
   return (
