@@ -1,4 +1,4 @@
-# 🎵 MUSICRESET – Full-Stack Music Streaming Platform
+# 🎵 RESET MUSIC – Full-Stack Music Streaming Platform
 
 <div align="center">
 
@@ -78,13 +78,6 @@
 | ![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react) | ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?logo=tailwindcss) | ![React Router](https://img.shields.io/badge/React_Router-6.x-CA4245?logo=reactrouter) | ![Vite](https://img.shields.io/badge/Vite-4.x-646CFF?logo=vite) |
 | ![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-1.9-764ABC?logo=redux) | ![React Loading Skeleton](https://img.shields.io/badge/Loading_Skeleton-3.x-gray) | ![React Helmet](https://img.shields.io/badge/React_Helmet-6.x-blue) | ![ESLint](https://img.shields.io/badge/ESLint-8.x-4B32C3?logo=eslint) |
 
-### **Backend Technologies**
-| Core | Database | Security | Documentation |
-|------|----------|----------|---------------|
-| ![Node.js](https://img.shields.io/badge/Node.js-18.x-339933?logo=nodedotjs) | ![MongoDB](https://img.shields.io/badge/MongoDB-6.x-47A248?logo=mongodb) | ![bcrypt](https://img.shields.io/badge/bcrypt-5.x-red) | ![Swagger](https://img.shields.io/badge/Swagger-3.x-85EA2D?logo=swagger) |
-| ![Express.js](https://img.shields.io/badge/Express.js-4.x-000000?logo=express) | ![Mongoose](https://img.shields.io/badge/Mongoose-7.x-880000) | ![crypto](https://img.shields.io/badge/crypto-Node_built--in-green) | ![Nodemailer](https://img.shields.io/badge/Nodemailer-6.x-blue) |
-| ![Cookie Parser](https://img.shields.io/badge/Cookie_Parser-1.x-orange) | | ![JWT](https://img.shields.io/badge/JWT-9.x-000000?logo=jsonwebtokens) | |
-
 ### **Cloud Infrastructure & Media**
 | AWS Services | Media Processing | DevOps |
 |--------------|------------------|--------|
@@ -96,8 +89,6 @@
 | Payments | Social Auth |
 |----------|-------------|
 | ![Razorpay](https://img.shields.io/badge/Razorpay-528DD7?logo=razorpay) | ![Google OAuth](https://img.shields.io/badge/Google_OAuth-4285F4?logo=google) |
-| | ![Facebook Login](https://img.shields.io/badge/Facebook_Login-1877F2?logo=facebook) |
-| | ![Apple ID](https://img.shields.io/badge/Apple_ID-000000?logo=apple) |
 
 </div>
 
