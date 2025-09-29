@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import PageSEO from "../components/SEO/PageSEO";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -144,14 +144,11 @@ const Home = () => {
 
   return (
     <>
-      <Helmet>
-        <title>MUSICRESET - RESET MUSIC STREAMING PLATFORM</title>
-        <meta name="robots" content="index, follow" />
-        <meta
-          name="description"
-          content="Listen to relaxing ambient, instrumental, and experimental music on Reset. Enjoy music without lyrics, perfect for focus, study, and calm."
-        />
-      </Helmet>
+          <PageSEO 
+      title="Reset Music - Streaming Platform | Instrumental Music"
+  description="Reset Music Streaming Platform – Stream ambient, instrumental, classical & experimental music for musicians, sound designers, and audiophiles."
+        url="https://musicreset.com/home"
+      />
 
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">

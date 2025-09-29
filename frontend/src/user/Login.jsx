@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";
 import { toast } from "sonner";
-import { Helmet } from "react-helmet";
+import PageSEO from "../components/SEO/PageSEO";
 import BackgroundWrapper from "../components/BackgroundWrapper";
 
 const Login = () => {
@@ -64,12 +64,11 @@ const Login = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Login to MusicReset | Stream Ambient & Experimental Music</title>
-        <meta name="robots" content="index, follow" />
-        <meta name="description" content="Access your MusicReset account to stream ambient, instrumental, and experimental music. Log in to manage subscriptions, liked songs, and more." />
-      </Helmet>
-
+        <PageSEO
+  title="Login | Reset Music - Streaming Platform"
+  description="Login to Reset Music and access your personalized collection of electronic, ambient, and experimental music. Stream tracks from top artists worldwide."
+  url={window.location.href}
+/>
       <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">
         <IconHeader />

@@ -6,6 +6,7 @@ import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import IconHeader from "../components/user/IconHeader";
 import BackgroundWrapper from "../components/BackgroundWrapper";
+import PageSEO from "../components/SEO/PageSEO";
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -41,6 +42,12 @@ const ResetPassword = () => {
   };
 
   return (
+    <>
+        <PageSEO
+  title="Reset Password | Reset Music - Secure Account Recovery"
+  description="Reset your Reset Music account password securely. Create a new password to regain access to your personalized music streaming experience."
+  url={window.location.href}
+/>
     <BackgroundWrapper>
     <section className="w-full min-h-screen flex flex-col items-center">
       <IconHeader />
@@ -112,6 +119,7 @@ const ResetPassword = () => {
       </div>
     </section>
     </BackgroundWrapper>
+    </>
   );
 };
 

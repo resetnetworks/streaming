@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
+import PageSEO from "../components/SEO/PageSEO";
 
 import { fetchAlbumById } from "../features/albums/albumsSlice";
 import {
@@ -261,6 +262,16 @@ export default function Album() {
 
   return (
    <>
+     <PageSEO
+  title={album ? `${album.title} - Reset Music | Album` : "Album - Reset Music"}
+  description={
+    album
+      ? album.description ||
+        `Listen to ${album.title} by ${artistName} on Reset Music. Stream instrumental, ambient, classical & experimental music.`
+      : "Reset Music Streaming Platform - Stream albums and tracks from your favorite artists."
+  }
+  url={window.location.href}
+/>
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">

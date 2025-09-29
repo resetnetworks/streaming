@@ -20,6 +20,7 @@ import {
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { toast } from "sonner";
+import PageSEO from "../components/SEO/PageSEO";
 
 // ✅ Import Currency Utilities
 import { 
@@ -291,8 +292,27 @@ const Search = () => {
     return null;
   };
 
+   const getPageTitle = () => {
+    if (query.trim()) {
+      return `Search "${query}" | Reset Music - Find Your Music`;
+    }
+    return "Search Music | Reset Music - Find Songs, Artists & Albums";
+  };
+
+  const getPageDescription = () => {
+    if (query.trim()) {
+      return `Search results for "${query}" on Reset Music. Find electronic, ambient, and experimental music from top artists worldwide.`;
+    }
+    return "Search and discover electronic, ambient, and experimental music on Reset Music. Find your favorite songs, artists, and albums from our curated collection.";
+  };
+
   return (
     <>
+      <PageSEO
+        title={getPageTitle()}
+        description={getPageDescription()}
+        url={window.location.href}
+      />
       <UserHeader />
       <h1 className="text-xl text-center leading-none text-white">
         Search by artist, album, or song
