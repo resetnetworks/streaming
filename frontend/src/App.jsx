@@ -80,9 +80,11 @@ function App() {
             {/* Public Routes */}
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
             <Route path="/terms-and-conditions" element={<Pages.TermsAndConditions />} />
+            <Route path="/cancellation-refund-policy" element={<Pages.CancellationRefundPolicy />} />
+            <Route path="/about-us" element={<Pages.About />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route path="/" element={<Pages.LandingPage />} />
-            <Route path="/help" element={<Pages.Help />} />
+            <Route path="/contact-us" element={<Pages.Help />} />
             <Route path="/data-deletion" element={<Pages.DataDeletion />} />
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
 

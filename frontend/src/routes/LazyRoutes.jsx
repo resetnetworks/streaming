@@ -23,6 +23,8 @@ export const SocialLoginCallback = lazy(() => import("../user/SocialLoginCallbac
 export const Genre = lazy(() => import("../user/Genre"));
 export const LandingPage = lazy(() => import("../user/LandingPage"));
 export const TermsAndConditions = lazy(() => import("../user/TermsAndConditions"));
+export const About = lazy(() => import("../user/About"));
+export const CancellationRefundPolicy = lazy(() => import("../user/CancellationRefundPolicy"));
 
 
 // Admin pages routes

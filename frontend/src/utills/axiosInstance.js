@@ -112,7 +112,7 @@ const forceLogout = async () => {
   // ✅ ENHANCED: Smart redirect with loop prevention
   const currentPath = window.location.pathname;
   const authPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
-  const publicPaths = ['/privacy-policy', '/help', '/data-deletion', "/"];
+  const publicPaths = ['/privacy-policy', '/contact-us', '/data-deletion', '/about-us', 'terms-and-conditions', "/"];
   const isOnAuthPage = authPaths.some(path => currentPath.includes(path));
   const isOnPublicPage = publicPaths.some(path => currentPath.includes(path));
   

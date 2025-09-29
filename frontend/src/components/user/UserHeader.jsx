@@ -111,11 +111,11 @@ const UserHeader = () => {
                 </li>
                 <li
                   className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                    isActive("/help") ? "text-blue-500" : ""
+                    isActive("/contact-us") ? "text-blue-500" : ""
                   }`}
                   onClick={() => {
                     setOpen(false);
-                    navigate("/help");
+                    navigate("/contact-us");
                   }}
                 >
                   <FiHelpCircle />

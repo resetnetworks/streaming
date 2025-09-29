@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinks = [
   { href: "/privacy-policy", text: "Privacy Policy", icon: <FaShieldAlt />, type: "route" },
   { href: "/terms-and-conditions", text: "Terms", icon: <FaFileContract />, type: "route" },
-  { href: "/help", text: "Help", icon: <FaQuestionCircle />, type: "route" },
+  { href: "/contact-us", text: "Help", icon: <FaQuestionCircle />, type: "route" },
 ];
 
 const Header = () => {
