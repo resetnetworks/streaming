@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // --- Data for Navigation Links (DRY Principle) ---
 const navLinks = [
+  { href: "/about-us", text: "About", icon: <FaMusic />, type: "route" },
   { href: "/privacy-policy", text: "Privacy Policy", icon: <FaShieldAlt />, type: "route" },
   { href: "/terms-and-conditions", text: "Terms", icon: <FaFileContract />, type: "route" },
+  { href: "/cancellation-refund-policy", text: "Refund Policy", icon: <FaHeadphones />, type: "route" },
   { href: "/contact-us", text: "Help", icon: <FaQuestionCircle />, type: "route" },
 ];
 
