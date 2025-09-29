@@ -58,17 +58,42 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
   };
 
 
-  const handleImageChange = (e) => {
-    const file = e.target.files;
-    setImage(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+const handleImageChange = (e) => {
+  const file = e.target.files[0];
+  
+  // Validation
+  if (file) {
+    // Check file size (5MB limit as mentioned in your UI)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      e.target.value = ''; // Clear the input
+      return;
     }
-  };
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select a valid image file");
+      e.target.value = ''; // Clear the input
+      return;
+    }
+  }
+  
+  setImage(file);
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
+    };
+    reader.readAsDataURL(file);
+  } else {
+    setImagePreview(null);
+  }
+};
+
 
 
   const handleSubmit = async (e) => {
