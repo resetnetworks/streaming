@@ -9,12 +9,10 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 
-
 const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
   const dispatch = useDispatch();
   const loading = useSelector(selectArtistLoading);
   const error = useSelector(selectArtistError);
-
 
   const [form, setForm] = useState({
     name: "",
@@ -24,10 +22,8 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     location: "",
   });
 
-
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
 
   useEffect(() => {
     if (initialData) {
@@ -52,72 +48,70 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
     }
   }, [initialData]);
 
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  
-  // Validation
-  if (file) {
-    // Check file size (5MB limit as mentioned in your UI)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
-      e.target.value = ''; // Clear the input
-      return;
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    
+    // Validation
+    if (file) {
+      // Check file size (5MB limit as mentioned in your UI)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size must be less than 5MB");
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select a valid image file");
+        e.target.value = ''; // Clear the input
+        return;
+      }
     }
     
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please select a valid image file");
-      e.target.value = ''; // Clear the input
-      return;
+    setImage(file);
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.onerror = () => {
+        toast.error("Failed to read image file");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
     }
-  }
-  
-  setImage(file);
-  
-  if (file) {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read image file");
-    };
-    reader.readAsDataURL(file);
-  } else {
-    setImagePreview(null);
-  }
-};
-
-
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
 
     if (!form.name.trim()) {
       toast.error("Artist name is required");
       return;
     }
 
+    // Bio character limit validation
+    if (form.bio.length > 500) {
+      toast.error("Bio cannot exceed 500 characters");
+      return;
+    }
 
     if (form.location.trim().length < 2) {
       toast.error("Location must be at least 2 characters");
       return;
     }
 
-
     const isPaid = form.subscriptionPrice !== "0";
     if (isPaid && !form.cycle) {
       toast.error("Subscription cycle is required for paid plans");
       return;
     }
-
 
     const formData = new FormData();
     formData.append("name", form.name);
@@ -128,7 +122,6 @@ const handleImageChange = (e) => {
     if (image) {
       formData.append("coverImage", image);
     }
-
 
     try {
       if (initialData) {
@@ -144,15 +137,11 @@ const handleImageChange = (e) => {
     }
   };
 
-
   const isPaid = (form.subscriptionPrice || "0") !== "0";
-
 
   if (!isOpen) return null;
 
-
   const mode = initialData ? "Edit" : "Create";
-
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
@@ -166,9 +155,7 @@ const handleImageChange = (e) => {
           </button>
         </div>
 
-
         {error && <p className="text-red-500 mb-4">{error}</p>}
-
 
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           {/* Name */}
@@ -184,19 +171,30 @@ const handleImageChange = (e) => {
             />
           </div>
 
-
-          {/* Bio */}
+          {/* Bio with character limit */}
           <div className="mb-4">
-            <label className="block font-medium mb-1 text-gray-300">Bio</label>
+            <label className="block font-medium mb-1 text-gray-300">
+              Bio 
+              <span className="text-sm text-gray-500 ml-2">
+                ({form.bio.length}/500 characters)
+              </span>
+            </label>
             <textarea
               name="bio"
               value={form.bio}
               onChange={handleChange}
               className="w-full border p-2 rounded bg-gray-800 border-gray-700 text-white"
               rows="4"
+              maxLength={500}
+              placeholder="Tell us about the artist..."
             />
-          </div>
 
+            {form.bio.length === 500 && (
+              <p className="text-red-400 text-sm mt-1">
+                Maximum character limit reached
+              </p>
+            )}
+          </div>
 
           {/* Location */}
           <div className="mb-4">
@@ -211,7 +209,6 @@ const handleImageChange = (e) => {
               minLength={2}
             />
           </div>
-
 
           {/* Subscription Price with USD symbol */}
           <div className="mb-4">
@@ -236,7 +233,6 @@ const handleImageChange = (e) => {
             </div>
           </div>
 
-
           {/* Subscription Cycle */}
           <div className="mb-4">
             <label className="block font-medium mb-1 text-gray-300">
@@ -258,7 +254,6 @@ const handleImageChange = (e) => {
               <option value="12m">Yearly (12 months)</option>
             </select>
           </div>
-
 
           {/* Cover Image */}
           <div className="mb-6">
@@ -295,7 +290,6 @@ const handleImageChange = (e) => {
             </div>
           </div>
 
-
           {/* Submit */}
           <button
             type="submit"
@@ -309,6 +303,5 @@ const handleImageChange = (e) => {
     </div>
   );
 };
-
 
 export default CreateArtistModal;
