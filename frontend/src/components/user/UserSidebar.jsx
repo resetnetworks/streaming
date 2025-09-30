@@ -24,48 +24,16 @@ const UserSidebar = () => {
   // Use Redux selector instead of context
   const songs = useSelector(selectAllSongs);
 
-  // Production-safe mobile detection
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    // Safe window access for production
-    const checkMobile = () => {
-      if (typeof window !== 'undefined') {
-        const mobile = window.innerWidth < 768;
-        setIsMobile(mobile);
-        setIsLoaded(true);
-        
-        // Debug log for production troubleshooting
-        console.log('Mobile detection:', mobile, 'Width:', window.innerWidth);
-      }
-    };
-
-    // Initial check with delay to ensure DOM is ready
-    const timer = setTimeout(checkMobile, 100);
-
     const handleResize = () => {
-      checkMobile();
+      setIsMobile(window.innerWidth < 768);
     };
 
-    // Add event listener
     window.addEventListener("resize", handleResize);
-    
-    // Cleanup
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Don't render components until detection is complete
-  if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -112,13 +80,10 @@ const UserSidebar = () => {
         </aside>
       )}
 
-      {isMobile && isLoaded && (
+      {isMobile && (
         <>
-          {/* Safe mobile component rendering */}
-          <div className="mobile-container">
-            <MobilePlayer />
-            <MobileNavBar />
-          </div>
+          <MobilePlayer />
+          <MobileNavBar />
         </>
       )}
     </>
