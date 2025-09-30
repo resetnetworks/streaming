@@ -12,15 +12,18 @@ const __dirname = dirname(__filename);
 const BASE_URL = 'https://www.musicreset.com';
 
 const pages = [
+  // ===== MAIN PAGES (Static) =====
   { url: '/', changefreq: 'daily', priority: 1.0 },
   { url: '/login', changefreq: 'monthly', priority: 0.5 },
   { url: '/register', changefreq: 'monthly', priority: 0.5 },
+  
+  // ===== LEGAL & INFO PAGES =====
   { url: '/contact-us', changefreq: 'weekly', priority: 0.8 },
-  { url: '/data-deletion', changefreq: 'weekly', priority: 0.8 },
-  { url: '/privacy-policy', changefreq: 'weekly', priority: 0.8 },
   { url: '/about-us', changefreq: 'weekly', priority: 0.8 },
-  { url: '/cancellation-refund-policy', changefreq: 'weekly', priority: 0.8 },
+  { url: '/privacy-policy', changefreq: 'weekly', priority: 0.8 },
   { url: '/terms-and-conditions', changefreq: 'weekly', priority: 0.9 },
+  { url: '/cancellation-refund-policy', changefreq: 'weekly', priority: 0.8 },
+  { url: '/data-deletion', changefreq: 'weekly', priority: 0.8 },
 ];
 
 (async () => {

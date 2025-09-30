@@ -214,13 +214,13 @@ export default function Album() {
 
   const artistName =
     typeof album?.artist === "object"
-      ? album.artist.name
+      ? album?.artist?.name
       : artists.find((a) => a._id === album?.artist)?.name || "Unknown Artist";
 
   // ✅ NEW: Get artist slug for navigation
   const getArtistSlug = () => {
-    if (typeof album?.artist === "object" && album.artist.slug) {
-      return album.artist.slug;
+    if (typeof album?.artist === "object" && album?.artist?.slug) {
+      return album?.artist?.slug;
     }
     const artistData = artists.find((a) => a._id === album?.artist);
     return artistData?.slug || null;

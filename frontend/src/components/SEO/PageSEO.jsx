@@ -15,6 +15,11 @@ const PageSEO = ({
       <meta name="keywords" content="reset streaming platform, musicreset, reset music, ambient music streaming, instrumental music platform, experimental music, electronic music, classical music, sound design, audiophile platform, IDM, drone, techno, electroacoustic" />
       <meta name="robots" content="index, follow" />
       <meta name="author" content="Reset Music" />
+
+       <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+      <link rel="icon" type="image/png" href="/icon.png" />
+      <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       
      {/* Open Graph Tags for Social Media */}
     <meta property="og:title" content={title} />
