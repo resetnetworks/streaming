@@ -344,20 +344,6 @@ const handlePriceBlur = (e) => {
   </div>
 )}
 
-
-            {/* Genre */}
-            <div>
-              <label className="block text-gray-300 mb-2">Genres (comma-separated)</label>
-              <input
-                type="text"
-                name="genre"
-                value={newAlbum.genre}
-                onChange={handleChange}
-                className="w-full bg-gray-700 text-white px-4 py-2 rounded"
-                placeholder="e.g., Pop, Jazz"
-              />
-            </div>
-
             {/* Error */}
             {error && <div className="text-red-400 text-sm">{error}</div>}
           </div>

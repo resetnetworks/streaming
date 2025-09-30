@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../../../assets/assets";
-import { FaHome, FaMusic, FaHeadphones, FaQuestionCircle, FaShieldAlt, FaFileContract, FaInfoCircle, FaUndo } from "react-icons/fa";
+import { FaHome, FaShieldAlt, FaFileContract, FaInfoCircle, FaUndo } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
 // --- Data for Navigation Links (DRY Principle) ---
@@ -10,7 +10,6 @@ const navLinks = [
   { href: "/privacy-policy", text: "Privacy Policy", icon: <FaShieldAlt />, type: "route" },
   { href: "/terms-and-conditions", text: "Terms", icon: <FaFileContract />, type: "route" },
   { href: "/cancellation-refund-policy", text: "Refund Policy", icon: <FaUndo />, type: "route" },
-  { href: "/contact-us", text: "Help", icon: <FaQuestionCircle />, type: "route" },
 ];
 
 const Header = () => {

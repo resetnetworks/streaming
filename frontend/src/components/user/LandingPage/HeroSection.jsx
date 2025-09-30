@@ -11,6 +11,9 @@ const HeroSection = ({ scrollContainerRef }) => {
   const handleStartStreaming = () => {
     navigate('/home');
   };
+  const handleSignUpAsArtist =()=>{
+    window.open('https://forms.wix.com/f/7377232876368036493', '_blank');
+  }
 
   return (
     <div className="landing-content-overlay">
@@ -80,7 +83,8 @@ const HeroSection = ({ scrollContainerRef }) => {
             </span>
           </motion.button>
           
-          <motion.button 
+          <motion.button
+            onClick={handleSignUpAsArtist} 
             className="group border-2 border-gray-400 hover:border-blue-400 text-white font-semibold py-4 px-10 rounded-xl text-lg transition-all duration-300 hover:bg-blue-400/10 hover:shadow-lg"
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
