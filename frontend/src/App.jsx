@@ -68,6 +68,20 @@ function App() {
     };
   }, []);
 
+  // 🟦 Disable vertical overscroll (bounce) effect
+useEffect(() => {
+  // CSS style add करें
+  document.body.style.overscrollBehaviorY = 'none';
+  document.documentElement.style.overscrollBehaviorY = 'none';
+  
+  return () => {
+    // Cleanup (optional)
+    document.body.style.overscrollBehaviorY = '';
+    document.documentElement.style.overscrollBehaviorY = '';
+  };
+}, []);
+
+
   if (initialLoad) return <Loader />;
 
   return (
