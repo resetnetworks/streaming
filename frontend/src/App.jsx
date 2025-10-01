@@ -42,31 +42,31 @@ function App() {
   }, [dispatch, isAuthenticated]);
 
   // 🔐 Disable Right Click & Inspect Shortcut
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && e.key === "I") ||
-        (e.ctrlKey && e.shiftKey && e.key === "J") ||
-        (e.ctrlKey && e.key === "U") ||
-        (e.ctrlKey && e.shiftKey && e.key === "C")
-      ) {
-        e.preventDefault();
-      }
-    };
+  // useEffect(() => {
+  //   const handleKeyDown = (e) => {
+  //     if (
+  //       e.key === "F12" ||
+  //       (e.ctrlKey && e.shiftKey && e.key === "I") ||
+  //       (e.ctrlKey && e.shiftKey && e.key === "J") ||
+  //       (e.ctrlKey && e.key === "U") ||
+  //       (e.ctrlKey && e.shiftKey && e.key === "C")
+  //     ) {
+  //       e.preventDefault();
+  //     }
+  //   };
 
-    const handleRightClick = (e) => {
-      e.preventDefault();
-    };
+  //   const handleRightClick = (e) => {
+  //     e.preventDefault();
+  //   };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("contextmenu", handleRightClick);
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   document.addEventListener("contextmenu", handleRightClick);
 
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("contextmenu", handleRightClick);
-    };
-  }, []);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //     document.removeEventListener("contextmenu", handleRightClick);
+  //   };
+  // }, []);
 
   if (initialLoad) return <Loader />;
 
