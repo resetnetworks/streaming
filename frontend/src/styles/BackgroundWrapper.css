@@ -12,6 +12,7 @@
   background-attachment: fixed;
   overflow-x: hidden;
   overflow-y: visible;
+  overscroll-behavior-y: none;
 }
 
 .background-container::before {
