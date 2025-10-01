@@ -67,20 +67,20 @@ function App() {
       document.removeEventListener("contextmenu", handleRightClick);
     };
   }, []);
-
-  // 🟦 Disable vertical overscroll (bounce) effect
-useEffect(() => {
-  // CSS style add करें
-  document.body.style.overscrollBehaviorY = 'none';
-  document.documentElement.style.overscrollBehaviorY = 'none';
   
-  return () => {
-    // Cleanup (optional)
-    document.body.style.overscrollBehaviorY = '';
-    document.documentElement.style.overscrollBehaviorY = '';
-  };
-}, []);
+    useEffect(() => {
+    // Touch events prevent default
+    const preventDefault = (e) => {
+      e.preventDefault();
+    };
 
+    // Prevent pull-to-refresh
+    document.addEventListener('touchmove', preventDefault, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', preventDefault);
+    };
+  }, []);
 
   if (initialLoad) return <Loader />;
 

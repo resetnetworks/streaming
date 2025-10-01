@@ -13,7 +13,6 @@ body {
   overflow-x: hidden;
   box-sizing: border-box;
   overflow-x: hidden; /* ✅ Horizontal scroll prevent */
-  overscroll-behavior-y: none;
 }
 
 .bg-image {

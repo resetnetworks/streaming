@@ -6,7 +6,6 @@
   position: relative;
   overflow-y: auto; /* Changed from overflow: hidden */
   overflow-x: hidden;
-  overscroll-behavior-y: none;
   background: 
     radial-gradient(ellipse at 20% 80%, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
