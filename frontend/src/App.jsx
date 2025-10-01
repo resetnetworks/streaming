@@ -68,19 +68,6 @@ function App() {
     };
   }, []);
   
-    useEffect(() => {
-    // Touch events prevent default
-    const preventDefault = (e) => {
-      e.preventDefault();
-    };
-
-    // Prevent pull-to-refresh
-    document.addEventListener('touchmove', preventDefault, { passive: false });
-
-    return () => {
-      document.removeEventListener('touchmove', preventDefault);
-    };
-  }, []);
 
   if (initialLoad) return <Loader />;
 
