@@ -56,6 +56,28 @@ export const fetchAllSongs = createAsyncThunk(
   }
 );
 
+// ✅ NEW: Fetch All Singles
+export const fetchAllSingles = createAsyncThunk(
+  'songs/fetchAllSingles',
+  async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
+    try {
+      const res = await axios.get(`/songs/singles?page=${page}&limit=${limit}`);
+      console.log("Fetched singles:", res.data);
+      return {
+        singles: res.data.songs,
+        pagination: {
+          page,
+          limit,
+          totalPages: res.data.totalPages || 1,
+          total: res.data.total || 0,
+        },
+      };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching singles failed');
+    }
+  }
+);
+
 // ✅ Fetch Liked Songs (OLD STRUCTURE - NO CACHE)
 export const fetchLikedSongs = createAsyncThunk(
   'songs/fetchLikedSongs',
@@ -138,6 +160,28 @@ export const fetchSongsByArtist = createAsyncThunk(
   }
 );
 
+// ✅ NEW: Fetch Singles by Artist
+export const fetchSinglesSongByArtist = createAsyncThunk(
+  'songs/fetchSinglesByArtist',
+  async ({ artistId, page = 1, limit = 20 }, thunkAPI) => {
+    try {
+      const res = await axios.get(`/songs/singles/artist/${artistId}?page=${page}&limit=${limit}`);
+      return {
+        artistId,
+        songs: res.data.songs,
+        total: res.data.total,
+        page: res.data.page,
+        pages: res.data.pages,
+        artist: res.data.artist,
+      };
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || 'Fetching singles by artist failed'
+      );
+    }
+  }
+);
+
 // ✅ UPDATED: Fetch Songs By Genre with cache and append support
 export const fetchSongsByGenre = createAsyncThunk(
   'songs/fetchSongsByGenre',
@@ -171,6 +215,9 @@ const initialState = {
   songs: [],
   allSongs: [],
   
+  // ✅ NEW: All singles state
+  allSingles: [],
+  
   // ✅ OLD LIKED SONGS STRUCTURE (NO CACHE)
   likedSongs: {
     songs: [],
@@ -199,6 +246,7 @@ const initialState = {
   
   songsByAlbum: {},
   songsByArtist: {},
+  singlesByArtist: {}, // ✅ NEW: Singles by artist
   status: 'idle',
   error: null,
   message: null,
@@ -211,11 +259,25 @@ const initialState = {
     totalPages: 0,
   },
   
+  // ✅ NEW: Pagination data for singles
+  singlesPagination: {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  },
+  
   // ✅ Cache system properties for paginated songs
   isCached: false,
   lastFetchTime: null,
   cachedPages: [],
   cachedData: {}, // Store data for each page
+  
+  // ✅ NEW: Cache system properties for singles
+  isSinglesCached: false,
+  singlesLastFetchTime: null,
+  singlesCachedPages: [],
+  singlesCachedData: {}, // Store singles data for each page
   
   // ✅ NEW: Cache system properties for matching genre songs
   isMatchingGenreCached: false,
@@ -319,6 +381,26 @@ const songSlice = createSlice({
       };
     },
     
+    // ✅ NEW: Clear singles by artist
+    clearSinglesByArtist: (state) => {
+      state.singlesByArtist = {};
+    },
+    
+    // ✅ NEW: Clear all singles
+    clearAllSingles: (state) => {
+      state.allSingles = [];
+      state.isSinglesCached = false;
+      state.singlesLastFetchTime = null;
+      state.singlesCachedPages = [];
+      state.singlesCachedData = {};
+      state.singlesPagination = {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      };
+    },
+    
     // ✅ NEW: Clear matching genre songs cache
     clearMatchingGenreSongs: (state) => {
       ensureMatchingGenreState(state);
@@ -356,6 +438,21 @@ const songSlice = createSlice({
       };
     },
     
+    // ✅ NEW: Clear singles cache
+    clearSinglesCache: (state) => {
+      state.allSingles = [];
+      state.isSinglesCached = false;
+      state.singlesLastFetchTime = null;
+      state.singlesCachedPages = [];
+      state.singlesCachedData = {};
+      state.singlesPagination = {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      };
+    },
+    
     // ✅ NEW: Clear matching genre cache
     clearMatchingGenreCache: (state) => {
       ensureMatchingGenreState(state);
@@ -372,7 +469,7 @@ const songSlice = createSlice({
       };
     },
     
-    // ✅ Clear all caches (INCLUDING MATCHING GENRE + PER-GENRE CACHE)
+    // ✅ Clear all caches (INCLUDING MATCHING GENRE + PER-GENRE CACHE + SINGLES)
     clearAllCaches: (state) => {
       // Clear regular paginated cache
       state.allSongs = [];
@@ -386,6 +483,20 @@ const songSlice = createSlice({
         total: 0,
         totalPages: 0,
       };
+      
+      // Clear singles cache
+      state.allSingles = [];
+      state.isSinglesCached = false;
+      state.singlesLastFetchTime = null;
+      state.singlesCachedPages = [];
+      state.singlesCachedData = {};
+      state.singlesPagination = {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      };
+      
       // Clear matching genre cache
       ensureMatchingGenreState(state);
       state.matchingGenreSongs.songs = [];
@@ -399,10 +510,14 @@ const songSlice = createSlice({
         total: 0,
         totalPages: 0,
       };
+      
       // Clear per-genre cache
       ensureGenreCacheState(state);
       state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
       state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
+      
+      // Clear singles by artist
+      state.singlesByArtist = {};
     },
     
     setCachedData: (state, action) => {
@@ -416,11 +531,32 @@ const songSlice = createSlice({
       }
     },
     
+    // ✅ NEW: Singles cache management
+    setSinglesCachedData: (state, action) => {
+      const { page, singles, pagination } = action.payload;
+      if (!state.singlesCachedData) state.singlesCachedData = {};
+      if (!state.singlesCachedPages) state.singlesCachedPages = [];
+      
+      state.singlesCachedData[page] = { singles, pagination };
+      if (!state.singlesCachedPages.includes(page)) {
+        state.singlesCachedPages.push(page);
+      }
+    },
+    
     loadFromCache: (state, action) => {
       const page = action.payload;
       if (state.cachedData && state.cachedData[page]) {
         state.allSongs = state.cachedData[page].songs;
         state.pagination = state.cachedData[page].pagination;
+      }
+    },
+    
+    // ✅ NEW: Load singles from cache
+    loadSinglesFromCache: (state, action) => {
+      const page = action.payload;
+      if (state.singlesCachedData && state.singlesCachedData[page]) {
+        state.allSingles = state.singlesCachedData[page].singles;
+        state.singlesPagination = state.singlesCachedData[page].pagination;
       }
     },
     
@@ -497,14 +633,19 @@ const songSlice = createSlice({
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
+        state.isSinglesCached = false;
+        state.singlesCachedPages = [];
+        state.singlesCachedData = {};
+        state.singlesLastFetchTime = null;
         state.isMatchingGenreCached = false;
         state.matchingGenreCachedPages = [];
         state.matchingGenreCachedData = {};
         state.matchingGenreLastFetchTime = null;
 
-        // also clear per-genre cache
+        // also clear per-genre cache and singles
         state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
         state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
+        state.singlesByArtist = {};
       })
       
       .addCase(updateSong.fulfilled, (state, action) => {
@@ -513,6 +654,10 @@ const songSlice = createSlice({
 
         const allIndex = state.allSongs.findIndex((s) => s._id === action.payload._id);
         if (allIndex !== -1) state.allSongs[allIndex] = action.payload;
+
+        // ✅ Update in all singles
+        const singlesIndex = state.allSingles.findIndex((s) => s._id === action.payload._id);
+        if (singlesIndex !== -1) state.allSingles[singlesIndex] = action.payload;
 
         // ✅ Update in matching genre cache as well with safety check
         ensureMatchingGenreState(state);
@@ -524,6 +669,14 @@ const songSlice = createSlice({
         const genreIndex = state.genreSongs.songs.findIndex((s) => s._id === action.payload._id);
         if (genreIndex !== -1) state.genreSongs.songs[genreIndex] = action.payload;
 
+        // ✅ Update in singles by artist
+        Object.keys(state.singlesByArtist).forEach(artistId => {
+          const singlesIndex = state.singlesByArtist[artistId]?.songs?.findIndex((s) => s._id === action.payload._id);
+          if (singlesIndex !== -1) {
+            state.singlesByArtist[artistId].songs[singlesIndex] = action.payload;
+          }
+        });
+
         state.status = 'succeeded';
         state.message = 'Song updated successfully';
         
@@ -531,19 +684,25 @@ const songSlice = createSlice({
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
+        state.isSinglesCached = false;
+        state.singlesCachedPages = [];
+        state.singlesCachedData = {};
+        state.singlesLastFetchTime = null;
         state.isMatchingGenreCached = false;
         state.matchingGenreCachedPages = [];
         state.matchingGenreCachedData = {};
         state.matchingGenreLastFetchTime = null;
 
-        // per-genre
+        // per-genre and singles
         state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
         state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
+        state.singlesByArtist = {};
       })
       
       .addCase(deleteSong.fulfilled, (state, action) => {
         state.songs = state.songs.filter((s) => s._id !== action.payload);
         state.allSongs = state.allSongs.filter((s) => s._id !== action.payload);
+        state.allSingles = state.allSingles.filter((s) => s._id !== action.payload);
         
         // ✅ Filter with safety check
         ensureMatchingGenreState(state);
@@ -553,6 +712,13 @@ const songSlice = createSlice({
         ensureGenreCacheState(state);
         state.genreSongs.songs = state.genreSongs.songs.filter((s) => s._id !== action.payload);
         
+        // ✅ Filter from singles by artist
+        Object.keys(state.singlesByArtist).forEach(artistId => {
+          if (state.singlesByArtist[artistId]?.songs) {
+            state.singlesByArtist[artistId].songs = state.singlesByArtist[artistId].songs.filter((s) => s._id !== action.payload);
+          }
+        });
+        
         state.status = 'succeeded';
         state.message = 'Song deleted successfully';
         
@@ -560,14 +726,19 @@ const songSlice = createSlice({
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
+        state.isSinglesCached = false;
+        state.singlesCachedPages = [];
+        state.singlesCachedData = {};
+        state.singlesLastFetchTime = null;
         state.isMatchingGenreCached = false;
         state.matchingGenreCachedPages = [];
         state.matchingGenreCachedData = {};
         state.matchingGenreLastFetchTime = null;
 
-        // per-genre
+        // per-genre and singles
         state.genreSongs = { genre: null, songs: [], total: 0, page: 1, pages: 1 };
         state.genreCache = { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
+        state.singlesByArtist = {};
       })
       
       .addCase(fetchAllSongs.pending, (state) => {
@@ -596,6 +767,37 @@ const songSlice = createSlice({
         }
       })
       .addCase(fetchAllSongs.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      
+      // ✅ NEW: Fetch All Singles cases
+      .addCase(fetchAllSingles.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchAllSingles.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.allSingles = action.payload.singles;
+        state.singlesPagination = action.payload.pagination;
+        
+        // ✅ Cache the singles data
+        state.isSinglesCached = true;
+        state.singlesLastFetchTime = Date.now();
+        const page = action.payload.pagination.page;
+        
+        if (!state.singlesCachedData) state.singlesCachedData = {};
+        if (!state.singlesCachedPages) state.singlesCachedPages = [];
+        
+        state.singlesCachedData[page] = {
+          singles: action.payload.singles,
+          pagination: action.payload.pagination,
+        };
+        if (!state.singlesCachedPages.includes(page)) {
+          state.singlesCachedPages.push(page);
+        }
+      })
+      .addCase(fetchAllSingles.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
@@ -691,6 +893,33 @@ const songSlice = createSlice({
         state.status = 'succeeded';
       })
 
+      // ✅ NEW: Fetch Singles by Artist cases
+      .addCase(fetchSinglesSongByArtist.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchSinglesSongByArtist.fulfilled, (state, action) => {
+        const { artistId, songs, total, page, pages, artist } = action.payload;
+        if (!state.singlesByArtist) state.singlesByArtist = {};
+        
+        const existing = state.singlesByArtist[artistId]?.songs || [];
+        const uniqueSongs = songs.filter(
+          (song) => !existing.some((existingSong) => existingSong._id === song._id)
+        );
+        state.singlesByArtist[artistId] = {
+          songs: [...existing, ...uniqueSongs],
+          total,
+          page,
+          pages,
+          artist,
+        };
+        state.status = 'succeeded';
+      })
+      .addCase(fetchSinglesSongByArtist.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+
       // ✅ UPDATED: per-genre fulfilled with append support
       .addCase(fetchSongsByGenre.pending, (state) => {
         state.status = 'loading';
@@ -757,13 +986,18 @@ export const {
   clearSongMessage, 
   clearLikedSongs, 
   removeSongFromLiked,
-  clearGenreSongs, // ✅ NEW: Added clearGenreSongs export
+  clearGenreSongs,
+  clearSinglesByArtist,
+  clearAllSingles, // ✅ NEW: Export singles clear action
   clearMatchingGenreSongs,
   clearCache,
+  clearSinglesCache, // ✅ NEW: Export singles cache clear action
   clearMatchingGenreCache,
   clearAllCaches,
   setCachedData,
+  setSinglesCachedData, // ✅ NEW: Export singles cache setter
   loadFromCache,
+  loadSinglesFromCache, // ✅ NEW: Export singles cache loader
   setMatchingGenreCachedData,
   loadMatchingGenreFromCache,
   setGenreCachedData,

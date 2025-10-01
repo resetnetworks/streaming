@@ -1,10 +1,15 @@
 // src/components/user/Artist/ArtistSinglesSection.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import RecentPlays from "../RecentPlays";
-import { selectSongsByArtist } from "../../../features/songs/songSelectors";
+import { 
+  selectSinglesByArtist, 
+  selectHasArtistSingles,
+  selectSinglesByArtistPagination 
+} from "../../../features/songs/songSelectors";
+import { fetchSinglesSongByArtist } from "../../../features/songs/songSlice";
 import { setSelectedSong, play } from "../../../features/playback/playerSlice";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import CurrencySelectionModal from "../CurrencySelectionModal";
@@ -34,21 +39,52 @@ const ArtistSinglesSection = ({
   const [selectedSong, setSelectedSongForPurchase] = useState(null);
 
   const currentSelectedSong = useSelector((state) => state.player.selectedSong);
-  const artistSongsData = useSelector(
-    (state) => selectSongsByArtist(state, artistId),
+  
+  // ✅ Updated selectors for singles by artist
+  const artistSinglesData = useSelector(
+    (state) => selectSinglesByArtist(state, artistId),
     shallowEqual
   );
 
-  const {
-    songs: artistSongs = [],
-    pages: totalPages = 1,
-    status: songsStatus = "idle",
-  } = artistSongsData || {};
+  const hasArtistSingles = useSelector(
+    (state) => selectHasArtistSingles(state, artistId)
+  );
 
-  const { lastElementRef: songsLastRef } = useInfiniteScroll({
-    hasMore: false, // Singles don't need infinite scroll in horizontal view
-    loading: songsStatus === "loading",
-    onLoadMore: () => {}
+  const singlesPagination = useSelector(
+    (state) => selectSinglesByArtistPagination(state, artistId),
+    shallowEqual
+  );
+
+  const singlesStatus = useSelector((state) => state.songs.status);
+
+  const {
+    songs: artistSingles = [],
+    pages: totalPages = 1,
+  } = artistSinglesData || {};
+
+  // ✅ Fetch singles on component mount
+  useEffect(() => {
+    if (artistId && !hasArtistSingles) {
+      dispatch(fetchSinglesSongByArtist({ 
+        artistId, 
+        page: 1, 
+        limit: 20 
+      }));
+    }
+  }, [dispatch, artistId, hasArtistSingles]);
+
+  const { lastElementRef: singlesLastRef } = useInfiniteScroll({
+    hasMore: singlesPagination.hasMore,
+    loading: singlesStatus === "loading",
+    onLoadMore: () => {
+      if (singlesPagination.hasMore && singlesStatus !== "loading") {
+        dispatch(fetchSinglesSongByArtist({ 
+          artistId, 
+          page: singlesPagination.page + 1, 
+          limit: 20 
+        }));
+      }
+    }
   });
 
   const handlePlaySong = (song) => {
@@ -179,6 +215,11 @@ const ArtistSinglesSection = ({
     );
   };
 
+  // Don't render if no singles available
+  if (!hasArtistSingles && singlesStatus !== "loading" && artistSingles.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
@@ -199,16 +240,16 @@ const ArtistSinglesSection = ({
         ref={singlesScrollRef}
         className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
       >
-        {songsStatus === "loading" && artistSongs.length === 0
+        {singlesStatus === "loading" && artistSingles.length === 0
           ? [...Array(5)].map((_, idx) => (
               <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
                 <Skeleton height={160} width={160} className="rounded-xl" />
                 <Skeleton width={120} height={16} className="mt-2" />
               </div>
             ))
-          : artistSongs.map((song, idx) => (
+          : artistSingles.map((song, idx) => (
               <RecentPlays
-                ref={idx === artistSongs.length - 1 ? songsLastRef : null}
+                ref={idx === artistSingles.length - 1 ? singlesLastRef : null}
                 key={song._id}
                 title={song.title}
                 singer={song.singer}
@@ -222,6 +263,13 @@ const ArtistSinglesSection = ({
                 price={getSongPriceDisplay(song)}
               />
             ))}
+        
+        {/* Show loading indicator for pagination */}
+        {singlesStatus === "loading" && artistSingles.length > 0 && (
+          <div className="min-w-[160px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          </div>
+        )}
       </div>
 
       {/* Currency Selection Modal */}

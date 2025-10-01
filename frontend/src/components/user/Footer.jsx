@@ -53,7 +53,6 @@ const Footer = () => {
                     <FaVolumeUp className="text-lg" />
                   </button>
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#007aff] rounded-full animate-ping"></div>
               </div>
               <h2 className="text-2xl font-bold text-white" style={{ fontFamily: 'Jura' }}>
                 Musicreset
@@ -63,15 +62,6 @@ const Footer = () => {
               Experience the ultimate musical journey with our cutting-edge streaming platform. 
               Where every beat comes to life.
             </p>
-            <div className="flex items-center space-x-2 text-sm text-[#88b2ef]">
-              <div className="equalizer">
-                <span className="equalizer-bar"></span>
-                <span className="equalizer-bar"></span>
-                <span className="equalizer-bar"></span>
-                <span className="equalizer-bar"></span>
-              </div>
-              <span style={{ fontFamily: 'Jura' }}>Now Playing</span>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -109,7 +99,7 @@ const Footer = () => {
   <div className="space-y-4">
     {[
       { icon: FaShieldAlt, name: 'SSL Encryption'},
-      { icon: FaLock, name: 'DRM Protection'},
+      { icon: FaLock, name: 'DMCA PROTECTED'},
       { icon: FaUserShield, name: 'Privacy Shield'},
     ].map(({ icon: Icon, name, description }) => (
       <div key={name} className="subscription-wrapper w-full">
@@ -185,11 +175,7 @@ const Footer = () => {
           <div className="gradiant-line mb-6"></div>
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-gray-400 text-sm flex items-center space-x-2" style={{ fontFamily: 'Jura' }}>
-              <span>© 2025 Musicreset. All rights reserved.</span>
-              <span>•</span>
-              <span className="flex items-center">
-                Made with <FaHeart className="text-[#007aff] mx-1 animate-pulse" /> for music lovers
-              </span>
+              <span>© 2025 RESET NETWORKS (OPC) PRIVATE LIMITED.</span>
             </div>
             <div className="flex space-x-6 text-sm text-gray-400" style={{ fontFamily: 'Jura' }}>
               <Link to="/privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</Link>

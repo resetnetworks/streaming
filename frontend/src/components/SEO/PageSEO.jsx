@@ -15,6 +15,7 @@ const PageSEO = ({
       <meta name="keywords" content="reset streaming platform, musicreset, reset music, ambient music streaming, instrumental music platform, experimental music, electronic music, classical music, sound design, audiophile platform, IDM, drone, techno, electroacoustic" />
       <meta name="robots" content="index, follow" />
       <meta name="author" content="Reset Music" />
+      <link rel="canonical" href="https://musicreset.com/"/>
 
        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       <link rel="icon" type="image/png" href="/icon.png" />
@@ -26,7 +27,7 @@ const PageSEO = ({
 <meta property="og:description" content={description} />
 <meta property="og:type" content={type} />
 <meta property="og:url" content={url} />
-<meta property="og:site_name" content="Reset Streaming Platform - Reset Music" />
+<meta property="og:site_name" content="ResetMusic" />
 <meta property="og:locale" content="en_US" />
 <meta property="og:image" content="https://musicreset.com/icon.png" />
 <meta property="og:image:alt" content="Reset Streaming Platform - Reset Music" />

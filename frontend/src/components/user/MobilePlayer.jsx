@@ -376,22 +376,6 @@ const MobilePlayer = () => {
       className="w-full h-full object-cover"
       alt="Album cover"
     />
-
-    {/* Equalizer */}
-    {isPlaying && (
-      <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent flex justify-center items-end gap-1 px-4">
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="w-2 bg-blue-400 rounded-t-sm"
-            style={{
-              height: `${Math.random() * 100}%`,
-              animation: `equalizer 1s infinite ${i * 0.1}s alternate`,
-            }}
-          ></div>
-        ))}
-      </div>
-    )}
   </div>
 
   {/* Song Info */}
