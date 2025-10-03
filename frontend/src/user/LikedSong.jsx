@@ -155,9 +155,9 @@ const LikedSongs = () => {
                       song.album?.coverImage ||
                       "/images/placeholder.png"
                     }
-                    songName={song.title.length > 9 ? `${song.title.slice(0, 9)}` : song.title}
-                    singerName={song.artist?.name || song.singer}
-                    seekTime={formatDuration(song.duration)}
+                    songName={song?.title}
+                    singerName={song?.artist?.name || song?.singer}
+                    seekTime={formatDuration(song?.duration)}
                     onPlay={() => handlePlaySong(song)}
                     isSelected={selectedSong?._id === song._id}
                     isPlaying={
