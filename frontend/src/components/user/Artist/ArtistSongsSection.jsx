@@ -107,19 +107,19 @@ const ArtistSongsSection = ({ artistId, artist }) => {
           <>
             {songListView.map((song, idx) => (
               <SongList
-                key={song._id}
+                key={song?._id}
                 ref={idx === songListView.length - 1 && showAllSongs ? songsLastRef : null}
-                songId={song._id}
+                songId={song?._id}
                 img={
-                  song.coverImage
-                    ? song.coverImage
-                    : renderCoverImage(null, song.title, "w-12 h-12")
+                  song?.coverImage
+                    ? song?.coverImage
+                    : renderCoverImage(null, song?.title, "w-12 h-12")
                 }
-                songName={song.title.slice(0, 12)}
-                singerName={song.singer}
-                seekTime={formatDuration(song.duration)}
+                songName={song?.title}
+                singerName={song?.singer}
+                seekTime={formatDuration(song?.duration)}
                 onPlay={() => handlePlaySong(song)}
-                isSelected={selectedSong?._id === song._id}
+                isSelected={selectedSong?._id === song?._id}
               />
             ))}
             {songsStatus === "loading" &&

@@ -72,7 +72,8 @@ const SongList = ({
             isSelected ? "shadow-[0_0_5px_1px_#3b82f6]" : ""
           }`}
         />
-        <div className="mx-4 max-w-[160px]">
+        <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
+          {/* ✅ UPDATED: SONG NAME WITH RESPONSIVE TRUNCATION */}
           <h3 className="text-white text-lg leading-none truncate">
             {songName}
           </h3>

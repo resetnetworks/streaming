@@ -424,7 +424,7 @@ export default function Album() {
                     <SongList
                       songId={song._id}
                       img={song.coverImage || album.coverImage}
-                      songName={song.title.slice(0,15)}
+                      songName={song.title} // ✅ REMOVED SLICE - FULL NAME NOW
                       singerName={song.singer}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
