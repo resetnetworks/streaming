@@ -100,7 +100,7 @@ const Footer = () => {
     {[
       { icon: FaShieldAlt, name: 'SSL Encryption'},
       { icon: FaLock, name: 'DMCA PROTECTED'},
-      { icon: FaUserShield, name: 'Privacy Shield'},
+      { icon: FaUserShield, name: 'DDoS Protection'},
     ].map(({ icon: Icon, name, description }) => (
       <div key={name} className="subscription-wrapper w-full">
         <div
