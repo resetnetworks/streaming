@@ -73,10 +73,18 @@ const SongList = ({
           }`}
         />
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
-          {/* ✅ UPDATED: SONG NAME WITH RESPONSIVE TRUNCATION */}
-          <h3 className="text-white text-lg leading-none truncate">
-            {songName}
-          </h3>
+        <h3
+  className="
+    text-white text-lg leading-none
+    sm:truncate  // ✅ larger screens: normal truncate based on container
+  "
+>
+  <span className="block sm:hidden">
+    {songName.length > 12 ? songName.slice(0, 11) + "..." : songName}
+  </span>
+  <span className="hidden sm:block">{songName}</span>
+</h3>
+
           <p className="text-gray-400 text-xs font-light mt-1 truncate">
             {singerName}
           </p>
