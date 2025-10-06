@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
       "source": "/(.*)",
@@ -9,8 +10,7 @@
         }
       ],
       "destination": "https://www.musicreset.com/$1",
-      "permanent": true,
-      "statusCode": 301
+      "permanent": true
     }
   ]
 }
