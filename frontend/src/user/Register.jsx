@@ -108,7 +108,7 @@ const Register = () => {
       <PageSEO
   title="Register | Reset Music - Create Your Free Account"
   description="Create your free Reset Music account and discover electronic, ambient, and experimental music. Join thousands of music lovers streaming premium tracks."
-  url={window.location.href}
+  url="https://musicreset.com/register"
 />
      <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">

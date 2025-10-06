@@ -311,7 +311,7 @@ const Search = () => {
       <PageSEO
         title={getPageTitle()}
         description={getPageDescription()}
-        url={window.location.href}
+        url="https://musicreset.com/search"
       />
       <UserHeader />
       <h1 className="text-xl text-center leading-none text-white">

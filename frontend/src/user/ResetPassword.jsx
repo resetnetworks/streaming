@@ -43,11 +43,6 @@ const ResetPassword = () => {
 
   return (
     <>
-        <PageSEO
-  title="Reset Password | Reset Music - Secure Account Recovery"
-  description="Reset your Reset Music account password securely. Create a new password to regain access to your personalized music streaming experience."
-  url={window.location.href}
-/>
     <BackgroundWrapper>
     <section className="w-full min-h-screen flex flex-col items-center">
       <IconHeader />

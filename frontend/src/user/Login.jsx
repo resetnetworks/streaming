@@ -67,7 +67,7 @@ const Login = () => {
         <PageSEO
   title="Login | Reset Music - Streaming Platform"
   description="Login to Reset Music and access your personalized collection of electronic, ambient, and experimental music. Stream tracks from top artists worldwide."
-  url={window.location.href}
+  url="https://musicreset.com/login"
 />
       <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">
