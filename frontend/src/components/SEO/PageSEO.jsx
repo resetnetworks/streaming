@@ -1,5 +1,4 @@
 import React from 'react';
-import {Helmet} from "react-helmet";
 
 const PageSEO = ({ 
   title = "Reset Streaming Platform - Reset Music | Instrumental Music",
@@ -8,7 +7,7 @@ const PageSEO = ({
   type = "website"
 }) => {
   return (
-    <Helmet>
+    <>
       {/* Primary SEO Tags */}
       <title>{title}</title>
       <meta name="description" content={description} />
@@ -16,29 +15,28 @@ const PageSEO = ({
       <meta name="robots" content="index, follow" />
       <meta name="author" content="Reset Music" />
       <link rel="canonical" href={url}/>
-       <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+      <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       <link rel="icon" type="image/png" href="/icon.png" />
       <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       
-     {/* Open Graph Tags for Social Media */}
-    <meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
-<meta property="og:type" content={type} />
-<meta property="og:url" content={url} />
-<meta property="og:site_name" content="ResetMusic" />
-<meta property="og:locale" content="en_US" />
-<meta property="og:image" content="https://musicreset.com/icon.png" />
-<meta property="og:image:alt" content="Reset Streaming Platform - Reset Music" />
+      {/* Open Graph Tags for Social Media */}
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content={type} />
+      <meta property="og:url" content={url} />
+      <meta property="og:site_name" content="ResetMusic" />
+      <meta property="og:locale" content="en_US" />
+      <meta property="og:image" content="https://musicreset.com/icon.png" />
+      <meta property="og:image:alt" content="Reset Streaming Platform - Reset Music" />
 
-{/* Twitter Card Tags */}
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content={title} />
-<meta name="twitter:description" content={description} />
-<meta name="twitter:site" content="@musicreset" />
-<meta name="twitter:image" content="https://musicreset.com/icon.png" />
-<meta name="twitter:image:alt" content="Reset Streaming Platform - Reset Music" />
-
+      {/* Twitter Card Tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:site" content="@musicreset" />
+      <meta name="twitter:image" content="https://musicreset.com/icon.png" />
+      <meta name="twitter:image:alt" content="Reset Streaming Platform - Reset Music" />
       
       {/* Additional SEO Tags */}
       <meta name="theme-color" content="#3b82f6" />
@@ -81,7 +79,7 @@ const PageSEO = ({
           "serviceType": "Music Streaming Platform"
         })}
       </script>
-    </Helmet>
+    </>
   );
 };
 
