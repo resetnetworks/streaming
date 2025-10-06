@@ -16,7 +16,6 @@ const PageSEO = ({
       <meta name="robots" content="index, follow" />
       <meta name="author" content="Reset Music" />
       <link rel="canonical" href="https://musicreset.com/"/>
-
        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       <link rel="icon" type="image/png" href="/icon.png" />
       <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
