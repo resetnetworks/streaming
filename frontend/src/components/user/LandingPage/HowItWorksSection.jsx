@@ -118,7 +118,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
   const stats = [
     { number: "500", suffix: "+", label: "Hours Streamed" },
     { number: "150", suffix: "+", label: "Song Available" },
-    { number: "200", suffix: "+", label: "Countries" },
+    { number: "190", suffix: "+", label: "Countries" },
     { number: "99", suffix: "%", label: "Uptime" }
   ];
 
