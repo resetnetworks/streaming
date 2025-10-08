@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // ✅ Add useNavigate
 import { SkeletonTheme } from "react-loading-skeleton";
 import PageSEO from "../components/SEO/PageSEO";
 import "react-loading-skeleton/dist/skeleton.css";
+
 import UserHeader from "../components/user/UserHeader";
 import ArtistHeroSection from "../components/user/Artist/ArtistHeroSection";
 import ArtistSongsSection from "../components/user/Artist/ArtistSongsSection";
@@ -12,7 +13,9 @@ import ArtistSinglesSection from "../components/user/Artist/ArtistSinglesSection
 import ArtistAboutSection from "../components/user/Artist/ArtistAboutSection";
 import SubscriptionMethodModal from "../components/user/SubscriptionMethodModal";
 import PaymentMethodModal from "../components/user/PaymentMethodModal";
+import SubscribeModal from "../components/user/SubscribeModal"; // ✅ Import SubscribeModal
 import PaymentErrorNotification from "../components/user/Artist/PaymentErrorNotification";
+
 import { 
   fetchArtistBySlug,
   fetchSubscriberCount,
@@ -25,13 +28,21 @@ import { getAlbumsByArtist } from "../features/albums/albumsSlice";
 import { fetchSongsByArtist } from "../features/songs/songSlice";
 import { useSubscriptionPayment } from "../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
+import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions"; // ✅ Import subscription utility
 
 const Artist = () => {
   const { artistId } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // ✅ Add navigate hook
   const heroSectionRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  
+  // ✅ Add SubscribeModal states
+  const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
+  const [modalArtist, setModalArtist] = useState(null);
+  const [modalType, setModalType] = useState(null); // "play" | "purchase"
+  const [modalData, setModalData] = useState(null); // song or item
   
   // ✅ Add loading states for payments
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -94,6 +105,20 @@ const Artist = () => {
     };
   }, [dispatch]);
 
+  // ✅ Add SubscribeModal handlers
+  const handleSubscribeModalClose = () => {
+    setSubscribeModalOpen(false);
+    setModalType(null);
+    setModalArtist(null);
+    setModalData(null);
+  };
+
+  const handleNavigateToArtist = () => {
+    handleSubscribeModalClose();
+    // Since we're already on the artist page, we can scroll to subscription section
+    // or just close the modal and let user subscribe via hero section
+  };
+
   const handleCloseSubscriptionOptions = () => {
     closeSubscriptionOptions();
     setSubscriptionLoading(false);
@@ -134,18 +159,55 @@ const Artist = () => {
     closePaymentOptions();
   };
 
+  // ✅ Add subscription decision handler
+  const handleSubscribeDecision = (artist, type, data) => {
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+
+    if (type === "purchase") {
+      if (alreadySubscribed) {
+        // User is already subscribed, proceed with purchase
+        const itemType = data.type || "song";
+        handlePurchaseClick(data, itemType);
+        return;
+      }
+      // User is not subscribed, show subscribe modal
+      setModalArtist(artist);
+      setModalType(type);
+      setModalData(data);
+      setSubscribeModalOpen(true);
+      return;
+    }
+
+    if (type === "play") {
+      if (alreadySubscribed) {
+        setSubscribeModalOpen(false);
+        return;
+      }
+      setModalArtist(artist);
+      setModalType(type);
+      setModalData(data);
+      setSubscribeModalOpen(true);
+      return;
+    }
+
+    setModalArtist(artist);
+    setModalType(type);
+    setModalData(data);
+    setSubscribeModalOpen(true);
+  };
+
   return (
     <>
-       <PageSEO
-  title={artist ? `${artist.name} - Reset Music | Artist` : "Artist - Reset Music"}
-  description={
-    artist
-      ? artist.bio ||
-        `Listen to ${artist.name} on Reset Music. Stream albums, singles, and instrumental, ambient, classical & experimental music.`
-      : "Reset Music Streaming Platform - Explore artists, albums and tracks."
-  }
-  url={window.location.href}
-/>
+      <PageSEO
+        title={artist ? `${artist.name} - Reset Music | Artist` : "Artist - Reset Music"}
+        description={
+          artist
+            ? artist.bio ||
+              `Listen to ${artist.name} on Reset Music. Stream albums, singles, and instrumental, ambient, classical & experimental music.`
+            : "Reset Music Streaming Platform - Explore artists, albums and tracks."
+        }
+        url={window.location.href}
+      />
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div ref={heroSectionRef}>
@@ -160,22 +222,29 @@ const Artist = () => {
           />
         </div>
         
-        <ArtistSongsSection artistId={artistId} artist={artist} />
+        {/* ✅ Updated ArtistSongsSection with subscription handler */}
+        <ArtistSongsSection 
+          artistId={artistId} 
+          artist={artist}
+          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
+        />
         
-        {/* ✅ Updated ArtistAlbumsSection with proper currency support */}
+        {/* ✅ Updated ArtistAlbumsSection with subscription handler */}
         <ArtistAlbumsSection
           artistId={artistId}
           currentUser={currentUser}
-          onPurchaseClick={handlePurchaseClick} // Now supports currency data
+          onPurchaseClick={handlePurchaseClick}
+          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />
         
-        {/* ✅ Updated ArtistSinglesSection with proper currency support */}
+        {/* ✅ Updated ArtistSinglesSection with subscription handler */}
         <ArtistSinglesSection
           artistId={artistId}
           currentUser={currentUser}
-          onPurchaseClick={handlePurchaseClick} // Now supports currency data
+          onPurchaseClick={handlePurchaseClick}
+          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)} // ✅ Add this
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />
@@ -206,12 +275,22 @@ const Artist = () => {
         {/* ✅ Enhanced PaymentMethodModal with currency data support */}
         <PaymentMethodModal
           open={showPaymentOptions}
-          onClose={handleClosePaymentOptions} // Use enhanced close handler
-          onSelectMethod={handlePaymentMethodSelect} // Use wrapper with loading states
+          onClose={handleClosePaymentOptions}
+          onSelectMethod={handlePaymentMethodSelect}
           item={pendingPayment?.item}
           itemType={pendingPayment?.itemType}
-          currencyData={pendingPayment?.currencyData} // ✅ Pass currency data
-          getPaymentDisplayInfo={getPaymentDisplayInfo} // ✅ Pass helper function
+          currencyData={pendingPayment?.currencyData}
+          getPaymentDisplayInfo={getPaymentDisplayInfo}
+        />
+
+        {/* ✅ Add SubscribeModal */}
+        <SubscribeModal
+          open={subscribeModalOpen}
+          artist={modalArtist}
+          type={modalType}
+          itemData={modalData}
+          onClose={handleSubscribeModalClose}
+          onNavigate={handleNavigateToArtist}
         />
       </SkeletonTheme>
     </>

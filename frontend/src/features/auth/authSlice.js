@@ -55,7 +55,10 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
   localStorage.removeItem("subscribedArtists");
-   localStorage.clear();
+  localStorage.removeItem('persist:root');
+  localStorage.removeItem('persist:auth');
+  localStorage.removeItem('persist:player');
+  localStorage.clear();
   sessionStorage.clear();
 };
 
@@ -224,13 +227,21 @@ export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
 export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
     const res = await axios.post("/users/logout");
+    
+    // Clear all persist data
+    if (typeof window !== 'undefined' && window.__PERSISTOR__) {
+      await window.__PERSISTOR__.purge();
+      await window.__PERSISTOR__.flush();
+    }
     clearAuthFromLocal();
     delete axios.defaults.headers.common["Authorization"];
+    
     return res.data.message;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
   }
 });
+
 
 export const updatePreferredGenres = createAsyncThunk("auth/updatePreferredGenres", async (genres, thunkAPI) => {
   try {

@@ -106,7 +106,7 @@ const SimilarArtistSection = ({
           className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
         />
         <div>
-          <h2 className="text-blue-700 text-base leading-none">similar to</h2>
+          <h2 className="text-blue-400 text-base leading-none">explore more</h2>
           <p
             onClick={() => navigate(`/artist/${randomArtist.slug}`)}
             className="text-lg leading-none text-white hover:underline cursor-pointer"

@@ -12,6 +12,7 @@ import {
 import { fetchSinglesSongByArtist } from "../../../features/songs/songSlice";
 import { setSelectedSong, play } from "../../../features/playback/playerSlice";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
+import { hasArtistSubscriptionInPurchaseHistory } from "../../../utills/subscriptions"; // ✅ Import subscription utility
 import CurrencySelectionModal from "../CurrencySelectionModal";
 
 const getArtistColor = (name) => {
@@ -28,6 +29,7 @@ const ArtistSinglesSection = ({
   artistId, 
   currentUser, 
   onPurchaseClick, 
+  onSubscribeRequired, // ✅ Add this prop
   processingPayment, 
   paymentLoading 
 }) => {
@@ -39,6 +41,9 @@ const ArtistSinglesSection = ({
   const [selectedSong, setSelectedSongForPurchase] = useState(null);
 
   const currentSelectedSong = useSelector((state) => state.player.selectedSong);
+  
+  // ✅ Get artist data for subscription check
+  const artist = useSelector((state) => state.artists.selectedArtist);
   
   // ✅ Updated selectors for singles by artist
   const artistSinglesData = useSelector(
@@ -97,7 +102,7 @@ const ArtistSinglesSection = ({
     singlesScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
-  // Currency helper functions - same as AlbumsSection
+  // Currency helper functions
   const getCurrencySymbol = (currency) => {
     const symbols = {
       'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
@@ -121,7 +126,20 @@ const ArtistSinglesSection = ({
     return currencies;
   };
 
+  // ✅ Updated purchase click handler with subscription check
   const handleSongPurchaseClick = (song) => {
+    // First check if user is subscribed to the artist
+    const isSubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+    
+    if (!isSubscribed) {
+      // User is not subscribed, show subscribe modal
+      if (onSubscribeRequired) {
+        onSubscribeRequired(artist, "purchase", song);
+      }
+      return;
+    }
+
+    // User is subscribed, proceed with currency selection
     const availableCurrencies = getAvailableCurrencies(song);
     
     if (availableCurrencies.length > 1) {
@@ -272,7 +290,7 @@ const ArtistSinglesSection = ({
         )}
       </div>
 
-      {/* Currency Selection Modal */}
+      {/* Currency Selection Modal - Only shows if user is already subscribed */}
       <CurrencySelectionModal
         open={showCurrencyModal}
         onClose={handleCloseCurrencyModal}
