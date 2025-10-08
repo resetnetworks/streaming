@@ -121,7 +121,6 @@ const ArtistAboutSection = ({
               <FiMapPin className="text-blue-500" />
               <span>
                 {artist?.location || "Unknown Location"} •{" "}
-                {artist?.birthYear || "N/A"}
               </span>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">

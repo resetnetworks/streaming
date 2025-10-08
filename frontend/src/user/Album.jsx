@@ -226,8 +226,8 @@ export default function Album() {
     return artistData?.slug || null;
   };
 
-  // ✅ REVERSE THE SONGS ORDER
-  const songs = album?.songs ? [...album.songs].reverse() : [];
+  // ✅ REVERSE THE SONGS ORDER IS REMOVED - SHOW AS IS
+  const songs = album?.songs ? [...album.songs] : [];
 
   // Check if album is purchased
   const isAlbumPurchased = currentUser?.purchasedAlbums?.includes(album?._id);
