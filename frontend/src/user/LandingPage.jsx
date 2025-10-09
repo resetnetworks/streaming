@@ -8,7 +8,6 @@ import HeroSection from '../components/user/LandingPage/HeroSection';
 import HowItWorksSection from '../components/user/LandingPage/HowItWorksSection';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import PageSEO from '../components/SEO/PageSEO';
 
 // Professional Minimal Particles
 const ProfessionalParticles = () => {
@@ -128,7 +127,6 @@ const LandingPage = () => {
 
   return(
   <>
-    <PageSEO/>
     <div ref={scrollContainerRef} className="landing-page-container">
       <div className="landing-canvas-background">
         <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
