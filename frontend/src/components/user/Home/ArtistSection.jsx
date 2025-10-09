@@ -148,7 +148,7 @@ const ArtistCircle = forwardRef(function ArtistCircle(
           {priceDisplay}
         </p>
       </div>
-      <div className="absolute inset-0 transition-all duration-300 border-2 border-transparent rounded-full pointer-events-none border-blue-500/80"></div>
+      <div className="absolute inset-0 transition-all duration-300 border-2 rounded-full pointer-events-none border-blue-500/80"></div>
     </button>
   );
 });
