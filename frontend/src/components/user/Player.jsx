@@ -6,6 +6,12 @@ import { fetchStreamUrl } from "../../features/stream/streamSlice";
 import {
   selectAllSongs,
   selectSelectedSong,
+  selectDefaultSong,
+  selectDisplaySong,
+  selectIsDisplayOnly,
+  selectHasPersistentDefault, // ✅ NEW IMPORT
+  selectPlaybackContext, // ✅ NEW IMPORT
+  selectPlaybackContextSongs, // ✅ NEW IMPORT
 } from "../../features/songs/songSelectors";
 import {
   setSelectedSong,
@@ -14,7 +20,8 @@ import {
   setCurrentTime,
   setDuration,
   setVolume,
-  clearPlaybackContext,  // ✅ NEW IMPORT
+  clearPlaybackContext,
+  setRandomDefaultFromSongs, // ✅ NEW IMPORT
 } from "../../features/playback/playerSlice";
 import { toggleLikeSong } from "../../features/auth/authSlice";
 import { selectLikedSongIds } from "../../features/auth/authSelectors";
@@ -27,7 +34,7 @@ import {
 } from "react-icons/ri";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { IoIosMore } from "react-icons/io";
-import { FaPlay, FaPause, FaLock } from "react-icons/fa";
+import { FaPlay, FaPause, FaLock, FaRandom } from "react-icons/fa"; // ✅ ADDED FaRandom
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { LuDna } from "react-icons/lu";
 import { toast } from "sonner";
@@ -46,6 +53,15 @@ const Player = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector(selectSelectedSong);
+  
+  // ✅ UPDATED: Enhanced selectors with persistent default functionality
+  const defaultSong = useSelector(selectDefaultSong);
+  const displaySong = useSelector(selectDisplaySong);
+  const isDisplayOnly = useSelector(selectIsDisplayOnly);
+  const hasPersistentDefault = useSelector(selectHasPersistentDefault); // ✅ NEW
+  const playbackContext = useSelector(selectPlaybackContext);
+  const playbackContextSongs = useSelector(selectPlaybackContextSongs);
+  
   const isPlaying = useSelector((state) => state.player.isPlaying);
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
@@ -53,9 +69,6 @@ const Player = () => {
   const streamUrls = useSelector((state) => state.stream.urls);
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
-  
-  // ✅ NEW: Get playback context
-  const playbackContext = useSelector((state) => state.player.playbackContext);
 
   const [open, setOpen] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -66,11 +79,12 @@ const Player = () => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
 
-  const currentSong = selectedSong || null;
+  // ✅ UPDATED: Use display song instead of selected song only
+  const currentSong = displaySong;
 
-  // ✅ NEW: Use context songs instead of all songs
-  const contextSongs = playbackContext.songs.length > 0 
-    ? playbackContext.songs 
+  // ✅ UPDATED: Use context songs instead of all songs
+  const contextSongs = playbackContextSongs.length > 0 
+    ? playbackContextSongs 
     : songs; // fallback to all songs
 
   const currentIndex = currentSong
@@ -86,10 +100,18 @@ const Player = () => {
   const likedSongIds = useSelector(selectLikedSongIds);
   const isLiked = currentSong ? likedSongIds.includes(currentSong._id) : false;
 
-  // ✅ NEW: Smart Context Detection - Auto-exit when song doesn't belong to current context (SILENT)
+  // ✅ NEW: Set random default song if none exists on component mount
   useEffect(() => {
-    if (playbackContext.type !== 'all' && currentSong && playbackContext.songs.length > 0) {
-      const songInContext = playbackContext.songs.some(song => song._id === currentSong._id);
+    if (!hasPersistentDefault && songs.length > 0) {
+      console.log("No persistent default song found, setting random default from", songs.length, "songs");
+      dispatch(setRandomDefaultFromSongs(songs));
+    }
+  }, [hasPersistentDefault, songs.length, dispatch]);
+
+  // ✅ UPDATED: Smart Context Detection - Auto-exit when song doesn't belong to current context (SILENT)
+  useEffect(() => {
+    if (playbackContext.type !== 'all' && currentSong && playbackContextSongs.length > 0) {
+      const songInContext = playbackContextSongs.some(song => song._id === currentSong._id);
       
       if (!songInContext) {
         // Song doesn't belong to current context, switch to library mode silently
@@ -97,26 +119,20 @@ const Player = () => {
         console.log("Auto-switched to library playback - song not in current context");
       }
     }
-  }, [currentSong?._id, playbackContext.type, playbackContext.songs, dispatch]);
+  }, [currentSong?._id, playbackContext.type, playbackContextSongs, dispatch]);
 
-  // Fetch stream URL when song changes
+  // ✅ UPDATED: Fetch stream URL only for selected songs (not default display songs)
   useEffect(() => {
     if (selectedSong && !streamUrls[selectedSong._id]) {
       dispatch(fetchStreamUrl(selectedSong._id));
     }
   }, [selectedSong, streamUrls, dispatch]);
 
-  // Initialize with first song if none selected
-  useEffect(() => {
-    if (!selectedSong && contextSongs.length > 0) {
-      dispatch(setSelectedSong(contextSongs[0]));
-    }
-  }, [selectedSong, contextSongs, dispatch]);
-
-  // Main HLS player initialization - FIXED VERSION
+  // ✅ UPDATED: Main HLS player initialization - Only for selected songs
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !currentSong || !streamUrls[selectedSong._id]) return;
+    // ✅ Only initialize player for selected songs, not display-only songs
+    if (!video || !selectedSong || !streamUrls[selectedSong._id]) return;
 
     let hls;
     const initPlayer = async () => {
@@ -151,8 +167,8 @@ const Player = () => {
               console.error("HLS Error:", data);
               setPlaybackError(`Playback Error: ${data.type}`);
               hls.destroy();
-              if (currentSong.audioUrl) {
-                video.src = currentSong.audioUrl;
+              if (selectedSong.audioUrl) {
+                video.src = selectedSong.audioUrl;
                 video.load();
               }
             }
@@ -162,15 +178,15 @@ const Player = () => {
             hls.loadSource(mediaUrl);
           });
 
-         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-  video.currentTime = currentTime || 0; // ✅ restore last time
-  if (isPlaying) {
-    video.play().catch((err) => {
-      setPlaybackError("Autoplay blocked. Tap play to continue.");
-      dispatch(pause());
-    });
-  }
-});
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.currentTime = currentTime || 0; // ✅ restore last time
+            if (isPlaying) {
+              video.play().catch((err) => {
+                setPlaybackError("Autoplay blocked. Tap play to continue.");
+                dispatch(pause());
+              });
+            }
+          });
 
           hls.attachMedia(video);
           hlsRef.current = hls;
@@ -189,7 +205,7 @@ const Player = () => {
 
         video.onloadedmetadata = () => {
           const safeDuration = isNaN(video.duration)
-            ? currentSong.duration || 0
+            ? selectedSong.duration || 0
             : video.duration;
           dispatch(setDuration(safeDuration));
         };
@@ -229,7 +245,7 @@ const Player = () => {
         video.onloadedmetadata = null;
       }
     };
-  }, [selectedSong, streamUrls]);
+  }, [selectedSong, streamUrls]); // ✅ Only depend on selectedSong, not displaySong
 
   // Volume control
   useEffect(() => {
@@ -239,27 +255,37 @@ const Player = () => {
     }
   }, [volume, isMuted]);
 
-useEffect(() => {
-  if (
-    streamError &&
-    selectedSong &&
-    streamError.songId === selectedSong._id
-  ) {
-    const toastId = `stream-error-${selectedSong._id}`;
+  useEffect(() => {
+    if (
+      streamError &&
+      selectedSong &&
+      streamError.songId === selectedSong._id
+    ) {
+      const toastId = `stream-error-${selectedSong._id}`;
 
-    // This will ensure the toast shows only once for a specific song
-    toast.warning(streamError.message, {
-      id: toastId, // Sonner will auto-prevent duplicates by this ID
-      duration: 2000,
-    });
+      // This will ensure the toast shows only once for a specific song
+      toast.warning(streamError.message, {
+        id: toastId, // Sonner will auto-prevent duplicates by this ID
+        duration: 2000,
+      });
 
-    setPlaybackError(streamError.message);
-  }
-}, [streamError?.songId]);
+      setPlaybackError(streamError.message);
+    }
+  }, [streamError?.songId]);
 
+  // ✅ UPDATED: Handle play button with display-only mode
   const handleTogglePlay = async () => {
     const video = videoRef.current;
-    if (!video || !currentSong) return;
+    
+    // ✅ UPDATED: If display-only mode, make default song selected first
+    if (isDisplayOnly && defaultSong) {
+      console.log("Converting display-only song to selected song:", defaultSong.title);
+      dispatch(setSelectedSong(defaultSong));
+      dispatch(play());
+      return;
+    }
+    
+    if (!video || !selectedSong) return;
 
     try {
       if (isPlaying) {
@@ -284,6 +310,14 @@ useEffect(() => {
     setIsMuted(!isMuted);
   };
 
+  // ✅ NEW: Handle random default song refresh
+  const handleRefreshDefaultSong = () => {
+    if (songs.length > 0) {
+      dispatch(setRandomDefaultFromSongs(songs));
+      toast.success("Default song refreshed!");
+    }
+  };
+
   // ✅ UPDATED: Use context songs for navigation
   const handleNext = () => {
     if (!currentSong || contextSongs.length === 0) return;
@@ -306,7 +340,8 @@ useEffect(() => {
 
   const handleSeekChange = (val) => {
     const video = videoRef.current;
-    if (video) {
+    // ✅ Only allow seeking for selected songs, not display-only
+    if (video && !isDisplayOnly) {
       video.currentTime = val;
       dispatch(setCurrentTime(val));
     }
@@ -328,7 +363,8 @@ useEffect(() => {
     dispatch(play());
   };
 
-  if (!currentSong || contextSongs.length === 0) {
+  // ✅ UPDATED: Show player even with just default song, no skeleton
+  if (!currentSong) {
     return (
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="ml-3">
@@ -356,10 +392,11 @@ useEffect(() => {
       />
 
       <div className="player-card w-[15.25rem] py-4 px-4 flex flex-col items-center">
+        
         <div className="w-full aspect-square overflow-hidden rounded-md">
           <img
             src={currentSong?.coverImage}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${isDisplayOnly ? 'opacity-80' : ''}`}
             alt=""
           />
         </div>
@@ -372,12 +409,15 @@ useEffect(() => {
             type="range"
             min="0"
             max={duration || 100}
-            value={currentTime}
+            value={isDisplayOnly ? 0 : currentTime}
             onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
-            className="track-progress w-full h-1 appearance-none rounded"
+            className={`track-progress w-full h-1 appearance-none rounded ${
+              isDisplayOnly ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isDisplayOnly}
           />
           <div className="flex justify-between text-xs text-gray-300 mt-1 px-[2px]">
-            <span>{formatTime(currentTime)}</span>
+            <span>{isDisplayOnly ? "0:00" : formatTime(currentTime)}</span>
             <span>{formatDuration(duration || currentSong?.duration)}</span>
           </div>
         </div>
@@ -392,8 +432,12 @@ useEffect(() => {
             </button>
           </div>
           <div className="button-wrapper shadow-md shadow-gray-800">
-            <button className="player-button" onClick={handleFeatureSoon}>
-              reset master
+            <button 
+              className="player-button flex justify-center items-center gap-2"
+              onClick={handleRefreshDefaultSong}
+              title="Refresh default song"
+            >
+              <FaRandom className="text-blue-500 text-sm" /> refresh
             </button>
           </div>
         </div>
@@ -415,13 +459,13 @@ useEffect(() => {
             <button
               className="play-pause-button flex justify-center items-center gap-2"
               onClick={handleTogglePlay}
-              disabled={isLoading || streamError?.songId === currentSong?._id}
+              disabled={isLoading || (streamError?.songId === selectedSong?._id)}
             >
-              {streamError?.songId === currentSong?._id ? (
+              {streamError?.songId === selectedSong?._id ? (
                 <FaLock className="text-sm text-white" />
               ) : isLoading ? (
                 <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : isPlaying ? (
+              ) : (isPlaying && !isDisplayOnly) ? (
                 <FaPause className="text-sm" />
               ) : (
                 <FaPlay className="text-sm" />

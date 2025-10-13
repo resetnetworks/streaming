@@ -18,6 +18,17 @@ import {
   PublicRoute,
 } from "./components/RouteGuards";
 
+// ✅ NEW: Import player actions and selectors
+import { 
+  setRandomDefaultFromSongs, 
+  loadDefaultSongFromStorage 
+} from "./features/playback/playerSlice";
+import { 
+  selectAllSongs, 
+  selectShouldInitializeDefault,
+  selectAvailableSongsForDefault 
+} from "./features/songs/songSelectors";
+
 import * as Pages from "./routes/LazyRoutes";
 
 // 🟦 Stripe
@@ -33,6 +44,11 @@ function App() {
   const user = useSelector(selectCurrentUser);
   const [initialLoad, setInitialLoad] = useState(true);
 
+  // ✅ NEW: Selectors for default song initialization
+  const allSongs = useSelector(selectAllSongs);
+  const shouldInitializeDefault = useSelector(selectShouldInitializeDefault);
+  const availableSongsCollections = useSelector(selectAvailableSongsForDefault);
+
   useEffect(() => {
     if (!isAuthenticated) {
       dispatch(getMyProfile()).finally(() => setInitialLoad(false));
@@ -40,6 +56,24 @@ function App() {
       setInitialLoad(false);
     }
   }, [dispatch, isAuthenticated]);
+
+  // ✅ NEW: Initialize default song on app start
+  useEffect(() => {
+    if (isAuthenticated && !initialLoad) {
+      // First, try to load default song from localStorage
+      dispatch(loadDefaultSongFromStorage());
+      
+      // If no default song exists and we have songs available, set a random one
+      if (shouldInitializeDefault && availableSongsCollections.length > 0) {
+        // Get all available songs from all collections
+        const allAvailableSongs = availableSongsCollections.flatMap(collection => collection.songs);
+        if (allAvailableSongs.length > 0) {
+          console.log("Setting initial default song from", allAvailableSongs.length, "available songs");
+          dispatch(setRandomDefaultFromSongs(allAvailableSongs));
+        }
+      }
+    }
+  }, [isAuthenticated, initialLoad, shouldInitializeDefault, availableSongsCollections, dispatch]);
 
   // 🔐 Disable Right Click & Inspect Shortcut
   useEffect(() => {

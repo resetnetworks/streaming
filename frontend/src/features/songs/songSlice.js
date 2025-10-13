@@ -55,6 +55,14 @@ const ensureGenreCacheState = (state) => {
 
 const normalizeGenreKey = (g) => (g || '').toString().trim().toLowerCase();
 
+// ✅ NEW: Helper function to get random song
+const getRandomSong = (songs, maxCount = 20) => {
+  if (!songs || songs.length === 0) return null;
+  const limitedSongs = songs.slice(0, Math.min(songs.length, maxCount));
+  const randomIndex = Math.floor(Math.random() * limitedSongs.length);
+  return limitedSongs[randomIndex];
+};
+
 // Slice
 const songSlice = createSlice({
   name: 'songs',
@@ -81,6 +89,35 @@ const songSlice = createSlice({
       if (state.likedSongs?.songs) {
         state.likedSongs.songs = state.likedSongs.songs.filter((s) => s._id !== songId);
         state.likedSongs.total = Math.max(0, state.likedSongs.total - 1);
+      }
+    },
+    
+    // ✅ NEW: Set default song for player display
+    setDefaultSong: (state, action) => {
+      // This will be handled in playerSlice, but we can keep this for consistency
+      // if you want to store default song in songs slice as well
+    },
+    
+    // ✅ NEW: Auto-set random default song from available songs
+    setRandomDefaultSong: (state) => {
+      // Priority order: allSongs -> allSingles -> matchingGenreSongs -> genreSongs
+      let availableSongs = [];
+      
+      if (state.allSongs && state.allSongs.length > 0) {
+        availableSongs = state.allSongs;
+      } else if (state.allSingles && state.allSingles.length > 0) {
+        availableSongs = state.allSingles;
+      } else if (state.matchingGenreSongs?.songs && state.matchingGenreSongs.songs.length > 0) {
+        availableSongs = state.matchingGenreSongs.songs;
+      } else if (state.genreSongs?.songs && state.genreSongs.songs.length > 0) {
+        availableSongs = state.genreSongs.songs;
+      }
+      
+      const randomSong = getRandomSong(availableSongs);
+      if (randomSong) {
+        // You can store this in songs slice or dispatch to playerSlice
+        // For now, we'll just return the random song info
+        state.message = `Random default song selected: ${randomSong.title}`;
       }
     },
     
@@ -701,6 +738,8 @@ export const {
   clearSongMessage, 
   clearLikedSongs, 
   removeSongFromLiked,
+  setDefaultSong, // ✅ NEW: Export default song setter
+  setRandomDefaultSong, // ✅ NEW: Export random default song setter
   clearGenreSongs,
   clearSinglesByArtist,
   clearAllSingles, // ✅ NEW: Export singles clear action

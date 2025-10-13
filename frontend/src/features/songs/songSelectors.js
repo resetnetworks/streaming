@@ -10,10 +10,120 @@ export const selectSongsPagination = (state) => state.songs?.pagination || { pag
 export const selectSelectedSong = (state) => state.player?.selectedSong || null;
 export const selectSongsState = (state) => state.songs || {};
 
-// ✅ NEW: All Singles selectors
+// ✅ UPDATED: Default song selectors for player display (from playerSlice)
+export const selectDefaultSong = (state) => state.player?.defaultSong || null;
+export const selectHasPersistentDefault = (state) => !!state.player?.defaultSong;
+export const selectCanPlay = (state) => !!(state.player?.selectedSong || state.player?.defaultSong);
+export const selectPlaybackContext = (state) => state.player?.playbackContext || { type: 'all', id: null, songs: [] };
+export const selectPlaybackContextType = (state) => state.player?.playbackContext?.type || 'all';
+export const selectPlaybackContextSongs = (state) => state.player?.playbackContext?.songs || [];
+
+// ✅ NEW: All Singles selectors (MOVED UP - Define before using)
 export const selectAllSingles = (state) => state.songs?.allSingles || [];
 export const selectSinglesPagination = (state) => state.songs?.singlesPagination || { page: 1, totalPages: 1, total: 0 };
 export const selectSinglesCount = (state) => state.songs?.allSingles?.length || 0;
+
+// ✅ NEW: Matching genre songs selectors (MOVED UP - Define before using)
+export const selectMatchingGenreSongs = (state) => state.songs?.matchingGenreSongs?.songs || [];
+export const selectMatchingGenres = (state) => state.songs?.matchingGenreSongs?.matchingGenres || [];
+export const selectMatchingGenreSongsTotal = (state) => state.songs?.matchingGenreSongs?.total || 0;
+export const selectMatchingGenreSongsPage = (state) => state.songs?.matchingGenreSongs?.page || 1;
+export const selectMatchingGenreSongsPages = (state) => state.songs?.matchingGenreSongs?.pages || 1;
+export const selectMatchingGenrePagination = (state) => state.songs?.matchingGenrePagination || { page: 1, totalPages: 1, total: 0 };
+
+// ✅ NEW: Per-genre live selectors (MOVED UP - Define before using)
+export const selectGenreSongsGenre = (state) => state.songs?.genreSongs?.genre || null;
+export const selectGenreSongs = (state) => state.songs?.genreSongs?.songs || [];
+export const selectGenreSongsTotal = (state) => state.songs?.genreSongs?.total || 0;
+export const selectGenreSongsPage = (state) => state.songs?.genreSongs?.page || 1;
+export const selectGenreSongsPages = (state) => state.songs?.genreSongs?.pages || 1;
+
+// ✅ UPDATED: Get random song from available songs (only used when no persistent default exists)
+export const selectRandomDefaultSong = createSelector(
+  [selectAllSongs, selectAllSingles, selectMatchingGenreSongs, selectGenreSongs],
+  (allSongs, allSingles, matchingGenreSongs, genreSongs) => {
+    // Priority order: allSongs -> allSingles -> matchingGenreSongs -> genreSongs
+    let availableSongs = [];
+    
+    if (allSongs && allSongs.length > 0) {
+      availableSongs = allSongs;
+    } else if (allSingles && allSingles.length > 0) {
+      availableSongs = allSingles;
+    } else if (matchingGenreSongs && matchingGenreSongs.length > 0) {
+      availableSongs = matchingGenreSongs;
+    } else if (genreSongs && genreSongs.length > 0) {
+      availableSongs = genreSongs;
+    }
+    
+    if (availableSongs.length === 0) return null;
+    
+    // Limit to first 20 songs for better performance
+    const limitedSongs = availableSongs.slice(0, Math.min(availableSongs.length, 20));
+    const randomIndex = Math.floor(Math.random() * limitedSongs.length);
+    return limitedSongs[randomIndex];
+  }
+);
+
+// ✅ UPDATED: Get best song for player display (selected > persistent default > random)
+export const selectPlayerDisplaySong = createSelector(
+  [selectSelectedSong, selectDefaultSong, selectRandomDefaultSong],
+  (selectedSong, defaultSong, randomSong) => {
+    // Priority: selected song > persistent default > random fallback
+    return selectedSong || defaultSong || randomSong || null;
+  }
+);
+
+// ✅ UPDATED: Check if player is in display-only mode (showing default song)
+export const selectIsPlayerDisplayOnly = createSelector(
+  [selectSelectedSong, selectDefaultSong],
+  (selectedSong, defaultSong) => {
+    return !selectedSong && !!defaultSong;
+  }
+);
+
+// ✅ NEW: Check if we need to initialize a default song
+export const selectShouldInitializeDefault = createSelector(
+  [selectDefaultSong, selectAllSongs, selectAllSingles],
+  (defaultSong, allSongs, allSingles) => {
+    // Return true if no default song exists but we have songs available
+    return !defaultSong && (allSongs.length > 0 || allSingles.length > 0);
+  }
+);
+
+// ✅ NEW: Get available songs for default selection (for initialization)
+export const selectAvailableSongsForDefault = createSelector(
+  [selectAllSongs, selectAllSingles, selectMatchingGenreSongs, selectGenreSongs],
+  (allSongs, allSingles, matchingGenreSongs, genreSongs) => {
+    const collections = [
+      { name: 'allSongs', songs: allSongs || [] },
+      { name: 'allSingles', songs: allSingles || [] },
+      { name: 'matchingGenreSongs', songs: matchingGenreSongs || [] },
+      { name: 'genreSongs', songs: genreSongs || [] }
+    ];
+    
+    return collections.filter(collection => collection.songs.length > 0);
+  }
+);
+
+// ✅ UPDATED: Additional selectors for better Player.jsx compatibility
+export const selectDisplaySong = selectPlayerDisplaySong;
+export const selectIsDisplayOnly = selectIsPlayerDisplayOnly;
+
+// ✅ NEW: Enhanced player state selector
+export const selectEnhancedPlayerState = createSelector(
+  [selectPlayerDisplaySong, selectIsPlayerDisplayOnly, selectHasPersistentDefault, selectCanPlay, selectPlaybackContext],
+  (displaySong, isDisplayOnly, hasPersistentDefault, canPlay, playbackContext) => ({
+    displaySong,
+    isDisplayOnly,
+    hasPersistentDefault,
+    canPlay,
+    playbackContext,
+    // Additional computed properties
+    hasContent: !!displaySong,
+    canShowPlayer: !!displaySong,
+    isContextualPlayback: playbackContext.type !== 'all'
+  })
+);
 
 // ✅ NEW: Singles cache selectors
 export const selectIsSinglesCached = (state) => state.songs?.isSinglesCached || false;
@@ -180,14 +290,6 @@ export const selectLikedSongsTotal = (state) => state.songs?.likedSongs?.total |
 export const selectLikedSongsPage = (state) => state.songs?.likedSongs?.page || 1;
 export const selectLikedSongsPages = (state) => state.songs?.likedSongs?.pages || 1;
 
-// ✅ NEW: Matching genre songs selectors WITH CACHE (existing)
-export const selectMatchingGenreSongs = (state) => state.songs?.matchingGenreSongs?.songs || [];
-export const selectMatchingGenres = (state) => state.songs?.matchingGenreSongs?.matchingGenres || [];
-export const selectMatchingGenreSongsTotal = (state) => state.songs?.matchingGenreSongs?.total || 0;
-export const selectMatchingGenreSongsPage = (state) => state.songs?.matchingGenreSongs?.page || 1;
-export const selectMatchingGenreSongsPages = (state) => state.songs?.matchingGenreSongs?.pages || 1;
-export const selectMatchingGenrePagination = (state) => state.songs?.matchingGenrePagination || { page: 1, totalPages: 1, total: 0 };
-
 // Legacy selectors for backward compatibility
 export const selectTotalPages = (state) => state.songs?.pagination?.totalPages || 1;
 export const selectCurrentPage = (state) => state.songs?.pagination?.page || 1;
@@ -298,13 +400,6 @@ export const selectMatchingGenreCachedPageData = (page) => (state) => {
   const cachedData = state.songs?.matchingGenreCachedData || {};
   return cachedData[page] || null;
 };
-
-// ✅ NEW: Per-genre live selectors
-export const selectGenreSongsGenre = (state) => state.songs?.genreSongs?.genre || null;
-export const selectGenreSongs = (state) => state.songs?.genreSongs?.songs || [];
-export const selectGenreSongsTotal = (state) => state.songs?.genreSongs?.total || 0;
-export const selectGenreSongsPage = (state) => state.songs?.genreSongs?.page || 1;
-export const selectGenreSongsPages = (state) => state.songs?.genreSongs?.pages || 1;
 
 // ✅ NEW: Per-genre cache selectors
 export const selectGenreCacheState = (state) => state.songs?.genreCache || { lastFetchTime: null, cachedPagesByGenre: {}, cachedDataByGenre: {} };
