@@ -8,9 +8,9 @@ import {
   selectDefaultSong,
   selectDisplaySong,
   selectIsDisplayOnly,
-  selectHasPersistentDefault, // ✅ NEW IMPORT
-  selectPlaybackContext, // ✅ NEW IMPORT
-  selectPlaybackContextSongs, // ✅ NEW IMPORT
+  selectHasPersistentDefault,
+  selectPlaybackContext,
+  selectPlaybackContextSongs,
 } from "../../features/songs/songSelectors";
 import {
   setSelectedSong,
@@ -20,14 +20,17 @@ import {
   setDuration,
   setVolume,
   clearPlaybackContext,
-  setRandomDefaultFromSongs, // ✅ NEW IMPORT
+  setRandomDefaultFromSongs,
+  setShuffleMode,
+  setRepeatMode,
 } from "../../features/playback/playerSlice";
 import { toggleLikeSong } from "../../features/auth/authSlice";
 import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { formatDuration } from "../../utills/helperFunctions";
-import { FaPlay, FaPause, FaLock, FaRandom } from "react-icons/fa"; // ✅ ADDED FaRandom
+import { FaPlay, FaPause, FaLock, FaRandom } from "react-icons/fa";
 import { RiSkipLeftFill, RiSkipRightFill, RiVolumeUpFill, RiVolumeMuteFill } from "react-icons/ri";
-import { IoIosArrowDown, IoIosInfinite, IoMdShuffle } from "react-icons/io";
+import { IoIosArrowDown, IoMdShuffle } from "react-icons/io";
+import { TbRepeat, TbRepeatOnce } from "react-icons/tb";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { LuDna } from "react-icons/lu";
 import { toast } from "sonner";
@@ -42,16 +45,83 @@ const handleFeatureSoon = () => {
   toast.success("This feature will be available soon");
 };
 
+// ✅ NEW: Shuffle algorithm (Fisher-Yates)
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// ✅ FIXED: Get next song index with proper repeat mode handling
+const getNextSongIndex = (currentIndex, songs, shuffleMode, repeatMode, shuffleOrder, isManualNext = false) => {
+  if (songs.length === 0) return -1;
+  
+  // ✅ FIXED: Only repeat current song if it's 'one' mode AND it's automatic (not manual next)
+  if (repeatMode === 'one' && !isManualNext) {
+    return currentIndex; // Stay on same song only for automatic progression
+  }
+  
+  if (shuffleMode) {
+    const currentShuffleIndex = shuffleOrder.indexOf(currentIndex);
+    if (currentShuffleIndex === -1) return 0;
+    
+    const nextShuffleIndex = currentShuffleIndex + 1;
+    
+    // ✅ Check if we've reached the end of the shuffled playlist
+    if (nextShuffleIndex >= shuffleOrder.length) {
+      if (repeatMode === 'all') {
+        return shuffleOrder[0]; // Start from beginning of shuffle order
+      } else {
+        return -1; // End of playlist, stop playing
+      }
+    }
+    
+    return shuffleOrder[nextShuffleIndex];
+  } else {
+    const nextIndex = currentIndex + 1;
+    
+    // ✅ Check if we've reached the end of the playlist
+    if (nextIndex >= songs.length) {
+      if (repeatMode === 'all') {
+        return 0; // Start from beginning
+      } else {
+        return -1; // End of playlist, stop playing
+      }
+    }
+    
+    return nextIndex;
+  }
+};
+
+// ✅ FIXED: Get previous song index with proper repeat mode handling
+const getPrevSongIndex = (currentIndex, songs, shuffleMode, repeatMode, shuffleOrder) => {
+  if (songs.length === 0) return -1;
+  
+  // Note: Previous button should always go to previous song, even in repeat one mode
+  
+  if (shuffleMode) {
+    const currentShuffleIndex = shuffleOrder.indexOf(currentIndex);
+    if (currentShuffleIndex === -1) return 0;
+    
+    const prevShuffleIndex = (currentShuffleIndex - 1 + shuffleOrder.length) % shuffleOrder.length;
+    return shuffleOrder[prevShuffleIndex];
+  } else {
+    return (currentIndex - 1 + songs.length) % songs.length;
+  }
+};
+
 const MobilePlayer = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector(selectSelectedSong);
   
-  // ✅ UPDATED: Enhanced selectors with persistent default functionality
   const defaultSong = useSelector(selectDefaultSong);
   const displaySong = useSelector(selectDisplaySong);
   const isDisplayOnly = useSelector(selectIsDisplayOnly);
-  const hasPersistentDefault = useSelector(selectHasPersistentDefault); // ✅ NEW
+  const hasPersistentDefault = useSelector(selectHasPersistentDefault);
   const playbackContext = useSelector(selectPlaybackContext);
   const playbackContextSongs = useSelector(selectPlaybackContextSongs);
   
@@ -59,6 +129,9 @@ const MobilePlayer = () => {
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
+  const shuffleMode = useSelector((state) => state.player.shuffleMode);
+  const repeatMode = useSelector((state) => state.player.repeatMode);
+  const shuffleOrder = useSelector((state) => state.player.shuffleOrder);
   const streamUrls = useSelector((state) => state.stream.urls);
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
@@ -68,7 +141,6 @@ const MobilePlayer = () => {
   const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
-  const [isLooping, setIsLooping] = useState(false);
   const [playbackError, setPlaybackError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isArtworkExpanded, setIsArtworkExpanded] = useState(false);
@@ -77,51 +149,77 @@ const MobilePlayer = () => {
   const hlsRef = useRef(null);
   const artworkRef = useRef(null);
 
-  // ✅ UPDATED: Use display song instead of selected song only
+  // ✅ NEW: Local state for shuffle history
+  const [shuffleHistory, setShuffleHistory] = useState([]);
+
   const currentSong = displaySong;
   const isLiked = currentSong ? likedSongIds.includes(currentSong._id) : false;
 
-  // ✅ UPDATED: Use context songs instead of all songs
   const contextSongs = playbackContextSongs.length > 0 
     ? playbackContextSongs 
-    : songs; // fallback to all songs
+    : songs;
 
   const currentIndex = currentSong
     ? contextSongs.findIndex((s) => s._id === currentSong._id)
     : -1;
 
-  // ✅ NEW: Set random default song if none exists on component mount
+  // ✅ NEW: Initialize shuffle order when shuffle mode is enabled
+  useEffect(() => {
+    if (shuffleMode && contextSongs.length > 0 && shuffleOrder.length === 0) {
+      const currentSongIndex = currentIndex !== -1 ? currentIndex : 0;
+      const remainingIndices = contextSongs
+        .map((_, index) => index)
+        .filter(index => index !== currentSongIndex);
+      
+      const shuffledRemaining = shuffleArray(remainingIndices);
+      const newShuffleOrder = [currentSongIndex, ...shuffledRemaining];
+      
+      dispatch({
+        type: 'player/setShuffleOrder',
+        payload: newShuffleOrder
+      });
+    }
+  }, [shuffleMode, contextSongs.length, dispatch]);
+
+  // ✅ NEW: Reset shuffle order when context songs change
+  useEffect(() => {
+    if (shuffleMode && contextSongs.length > 0) {
+      const newShuffleOrder = shuffleArray(Array.from({ length: contextSongs.length }, (_, i) => i));
+      dispatch({
+        type: 'player/setShuffleOrder',
+        payload: newShuffleOrder
+      });
+    }
+  }, [contextSongs, shuffleMode, dispatch]);
+
+  // ✅ UPDATED: Set random default song if none exists
   useEffect(() => {
     if (!hasPersistentDefault && songs.length > 0) {
-      console.log("No persistent default song found, setting random default from", songs.length, "songs");
       dispatch(setRandomDefaultFromSongs(songs));
     }
   }, [hasPersistentDefault, songs.length, dispatch]);
 
-  // ✅ UPDATED: Smart Context Detection - Auto-exit when song doesn't belong to current context (SILENT)
+  // ✅ UPDATED: Smart Context Detection
   useEffect(() => {
     if (playbackContext.type !== 'all' && currentSong && playbackContextSongs.length > 0) {
       const songInContext = playbackContextSongs.some(song => song._id === currentSong._id);
       
       if (!songInContext) {
-        // Song doesn't belong to current context, switch to library mode silently
         dispatch(clearPlaybackContext());
-        console.log("Auto-switched to library playback - song not in current context");
       }
     }
   }, [currentSong?._id, playbackContext.type, playbackContextSongs, dispatch]);
 
-  // ✅ UPDATED: Fetch stream URL only for selected songs (not default display songs)
+  // ✅ UPDATED: Fetch stream URL
   useEffect(() => {
     if (selectedSong && !streamUrls[selectedSong._id]) {
       dispatch(fetchStreamUrl(selectedSong._id));
     }
   }, [selectedSong, streamUrls, dispatch]);
 
-  // ✅ UPDATED: Main HLS player initialization - Only for selected songs
+  // ✅ UPDATED: Main HLS player initialization with proper repeat mode handling
   useEffect(() => {
     const video = videoRef.current;
-    // ✅ Only initialize player for selected songs, not display-only songs
     if (!video || !selectedSong || !streamUrls[selectedSong._id]) return;
 
     let hls;
@@ -130,11 +228,9 @@ const MobilePlayer = () => {
         setIsLoading(true);
         setPlaybackError(null);
 
-        // Reset player state
         dispatch(setCurrentTime(0));
         dispatch(setDuration(0));
 
-        // Clean up previous HLS instance
         if (hlsRef.current) {
           hlsRef.current.destroy();
           hlsRef.current = null;
@@ -169,7 +265,7 @@ const MobilePlayer = () => {
           });
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.currentTime = currentTime || 0; // ✅ restore last time
+            video.currentTime = currentTime || 0;
             if (isPlaying) {
               video.play().catch((err) => {
                 setPlaybackError("Autoplay blocked. Tap play to continue.");
@@ -206,16 +302,28 @@ const MobilePlayer = () => {
 
             const remainingTime = (video.duration || 0) - video.currentTime;
 
-            // Auto trigger next song 0.5s before end
-            if (remainingTime <= 0.5 && video.duration > 1 && !isLooping) {
-              video.ontimeupdate = null; // prevent multiple triggers
-              handleNext();
+            // ✅ FIXED: Auto trigger next song logic with proper repeat mode support
+            if (remainingTime <= 0.5 && video.duration > 1) {
+              if (repeatMode === 'one') {
+                // Repeat current song
+                video.currentTime = 0;
+                video.play().catch(console.error);
+              } else {
+                video.ontimeupdate = null;
+                handleNext(false); // false = automatic progression
+              }
             }
           }
         };
 
         video.onended = () => {
-          if (!isLooping) handleNext();
+          // ✅ FIXED: Handle song end with proper repeat modes
+          if (repeatMode === 'one') {
+            video.currentTime = 0;
+            video.play().catch(console.error);
+          } else {
+            handleNext(false); // false = automatic progression
+          }
         };
       } catch (err) {
         setPlaybackError(err.message);
@@ -235,7 +343,7 @@ const MobilePlayer = () => {
         video.onloadedmetadata = null;
       }
     };
-  }, [selectedSong, streamUrls, isLooping]); // ✅ Only depend on selectedSong, not displaySong
+  }, [selectedSong, streamUrls, repeatMode]); 
 
   // Volume control
   useEffect(() => {
@@ -245,7 +353,7 @@ const MobilePlayer = () => {
     }
   }, [volume, isMuted]);
 
-  // Show 403 error toast if current song can't be streamed
+  // Show stream error
   useEffect(() => {
     if (streamError && selectedSong && streamError.songId === selectedSong._id) {
       const toastId = `stream-error-${selectedSong._id}`;
@@ -257,13 +365,11 @@ const MobilePlayer = () => {
     }
   }, [streamError?.songId]);
 
-  // ✅ UPDATED: Handle play button with display-only mode
+  // ✅ UPDATED: Handle play button
   const handleTogglePlay = async () => {
     const video = videoRef.current;
     
-    // ✅ UPDATED: If display-only mode, make default song selected first
     if (isDisplayOnly && defaultSong) {
-      console.log("Converting display-only song to selected song:", defaultSong.title);
       dispatch(setSelectedSong(defaultSong));
       dispatch(play());
       return;
@@ -294,7 +400,39 @@ const MobilePlayer = () => {
     setIsMuted(!isMuted);
   };
 
-  // ✅ NEW: Handle random default song refresh
+  // ✅ NEW: Toggle shuffle mode
+  const handleToggleShuffle = () => {
+    const newShuffleMode = !shuffleMode;
+    dispatch(setShuffleMode(newShuffleMode));
+    
+    if (newShuffleMode && contextSongs.length > 0) {
+      // Initialize shuffle order when enabling shuffle
+      const currentSongIndex = currentIndex !== -1 ? currentIndex : 0;
+      const remainingIndices = contextSongs
+        .map((_, index) => index)
+        .filter(index => index !== currentSongIndex);
+      
+      const shuffledRemaining = shuffleArray(remainingIndices);
+      const newShuffleOrder = [currentSongIndex, ...shuffledRemaining];
+      
+      dispatch({
+        type: 'player/setShuffleOrder',
+        payload: newShuffleOrder
+      });
+    }
+  };
+
+  // ✅ UPDATED: Cycle through repeat modes (removed toast messages)
+  const handleToggleRepeat = () => {
+    const repeatModes = ['off', 'one', 'all'];
+    const currentRepeatIndex = repeatModes.indexOf(repeatMode);
+    const nextIndex = (currentRepeatIndex + 1) % repeatModes.length;
+    const nextRepeatMode = repeatModes[nextIndex];
+    
+    dispatch(setRepeatMode(nextRepeatMode));
+  };
+
+  // Handle random default song refresh
   const handleRefreshDefaultSong = () => {
     if (songs.length > 0) {
       dispatch(setRandomDefaultFromSongs(songs));
@@ -302,21 +440,60 @@ const MobilePlayer = () => {
     }
   };
 
-  // ✅ UPDATED: Use context songs for navigation
-  const handleNext = () => {
+  // ✅ FIXED: Next song with proper manual vs automatic handling
+  const handleNext = (isManual = true) => {
     if (!currentSong || contextSongs.length === 0) return;
-    const nextIndex = (currentIndex + 1) % contextSongs.length;
-    dispatch(setSelectedSong(contextSongs[nextIndex]));
-    dispatch(play());
+    
+    const nextIndex = getNextSongIndex(
+      currentIndex, 
+      contextSongs, 
+      shuffleMode, 
+      repeatMode, 
+      shuffleOrder,
+      isManual // Pass whether this is manual next button click
+    );
+    
+    if (nextIndex < contextSongs.length) {
+      dispatch(setSelectedSong(contextSongs[nextIndex]));
+      dispatch(play());
+      
+      // ✅ NEW: Add to shuffle history for back navigation
+      if (shuffleMode) {
+        setShuffleHistory(prev => [...prev, currentIndex]);
+      }
+    }
   };
 
-  // ✅ UPDATED: Use context songs for navigation
+  // ✅ UPDATED: Previous song with shuffle and repeat support
   const handlePrev = () => {
     if (!currentSong || contextSongs.length === 0) return;
+    
+    // If we're more than 3 seconds into the song, restart it
     if (currentTime > 3) {
       handleSeekChange(0);
-    } else {
-      const prevIndex = (currentIndex - 1 + contextSongs.length) % contextSongs.length;
+      return;
+    }
+    
+    // ✅ NEW: Handle shuffle history for back navigation
+    if (shuffleMode && shuffleHistory.length > 0) {
+      const prevIndex = shuffleHistory[shuffleHistory.length - 1];
+      const newHistory = shuffleHistory.slice(0, -1);
+      
+      setShuffleHistory(newHistory);
+      dispatch(setSelectedSong(contextSongs[prevIndex]));
+      dispatch(play());
+      return;
+    }
+    
+    const prevIndex = getPrevSongIndex(
+      currentIndex, 
+      contextSongs, 
+      shuffleMode, 
+      repeatMode, 
+      shuffleOrder
+    );
+    
+    if (prevIndex !== -1 && prevIndex < contextSongs.length) {
       dispatch(setSelectedSong(contextSongs[prevIndex]));
       dispatch(play());
     }
@@ -324,7 +501,6 @@ const MobilePlayer = () => {
 
   const handleSeekChange = (val) => {
     const video = videoRef.current;
-    // ✅ Only allow seeking for selected songs, not display-only
     if (video && !isDisplayOnly) {
       video.currentTime = val;
       dispatch(setCurrentTime(val));
@@ -345,16 +521,51 @@ const MobilePlayer = () => {
     setIsArtworkExpanded(!isArtworkExpanded);
   };
 
-  // ✅ UPDATED: Show player even with just default song, no skeleton
   if (!currentSong) {
     return null;
   }
+
+  // ✅ UPDATED: Get repeat icon based on current mode (YouTube Music style)
+  const getRepeatIcon = () => {
+    switch (repeatMode) {
+      case 'one':
+        return (
+          <div className="relative">
+            <TbRepeat className="text-2xl text-blue-500" />
+            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+              1
+            </span>
+          </div>
+        );
+      case 'all':
+        return <TbRepeat className="text-2xl text-blue-500" />;
+      default:
+        return <TbRepeat className="text-2xl text-gray-400" />;
+    }
+  };
+
+  // ✅ UPDATED: Get repeat label for accessibility
+  const getRepeatLabel = () => {
+    switch (repeatMode) {
+      case 'one':
+        return 'Repeat one song';
+      case 'all':
+        return 'Repeat all songs';
+      default:
+        return 'Repeat disabled';
+    }
+  };
 
   const trackStyle = {
     background: `linear-gradient(to right, #007aff ${
       volume * 100
     }%, #ffffff22 ${volume * 100}%)`,
   };
+
+  // ✅ UPDATED: Progress calculation to prevent blinking
+  const progressPercentage = duration && !isNaN(duration) && !isNaN(currentTime) 
+    ? Math.min((currentTime / duration) * 100, 100) 
+    : 0;
 
   return (
     <>
@@ -374,7 +585,7 @@ const MobilePlayer = () => {
       >
         <div
           className="h-1 from-black to-blue-600 bg-gradient-to-br transition-all duration-300 ease-in-out"
-          style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+          style={{ width: `${progressPercentage}%` }}
         ></div>
 
         <div className="p-3">
@@ -430,7 +641,7 @@ const MobilePlayer = () => {
         <div
           className="absolute inset-0 border-8 border-transparent animate-pulse pointer-events-none"
           style={{
-            boxShadow: "0 0 20px 5px rgba(59, 130, 246, 0.5)", // blue-500
+            boxShadow: "0 0 20px 5px rgba(59, 130, 246, 0.5)",
           }}
         ></div>
 
@@ -493,16 +704,16 @@ const MobilePlayer = () => {
           <div className="relative h-3 mb-2 group">
             <div className="absolute inset-0 bg-gray-800 rounded-full overflow-hidden"></div>
             <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-300 ease-out"
               style={{
-                width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+                width: `${progressPercentage}%`,
               }}
             ></div>
             <div
               className="absolute top-0 left-0 h-full w-full rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               style={{
                 boxShadow: "0 0 10px rgba(59,130,246,0.7)",
-                width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+                width: `${progressPercentage}%`,
               }}
             ></div>
             <input
@@ -526,12 +737,18 @@ const MobilePlayer = () => {
         {/* Controls */}
         <div className="w-full max-w-md mb-6">
           <div className="flex justify-between items-center px-6">
+            {/* Shuffle Button */}
             <button
-              onClick={handleRefreshDefaultSong}
-              className="p-3 text-gray-400 hover:text-blue-400 transition-colors"
-              title="Refresh default song"
+              onClick={handleToggleShuffle}
+              className={`p-3 transition-colors relative ${
+                shuffleMode ? "text-blue-500" : "text-gray-400"
+              }`}
+              title={shuffleMode ? "Shuffle enabled" : "Shuffle disabled"}
             >
-              <FaRandom className="text-xl" />
+              <IoMdShuffle className="text-2xl" />
+              {shuffleMode && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+              )}
             </button>
 
             <button
@@ -557,25 +774,30 @@ const MobilePlayer = () => {
               )}
             </button>
 
+            {/* ✅ FIXED: Next button with proper manual handling */}
             <button
-              onClick={handleNext}
+              onClick={() => handleNext(true)} // true = manual next button click
               className="p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-all"
             >
               <RiSkipRightFill className="text-3xl" />
             </button>
 
+            {/* Repeat Button - YouTube Music Style */}
             <button
-              onClick={() => setIsLooping(!isLooping)}
-              className={`p-3 transition-colors ${
-                isLooping ? "text-blue-500" : "text-gray-400"
+              onClick={handleToggleRepeat}
+              className={`p-3 transition-colors relative ${
+                repeatMode !== 'off' ? "text-blue-500" : "text-gray-400"
               }`}
+              title={getRepeatLabel()}
             >
-              <IoIosInfinite className="text-2xl" />
+              {getRepeatIcon()}
+              {repeatMode === 'all' && (
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+              )}
             </button>
           </div>
         </div>
 
-        {/* CSS Animation */}
         <style>{`
           @keyframes equalizer {
             0% { height: 10%; }

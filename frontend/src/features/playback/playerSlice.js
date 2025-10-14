@@ -1,11 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// ✅ NEW: Load initial state from localStorage for persistence
 const loadInitialState = () => {
   try {
     const savedVolume = localStorage.getItem("player-volume");
     const savedDefaultSong = localStorage.getItem("player-default-song");
     const savedPlaybackContext = localStorage.getItem("player-playback-context");
+    const savedShuffleMode = localStorage.getItem("player-shuffle-mode");
+    const savedRepeatMode = localStorage.getItem("player-repeat-mode");
     
     return {
       selectedSong: null,
@@ -20,7 +21,11 @@ const loadInitialState = () => {
         type: 'all',
         id: null,
         songs: []
-      }
+      },
+      // ✅ NEW: Shuffle and repeat state
+      shuffleMode: savedShuffleMode ? JSON.parse(savedShuffleMode) : false,
+      repeatMode: savedRepeatMode || 'off',
+      shuffleOrder: []
     };
   } catch (e) {
     console.warn("Failed to load player state from storage", e);
@@ -37,14 +42,17 @@ const loadInitialState = () => {
         type: 'all',
         id: null,
         songs: []
-      }
+      },
+      // ✅ NEW: Default shuffle and repeat state
+      shuffleMode: false,
+      repeatMode: 'off',
+      shuffleOrder: []
     };
   }
 };
 
 const initialState = loadInitialState();
 
-// ✅ NEW: Helper function to get random song from array
 function getRandomSong(songs, maxCount = 20) {
   if (!songs || songs.length === 0) return null;
   const limitedSongs = songs.slice(0, Math.min(songs.length, maxCount));
@@ -58,7 +66,7 @@ const playerSlice = createSlice({
   reducers: {
     setSelectedSong(state, action) {
       state.selectedSong = action.payload;
-      state.currentTime = 0; // reset time for new song
+      state.currentTime = 0;
       state.duration = 0;
       state.isPlaying = true;
       state.lastSelectedAt = Date.now();
@@ -90,9 +98,36 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ UPDATED: Set default song for display (with persistence)
+    // ✅ NEW: Set shuffle mode with persistence
+    setShuffleMode(state, action) {
+      state.shuffleMode = action.payload;
+      // Reset shuffle order when disabling shuffle
+      if (!action.payload) {
+        state.shuffleOrder = [];
+      }
+      try {
+        localStorage.setItem("player-shuffle-mode", JSON.stringify(action.payload));
+      } catch (e) {
+        console.warn("Failed to persist shuffle mode", e);
+      }
+    },
+    
+    // ✅ NEW: Set repeat mode with persistence
+    setRepeatMode(state, action) {
+      state.repeatMode = action.payload;
+      try {
+        localStorage.setItem("player-repeat-mode", action.payload);
+      } catch (e) {
+        console.warn("Failed to persist repeat mode", e);
+      }
+    },
+    
+    // ✅ NEW: Set shuffle order
+    setShuffleOrder(state, action) {
+      state.shuffleOrder = action.payload;
+    },
+    
     setDefaultSong(state, action) {
-      // Only set if not already set or explicitly forced
       if (!state.defaultSong || action.payload.force) {
         state.defaultSong = action.payload.song;
         try {
@@ -103,9 +138,7 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Set random default song from available songs (only if no default exists)
     setRandomDefaultFromSongs(state, action) {
-      // Only set random default if no default song exists
       if (!state.defaultSong) {
         const availableSongs = action.payload || [];
         if (availableSongs.length > 0) {
@@ -122,7 +155,6 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Load default song from localStorage (for initialization)
     loadDefaultSongFromStorage(state) {
       try {
         const saved = localStorage.getItem("player-default-song");
@@ -135,7 +167,6 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Clear default song
     clearDefaultSong(state) {
       state.defaultSong = null;
       try {
@@ -145,7 +176,6 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Set playback context with persistence
     setPlaybackContext(state, action) {
       state.playbackContext = action.payload;
       try {
@@ -155,7 +185,6 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Clear playback context
     clearPlaybackContext(state) {
       state.playbackContext = {
         type: 'all',
@@ -169,17 +198,20 @@ const playerSlice = createSlice({
       }
     },
     
-    // ✅ UPDATED: Reset player state but preserve default song and volume
     resetPlayerState(state) {
       const preservedVolume = state.volume;
       const preservedDefaultSong = state.defaultSong;
       const preservedPlaybackContext = state.playbackContext;
+      const preservedShuffleMode = state.shuffleMode;
+      const preservedRepeatMode = state.repeatMode;
       
       return {
         ...initialState,
         volume: preservedVolume,
-        defaultSong: preservedDefaultSong, // ✅ Preserve default song on reset
-        playbackContext: preservedPlaybackContext, // ✅ Preserve playback context
+        defaultSong: preservedDefaultSong,
+        playbackContext: preservedPlaybackContext,
+        shuffleMode: preservedShuffleMode,
+        repeatMode: preservedRepeatMode,
         forceRefreshToken: Date.now(),
       };
     },
@@ -188,18 +220,19 @@ const playerSlice = createSlice({
       state.forceRefreshToken = Date.now();
     },
 
-    // ✅ NEW: Reset everything including default song
     resetEverything(state) {
       try {
         localStorage.removeItem("player-default-song");
         localStorage.removeItem("player-playback-context");
+        localStorage.removeItem("player-shuffle-mode");
+        localStorage.removeItem("player-repeat-mode");
       } catch (e) {
         console.warn("Failed to clear player storage", e);
       }
       
       return {
         ...initialState,
-        volume: state.volume, // Only preserve volume
+        volume: state.volume,
         forceRefreshToken: Date.now(),
       };
     }
@@ -213,6 +246,9 @@ export const {
   setCurrentTime,
   setDuration,
   setVolume,
+  setShuffleMode,
+  setRepeatMode,
+  setShuffleOrder,
   setDefaultSong,
   setRandomDefaultFromSongs,
   loadDefaultSongFromStorage,
@@ -221,33 +257,7 @@ export const {
   clearPlaybackContext,
   resetPlayerState,
   forceRefresh,
-  resetEverything, // ✅ NEW export
+  resetEverything,
 } = playerSlice.actions;
-
-// ✅ UPDATED: Enhanced selector with default song info
-export const selectPlayerState = (state) => ({
-  ...state.player,
-  shouldRefresh: state.player.forceRefreshToken !== null,
-  // ✅ UPDATED: Computed properties for player display
-  displaySong: state.player.selectedSong || state.player.defaultSong || null,
-  isDisplayOnly: !state.player.selectedSong && !!state.player.defaultSong,
-  hasAnySong: !!(state.player.selectedSong || state.player.defaultSong),
-  // ✅ NEW: Additional computed properties
-  hasPersistentDefault: !!state.player.defaultSong,
-  canPlay: !!(state.player.selectedSong || state.player.defaultSong),
-});
-
-// ✅ UPDATED: Additional selectors for default song functionality
-export const selectDefaultSong = (state) => state.player?.defaultSong || null;
-export const selectDisplaySong = (state) => state.player?.selectedSong || state.player?.defaultSong || null;
-export const selectIsDisplayOnly = (state) => !state.player?.selectedSong && !!state.player?.defaultSong;
-export const selectHasAnySong = (state) => !!(state.player?.selectedSong || state.player?.defaultSong);
-
-// ✅ NEW: Additional selectors for enhanced functionality
-export const selectHasPersistentDefault = (state) => !!state.player?.defaultSong;
-export const selectCanPlay = (state) => !!(state.player?.selectedSong || state.player?.defaultSong);
-export const selectPlaybackContext = (state) => state.player?.playbackContext || { type: 'all', id: null, songs: [] };
-export const selectPlaybackContextType = (state) => state.player?.playbackContext?.type || 'all';
-export const selectPlaybackContextSongs = (state) => state.player?.playbackContext?.songs || [];
 
 export default playerSlice.reducer;
