@@ -153,17 +153,17 @@ const ArtistHeroSection = ({
           <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
             {renderArtistImage(artist?.image, artist?.name)}
             <div>
-              <p className="text-sm lowercase tracking-widest text-gray-200">Artist</p>
-              <h1 className="text-3xl md:text-4xl font-bold mt-1">
+              <p className="sm:text-sm text-xs lowercase tracking-widest text-gray-200">artist</p>
+              <h1 className="text-2xl md:text-4xl font-bold mt-1">
                 {artist?.name || "Unknown Artist"}
               </h1>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center mt-1 text-gray-300 text-sm">
-                  <FiMapPin className="mr-2 text-blue-400" />
+              <div className="flex items-center sm:gap-3 flex-wrap">
+                <div className="flex items-center mt-1 text-gray-300 sm:text-sm text-xs">
+                  <FiMapPin className="mr-2 text-sm text-blue-400" />
                   <span>{artist?.location || "Unknown City"}</span>
                 </div>
                 <div className="flex items-center mt-1 text-gray-300 text-sm">
-                  <HiUsers className="mr-2 text-blue-400" />
+                  <HiUsers className="mr-2 text-sm text-blue-400" />
                   <span className="flex items-center gap-2">
                     <span className="font-bold text-blue-400">
                       {formatSubscriberCount(liveSubscriberCount)}
