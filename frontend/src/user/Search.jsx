@@ -505,6 +505,8 @@ const Search = () => {
         itemType={pendingPayment?.itemType}
         currencyData={pendingPayment?.currencyData}
       />
+
+      {/* //commented out footer */}
     </>
   );
 };
