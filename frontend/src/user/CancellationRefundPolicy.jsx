@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
-import PageSEO from "../components/SEO/PageSEO";
+
 
 const CancellationRefundPolicy = () => {
   const navigate = useNavigate();
@@ -81,11 +81,6 @@ const CancellationRefundPolicy = () => {
 
   return (
     <>
-      <PageSEO 
-        title="Cancellation and Refund Policy - Reset Music | Subscription Management"
-        description="Learn about Reset Music's cancellation and refund policy. Understand how to cancel subscriptions, our no-refund policy, and manage your account."
-        url="https://musicreset.com/cancellation-refund-policy"
-      />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         

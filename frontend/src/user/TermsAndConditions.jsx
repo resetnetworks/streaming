@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
-import PageSEO from "../components/SEO/PageSEO";
 
 
 const TermsAndConditions = () => {
@@ -127,11 +126,6 @@ const TermsAndConditions = () => {
 
   return (
     <>
-      <PageSEO 
-        title="Terms and Conditions - Reset Streaming Platform | Reset Music"
-        description="Read the Terms and Conditions for using the Reset Music Streaming Platform by Reset Music. Understand your rights and responsibilities and more."
-        url="https://musicreset.com/terms-and-conditions"
-      />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         {/* Header Section */}

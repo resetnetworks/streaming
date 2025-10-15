@@ -20,7 +20,6 @@ import {
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 import { toast } from "sonner";
-import PageSEO from "../components/SEO/PageSEO";
 
 // ✅ Import Currency Utilities
 import { 
@@ -308,11 +307,6 @@ const Search = () => {
 
   return (
     <>
-      <PageSEO
-        title={getPageTitle()}
-        description={getPageDescription()}
-        url="https://musicreset.com/search"
-      />
       <UserHeader />
       <h1 className="text-xl text-center leading-none text-white">
         Search by artist, album, or song

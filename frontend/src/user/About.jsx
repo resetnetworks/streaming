@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
-import PageSEO from "../components/SEO/PageSEO";
+
 
 const About = () => {
   const navigate = useNavigate();
@@ -54,11 +54,6 @@ const About = () => {
 
   return (
     <>
-      <PageSEO 
-        title="About Us - Reset Music | Music Streaming Platform"
-        description="Learn about Reset Music's mission to connect listeners, creators, and innovators through transformative music experiences. Discover our story and values."
-        url="https://musicreset.com/about"
-      />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         

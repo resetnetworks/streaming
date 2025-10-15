@@ -1,15 +1,9 @@
 import React from "react";
-import PageSEO from "../components/SEO/PageSEO";
 import IconHeader from "../components/user/IconHeader";
 
 const DataDeletion = () => {
   return (
     <>
-     <PageSEO 
-        title="Data Deletion Instructions - Reset Streaming Platform | Reset Music"
-        description="Instructions for deleting your account and data from Reset Music if you signed in using Facebook or Google. Contact us for support."
-        url="https://musicreset.com/data-deletion"
-      />
       <div className="bg-gray-950">
       <IconHeader />
       <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center px-4">

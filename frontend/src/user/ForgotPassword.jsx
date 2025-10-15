@@ -5,7 +5,6 @@ import { MdOutlineEmail } from "react-icons/md";
 import { toast } from "sonner";
 import IconHeader from "../components/user/IconHeader";
 import BackgroundWrapper from "../components/BackgroundWrapper";
-import PageSEO from "../components/SEO/PageSEO";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -36,10 +35,6 @@ const ForgotPassword = () => {
 
   return (
     <>
-      <PageSEO  title="Forgot Password | Reset Music - Account Recovery"
-  description="Forgot your Reset Music password? Request a password reset link to regain access to your account and continue enjoying your favorite music."
-  url="https://musicreset.com/forgot-password"
-/>
     <BackgroundWrapper>
     <section className="w-full min-h-screen flex flex-col items-center">
       <IconHeader />

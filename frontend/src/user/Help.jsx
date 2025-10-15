@@ -1,6 +1,5 @@
 // src/pages/Help.jsx
 import React, { useState } from "react";
-import PageSEO from "../components/SEO/PageSEO";
 import { FiChevronDown, FiChevronRight, FiHelpCircle, FiPhone, FiMail, FiHome } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
@@ -72,11 +71,6 @@ const Help = () => {
 
   return (
     <>
-     <PageSEO
-        title="Help & Support - Reset Streaming Platform | Reset Music"
-        description="Get help with account access, subscriptions, streaming issues, and more on the official support center for Reset Music."
-        url="https://musicreset.com/contact-us" 
-     />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />

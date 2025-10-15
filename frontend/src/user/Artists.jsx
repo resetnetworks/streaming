@@ -16,7 +16,6 @@ import {
 import UserHeader from "../components/user/UserHeader";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import PageSEO from "../components/SEO/PageSEO";
 import { FaPlay, FaMicrophone } from "react-icons/fa";
 import { HiSpeakerWave } from "react-icons/hi2";
 
@@ -171,11 +170,6 @@ const Artists = () => {
 
   return (
     <>
-      <PageSEO 
-      title="Artists | RESET Music Streaming Platform"
-      description="Explore music artists on RESET. Discover experimental, instrumental, and ambient music creators."
-      url={window.location.href}
-    />
 
       <UserHeader />
 

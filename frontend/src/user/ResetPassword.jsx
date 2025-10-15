@@ -6,7 +6,6 @@ import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import IconHeader from "../components/user/IconHeader";
 import BackgroundWrapper from "../components/BackgroundWrapper";
-import PageSEO from "../components/SEO/PageSEO";
 
 const ResetPassword = () => {
   const { token } = useParams();

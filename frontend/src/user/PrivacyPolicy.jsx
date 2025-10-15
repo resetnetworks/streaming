@@ -1,6 +1,5 @@
 // src/pages/PrivacyPolicy.jsx
 import React, { useState } from "react";
-import PageSEO from "../components/SEO/PageSEO";
 import { FiChevronDown, FiChevronRight, FiShield, FiLock, FiHome } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
@@ -129,12 +128,6 @@ Note: If you request data deletion, make sure you send the request using your ow
 
   return (
     <>
-    <PageSEO 
-    title="Privacy Policy - Reset Streaming Platform | Reset Music"
-    description="Learn how Reset Music collects, uses, and protects your personal data. Understand your privacy rights and our commitment to data security."
-    url="https://musicreset.com/privacy-policy"
-    />
-
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />

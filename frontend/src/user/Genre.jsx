@@ -17,7 +17,6 @@ import {
   selectIsGenrePageCached,
   selectGenreCachedPageData,
 } from "../features/songs/songSelectors";
-import PageSEO from "../components/SEO/PageSEO";
 import UserHeader from "../components/user/UserHeader";
 import GenreSongRow from "../components/user/GenreSongRow";
 import SubscribeModal from "../components/user/SubscribeModal";
@@ -311,11 +310,6 @@ const GenrePage = () => {
 
   return (
     <>
-    <PageSEO
-  title={`${headerLabel} Songs | Reset Music`}
-  description={`Listen to ${total} tracks in the ${headerLabel} genre on RESET Music. Stream or purchase songs from your favorite artists.`}
-  url={window.location.href}
-/>
       <UserHeader />
       
       {/* Header */}

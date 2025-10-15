@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom"; // ✅ Add useNavigate
 import { SkeletonTheme } from "react-loading-skeleton";
-import PageSEO from "../components/SEO/PageSEO";
 import "react-loading-skeleton/dist/skeleton.css";
 
 import UserHeader from "../components/user/UserHeader";
@@ -198,16 +197,6 @@ const Artist = () => {
 
   return (
     <>
-      <PageSEO
-        title={artist ? `${artist.name} - Reset Music | Artist` : "Artist - Reset Music"}
-        description={
-          artist
-            ? artist.bio ||
-              `Listen to ${artist.name} on Reset Music. Stream albums, singles, and instrumental, ambient, classical & experimental music.`
-            : "Reset Music Streaming Platform - Explore artists, albums and tracks."
-        }
-        url={window.location.href}
-      />
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div ref={heroSectionRef}>

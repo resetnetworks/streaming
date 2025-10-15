@@ -8,7 +8,6 @@ import { assets } from "../assets/assets";
 import { registerUser } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import PageSEO from "../components/SEO/PageSEO";
 import axios from "../utills/axiosInstance";
 import BackgroundWrapper from "../components/BackgroundWrapper";
 
@@ -105,11 +104,6 @@ const Register = () => {
 
   return (
     <>
-      <PageSEO
-  title="Register | Reset Music - Create Your Free Account"
-  description="Create your free Reset Music account and discover electronic, ambient, and experimental music. Join thousands of music lovers streaming premium tracks."
-  url="https://musicreset.com/register"
-/>
      <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">
         <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />

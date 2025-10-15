@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";
 import { toast } from "sonner";
-import PageSEO from "../components/SEO/PageSEO";
 import BackgroundWrapper from "../components/BackgroundWrapper";
 
 const Login = () => {
@@ -64,11 +63,6 @@ const Login = () => {
 
   return (
     <>
-        <PageSEO
-  title="Login | Reset Music - Streaming Platform"
-  description="Login to Reset Music and access your personalized collection of electronic, ambient, and experimental music. Stream tracks from top artists worldwide."
-  url="https://musicreset.com/login"
-/>
       <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">
         <IconHeader />
