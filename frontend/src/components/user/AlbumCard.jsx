@@ -8,12 +8,12 @@ const AlbumCard = ({
   price,
 }) => {
   return (
-    <div className="md:w-56 w-36 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative">
+    <div className="md:w-56 w-44 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative">
       <div className="relative" onClick={onClick}>
         <img
           src={image}
           alt={`Album cover for ${tag} by ${artists}`}
-          className="w-full md:h-48 h-32 object-cover"
+          className="w-full md:h-48 h-36 object-cover"
         />
         <div
           className="absolute inset-0"

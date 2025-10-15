@@ -116,7 +116,6 @@ function App() {
             <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
             <Route path="/terms-and-conditions" element={<Pages.TermsAndConditions />} />
             <Route path="/cancellation-refund-policy" element={<Pages.CancellationRefundPolicy />} />
-             <Route path="/reset-password/:token" element={ <Pages.ResetPassword /> } />
             <Route path="/about-us" element={<Pages.About />} />
             <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
             <Route path="/" element={<Pages.LandingPage />} />
@@ -152,7 +151,14 @@ function App() {
                 </PublicRoute>
               }
             />
-           
+            <Route
+              path="/reset-password/:token"
+              element={
+                <PublicRoute isAuthenticated={isAuthenticated}>
+                  <Pages.ResetPassword />
+                </PublicRoute>
+              }
+            />
 
             {/* Genre Selection - Protected but Special Case */}
             <Route
