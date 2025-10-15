@@ -10,7 +10,24 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 
-    <!-- Seo tags -->
+    <!-- WebSite Structured Data for Site Name -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Reset Music",
+      "alternateName": ["Reset Streaming Platform", "Reset"],
+      "url": "https://musicreset.com",
+      "description": "Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://musicreset.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- SEO tags -->
     <title>Reset Streaming Platform - Reset Music | Instrumental Music</title>
     <meta
       name="description"
@@ -27,10 +44,11 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="Streaming App" />
+    <meta name="apple-mobile-web-app-title" content="Reset Music" />
     <link rel="canonical" href="https://musicreset.com" />
     <link rel="manifest" href="/manifest.json" />
 
+    <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website" />
     <meta
       property="og:title"
@@ -68,7 +86,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://musicreset.com/icon-192x192.png"
+      content="https://musicreset.com/og-image-1200x630.jpg"
     />
     <meta
       name="twitter:image:alt"
