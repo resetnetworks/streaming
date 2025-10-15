@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 
 const About = () => {
@@ -54,6 +55,31 @@ const About = () => {
 
   return (
     <>
+     <PageSEO
+        title="About Reset Music - Our Mission & Values | Music Streaming Platform"
+        description="Learn about Reset Music's mission to connect music lovers, creators, and innovators. Discover our values, community, and commitment to transformative music experiences."
+        canonicalUrl="https://musicreset.com/about-us"
+        ogTitle="About Reset Music - Transformative Music Platform"
+        ogDescription="Discover Reset Music's mission to connect listeners, creators, and innovators through music that resets, renews, and redefines your connection to sound."
+        structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "About Reset Music",
+    "description": "about Reset Music's mission to connect music lovers, creators, and innovators. Discover our values, community.",
+    "url": "https://musicreset.com/about-us",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Reset Music",
+      "url": "https://musicreset.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@reset93.net",
+        "contactType": "customer support"
+      }
+    },
+    "dateModified": "2025-09-29"
+  }}
+      />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         

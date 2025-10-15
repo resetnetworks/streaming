@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 
 const CancellationRefundPolicy = () => {
@@ -81,6 +82,33 @@ const CancellationRefundPolicy = () => {
 
   return (
     <>
+
+    <PageSEO
+  title="Cancellation & Refund Policy - Reset Music | Subscription Management"
+  description="Learn how to cancel your Reset Music artist subscriptions and understand our refund policy. Step-by-step cancellation guide, policy details, and frequently asked questions."
+  canonicalUrl="https://musicreset.com/cancellation-refund-policy"
+  ogTitle="Reset Music Cancellation & Refund Policy"
+  ogDescription="Complete guide to canceling subscriptions and understanding Reset Music's refund policy. Easy steps to manage your artist subscriptions."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Cancellation & Refund Policy",
+    "description": "Reset Music cancellation and refund policy page with step-by-step cancellation guide",
+    "url": "https://musicreset.com/cancellation-refund-policy",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Reset Music",
+      "url": "https://musicreset.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@reset93.net",
+        "contactType": "customer support"
+      }
+    },
+    "dateModified": "2025-09-29"
+  }}
+/>
+
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         

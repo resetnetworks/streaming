@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
@@ -128,6 +129,76 @@ Note: If you request data deletion, make sure you send the request using your ow
 
   return (
     <>
+    <PageSEO
+  title="Privacy Policy - Reset Music | Data Protection & User Privacy"
+  description="Learn how Reset Music collects, uses, and protects your personal data. Comprehensive privacy policy covering data security, user rights, and data deletion procedures."
+  canonicalUrl="https://musicreset.com/privacy-policy"
+  ogTitle="Reset Music Privacy Policy - Your Data Protection Rights"
+  ogDescription="Understand how Reset Music handles your personal information, protects your privacy, and ensures data security while you stream music."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Privacy Policy",
+    "description": "Reset Music privacy policy outlining data collection, usage, protection, and user rights",
+    "url": "https://musicreset.com/privacy-policy",
+    "mainEntity": {
+      "@type": "Article",
+      "headline": "Reset Music Privacy Policy",
+      "datePublished": "2025-07-24",
+      "dateModified": "2025-07-25",
+      "author": {
+        "@type": "Organization",
+        "name": "Reset Networks Studios"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Reset Music",
+        "url": "https://musicreset.com",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "contact@reset93.net",
+          "contactType": "privacy officer",
+          "areaServed": "Worldwide"
+        }
+      },
+      "about": [
+        {
+          "@type": "Thing",
+          "name": "Data Collection",
+          "description": "Information about what personal data Reset Music collects from users"
+        },
+        {
+          "@type": "Thing", 
+          "name": "Data Protection",
+          "description": "Security measures and encryption used to protect user data"
+        },
+        {
+          "@type": "Thing",
+          "name": "User Rights",
+          "description": "Rights users have regarding their personal data including access, correction, and deletion"
+        }
+      ]
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://musicreset.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Privacy Policy",
+          "item": "https://musicreset.com/privacy-policy"
+        }
+      ]
+    }
+  }}
+/>
+
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />

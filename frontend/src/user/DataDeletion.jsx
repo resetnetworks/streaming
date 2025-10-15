@@ -1,9 +1,35 @@
 import React from "react";
 import IconHeader from "../components/user/IconHeader";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 const DataDeletion = () => {
   return (
     <>
+    <PageSEO
+  title="Data Deletion Instructions - Reset Music | Delete Account Data"
+  description="Learn how to delete your Reset Music account data and personal information. Simple 4-step process to request complete data deletion within 7 business days."
+  canonicalUrl="https://musicreset.com/data-deletion"
+  ogTitle="Reset Music Data Deletion - Delete Your Account Data"
+  ogDescription="Delete your Reset Music account and all associated data. Follow our simple data deletion process to protect your privacy."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Data Deletion Instructions",
+    "description": "Instructions for deleting personal data from Reset Music platform",
+    "url": "https://musicreset.com/data-deletion",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Reset Music",
+      "url": "https://musicreset.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@reset93.net",
+        "contactType": "customer support"
+      }
+    }
+  }}
+/>
+
       <div className="bg-gray-950">
       <IconHeader />
       <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center px-4">

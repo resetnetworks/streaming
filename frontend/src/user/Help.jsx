@@ -71,6 +71,69 @@ const Help = () => {
 
   return (
     <>
+    <PageSEO
+  title="Help & Support - Reset Music | FAQ & Customer Support"
+  description="Get help with Reset Music account issues, subscriptions, payments, and technical problems. Find answers to frequently asked questions or contact our support team."
+  canonicalUrl="https://musicreset.com/contact-us"
+  ogTitle="Reset Music Help Center - Customer Support & FAQ"
+  ogDescription="Find solutions to common Reset Music issues including account access, subscription management, payment problems, and streaming technical support."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "name": "Reset Music Help & Support",
+    "description": "Frequently asked questions and support information for Reset Music streaming platform",
+    "url": "https://musicreset.com/contact-us",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What should I do if I forgot my password?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "To reset your password, log out of your account, go to the login page and click 'Reset Password' below the password field. Enter your email address and click 'Send Reset Link'. A reset link will be sent to your email."
+        }
+      },
+      {
+        "@type": "Question", 
+        "name": "I made a payment but didn't receive the song or subscription. What should I do?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "If you've completed a payment but haven't received access, contact us at contact@reset93.net with your registered email, payment proof, and the name of the song or artist you paid for."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I cancel my subscription?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "To cancel your subscription, go to your purchases and select the artist you want to cancel. Then, click the red 'Cancel' button."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "My player is stuck in the loading state. What should I do?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You need to click on a song to start playback. This is common for new users - once you select a song, the player will activate and work normally."
+        }
+      }
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "Reset Music",
+      "url": "https://musicreset.com",
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "email": "contact@reset93.net",
+          "telephone": "+919266084749",
+          "contactType": "customer support",
+          "areaServed": "Worldwide"
+        }
+      ]
+    }
+  }}
+/>
+
       
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />

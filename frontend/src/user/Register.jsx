@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "../utills/axiosInstance";
 import BackgroundWrapper from "../components/BackgroundWrapper";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -104,6 +105,50 @@ const Register = () => {
 
   return (
     <>
+    <PageSEO
+  title="Create Account - Reset Music | Sign Up for Music Streaming"
+  description="Join Reset Music and create your free account to stream ambient, instrumental, and experimental music. Sign up with email or Google to start your musical journey."
+  canonicalUrl="https://musicreset.com/register"
+  ogTitle="Join Reset Music - Create Your Account"
+  ogDescription="Sign up for Reset Music and discover ambient, electronic, and experimental music. Create your free account and start streaming today."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Create Account - Reset Music",
+    "description": "User registration page for Reset Music streaming platform",
+    "url": "https://musicreset.com/register",
+    "mainEntity": {
+      "@type": "WebApplication",
+      "name": "Reset Music Registration",
+      "applicationCategory": "Music Streaming",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "description": "Free account registration for Reset Music streaming platform"
+      },
+      "featureList": [
+        "Stream ambient and electronic music",
+        "Create personalized playlists", 
+        "Subscribe to artists",
+        "Discover experimental music"
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Reset Music",
+      "url": "https://musicreset.com"
+    },
+    "potentialAction": {
+      "@type": "RegisterAction",
+      "target": "https://musicreset.com/register",
+      "name": "Create Reset Music Account"
+    }
+  }}
+  noIndex={true}
+/>
+
      <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">
         <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />

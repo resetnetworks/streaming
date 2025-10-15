@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authSlice";
 import { toast } from "sonner";
 import BackgroundWrapper from "../components/BackgroundWrapper";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -63,6 +64,44 @@ const Login = () => {
 
   return (
     <>
+    <PageSEO
+  title="Login - Reset Music | Sign In to Your Account"
+  description="Sign in to your Reset Music account to access your playlists, subscriptions, and stream ambient, instrumental, and experimental music. Login with email or Google."
+  canonicalUrl="https://musicreset.com/login"
+  ogTitle="Sign In to Reset Music - Access Your Account"
+  ogDescription="Login to Reset Music and continue your musical journey. Access your personalized playlists and artist subscriptions."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Login - Reset Music",
+    "description": "User login page for Reset Music streaming platform",
+    "url": "https://musicreset.com/login",
+    "mainEntity": {
+      "@type": "WebApplication",
+      "name": "Reset Music Login",
+      "applicationCategory": "Music Streaming",
+      "operatingSystem": "Web Browser",
+      "featureList": [
+        "Access personal playlists",
+        "Manage artist subscriptions",
+        "Stream music library",
+        "Personalized recommendations"
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Reset Music",
+      "url": "https://musicreset.com"
+    },
+    "potentialAction": {
+      "@type": "LoginAction",
+      "target": "https://musicreset.com/login",
+      "name": "Sign In to Reset Music Account"
+    }
+  }}
+  noIndex={true}
+/>
+
       <BackgroundWrapper>
       <section className="w-full min-h-screen flex flex-col items-center">
         <IconHeader />

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 
 const TermsAndConditions = () => {
@@ -126,6 +127,81 @@ const TermsAndConditions = () => {
 
   return (
     <>
+    <PageSEO
+  title="Terms and Conditions - Reset Music | User Agreement & Service Terms"
+  description="Read Reset Music's terms and conditions governing the use of our streaming platform. Understand user agreements, service rules, payments, subscriptions, and legal obligations."
+  canonicalUrl="https://musicreset.com/terms-and-conditions"
+  ogTitle="Reset Music Terms and Conditions - Service Agreement"
+  ogDescription="Complete terms and conditions for Reset Music streaming platform covering user agreements, payment terms, service usage rules, and legal obligations."
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Terms and Conditions",
+    "description": "Legal terms and conditions governing the use of Reset Music streaming platform",
+    "url": "https://musicreset.com/terms-and-conditions",
+    "mainEntity": {
+      "@type": "Article",
+      "headline": "Reset Music Terms and Conditions",
+      "datePublished": "2025-09-17",
+      "dateModified": "2025-09-17",
+      "author": {
+        "@type": "Organization",
+        "name": "Reset Music"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Reset Music",
+        "url": "https://musicreset.com",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "contact@reset93.net",
+          "contactType": "legal department",
+          "areaServed": "Worldwide"
+        }
+      },
+      "about": [
+        {
+          "@type": "Thing",
+          "name": "Service Agreement",
+          "description": "Legal agreement between Reset Music and platform users"
+        },
+        {
+          "@type": "Thing",
+          "name": "Payment Terms",
+          "description": "Terms governing payments, subscriptions, and refunds"
+        },
+        {
+          "@type": "Thing",
+          "name": "Usage Rules",
+          "description": "Rules and restrictions for using the music streaming service"
+        },
+        {
+          "@type": "Thing",
+          "name": "User Responsibilities",
+          "description": "Obligations and responsibilities of platform users"
+        }
+      ]
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://musicreset.com"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Terms and Conditions",
+          "item": "https://musicreset.com/terms-and-conditions"
+        }
+      ]
+    }
+  }}
+/>
+
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
         {/* Header Section */}
