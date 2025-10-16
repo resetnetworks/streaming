@@ -6,8 +6,8 @@ const DataDeletion = () => {
   return (
     <>
     <PageSEO
-  title="Data Deletion Instructions - Reset Music | Delete Account Data"
-  description="Learn how to delete your Reset Music account data and personal information. Simple 4-step process to request complete data deletion within 7 business days."
+  title="Data Deletion - Reset Music Streaming Account Guide"
+description="Learn how to delete your Reset Music streaming account data & personal information. Simple 4-step process for complete data deletion."
   canonicalUrl="https://musicreset.com/data-deletion"
   structuredData={{
     "@context": "https://schema.org",

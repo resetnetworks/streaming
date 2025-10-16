@@ -65,8 +65,8 @@ const Login = () => {
   return (
     <>
     <PageSEO
-  title="Login - Reset Music | Sign In to Your Account"
-  description="Sign in to your Reset Music account to access your playlists, subscriptions, and stream ambient, instrumental, and experimental music. Login with email or Google."
+  title="Login - Reset Music Streaming | Sign In Account"
+description="Sign in to your Reset Music streaming account to access playlists, subscriptions & stream ambient, instrumental music. Login with email."
   canonicalUrl="https://musicreset.com/login"
   structuredData={{
     "@context": "https://schema.org",

@@ -56,11 +56,9 @@ const About = () => {
   return (
     <>
      <PageSEO
-        title="About Reset Music - Our Mission & Values | Music Streaming Platform"
-        description="Learn about Reset Music's mission to connect music lovers, creators, and innovators. Discover our values, community, and commitment to transformative music experiences."
+        title="About Reset Music Streaming - Our Mission & Values"
+        description="Learn about Reset Music streaming platform's mission to connect music lovers & creators. Discover our values, community & transformative music."
         canonicalUrl="https://musicreset.com/about-us"
-        ogTitle="About Reset Music - Transformative Music Platform"
-        ogDescription="Discover Reset Music's mission to connect listeners, creators, and innovators through music that resets, renews, and redefines your connection to sound."
         structuredData={{
     "@context": "https://schema.org",
     "@type": "WebPage",

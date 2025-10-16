@@ -128,8 +128,8 @@ const TermsAndConditions = () => {
   return (
     <>
     <PageSEO
-  title="Terms and Conditions - Reset Music | User Agreement & Service Terms"
-  description="Read Reset Music's terms and conditions governing the use of our streaming platform. Understand user agreements, service rules, payments, subscriptions, and legal obligations."
+  title="Terms & Conditions - Reset Music Streaming | User Agreement"
+description="Read Reset Music streaming terms & conditions governing platform use. Understand user agreements, service rules, payments & subscriptions."
   canonicalUrl="https://musicreset.com/terms-and-conditions"
   structuredData={{
     "@context": "https://schema.org",

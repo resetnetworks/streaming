@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // 👇 Your domain (must be https if deployed with SSL)
-const BASE_URL = 'https://www.musicreset.com';
+const BASE_URL = 'https://musicreset.com';
 
 const pages = [
   // ===== MAIN PAGES (Static) =====

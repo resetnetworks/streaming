@@ -84,8 +84,8 @@ const CancellationRefundPolicy = () => {
     <>
 
     <PageSEO
-  title="Cancellation & Refund Policy - Reset Music | Subscription Management"
-  description="Learn how to cancel your Reset Music artist subscriptions and understand our refund policy. Step-by-step cancellation guide, policy details, and frequently asked questions."
+  title="Cancellation & Refund - Reset Music Streaming Policy"
+  description="Learn how to cancel Reset Music streaming subscriptions & understand our refund policy. Step-by-step cancellation guide & policy details."
   canonicalUrl="https://musicreset.com/cancellation-refund-policy"
   structuredData={{
     "@context": "https://schema.org",

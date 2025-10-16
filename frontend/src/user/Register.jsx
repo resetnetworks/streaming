@@ -106,8 +106,8 @@ const Register = () => {
   return (
     <>
     <PageSEO
-  title="Create Account - Reset Music | Sign Up for Music Streaming"
-  description="Join Reset Music and create your free account to stream ambient, instrumental, and experimental music. Sign up with email or Google to start your musical journey."
+  title="Create Account - Reset Music Streaming | Sign Up Free"
+description="Join Reset Music streaming & create your free account to stream ambient, instrumental & experimental music. Sign up with email to start."
   canonicalUrl="https://musicreset.com/register"
   structuredData={{
     "@context": "https://schema.org",

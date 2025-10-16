@@ -72,9 +72,8 @@ const Help = () => {
   return (
     <>
     <PageSEO
-  title="Help & Support - Reset Music | FAQ & Customer Support"
-  description="Get help with Reset Music account issues, subscriptions, payments, and technical problems. Find answers to frequently asked questions or contact our support team."
-  canonicalUrl="https://musicreset.com/contact-us"
+  title="Help & Support - Reset Music Streaming | FAQ Guide"
+description="Get help with Reset Music streaming account issues, subscriptions, payments & technical problems. Find FAQ answers or contact support."
   structuredData={{
     "@context": "https://schema.org",
     "@type": "FAQPage",
