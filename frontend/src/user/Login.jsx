@@ -68,8 +68,6 @@ const Login = () => {
   title="Login - Reset Music | Sign In to Your Account"
   description="Sign in to your Reset Music account to access your playlists, subscriptions, and stream ambient, instrumental, and experimental music. Login with email or Google."
   canonicalUrl="https://musicreset.com/login"
-  ogTitle="Sign In to Reset Music - Access Your Account"
-  ogDescription="Login to Reset Music and continue your musical journey. Access your personalized playlists and artist subscriptions."
   structuredData={{
     "@context": "https://schema.org",
     "@type": "WebPage",

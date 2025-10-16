@@ -109,8 +109,6 @@ const Register = () => {
   title="Create Account - Reset Music | Sign Up for Music Streaming"
   description="Join Reset Music and create your free account to stream ambient, instrumental, and experimental music. Sign up with email or Google to start your musical journey."
   canonicalUrl="https://musicreset.com/register"
-  ogTitle="Join Reset Music - Create Your Account"
-  ogDescription="Sign up for Reset Music and discover ambient, electronic, and experimental music. Create your free account and start streaming today."
   structuredData={{
     "@context": "https://schema.org",
     "@type": "WebPage",

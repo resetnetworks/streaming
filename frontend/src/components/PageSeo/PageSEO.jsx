@@ -6,9 +6,6 @@ const PageSEO = ({
   description,
   keywords,
   canonicalUrl,
-  ogTitle,
-  ogDescription,
-  ogImage,
   ogUrl,
   twitterTitle,
   twitterDescription,
@@ -21,7 +18,6 @@ const PageSEO = ({
   const defaultTitle = "Reset Streaming Platform - Reset Music | Instrumental Music";
   const defaultDescription = "Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles.";
   const defaultKeywords = "reset streaming platform, musicreset, reset music, ambient music streaming, instrumental music platform, experimental music, electronic music, classical music, sound design, audiophile platform, IDM, drone, techno, electroacoustic";
-  const defaultOgImage = "https://musicreset.com/og-image-1200x630.jpg";
   const defaultUrl = "https://musicreset.com";
 
   // Default WebSite structured data
@@ -44,13 +40,9 @@ const PageSEO = ({
   const finalDescription = description || defaultDescription;
   const finalKeywords = keywords || defaultKeywords;
   const finalCanonicalUrl = canonicalUrl || defaultUrl;
-  const finalOgTitle = ogTitle || finalTitle;
-  const finalOgDescription = ogDescription || finalDescription;
-  const finalOgImage = ogImage || defaultOgImage;
   const finalOgUrl = ogUrl || finalCanonicalUrl;
   const finalTwitterTitle = twitterTitle || finalTitle;
   const finalTwitterDescription = twitterDescription || finalDescription;
-  const finalTwitterImage = twitterImage || finalOgImage;
 
   // Use provided structured data or default WebSite schema
   const finalStructuredData = structuredData || defaultWebSiteSchema;
@@ -72,11 +64,8 @@ const PageSEO = ({
 
       {/* Open Graph Meta Tags */}
       <meta property="og:type" content="website" />
-      <meta property="og:title" content={finalOgTitle} />
-      <meta property="og:description" content={finalOgDescription} />
       <meta property="og:url" content={finalOgUrl} />
       <meta property="og:site_name" content="Reset Music" />
-      <meta property="og:image" content={finalOgImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content="Reset Music - Ambient and Electronic Music Streaming Platform" />
@@ -107,9 +96,6 @@ PageSEO.propTypes = {
   description: PropTypes.string,
   keywords: PropTypes.string,
   canonicalUrl: PropTypes.string,
-  ogTitle: PropTypes.string,
-  ogDescription: PropTypes.string,
-  ogImage: PropTypes.string,
   ogUrl: PropTypes.string,
   twitterTitle: PropTypes.string,
   twitterDescription: PropTypes.string,

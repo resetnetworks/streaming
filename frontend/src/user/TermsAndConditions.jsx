@@ -131,8 +131,6 @@ const TermsAndConditions = () => {
   title="Terms and Conditions - Reset Music | User Agreement & Service Terms"
   description="Read Reset Music's terms and conditions governing the use of our streaming platform. Understand user agreements, service rules, payments, subscriptions, and legal obligations."
   canonicalUrl="https://musicreset.com/terms-and-conditions"
-  ogTitle="Reset Music Terms and Conditions - Service Agreement"
-  ogDescription="Complete terms and conditions for Reset Music streaming platform covering user agreements, payment terms, service usage rules, and legal obligations."
   structuredData={{
     "@context": "https://schema.org",
     "@type": "WebPage",

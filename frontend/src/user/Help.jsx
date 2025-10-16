@@ -75,8 +75,6 @@ const Help = () => {
   title="Help & Support - Reset Music | FAQ & Customer Support"
   description="Get help with Reset Music account issues, subscriptions, payments, and technical problems. Find answers to frequently asked questions or contact our support team."
   canonicalUrl="https://musicreset.com/contact-us"
-  ogTitle="Reset Music Help Center - Customer Support & FAQ"
-  ogDescription="Find solutions to common Reset Music issues including account access, subscription management, payment problems, and streaming technical support."
   structuredData={{
     "@context": "https://schema.org",
     "@type": "FAQPage",

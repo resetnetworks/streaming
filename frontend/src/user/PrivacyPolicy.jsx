@@ -133,8 +133,6 @@ Note: If you request data deletion, make sure you send the request using your ow
   title="Privacy Policy - Reset Music | Data Protection & User Privacy"
   description="Learn how Reset Music collects, uses, and protects your personal data. Comprehensive privacy policy covering data security, user rights, and data deletion procedures."
   canonicalUrl="https://musicreset.com/privacy-policy"
-  ogTitle="Reset Music Privacy Policy - Your Data Protection Rights"
-  ogDescription="Understand how Reset Music handles your personal information, protects your privacy, and ensures data security while you stream music."
   structuredData={{
     "@context": "https://schema.org",
     "@type": "WebPage",
