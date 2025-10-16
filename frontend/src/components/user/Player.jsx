@@ -103,7 +103,6 @@ const Player = () => {
   // ✅ NEW: Set random default song if none exists on component mount
   useEffect(() => {
     if (!hasPersistentDefault && songs.length > 0) {
-      console.log("No persistent default song found, setting random default from", songs.length, "songs");
       dispatch(setRandomDefaultFromSongs(songs));
     }
   }, [hasPersistentDefault, songs.length, dispatch]);
@@ -116,7 +115,6 @@ const Player = () => {
       if (!songInContext) {
         // Song doesn't belong to current context, switch to library mode silently
         dispatch(clearPlaybackContext());
-        console.log("Auto-switched to library playback - song not in current context");
       }
     }
   }, [currentSong?._id, playbackContext.type, playbackContextSongs, dispatch]);
@@ -279,7 +277,6 @@ const Player = () => {
     
     // ✅ UPDATED: If display-only mode, make default song selected first
     if (isDisplayOnly && defaultSong) {
-      console.log("Converting display-only song to selected song:", defaultSong.title);
       dispatch(setSelectedSong(defaultSong));
       dispatch(play());
       return;

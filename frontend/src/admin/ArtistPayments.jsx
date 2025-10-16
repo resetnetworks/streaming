@@ -29,8 +29,6 @@ const ArtistPayments = () => {
     dispatch(fetchSubscriberCount(artistId));
   }, [dispatch, artistId]);
 
-  // console.log(transactions, revenueBreakdown, subscriberCount, totalRevenue);
-
   // ✅ Safe filter with null checks
   const paidTransactions = transactions?.filter((txn) => 
     txn && txn.status === 'paid'

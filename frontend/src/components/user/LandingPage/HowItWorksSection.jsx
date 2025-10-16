@@ -241,7 +241,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                     controls={false}
                     className="w-full h-full object-cover"
                     onLoadedData={() => {
-                      console.log("Video loaded successfully");
                     }}
                     onError={(e) => {
                       console.error("Video error:", e);

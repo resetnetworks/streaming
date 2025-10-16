@@ -68,7 +68,6 @@ function App() {
         // Get all available songs from all collections
         const allAvailableSongs = availableSongsCollections.flatMap(collection => collection.songs);
         if (allAvailableSongs.length > 0) {
-          console.log("Setting initial default song from", allAvailableSongs.length, "available songs");
           dispatch(setRandomDefaultFromSongs(allAvailableSongs));
         }
       }

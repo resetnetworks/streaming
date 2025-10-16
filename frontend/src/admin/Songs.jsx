@@ -163,7 +163,6 @@ const Songs = () => {
 
   const handleAddOrUpdateSong = useCallback(async (formData) => {
     if (isSubmitting) {
-      console.log('Already submitting, ignoring duplicate submission');
       return;
     }
 

@@ -62,7 +62,6 @@ export const useSubscriptionPayment = () => {
           throw new Error('PayPal plan information is missing.');
         }
 
-        console.log('Selected PayPal Plan:', paypalPlan); // Debug log
 
         // ✅ NEW: Use selected PayPal plan for subscription
         const paypalResponse = await dispatch(initiatePaypalSubscription({

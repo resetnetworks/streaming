@@ -128,7 +128,6 @@ export const useSongCache = (type, options = {}) => {
       initialFetchDone && 
       status === 'succeeded'
     ) {
-      console.log(`Setting random default song from ${songs.length} loaded songs`);
       dispatch(setRandomDefaultFromSongs(songs));
     }
   }, [songs, selectedSong, defaultSong, initialFetchDone, status, dispatch]);
