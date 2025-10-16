@@ -77,7 +77,6 @@ const PageSEO = ({
       <meta name="twitter:creator" content="@musicreset" />
       <meta name="twitter:title" content={finalTwitterTitle} />
       <meta name="twitter:description" content={finalTwitterDescription} />
-      <meta name="twitter:image" content={finalTwitterImage} />
       <meta name="twitter:image:alt" content="Reset Music - Ambient and Electronic Music Streaming Platform" />
 
       {/* Default WebSite Structured Data - Always included */}
