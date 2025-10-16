@@ -365,8 +365,6 @@ description="Read Reset Music streaming terms & conditions governing platform us
 
        <Footer />
       </div>
-
-      {/* end  */}
     </>
   );
 };
