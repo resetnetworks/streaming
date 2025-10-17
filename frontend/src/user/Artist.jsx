@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom"; // ✅ Add useNavigate
+import { useParams, useNavigate } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -12,12 +12,13 @@ import ArtistSinglesSection from "../components/user/Artist/ArtistSinglesSection
 import ArtistAboutSection from "../components/user/Artist/ArtistAboutSection";
 import SubscriptionMethodModal from "../components/user/SubscriptionMethodModal";
 import PaymentMethodModal from "../components/user/PaymentMethodModal";
-import SubscribeModal from "../components/user/SubscribeModal"; // ✅ Import SubscribeModal
+import SubscribeModal from "../components/user/SubscribeModal";
 import PaymentErrorNotification from "../components/user/Artist/PaymentErrorNotification";
 
 import { 
   fetchArtistBySlug,
   fetchSubscriberCount,
+  clearSelectedArtist, // ✅ Add this import
 } from "../features/artists/artistsSlice";
 import { selectSelectedArtist } from "../features/artists/artistsSelectors";
 import { fetchUserSubscriptions } from "../features/payments/userPaymentSlice";
@@ -27,23 +28,21 @@ import { getAlbumsByArtist } from "../features/albums/albumsSlice";
 import { fetchSongsByArtist } from "../features/songs/songSlice";
 import { useSubscriptionPayment } from "../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../hooks/usePaymentGateway";
-import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions"; // ✅ Import subscription utility
+import { hasArtistSubscriptionInPurchaseHistory } from "../utills/subscriptions";
 
 const Artist = () => {
   const { artistId } = useParams();
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ Add navigate hook
+  const navigate = useNavigate();
   const heroSectionRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   
-  // ✅ Add SubscribeModal states
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
-  const [modalType, setModalType] = useState(null); // "play" | "purchase"
-  const [modalData, setModalData] = useState(null); // song or item
+  const [modalType, setModalType] = useState(null);
+  const [modalData, setModalData] = useState(null);
   
-  // ✅ Add loading states for payments
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   
@@ -59,14 +58,13 @@ const Artist = () => {
     closeSubscriptionOptions
   } = useSubscriptionPayment();
   
-  // ✅ Updated to use payment gateway hook with currency support
   const {
     showPaymentOptions,
     pendingPayment,
     openPaymentOptions,
     handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
     closePaymentOptions,
-    getPaymentDisplayInfo // ✅ Add this helper function
+    getPaymentDisplayInfo
   } = usePaymentGateway();
 
   useEffect(() => {
@@ -81,6 +79,11 @@ const Artist = () => {
     }
     return () => observer.disconnect();
   }, []);
+
+  // ✅ Clear previous artist data immediately when artistId changes
+  useEffect(() => {
+    dispatch(clearSelectedArtist());
+  }, [artistId, dispatch]);
 
   useEffect(() => {
     if (artistId) {
@@ -104,7 +107,6 @@ const Artist = () => {
     };
   }, [dispatch]);
 
-  // ✅ Add SubscribeModal handlers
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);
@@ -114,8 +116,6 @@ const Artist = () => {
 
   const handleNavigateToArtist = () => {
     handleSubscribeModalClose();
-    // Since we're already on the artist page, we can scroll to subscription section
-    // or just close the modal and let user subscribe via hero section
   };
 
   const handleCloseSubscriptionOptions = () => {
@@ -123,27 +123,22 @@ const Artist = () => {
     setSubscriptionLoading(false);
   };
 
-  // ✅ Updated purchase handler to support currency data
   const handlePurchaseClick = (item, itemType, currencyData = null) => {
-    // Reset processing states before opening payment modal
     setProcessingPayment(false);
     setPaymentLoading(false);
     openPaymentOptions(item, itemType, currencyData);
   };
 
-  // ✅ Wrapper for payment method selection with loading states
   const handlePaymentMethodSelect = async (gateway) => {
     try {
       setProcessingPayment(true);
       setPaymentLoading(true);
       
-      // Call the original payment method select
       await originalHandlePaymentMethodSelect(gateway);
       
     } catch (error) {
       console.error('Payment method selection error:', error);
     } finally {
-      // Reset loading states after payment processing
       setTimeout(() => {
         setProcessingPayment(false);
         setPaymentLoading(false);
@@ -151,25 +146,21 @@ const Artist = () => {
     }
   };
 
-  // ✅ Enhanced close handler
   const handleClosePaymentOptions = () => {
     setProcessingPayment(false);
     setPaymentLoading(false);
     closePaymentOptions();
   };
 
-  // ✅ Add subscription decision handler
   const handleSubscribeDecision = (artist, type, data) => {
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
 
     if (type === "purchase") {
       if (alreadySubscribed) {
-        // User is already subscribed, proceed with purchase
         const itemType = data.type || "song";
         handlePurchaseClick(data, itemType);
         return;
       }
-      // User is not subscribed, show subscribe modal
       setModalArtist(artist);
       setModalType(type);
       setModalData(data);
@@ -211,14 +202,12 @@ const Artist = () => {
           />
         </div>
         
-        {/* ✅ Updated ArtistSongsSection with subscription handler */}
         <ArtistSongsSection 
           artistId={artistId} 
           artist={artist}
           onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
         />
         
-        {/* ✅ Updated ArtistAlbumsSection with subscription handler */}
         <ArtistAlbumsSection
           artistId={artistId}
           currentUser={currentUser}
@@ -228,12 +217,11 @@ const Artist = () => {
           paymentLoading={paymentLoading}
         />
         
-        {/* ✅ Updated ArtistSinglesSection with subscription handler */}
         <ArtistSinglesSection
           artistId={artistId}
           currentUser={currentUser}
           onPurchaseClick={handlePurchaseClick}
-          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)} // ✅ Add this
+          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />
@@ -261,7 +249,6 @@ const Artist = () => {
           subscriptionPrice={pendingSubscription?.subscriptionPrice}
         />
         
-        {/* ✅ Enhanced PaymentMethodModal with currency data support */}
         <PaymentMethodModal
           open={showPaymentOptions}
           onClose={handleClosePaymentOptions}
@@ -272,7 +259,6 @@ const Artist = () => {
           getPaymentDisplayInfo={getPaymentDisplayInfo}
         />
 
-        {/* ✅ Add SubscribeModal */}
         <SubscribeModal
           open={subscribeModalOpen}
           artist={modalArtist}

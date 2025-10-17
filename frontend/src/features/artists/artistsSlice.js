@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance";
 
-// Thunks
+// Thunks (same as before - no changes)
 export const fetchAllArtists = createAsyncThunk(
   "artists/fetchAll",
   async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
@@ -138,7 +138,6 @@ export const searchArtists = createAsyncThunk(
   }
 );
 
-// ✅ NEW: Fetch Subscriber Count Thunk
 export const fetchSubscriberCount = createAsyncThunk(
   "artists/fetchSubscriberCount",
   async (artistId, thunkAPI) => {
@@ -179,26 +178,21 @@ const artistSlice = createSlice({
       total: 0,
       totalPages: 0,
     },
-    // ✅ Cache system properties for paginated artists
     isCached: false,
     lastFetchTime: null,
     cachedPages: [],
-    cachedData: {}, // Store data for each page
-    
-    // ✅ Cache system properties for full artist list (no pagination)
+    cachedData: {},
     isFullListCached: false,
     fullListLastFetchTime: null,
-
-    // ✅ NEW: Subscriber Count State
-    subscriberCounts: {}, // { artistId: { activeSubscribers: number, totalRevenue: number } }
+    subscriberCounts: {},
     subscriberCountLoading: false,
     subscriberCountError: null,
   },
   reducers: {
     clearSelectedArtist: (state) => {
       state.selectedArtist = null;
+      state.loading = true; // ✅ Show loading when clearing
     },
-    // ✅ Cache management reducers
     clearCache: (state) => {
       state.allArtists = [];
       state.isCached = false;
@@ -212,15 +206,12 @@ const artistSlice = createSlice({
         totalPages: 0,
       };
     },
-    // ✅ Clear full list cache
     clearFullListCache: (state) => {
       state.fullArtistList = [];
       state.isFullListCached = false;
       state.fullListLastFetchTime = null;
     },
-    // ✅ Clear all caches
     clearAllCaches: (state) => {
-      // Clear paginated cache
       state.allArtists = [];
       state.isCached = false;
       state.lastFetchTime = null;
@@ -232,7 +223,6 @@ const artistSlice = createSlice({
         total: 0,
         totalPages: 0,
       };
-      // Clear full list cache
       state.fullArtistList = [];
       state.isFullListCached = false;
       state.fullListLastFetchTime = null;
@@ -251,12 +241,9 @@ const artistSlice = createSlice({
         state.pagination = state.cachedData[page].pagination;
       }
     },
-    // ✅ Load full list from cache
     loadFullListFromCache: (state) => {
-      // Data is already in fullArtistList, just update loading state
       state.loading = false;
     },
-    // ✅ NEW: Clear subscriber count data
     clearSubscriberCount: (state, action) => {
       if (action.payload) {
         delete state.subscriberCounts[action.payload];
@@ -275,7 +262,6 @@ const artistSlice = createSlice({
         state.loading = false;
         state.allArtists = action.payload.artists;
         state.pagination = action.payload.pagination;
-        // ✅ Cache the data
         state.isCached = true;
         state.lastFetchTime = Date.now();
         const page = action.payload.pagination.page;
@@ -292,7 +278,6 @@ const artistSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ✅ Enhanced fetchAllArtistsNoPagination with cache
       .addCase(fetchAllArtistsNoPagination.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -300,7 +285,6 @@ const artistSlice = createSlice({
       .addCase(fetchAllArtistsNoPagination.fulfilled, (state, action) => {
         state.loading = false;
         state.fullArtistList = action.payload;
-        // ✅ Cache the full artist list
         state.isFullListCached = true;
         state.fullListLastFetchTime = Date.now();
       })
@@ -310,6 +294,7 @@ const artistSlice = createSlice({
       })
 
       .addCase(fetchArtistBySlug.pending, (state) => {
+        state.selectedArtist = null; // ✅ Clear previous data immediately
         state.loading = true;
         state.error = null;
       })
@@ -329,7 +314,6 @@ const artistSlice = createSlice({
       .addCase(createArtist.fulfilled, (state, action) => {
         state.loading = false;
         state.allArtists.push(action.payload);
-        // ✅ Clear all caches when new artist is created
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
@@ -350,11 +334,9 @@ const artistSlice = createSlice({
         const index = state.allArtists.findIndex(a => a._id === action.payload._id);
         if (index !== -1) state.allArtists[index] = action.payload;
         
-        // ✅ Update in full list cache as well
         const fullListIndex = state.fullArtistList.findIndex(a => a._id === action.payload._id);
         if (fullListIndex !== -1) state.fullArtistList[fullListIndex] = action.payload;
         
-        // ✅ Clear all caches when artist is updated
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
@@ -374,13 +356,11 @@ const artistSlice = createSlice({
         state.loading = false;
         state.allArtists = state.allArtists.filter(artist => artist._id !== action.payload);
         state.fullArtistList = state.fullArtistList.filter(artist => artist._id !== action.payload);
-        // ✅ Clear all caches when artist is deleted
         state.isCached = false;
         state.cachedPages = [];
         state.cachedData = {};
         state.isFullListCached = false;
         state.fullListLastFetchTime = null;
-        // ✅ Clear subscriber count for deleted artist
         delete state.subscriberCounts[action.payload];
       })
       .addCase(deleteArtist.rejected, (state, action) => {
@@ -417,7 +397,6 @@ const artistSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ✅ NEW: Subscriber Count Cases
       .addCase(fetchSubscriberCount.pending, (state) => {
         state.subscriberCountLoading = true;
         state.subscriberCountError = null;
