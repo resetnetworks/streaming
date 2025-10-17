@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchStreamUrl } from "../../features/stream/streamSlice";
+import { useLocation } from "react-router-dom";
 import {
   selectAllSongs,
   selectSelectedSong,
@@ -115,6 +116,7 @@ const getPrevSongIndex = (currentIndex, songs, shuffleMode, repeatMode, shuffleO
 
 const MobilePlayer = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector(selectSelectedSong);
   
@@ -364,6 +366,12 @@ const MobilePlayer = () => {
       setPlaybackError(streamError.message);
     }
   }, [streamError?.songId]);
+
+    useEffect(() => {
+    if (isFullPlayerOpen) {
+      setIsFullPlayerOpen(false);
+    }
+  }, [location.pathname]);
 
   // ✅ UPDATED: Handle play button
   const handleTogglePlay = async () => {
