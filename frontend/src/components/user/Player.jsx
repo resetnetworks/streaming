@@ -307,14 +307,6 @@ const Player = () => {
     setIsMuted(!isMuted);
   };
 
-  // ✅ NEW: Handle random default song refresh
-  const handleRefreshDefaultSong = () => {
-    if (songs.length > 0) {
-      dispatch(setRandomDefaultFromSongs(songs));
-      toast.success("Default song refreshed!");
-    }
-  };
-
   // ✅ UPDATED: Use context songs for navigation
   const handleNext = () => {
     if (!currentSong || contextSongs.length === 0) return;
@@ -423,7 +415,6 @@ const Player = () => {
           <div className="button-wrapper shadow-md shadow-gray-800">
             <button
               className="player-button flex justify-center items-center gap-2"
-              onClick={handleFeatureSoon}
             >
               <LuDna className="text-blue-500 text-sm" /> lossless
             </button>
@@ -431,10 +422,9 @@ const Player = () => {
           <div className="button-wrapper shadow-md shadow-gray-800">
             <button 
               className="player-button flex justify-center items-center gap-2"
-              onClick={handleRefreshDefaultSong}
               title="Refresh default song"
             >
-              <FaRandom className="text-blue-500 text-sm" /> refresh
+              <FaRandom className="text-blue-500 text-sm" /> reset master
             </button>
           </div>
         </div>

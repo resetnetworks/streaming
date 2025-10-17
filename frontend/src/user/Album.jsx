@@ -292,7 +292,7 @@ export default function Album() {
                 />
               ) : (
                 <div
-                  className={`w-[232px] h-[232px] ${artistColor} rounded-lg shadow-lg flex items-center justify-center text-white font-bold text-4xl`}
+                  className={`w-[232px] h-[232px] ${artistColor} rounded-lg shadow-lg flex items-center justify-center text-white font-bold md:text-4xl`}
                 >
                   {album.title ? album.title.charAt(0).toUpperCase() : "A"}
                 </div>
@@ -301,18 +301,18 @@ export default function Album() {
                 <div className="text-sm font-bold tracking-widest uppercase opacity-80">
                   Album
                 </div>
-                <h1 className="text-5xl md:text-6xl font-extrabold my-2">
+                <h1 className="text-3xl md:text-6xl font-extrabold my-2">
                   {album.title}
                 </h1>
-                <p className="text-lg text-gray-400">{album.description}</p>
+                <p className="md:text-lg text-sm text-gray-400">{album.description}</p>
                 <div className="flex items-center gap-2 mt-4 flex-wrap text-sm md:text-base text-gray-300">
                   <span className="font-semibold">{artistName}</span>
-                  <span className="text-xl">•</span>
+                  <span className="text-base md:text-xl">•</span>
                   <span>{formatDate(album.releaseDate)}</span>
-                  <span className="text-xl">•</span>
+                  <span className="text-base md:text-xl">•</span>
                   <span>{songs.length} songs</span>
                   {/* ✅ ADD TOTAL DURATION */}
-                  <span className="text-xl">•</span>
+                  <span className="text-base md:text-xl">•</span>
                   <span>{formatDuration(totalDuration)}</span>
                 </div>
                 
@@ -350,14 +350,14 @@ export default function Album() {
                   {/* ✅ NEW: Subscription Button for Subscription Albums */}
                   {isSubscriptionAlbum && getArtistSlug() && (
                     <>
-                      <span className="text-lg font-semibold text-blue-400">
+                      <span className="md:text-lg text-sm font-semibold text-blue-400">
                         Subscription
                       </span>
                       <button
                         onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+                        className="md:px-6 px-4 md:py-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
                       >
-                        <span>View Artist</span>
+                        <span className="md:text-lg text-sm">View Artist</span>
                         <svg 
                           className="w-4 h-4" 
                           fill="none" 
