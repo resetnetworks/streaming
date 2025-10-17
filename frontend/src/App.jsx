@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { getMyProfile } from "./features/auth/authSlice";
 import UserLayout from "./components/user/UserLayout";
 import PayPalSuccessHandler from "./components/PayPalSuccessHandler";
+import ScrollToTop from "./components/ScrollToTop";
 import {
   selectIsAuthenticated,
   selectAuthStatus,
@@ -107,6 +108,7 @@ function App() {
   return (
     <Elements stripe={stripePromise}>
       <BrowserRouter>
+      <ScrollToTop />
       {/* paypal success handler */}
       {isAuthenticated && <PayPalSuccessHandler />}
         <Suspense fallback={<Loader />}>
