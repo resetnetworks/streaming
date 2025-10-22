@@ -34,7 +34,7 @@ const Counter = ({ value, suffix = "", duration = 2 }) => {
 // Accept the scrollContainerRef as a prop.
 const HowItWorksSection = ({ scrollContainerRef }) => {
   const sectionRef = useRef(null);
-  const videoRef = useRef(null);
+  const imageRef = useRef(null);
 
   // Tell useInView to use the passed ref as the scroll "root".
   const isInView = useInView(sectionRef, {
@@ -42,23 +42,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
     once: true,
     amount: 0.3
   });
-
-  // Simplified useEffect for autoplay
-  useEffect(() => {
-    if (isInView) {
-      const video = videoRef.current;
-      if (video) {
-        video.muted = true; // Ensure it's muted for autoplay
-        const playPromise = video.play();
-
-        if (playPromise) {
-            playPromise.catch(error => {
-                console.error("Video autoplay was prevented by the browser:", error);
-            });
-        }
-      }
-    }
-  }, [isInView]); // This effect depends only on isInView changing.
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -83,7 +66,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
     }
   };
 
-  const videoVariants = {
+  const imageVariants = {
     hidden: { opacity: 0, scale: 0.9, rotateY: -15 },
     visible: {
       opacity: 1,
@@ -163,7 +146,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
           animate={isInView ? "visible" : "hidden"}
           className="grid lg:grid-cols-5 gap-16 items-center"
         >
-          {/* CHANGE 2: The left content now takes up 2 of the 5 columns */}
+          {/* Left content - 2 of 5 columns */}
           <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
             {/* Section Tag */}
             <motion.div 
@@ -175,20 +158,18 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             </motion.div>
 
             {/* Main Heading */}
-
-<motion.div variants={itemVariants} className="space-y-4">
-  <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-    Instantly stream your favorite 
-    <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text leading-tight">
-      <span className="block sm:inline">Music On Demand,</span>
-      <span className="block sm:inline sm:ml-2">Anytime, Anywhere</span>
-    </span>
-  </h2>
-  <p className="text-xl text-slate-300 leading-relaxed">
-    By creating a niche streaming platform within the realm of ambient and instrumental music, we'll be leveraging the situation by enabling a more dedicated fanbase, community; thereby exponentially increasing artist to fan reach as well as significantly increase royalties.
-  </p>
-</motion.div>
-
+            <motion.div variants={itemVariants} className="space-y-4">
+              <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+                Instantly stream your favorite 
+                <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text leading-tight">
+                  <span className="block sm:inline">Music On Demand,</span>
+                  <span className="block sm:inline sm:ml-2">Anytime, Anywhere</span>
+                </span>
+              </h2>
+              <p className="text-xl text-slate-300 leading-relaxed">
+                By creating a niche streaming platform within the realm of ambient and instrumental music, we'll be leveraging the situation by enabling a more dedicated fanbase, community; thereby exponentially increasing artist to fan reach as well as significantly increase royalties.
+              </p>
+            </motion.div>
 
             {/* Description */}
             <motion.div variants={itemVariants} className="space-y-6">
@@ -217,62 +198,71 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             </motion.div>
           </motion.div>
 
-          {/* CHANGE 3: The right video section now takes up 3 of the 5 columns, making it larger */}
+          {/* Right image section - 3 of 5 columns */}
           <motion.div 
-            variants={videoVariants}
+            variants={imageVariants}
             className="relative lg:col-span-3"
           >
-            {/* Video Container with 3D Effect */}
+            {/* Image Container with 3D Effect */}
             <div className="relative group">
               {/* Background Glow Effect */}
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
               
-              {/* Video Frame */}
+              {/* Image Frame */}
               <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 p-2 rounded-2xl border border-slate-700/50 shadow-2xl">
                 <div className="aspect-video rounded-xl overflow-hidden bg-slate-900 relative group-hover:scale-[1.02] transition-transform duration-500">
-                  {/* Video Element */}
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="auto"
-                    controls={false}
+                  {/* Image Element with Hover Animation */}
+                  <motion.img
+                    ref={imageRef}
+                    src="/images/home.png" // Replace with your image path
+                    alt="Platform Overview"
                     className="w-full h-full object-cover"
-                    onLoadedData={() => {
+                    initial={{ scale: 1 }}
+                    whileHover={{ 
+                      scale: 1.05,
+                      transition: { duration: 0.3 }
                     }}
-                    onError={(e) => {
-                      console.error("Video error:", e);
-                    }}
+                    animate={isInView ? {
+                      scale: [1, 1.02, 1],
+                      transition: {
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }
+                    } : {}}
                     style={{
                       objectFit: 'cover',
                       width: '100%',
                       height: '100%'
                     }}
-                  >
-                    <source src="/images/tes.mp4" type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                    onLoad={() => {
+                      console.log("Image loaded successfully");
+                    }}
+                    onError={(e) => {
+                      console.error("Image error:", e);
+                    }}
+                  />
 
-                  {/* Video Overlay Content */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex flex-col justify-end p-6 pointer-events-none">
+                  {/* Image Overlay Content */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex flex-col justify-end p-6 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="space-y-2">
                       <h3 className="text-white font-semibold text-lg">Platform Overview</h3>
-                      <p className="text-slate-300 text-sm">See how easy it is to start streaming</p>
+                      <p className="text-slate-300 text-sm">Discover the future of music streaming</p>
                     </div>
                   </div>
 
-                  {/* Floating Elements */}
+                  {/* Additional animated elements for visual interest */}
                   <motion.div
-                    className="absolute top-4 right-4 w-3 h-3 bg-green-500 rounded-full"
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  <motion.div
-                    className="absolute top-4 right-12 w-2 h-2 bg-yellow-500 rounded-full"
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                    className="absolute bottom-4 left-4 w-16 h-1 bg-blue-500/50 rounded-full"
+                    animate={{ 
+                      width: ["0%", "100%", "0%"],
+                      opacity: [0.3, 1, 0.3]
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                   />
                 </div>
               </div>
