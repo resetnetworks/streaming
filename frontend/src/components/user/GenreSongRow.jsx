@@ -168,8 +168,7 @@ const AccessChip = ({
   }
 
 
-
-  if (song.accessType === "purchase-only" && song?.albumOnly === true) {
+  if (song?.accessType === "purchase-only" && song?.convertedPrices[0]?.amount === 0) {
     return (
       <>
         <span className={`${btnBase} bg-slate-600/80 text-white`}>Album</span>

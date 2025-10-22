@@ -57,7 +57,7 @@ const getSongPriceDisplay = (
       </button>
     );
   }
-  if (song.accessType === "purchase-only" && song?.basePrice?.amount === 0) {
+  if (song?.accessType === "purchase-only" && song?.convertedPrices[0]?.amount === 0) {
     return <span className="text-blue-300 text-xs font-semibold">album</span>;
   }
   return <span className="text-blue-300 text-xs font-semibold">Free</span>;
