@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { LuSquareChevronRight, LuSquareChevronLeft } from 'react-icons/lu';
 import { BsSoundwave } from "react-icons/bs";
 import Skeleton from 'react-loading-skeleton';
@@ -23,6 +24,86 @@ import {
 
 import { handlePlaySong } from "../../../utills/songHelpers";
 import CurrencySelectionModal from '../CurrencySelectionModal';
+
+// Album Card Component
+const AlbumCard = ({ album, onClick }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [hasImage, setHasImage] = useState(!!album.coverImage);
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setHasImage(false);
+    setImageLoaded(false);
+  };
+
+  return (
+    <div 
+      className="flex-shrink-0 cursor-pointer"
+      onClick={() => onClick(album)}
+    >
+      <div className="relative w-44 bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-xl p-4 backdrop-blur-md border border-white/10 hover:border-blue-400/30 transition-all duration-300">
+        
+        {/* Album Cover Container */}
+        <div className="relative mb-3 overflow-hidden rounded-lg bg-gray-700/50">
+          {hasImage && album.coverImage && !imageError ? (
+            <>
+              {/* Image */}
+              <img
+                src={album.coverImage}
+                alt=""
+                className={`w-full h-36 object-cover ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+                loading="lazy"
+              />
+              
+              {/* Loading placeholder */}
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-gray-700/50 animate-pulse flex items-center justify-center">
+                  <BsSoundwave className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+            </>
+          ) : (
+            /* No Image Placeholder */
+            <div className="w-full h-36 bg-gradient-to-br from-gray-700/70 to-gray-800/70 flex items-center justify-center group-hover:from-gray-600/70 group-hover:to-gray-700/70 transition-all duration-300">
+              <div className="text-center">
+                <BsSoundwave className="w-12 h-12 text-gray-400 mx-auto mb-2 group-hover:text-gray-300 transition-colors" />
+                <p className="text-gray-400 text-xs group-hover:text-gray-300 transition-colors">No Cover</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Album Info */}
+        <div>
+          <h3 className="text-white font-semibold text-sm mb-1 truncate group-hover:text-blue-400 transition-colors">
+            {album.title || 'Untitled Album'}
+          </h3>
+          <p className="text-gray-400 text-xs truncate mb-1">
+            Album • {album.songCount || 0} song{album.songCount !== 1 ? 's' : ''}
+          </p>
+          {album.songs && album.songs[0]?.artist && (
+            <p className="text-gray-500 text-xs truncate">
+              by {album.songs[0].artist.name}
+            </p>
+          )}
+        </div>
+
+        {/* Bottom gradient accent */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-xl"></div>
+      </div>
+    </div>
+  );
+};
 
 const getSongPriceDisplay = (
   song, 
@@ -70,15 +151,16 @@ const MatchingGenreSection = ({
   paymentLoading 
 }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const scrollRef = useRef(null);
 
   // Keep a stable, append-only merged list to avoid blinking
-  const [merged, setMerged] = useState([]); // [{...song}]
-  const [pageLoaded, setPageLoaded] = useState(new Set()); // track which pages loaded
+  const [merged, setMerged] = useState([]);
+  const [pageLoaded, setPageLoaded] = useState(new Set());
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Fix: Currency selection modal states - different variable name
+  // Currency selection modal states
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedSongForPurchase, setSelectedSongForPurchase] = useState(null);
 
@@ -90,18 +172,51 @@ const MatchingGenreSection = ({
   const limit = 10;
 
   // Redux selectors
-  const reduxSongs = useSelector(selectMatchingGenreSongs); // may be last fetched set
+  const reduxSongs = useSelector(selectMatchingGenreSongs);
   const matchingGenres = useSelector(selectMatchingGenres);
   const status = useSelector(selectSongsStatus);
   const pagination = useSelector(selectMatchingGenrePagination);
 
   const currentUser = useSelector((state) => state.auth.user);
-  // Fix: Different variable name to avoid conflict
   const currentlyPlayingSong = useSelector((state) => state.player.selectedSong);
 
   const isCacheValid = useSelector(selectIsMatchingGenreCacheValid);
   const isPageCached = useSelector(selectIsMatchingGenrePageCached(currentPage));
   const cachedPageData = useSelector(selectMatchingGenreCachedPageData(currentPage));
+
+  // Process data to extract unique albums
+  const uniqueAlbums = useMemo(() => {
+    const albumMap = new Map();
+    
+    merged.forEach(song => {
+      if (song.album && song.album._id) {
+        const albumId = song.album._id;
+        if (!albumMap.has(albumId)) {
+          albumMap.set(albumId, {
+            ...song.album,
+            songCount: 1,
+            songs: [song]
+          });
+        } else {
+          const existingAlbum = albumMap.get(albumId);
+          existingAlbum.songCount += 1;
+          existingAlbum.songs.push(song);
+        }
+      }
+    });
+    
+    return Array.from(albumMap.values());
+  }, [merged]);
+
+  // Handle album click navigation
+  const handleAlbumClick = (album) => {
+    navigate(`/album/${album._id}`, { 
+      state: { 
+        album: album,
+        songs: album.songs 
+      } 
+    });
+  };
 
   // Currency helper functions
   const getCurrencySymbol = (currency) => {
@@ -177,12 +292,11 @@ const MatchingGenreSection = ({
   // Load a page with cache awareness
   const loadPage = useCallback(async (page) => {
     if (!currentUser) return;
-    if (pageLoaded.has(page)) return; // already merged this page into local
+    if (pageLoaded.has(page)) return;
     setLoadingMore(true);
 
     try {
       if (isPageCached && isCacheValid && cachedPageData && page === currentPage && hasInitialLoad) {
-        // hydrate from redux cache to local merged
         const fromCache = cachedPageData.songs || [];
         setMerged(prev => mergeUnique(prev, fromCache));
         setPageLoaded(prev => new Set(prev).add(page));
@@ -192,7 +306,6 @@ const MatchingGenreSection = ({
 
       const result = await dispatch(fetchSongsMatchingUserGenres({ page, limit })).unwrap();
 
-      // write page to redux cache
       dispatch(setMatchingGenreCachedData({
         page,
         songs: result.songs,
@@ -200,7 +313,6 @@ const MatchingGenreSection = ({
         matchingGenres: result.matchingGenres
       }));
 
-      // append to local merged
       setMerged(prev => mergeUnique(prev, result.songs));
       setPageLoaded(prev => new Set(prev).add(page));
       setHasInitialLoad(true);
@@ -224,7 +336,7 @@ const MatchingGenreSection = ({
 
   // Initial load
   useEffect(() => {
-    setMerged([]); // reset when user changes
+    setMerged([]);
     setPageLoaded(new Set());
     setCurrentPage(1);
     setHasInitialLoad(false);
@@ -240,7 +352,6 @@ const MatchingGenreSection = ({
     if (pendingScrollLeftRef.current == null) return;
     const target = pendingScrollLeftRef.current;
     pendingScrollLeftRef.current = null;
-    // Use rAF to ensure DOM updated
     requestAnimationFrame(() => {
       if (!scrollRef.current) return;
       scrollRef.current.scrollLeft = target;
@@ -274,7 +385,6 @@ const MatchingGenreSection = ({
       (entries) => {
         const last = entries[0];
         if (last.isIntersecting && !loadingMore && pagination && currentPage < (pagination.totalPages || Infinity)) {
-          // preserve current scrollLeft before appending
           if (scrollRef.current) {
             pendingScrollLeftRef.current = scrollRef.current.scrollLeft;
           }
@@ -283,7 +393,7 @@ const MatchingGenreSection = ({
       },
       {
         root,
-        rootMargin: '200px', // prefetch a bit earlier
+        rootMargin: '200px',
         threshold: 0.1
       }
     );
@@ -295,9 +405,6 @@ const MatchingGenreSection = ({
   // Also support manual infinite load via scroll end
   const onHorizontalScroll = (e) => {
     const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
-    // Save position so back navigation feels natural
-    // No state update to avoid re-render; ref only
-    // If near end, trigger next page
     const nearEnd = scrollLeft + clientWidth >= scrollWidth - 10;
     if (nearEnd && !loadingMore && pagination && currentPage < (pagination.totalPages || Infinity)) {
       pendingScrollLeftRef.current = scrollLeft;
@@ -389,14 +496,14 @@ const MatchingGenreSection = ({
           <div className="hidden md:flex items-center gap-2">
             <button
               onClick={() => handleScrollArrows('left')}
-              className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+              className="text-white cursor-pointer text-lg hover:text-blue-400 transition-all"
               type="button"
             >
               <LuSquareChevronLeft />
             </button>
             <button
               onClick={() => handleScrollArrows('right')}
-              className="text-white cursor-pointer text-lg hover:text-blue-800 transition-all md:block hidden"
+              className="text-white cursor-pointer text-lg hover:text-blue-400 transition-all"
               type="button"
             >
               <LuSquareChevronRight />
@@ -411,7 +518,7 @@ const MatchingGenreSection = ({
           <BsSoundwave className="text-blue-400 text-lg animate-pulse" />
         </div>
 
-        {/* Songs */}
+        {/* Albums Display */}
         <div className="relative">
           <div
             ref={scrollRef}
@@ -419,7 +526,16 @@ const MatchingGenreSection = ({
             style={{ scrollSnapType: "x mandatory" }}
             onScroll={onHorizontalScroll}
           >
-            {merged.map((song, index) => (
+            {uniqueAlbums.map((album, index) => (
+              <AlbumCard
+                key={`album-${album._id}-${index}`}
+                album={album}
+                onClick={handleAlbumClick}
+              />
+            ))}
+
+            {/* Show individual songs that don't belong to any album */}
+            {merged.filter(song => !song.album || !song.album._id).map((song, index) => (
               <MatchingGenreSong
                 key={`matching-song-${song._id}-${index}`}
                 title={song.title}

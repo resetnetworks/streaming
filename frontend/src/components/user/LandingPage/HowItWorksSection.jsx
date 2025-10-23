@@ -235,9 +235,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                       width: '100%',
                       height: '100%'
                     }}
-                    onLoad={() => {
-                      console.log("Image loaded successfully");
-                    }}
                     onError={(e) => {
                       console.error("Image error:", e);
                     }}
