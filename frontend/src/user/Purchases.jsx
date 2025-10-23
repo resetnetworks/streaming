@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../features/songs/songSlice";
+import PageSEO from "../components/PageSeo/PageSEO";
 import {
   fetchUserSubscriptions,
   fetchUserPurchases,
@@ -228,6 +229,19 @@ const Purchases = () => {
 
   return (
     <>
+     <PageSEO
+          title="Reset Music Streaming purchased Songs and Subscriptions"
+          description="Explore your purchased songs and active artist subscriptions on Reset Music Streaming platform."
+          canonicalUrl="https://musicreset.com/purchases"
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Reset Music purchased Songs and Subscriptions",
+            "description": "Explore your purchased songs and active artist subscriptions on Reset Music Streaming platform.",
+            "url": "https://musicreset.com/purchases",
+          }}
+          noIndex={true}
+        />;
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-6">

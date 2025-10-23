@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllArtists, loadFromCache } from "../features/artists/artistsSlice";
+import PageSEO from "../components/PageSeo/PageSEO";
 import { useNavigate } from "react-router-dom";
 import {
   selectAllArtists,
@@ -170,6 +171,20 @@ const Artists = () => {
 
   return (
     <>
+
+    <PageSEO
+  title="Discover & Stream Artists - Reset Music Streaming"
+  description="Explore our exclusive Reset Music artists collection. Access profiles, music, and subscriptions available only to members."
+  canonicalUrl="https://musicreset.com/artists"
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Reset Music Artists",
+    "description": "List of artists featured on Reset Music streaming platform. Members can discover, stream, and subscribe to their favorite artists.",
+    "url": "https://musicreset.com/artists",
+  }}
+  noIndex={true}
+/>;
 
       <UserHeader />
 

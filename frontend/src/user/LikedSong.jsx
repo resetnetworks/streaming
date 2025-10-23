@@ -1,6 +1,7 @@
 // src/pages/LikedSongs.jsx
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import PageSEO from "../components/PageSeo/PageSEO";
 import {
   fetchLikedSongs,
   clearLikedSongs,
@@ -95,6 +96,19 @@ const LikedSongs = () => {
 
   return (
     <>
+      <PageSEO
+      title="Reset Music Streaming Liked Songs | Your Favorite Tracks"
+      description="Discover your liked songs on Reset Music Streaming. Stream and manage your favorite tracks all in one place."
+      canonicalUrl="https://musicreset.com/liked-songs"
+      structuredData={{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Reset Music liked Songs",
+        "description": "A collection of your liked songs on Reset Music Streaming platform.",
+        "url": "https://musicreset.com/liked-songs",
+      }}
+      noIndex={true}
+    />;
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen w-[96%] py-8 px-4">

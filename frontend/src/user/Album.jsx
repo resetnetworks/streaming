@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 import UserHeader from "../components/user/UserHeader";
 import SongList from "../components/user/SongList";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 
 import { fetchAlbumById } from "../features/albums/albumsSlice";
@@ -259,9 +260,34 @@ export default function Album() {
   };
 
   const artistColor = getArtistColor(artistName);
+  if (!album || loading) {
+    return null;
+  }
+
 
   return (
    <>
+   <PageSEO
+  title={`Album: ${album.title} by ${artistName} | Reset Music`}
+  description={`Access the album '${album.title}' by ${artistName} exclusively as a Reset Music. Stream all ${songs.length}.`}
+  canonicalUrl={`https://musicreset.com/album/${albumId}`}
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "MusicAlbum",
+    "name": album.title,
+    "description": album.description,
+    "image": album.coverImage,
+    "url": `https://musicreset.com/album/${albumId}`,
+    "byArtist": {
+      "@type": "MusicGroup",
+      "name": artistName,
+    },
+    "numTracks": songs.length,
+    "datePublished": album.releaseDate
+  }}
+  noIndex={true}
+/>
+
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">

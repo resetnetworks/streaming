@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import PageSEO from "../components/PageSeo/PageSEO";
 
 import UserHeader from "../components/user/UserHeader";
 import ArtistHeroSection from "../components/user/Artist/ArtistHeroSection";
@@ -185,9 +186,29 @@ const Artist = () => {
     setModalData(data);
     setSubscribeModalOpen(true);
   };
+    if(!artist) {
+    return null;
+  }
+  const artistSlug = artist?.slug || artist?._id;
+  const canonicalUrl = `https://musicreset.com/artist/${artistSlug}`;
 
   return (
     <>
+    <PageSEO
+  title={`${artist?.name} – Reset Music Streaming Artist Profile`}
+  description={`Explore the artist profile of ${artist.name} on Reset Music Streaming. Access exclusive music, albums, singles, and subscription features.`}
+  canonicalUrl={canonicalUrl}
+  structuredData={{
+    "@context": "https://schema.org",
+    "@type": "MusicGroup",
+    "name": artist.name,
+    "description": artist.biography || `Music artist profile on Reset Music streaming platform.`,
+    "url": canonicalUrl,
+    "image": artist.image || null,
+    "sameAs": artist.socialLinks || [], // Optional array of URLs to social profiles if available
+  }}
+  noIndex={true}
+/>;
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div ref={heroSectionRef}>
