@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/user/Footer";
 import IconHeader from "../components/user/IconHeader";
 import useNavigation from "../hooks/useAuthNavigation";
+import PageSEO from "../components/PageSeo/PageSEO"
 
 const Help = () => {
   const navigate = useNavigate();
