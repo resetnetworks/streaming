@@ -424,7 +424,7 @@ const Player = () => {
               className="player-button flex justify-center items-center gap-2"
               title="Refresh default song"
             >
-              <FaRandom className="text-blue-500 text-sm" /> reset master
+              <FaRandom className="text-blue-500 text-sm" /> ΛMB
             </button>
           </div>
         </div>
