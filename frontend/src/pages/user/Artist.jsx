@@ -19,7 +19,7 @@ import PaymentErrorNotification from "../../components/user/Artist/PaymentErrorN
 import { 
   fetchArtistBySlug,
   fetchSubscriberCount,
-  clearSelectedArtist, // ✅ Add this import
+  clearSelectedArtist,
 } from "../../features/artists/artistsSlice";
 import { selectSelectedArtist } from "../../features/artists/artistsSelectors";
 import { fetchUserSubscriptions } from "../../features/payments/userPaymentSlice";
@@ -38,6 +38,9 @@ const Artist = () => {
   const heroSectionRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  
+  // Add explicit loading state
+  const [isArtistLoading, setIsArtistLoading] = useState(true);
   
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -81,17 +84,32 @@ const Artist = () => {
     return () => observer.disconnect();
   }, []);
 
-  // ✅ Clear previous artist data immediately when artistId changes
+  // Clear previous artist data and set loading state when artistId changes
   useEffect(() => {
     dispatch(clearSelectedArtist());
+    setIsArtistLoading(true);
   }, [artistId, dispatch]);
 
   useEffect(() => {
     if (artistId) {
-      dispatch(fetchArtistBySlug(artistId));
-      dispatch(fetchUserSubscriptions());
-      dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 }));
-      dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }));
+      const fetchArtistData = async () => {
+        try {
+          // Fetch all artist-related data
+          await Promise.all([
+            dispatch(fetchArtistBySlug(artistId)),
+            dispatch(fetchUserSubscriptions()),
+            dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 })),
+            dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }))
+          ]);
+        } catch (error) {
+          console.error('Error fetching artist data:', error);
+        } finally {
+          // Set loading to false after all requests complete
+          setIsArtistLoading(false);
+        }
+      };
+      
+      fetchArtistData();
     }
   }, [dispatch, artistId]);
 
@@ -107,6 +125,8 @@ const Artist = () => {
       dispatch(resetPaymentState());
     };
   }, [dispatch]);
+
+  // ... rest of your handler functions remain the same
 
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
@@ -186,29 +206,95 @@ const Artist = () => {
     setModalData(data);
     setSubscribeModalOpen(true);
   };
-    if(!artist) {
+
+  // Show loading state while fetching data
+  if (isArtistLoading) {
+    return (
+      <>
+        <UserHeader />
+        <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+          <div className="min-h-screen">
+            {/* You can add specific skeleton components here or let child components handle it */}
+            <div ref={heroSectionRef}>
+              <ArtistHeroSection
+                artist={null} // Pass null to trigger skeleton in child component
+                artistId={artistId}
+                currentUser={currentUser}
+                isInView={isInView}
+                openSubscriptionOptions={openSubscriptionOptions}
+                subscriptionLoading={subscriptionLoading}
+                setSubscriptionLoading={setSubscriptionLoading}
+                isLoading={true} // Add loading prop
+              />
+            </div>
+            
+            <ArtistSongsSection 
+              artistId={artistId} 
+              artist={null}
+              onSubscribeRequired={handleSubscribeDecision}
+              isLoading={true}
+            />
+            
+            <ArtistAlbumsSection
+              artistId={artistId}
+              currentUser={currentUser}
+              onPurchaseClick={handlePurchaseClick}
+              onSubscribeRequired={handleSubscribeDecision}
+              processingPayment={processingPayment}
+              paymentLoading={paymentLoading}
+              isLoading={true}
+            />
+            
+            <ArtistSinglesSection
+              artistId={artistId}
+              currentUser={currentUser}
+              onPurchaseClick={handlePurchaseClick}
+              onSubscribeRequired={handleSubscribeDecision}
+              processingPayment={processingPayment}
+              paymentLoading={paymentLoading}
+              isLoading={true}
+            />
+            
+            <ArtistAboutSection
+              artist={null}
+              artistId={artistId}
+              currentUser={currentUser}
+              openSubscriptionOptions={openSubscriptionOptions}
+              subscriptionLoading={subscriptionLoading}
+              setSubscriptionLoading={setSubscriptionLoading}
+              isLoading={true}
+            />
+          </div>
+        </SkeletonTheme>
+      </>
+    );
+  }
+
+  // Return null if no artist found after loading
+  if (!isArtistLoading && !artist) {
     return null;
   }
+
   const artistSlug = artist?.slug || artist?._id;
   const canonicalUrl = `https://musicreset.com/artist/${artistSlug}`;
 
   return (
     <>
-    <PageSEO
-  title={`${artist?.name} – Reset Music Streaming Artist Profile`}
-  description={`Explore the artist profile of ${artist.name} on Reset Music Streaming. Access exclusive music, albums, singles, and subscription features.`}
-  canonicalUrl={canonicalUrl}
-  structuredData={{
-    "@context": "https://schema.org",
-    "@type": "MusicGroup",
-    "name": artist.name,
-    "description": artist.biography || `Music artist profile on Reset Music streaming platform.`,
-    "url": canonicalUrl,
-    "image": artist.image || null,
-    "sameAs": artist.socialLinks || [], // Optional array of URLs to social profiles if available
-  }}
-  noIndex={true}
-/>
+      <PageSEO
+        title={`${artist?.name} – Reset Music Streaming Artist Profile`}
+        description={`Explore the artist profile of ${artist.name} on Reset Music Streaming. Access exclusive music, albums, singles, and subscription features.`}
+        canonicalUrl={canonicalUrl}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "MusicGroup",
+          "name": artist.name,
+          "description": artist.biography || `Music artist profile on Reset Music streaming platform.`,
+          "url": canonicalUrl,
+          "image": artist.image || null,
+          "sameAs": artist.socialLinks || [],
+        }}
+        noIndex={true}
+      />
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div ref={heroSectionRef}>
@@ -226,14 +312,14 @@ const Artist = () => {
         <ArtistSongsSection 
           artistId={artistId} 
           artist={artist}
-          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
+          onSubscribeRequired={handleSubscribeDecision}
         />
         
         <ArtistAlbumsSection
           artistId={artistId}
           currentUser={currentUser}
           onPurchaseClick={handlePurchaseClick}
-          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
+          onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />
@@ -242,7 +328,7 @@ const Artist = () => {
           artistId={artistId}
           currentUser={currentUser}
           onPurchaseClick={handlePurchaseClick}
-          onSubscribeRequired={(artist, type, data) => handleSubscribeDecision(artist, type, data)}
+          onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />
