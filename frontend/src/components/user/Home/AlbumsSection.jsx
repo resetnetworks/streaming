@@ -28,6 +28,13 @@ const AlbumsSection = ({
   const albumsTotalPages = useSelector((state) => state.albums.pagination.totalPages);
   const allAlbums = useSelector((state) => state.albums.allAlbums);
 
+  // STRING TRUNCATION HELPER FUNCTION - YAHAN ADD KIYA GAYA HAI
+  const truncateTitle = (title, maxLength = 50) => {
+    if (!title) return "";
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength) + "...";
+  };
+
   const { lastElementRef } = useInfiniteScroll({
     hasMore: albumsPage < (albumsTotalPages || 1),
     loading: albumsStatus || loadingMore,
@@ -107,21 +114,16 @@ const AlbumsSection = ({
     setSelectedAlbum(null);
   };
   
-  // <-- YAHAN CHANGE KIYA GAYA HAI
   const getAlbumPriceDisplay = (album) => {
-    // Priority 1: Agar user ne album pehle se khareed liya hai
     if (currentUser?.purchasedAlbums?.includes(album._id)) {
       return "Purchased";
     }
 
-    // Priority 2: Agar access type 'subscription' hai
     if (album.accessType === "subscription") {
       return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
     }
 
-    // Priority 3: Agar access type 'purchase-only' hai
     if (album.accessType === "purchase-only") {
-      // Check karein ki price valid hai aur 0 se zyada hai
       if (album.basePrice && album.basePrice.amount > 0) {
         const basePrice = album.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
@@ -141,13 +143,11 @@ const AlbumsSection = ({
         );
       }
       
-      // Agar purchase-only hai lekin price 0 hai, to "Free" dikhayein
       if (album.basePrice && album.basePrice.amount === 0) {
         return "Free";
       }
     }
 
-    // Agar koi bhi condition match nahi hoti, to kuch na dikhayein
     return null;
   };
 
@@ -199,7 +199,7 @@ const AlbumsSection = ({
                 ref={idx === allAlbums.length - 1 ? lastElementRef : null}
               >
                 <AlbumCard
-                  tag={`${album.title || "Album"}`}
+                  tag={truncateTitle(album.title || "Album")} // YAHAN CHANGE KIYA GAYA HAI
                   artists={album.artist?.name || "Various Artists"}
                   image={album.coverImage || "/images/placeholder.png"}
                   price={getAlbumPriceDisplay(album)}
