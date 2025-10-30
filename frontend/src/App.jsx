@@ -297,12 +297,12 @@ function App() {
               }
             />
             {/* Artist Dashboard Route */}
-          <Route
+          {/* <Route
             path="/artist/register"
             element={
                 <Pages.ArtistRegister />
             }
-          />
+          /> */}
           </Routes>      
         </Suspense>
       </BrowserRouter>

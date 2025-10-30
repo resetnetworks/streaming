@@ -29,7 +29,7 @@ export const Career = lazy(() => import("../pages/user/Career"));
 
 
 // Artist pages routes
-export const ArtistRegister = lazy(() => import("../pages/artist/ArtistRegister"));
+// export const ArtistRegister = lazy(() => import("../pages/artist/ArtistRegister"));
 
 
 
