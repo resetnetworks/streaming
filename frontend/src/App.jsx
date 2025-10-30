@@ -123,6 +123,7 @@ function App() {
             <Route path="/contact-us" element={<Pages.Help />} />
             <Route path="/data-deletion" element={<Pages.DataDeletion />} />
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
+            <Route path="/careers" element={<Pages.Career />} />
 
             {/* 🔥 NEW: Social Login Callback Route */}
             <Route path="/auth/callback" element={<Pages.SocialLoginCallback />} />
@@ -295,7 +296,14 @@ function App() {
                 <Navigate to={isAuthenticated ? "/" : "/login"} replace />
               }
             />
-          </Routes>
+            {/* Artist Dashboard Route */}
+          <Route
+            path="/artist/register"
+            element={
+                <Pages.ArtistRegister />
+            }
+          />
+          </Routes>      
         </Suspense>
       </BrowserRouter>
 

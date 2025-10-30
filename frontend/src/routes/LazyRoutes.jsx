@@ -25,6 +25,12 @@ export const LandingPage = lazy(() => import("../pages/user/LandingPage"));
 export const TermsAndConditions = lazy(() => import("../pages/user/TermsAndConditions"));
 export const About = lazy(() => import("../pages/user/About"));
 export const CancellationRefundPolicy = lazy(() => import("../pages/user/CancellationRefundPolicy"));
+export const Career = lazy(() => import("../pages/user/Career"));
+
+
+// Artist pages routes
+export const ArtistRegister = lazy(() => import("../pages/artist/ArtistRegister"));
+
 
 
 // Admin pages routes

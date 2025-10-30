@@ -179,6 +179,7 @@ const Footer = () => {
             </div>
             <div className="flex space-x-6 text-sm text-gray-400" style={{ fontFamily: 'Jura' }}>
               <Link to="/privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</Link>
+              <Link to="/careers" className="hover:text-[#3b82f6] transition-colors">Careers</Link>
               <Link to="/data-deletion" className="hover:text-[#3b82f6] transition-colors">Data Deletion</Link>
               <Link to="/contact-us" className="hover:text-[#3b82f6] transition-colors">Support</Link>
               <Link to="/terms-and-conditions" className="hover:text-[#3b82f6] transition-colors">Terms & Conditions</Link>

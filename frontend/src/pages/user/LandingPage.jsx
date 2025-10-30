@@ -9,6 +9,7 @@ import HowItWorksSection from '../../components/user/LandingPage/HowItWorksSecti
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import PageSEO from '../../components/PageSeo/PageSEO';
+import Footer from '../../components/user/Footer';
 
 // Professional Minimal Particles
 const ProfessionalParticles = () => {
@@ -146,6 +147,7 @@ const LandingPage = () => {
       <Header />
       <HeroSection scrollContainerRef={scrollContainerRef} />
       <HowItWorksSection scrollContainerRef={scrollContainerRef} />
+    <Footer />
     </div>
     </>
   );

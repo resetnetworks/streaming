@@ -24,6 +24,7 @@ const pages = [
   { url: '/terms-and-conditions', changefreq: 'weekly', priority: 0.9 },
   { url: '/cancellation-refund-policy', changefreq: 'weekly', priority: 0.8 },
   { url: '/data-deletion', changefreq: 'weekly', priority: 0.8 },
+  { url: '/careers', changefreq: 'weekly', priority: 0.8 },
 ];
 
 (async () => {
