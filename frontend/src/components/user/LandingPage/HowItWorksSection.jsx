@@ -99,7 +99,6 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
 
   // Stats data
   const stats = [
-    { number: "500", suffix: "+", label: "Hours Streamed" },
     { number: "150", suffix: "+", label: "Song Available" },
     { number: "190", suffix: "+", label: "Countries" },
     { number: "99", suffix: "%", label: "Uptime" }
@@ -281,7 +280,7 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
 
           <motion.div 
             variants={itemVariants}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="grid grid-cols-2 md:grid-cols-3 gap-8"
           >
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
