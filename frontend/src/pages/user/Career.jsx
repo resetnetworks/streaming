@@ -185,41 +185,48 @@ const CareerPage = () => {
 ];
 
 
-  // Google Jobs Structured Data
-  const jobsStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "itemListElement": jobOpenings.map((job, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "item": {
-        "@type": "JobPosting",
-        "title": job.title,
-        "description": `${job.description} Requirements: ${job.requirements.join(', ')}`,
-        "datePosted": "2025-01-20",
-        "employmentType": "FULL_TIME",
-        "hiringOrganization": {
-          "@type": "Organization",
-          "name": "Reset Music",
-          "sameAs": "https://musicreset.com",
-          "logo": "https://musicreset.com/icon.png"
-        },
-        "jobLocation": {
-          "@type": "Place",
-          "address": {
-            "@type": "PostalAddress",
-            "addressLocality": job.location,
-            "addressCountry": "IN"
-          }
-        },
-        "applicantLocationRequirements": {
-          "@type": "Country",
-          "name": "India"
-        },
-        "validThrough": "2025-03-20T00:00:00+05:30"
-      }
-    }))
-  };
+ // Google Jobs Structured Data
+const jobsStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": jobOpenings.map((job, index) => ({
+    "@type": "ListItem", 
+    "position": index + 1,
+    "item": {
+      "@type": "JobPosting",
+      "title": job.title,
+      "description": `${job.description} Requirements: ${job.requirements.join(', ')}`,
+      "datePosted": "2025-01-20T00:00:00+05:30", // Fixed: ISO 8601 format with timezone
+      "validThrough": "2025-03-20T00:00:00+05:30",
+      "employmentType": job.type === "Full-time" ? "FULL_TIME" : "FULL_TIME",
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": "Reset Music",
+        "sameAs": "https://musicreset.com",
+        "logo": "https://musicreset.com/icon.png",
+        "url": "https://musicreset.com" // Added: Organization URL
+      },
+      "jobLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Reset Networks Office", // Add your actual street address
+          "addressLocality": "New Delhi", // Fixed: Specific city instead of job.location
+          "addressRegion": "Delhi", // Added: State/Region
+          "postalCode": "110001", // Add your actual postal code
+          "addressCountry": "IN"
+        }
+      },
+      "applicantLocationRequirements": {
+        "@type": "Country", 
+        "name": "India"
+      },
+      "industry": job.department, // Added: Industry field
+      "workHours": job.type === "Full-time" ? "40 hours per week" : "40 hours per week" // Added: Work hours
+    }
+  }))
+};
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
