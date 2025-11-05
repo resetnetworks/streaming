@@ -26,6 +26,7 @@ export const TermsAndConditions = lazy(() => import("../pages/user/TermsAndCondi
 export const About = lazy(() => import("../pages/user/About"));
 export const CancellationRefundPolicy = lazy(() => import("../pages/user/CancellationRefundPolicy"));
 export const Career = lazy(() => import("../pages/user/Career"));
+export const ArtistDetails = lazy(() => import("../pages/user/ArtistDetails"));
 
 
 // Artist pages routes

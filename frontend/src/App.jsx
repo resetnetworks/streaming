@@ -124,6 +124,7 @@ function App() {
             <Route path="/data-deletion" element={<Pages.DataDeletion />} />
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
             <Route path="/careers" element={<Pages.Career />} />
+            <Route path="/artist-details" element={<Pages.ArtistDetails />} />
 
             {/* 🔥 NEW: Social Login Callback Route */}
             <Route path="/auth/callback" element={<Pages.SocialLoginCallback />} />
