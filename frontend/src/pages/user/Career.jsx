@@ -28,38 +28,46 @@ const CareerPage = () => {
     window.open(mailtoLink, '_blank');
   };
 
-  const careerBenefits = [
-    {
-      icon: <FaMusic className="text-2xl" />,
-      title: "Music Passion",
-      description: "Work with what you love - music is at our core"
-    },
-    {
-      icon: <FaUsers className="text-2xl" />,
-      title: "Creative Team",
-      description: "Collaborate with talented musicians and developers"
-    },
-    {
-      icon: <FaCode className="text-2xl" />,
-      title: "Tech Innovation",
-      description: "Use cutting-edge technology in music applications"
-    },
-    {
-      icon: <FaChartLine className="text-2xl" />,
-      title: "Growth Opportunities",
-      description: "Grow your career in music technology best practices"
-    },
-    {
-      icon: <FaHeart className="text-2xl" />,
-      title: "Health Benefits",
-      description: "Comprehensive health and wellness package"
-    },
-    {
-      icon: <FaDollarSign className="text-2xl" />,
-      title: "Competitive Salary",
-      description: "Attractive compensation package with performance bonuses"
-    }
-  ];
+const careerBenefits = [
+  {
+    icon: <FaUsers className="text-2xl" />,
+    title: "Creative Collaboration",
+    description:
+      "Join musicians, designers, engineers, and researchers working together to reinvent how people create, share, and experience sound worldwide."
+  },
+  {
+    icon: <FaCode className="text-2xl" />,
+    title: "Tech for the Future of Sound",
+    description:
+      "Explore spatial audio, adaptive streaming, and AI-driven music tools shaping the next era of creative technology and digital performance."
+  },
+  {
+    icon: <FaChartLine className="text-2xl" />,
+    title: "Growth & Learning",
+    description:
+      "Access workshops, cross-team collaborations, and hands-on learning tools to sharpen your skills and expand your creative and technical range."
+  },
+  {
+    icon: <FaMusic className="text-2xl" />,
+    title: "Community & Impact",
+    description:
+      "Contribute to a global network of artists, developers, and researchers making real impact in the world of sound, innovation, and creativity."
+  },
+  {
+    icon: <FaDollarSign className="text-2xl" />,
+    title: "Rewards & Recognition",
+    description:
+      "Enjoy creative freedom with real rewards — competitive salary, bonuses, and support to bring your personal creative projects to life."
+  },
+  {
+    icon: <FaHeart className="text-2xl" />,
+    title: "Diversity & Inclusion",
+    description:
+      "Our diverse team and distributed culture fuel constant innovation, blending unique perspectives to push the boundaries of modern sound."
+  }
+];
+
+
 
  const jobOpenings = [
   {

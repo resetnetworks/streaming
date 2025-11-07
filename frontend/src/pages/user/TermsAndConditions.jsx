@@ -1,6 +1,14 @@
 // src/pages/TermsAndConditions.jsx
 import React, { useState } from "react";
-import { FiChevronDown, FiChevronRight, FiBookOpen, FiShield, FiHome, FiUser, FiMic } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiChevronRight,
+  FiBookOpen,
+  FiShield,
+  FiHome,
+  FiUser,
+  FiMic,
+} from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/user/Footer";
 import IconHeader from "../../components/user/IconHeader";
@@ -21,27 +29,27 @@ const TermsAndConditions = () => {
     {
       id: "introduction",
       title: "A. Introduction",
-      content: `This Agreement governs your use of the Reset Music Streaming Platform ("Service"), which allows streaming, purchasing, licensing, or subscribing to digital audio, video, and interactive content ("Content"). By creating an account or using the Service, you accept and agree to this Agreement and all related policies.`
+      content: `This Agreement governs your use of the Reset Music Streaming Platform ("Service"), which allows streaming, purchasing, licensing, or subscribing to digital audio, video, and interactive content ("Content"). By creating an account or using the Service, you accept and agree to this Agreement and all related policies.`,
     },
     {
       id: "payments",
       title: "B. Payments, Taxes, and Refunds",
-      content: `Transactions for Content or subscriptions may be free or paid. All paid Transactions are final unless technical issues prevent access, in which case a replacement or refund may be provided. Prices and applicable taxes may vary and are subject to change. Failure to pay may result in suspension or termination of access.`
+      content: `Transactions for Content or subscriptions may be free or paid. All paid Transactions are final unless technical issues prevent access, in which case a replacement or refund may be provided. Prices and applicable taxes may vary and are subject to change. Failure to pay may result in suspension or termination of access.`,
     },
     {
       id: "account",
       title: "C. Account",
-      content: `Users must provide accurate registration details and meet minimum age requirements. Account security is the user's responsibility. Reset Music is not liable for unauthorized access or use resulting from failure to secure credentials. Accounts for minors must be created or supervised by a parent or guardian.`
+      content: `Users must provide accurate registration details and meet minimum age requirements. Account security is the user's responsibility. Reset Music is not liable for unauthorized access or use resulting from failure to secure credentials. Accounts for minors must be created or supervised by a parent or guardian.`,
     },
     {
       id: "privacy",
       title: "D. Privacy",
-      content: `All personal information collected is governed by Reset Music's Privacy Policy, which complies with applicable privacy laws. Users should review the Privacy Policy regularly; continued use after changes constitutes acceptance.`
+      content: `All personal information collected is governed by Reset Music's Privacy Policy, which complies with applicable privacy laws. Users should review the Privacy Policy regularly; continued use after changes constitutes acceptance.`,
     },
     {
       id: "accessibility",
       title: "E. Accessibility",
-      content: `Reset Music endeavors to make the Service accessible to users with disabilities and offers accommodations upon request through support channels.`
+      content: `Reset Music endeavors to make the Service accessible to users with disabilities and offers accommodations upon request through support channels.`,
     },
     {
       id: "usage-rules",
@@ -51,53 +59,53 @@ const TermsAndConditions = () => {
 • Any attempt to bypass or circumvent restrictions on downloading will result in termination.
 • Users may not manipulate metrics such as play counts, ratings, or other engagement measures.
 • Streaming limits and simultaneous device restrictions may apply.
-• Users are responsible for compliant use; content availability may vary due to licensing.`
+• Users are responsible for compliant use; content availability may vary due to licensing.`,
     },
     {
       id: "termination",
       title: "G. Termination and Suspension of Services",
-      content: `Reset Music may suspend or terminate user access or Service availability at any time without notice for violations, suspected fraud, or other reasons. Payment responsibilities remain in effect despite termination.`
+      content: `Reset Music may suspend or terminate user access or Service availability at any time without notice for violations, suspected fraud, or other reasons. Payment responsibilities remain in effect despite termination.`,
     },
     {
       id: "downloads",
       title: "H. Downloads",
-      content: `Currently, users cannot download any Content from the Service. All access is streaming only, and any claims or offers to the contrary are null. Users should not expect offline access or local storage of the Content.`
+      content: `Currently, users cannot download any Content from the Service. All access is streaming only, and any claims or offers to the contrary are null. Users should not expect offline access or local storage of the Content.`,
     },
     {
       id: "subscriptions",
       title: "I. Subscriptions",
-      content: `Subscriptions auto-renew until cancelled via account settings. Price changes will be communicated, and continuation requires user consent where required by law. Free trials, where offered, are subject to terms limiting reactivation or combination with other promos.`
+      content: `Subscriptions auto-renew until cancelled via account settings. Price changes will be communicated, and continuation requires user consent where required by law. Free trials, where offered, are subject to terms limiting reactivation or combination with other promos.`,
     },
     {
       id: "content-availability",
       title: "J. Content and Service Availability",
-      content: `Content rights vary by region and may be removed or restricted. Use outside licensed territories may be blocked or limited. Content availability is dynamic and subject to change.`
+      content: `Content rights vary by region and may be removed or restricted. Use outside licensed territories may be blocked or limited. Content availability is dynamic and subject to change.`,
     },
     {
       id: "third-party",
       title: "K. Third-Party Devices and Equipment",
-      content: `Some Service features may depend on device compatibility. Use on non-standard devices may be unsupported. Users accept any restrictions or limitations arising from third-party equipment.`
+      content: `Some Service features may depend on device compatibility. Use on non-standard devices may be unsupported. Users accept any restrictions or limitations arising from third-party equipment.`,
     },
     {
       id: "submissions",
       title: "L. Your Submissions",
-      content: `User-generated content (comments, playlists, reviews) is subject to guidelines prohibiting illegal, offensive, or infringing material. Users grant Reset Music a royalty-free license to use submissions for operation, promotion, or improvement of the Service.`
+      content: `User-generated content (comments, playlists, reviews) is subject to guidelines prohibiting illegal, offensive, or infringing material. Users grant Reset Music a royalty-free license to use submissions for operation, promotion, or improvement of the Service.`,
     },
     {
       id: "family-sharing",
       title: "M. Family Sharing",
-      content: `Family Sharing allows subscription sharing with defined member limits. Organizers are responsible for family members' usage and payments. Certain subscriptions may be eligible for sharing; others are not.`
+      content: `Family Sharing allows subscription sharing with defined member limits. Organizers are responsible for family members' usage and payments. Certain subscriptions may be eligible for sharing; others are not.`,
     },
     {
       id: "additional-terms",
       title: "N. Additional Terms",
-      content: `Additional terms may apply for promotions, partnerships, or third-party content. Users must comply with those separate agreements where applicable.`
+      content: `Additional terms may apply for promotions, partnerships, or third-party content. Users must comply with those separate agreements where applicable.`,
     },
     {
       id: "miscellaneous",
       title: "O. Miscellaneous Provisions",
-      content: `Reset Music may update these Terms from time to time, with continued use constituting acceptance. This Agreement is governed by the laws of the jurisdiction of Reset Music's registration. Intellectual property rights are retained exclusively by Reset Music and licensors. No warranties of uninterrupted service are implied, and liability is limited to the extent allowed by law.`
-    }
+      content: `Reset Music may update these Terms from time to time, with continued use constituting acceptance. This Agreement is governed by the laws of the jurisdiction of Reset Music's registration. Intellectual property rights are retained exclusively by Reset Music and licensors. No warranties of uninterrupted service are implied, and liability is limited to the extent allowed by law.`,
+    },
   ];
 
   const artistTermsData = [
@@ -107,7 +115,7 @@ const TermsAndConditions = () => {
       content: `• "Content" means all audio recordings, audiovisual works, artwork, metadata, compositions, live performances, and related materials provided by the Artist for digital distribution.
 • "Platform" means all websites, mobile applications, APIs, and partner services operated or controlled by RESET NETWORKS for distribution, streaming, and promotion.
 • "Net Revenue" means gross receipts from monetization less applicable transaction fees, taxes, and refunds.
-• "Artist Dashboard" means the online portal provided by RESET NETWORKS for Artists to upload Content, view analytics, and access revenue reports.`
+• "Artist Dashboard" means the online portal provided by RESET NETWORKS for Artists to upload Content, view analytics, and access revenue reports.`,
     },
     {
       id: "appointment-scope",
@@ -115,7 +123,7 @@ const TermsAndConditions = () => {
       content: `• The Artist appoints RESET NETWORKS as digital distributor and streaming platform for the Content globally.
 • The license granted is non-exclusive and worldwide in scope.
 • RESET NETWORKS is authorized to use Content, metadata, and promotional materials for streaming, downloads, and promotional campaigns.
-• The Artist retains all ownership of the Content, subject only to the rights granted to RESET NETWORKS.`
+• The Artist retains all ownership of the Content, subject only to the rights granted to RESET NETWORKS.`,
     },
     {
       id: "platform-fees-payouts",
@@ -124,7 +132,7 @@ const TermsAndConditions = () => {
 • The remaining 85% of Net Revenue is remitted to the Artist within 15 days of each monthly accounting cycle.
 • Payments are made via bank transfer, PayPal, or other designated modes.
 • RESET NETWORKS may withhold or adjust payouts for fraudulent, disputed, or refunded transactions.
-• All payouts are subject to applicable taxes and regulatory deductions.`
+• All payouts are subject to applicable taxes and regulatory deductions.`,
     },
     {
       id: "artist-representations",
@@ -132,7 +140,7 @@ const TermsAndConditions = () => {
       content: `• The Artist is the sole owner or authorized licensee of the Content with full rights to grant licenses.
 • The Content does not infringe any third-party rights including copyrights, trademarks, or moral rights.
 • The Content does not contain defamatory, obscene, or unlawful material and complies with all applicable laws.
-• The Artist is responsible for obtaining and paying for all necessary rights, permissions, or clearances.`
+• The Artist is responsible for obtaining and paying for all necessary rights, permissions, or clearances.`,
     },
     {
       id: "obligations",
@@ -140,7 +148,7 @@ const TermsAndConditions = () => {
       content: `• Host, distribute, and promote the Content professionally through digital platforms and partner channels.
 • Provide the Artist with access to analytics and periodic sales/streaming reports.
 • Ensure timely processing of Artist payouts as per the agreement.
-• Maintain technical systems to ensure uptime, security, and availability of the Content.`
+• Maintain technical systems to ensure uptime, security, and availability of the Content.`,
     },
     {
       id: "intellectual-property",
@@ -148,7 +156,7 @@ const TermsAndConditions = () => {
       content: `• All rights, title, and interest in the Content remain with the Artist.
 • The Artist grants RESET NETWORKS a worldwide, non-exclusive, royalty-free, transferable license to use, reproduce, distribute, and promote the Content.
 • RESET NETWORKS may use the Artist's name, likeness, and artwork for platform-related promotional materials.
-• No transfer of ownership is implied by this Agreement.`
+• No transfer of ownership is implied by this Agreement.`,
     },
     {
       id: "term-termination",
@@ -157,7 +165,7 @@ const TermsAndConditions = () => {
 • The Artist may terminate by providing 30 days' written notice through the Artist Dashboard.
 • RESET NETWORKS may suspend or terminate immediately for breach of terms or infringing Content.
 • Upon termination, RESET NETWORKS shall remove the Content from the Platform within 30 days.
-• Termination does not affect rights or obligations accrued prior to termination.`
+• Termination does not affect rights or obligations accrued prior to termination.`,
     },
     {
       id: "confidentiality",
@@ -165,7 +173,7 @@ const TermsAndConditions = () => {
       content: `• Both Parties shall keep confidential all non-public business, technical, and financial information.
 • Confidentiality obligations survive termination of this Agreement.
 • Royalty rates and payment terms are confidential and may not be disclosed.
-• Unreleased content is treated as confidential until publication.`
+• Unreleased content is treated as confidential until publication.`,
     },
     {
       id: "indemnity-liability",
@@ -173,14 +181,14 @@ const TermsAndConditions = () => {
       content: `• The Artist indemnifies RESET NETWORKS against claims arising from the Artist's breach or violations of third-party rights.
 • RESET NETWORKS is not liable for indirect, incidental, consequential, or punitive damages.
 • Total aggregate liability of RESET NETWORKS shall not exceed the total commission earned in the 6 months preceding the claim.
-• The Artist is responsible for claims related to copyright infringement.`
+• The Artist is responsible for claims related to copyright infringement.`,
     },
     {
       id: "taxes",
       title: "10. Taxes",
       content: `• Each Party is responsible for its own applicable taxes arising from this Agreement.
 • RESET NETWORKS may deduct taxes as required under applicable law prior to remitting payouts.
-• Artists are responsible for declaring and paying taxes in their respective jurisdictions.`
+• Artists are responsible for declaring and paying taxes in their respective jurisdictions.`,
     },
     {
       id: "governing-law",
@@ -188,7 +196,7 @@ const TermsAndConditions = () => {
       content: `• For Artists based in India: Governed by laws of India, exclusive jurisdiction of courts in New Delhi.
 • For Artists outside India: Governed by laws of Estonia, exclusive jurisdiction of courts in Tallinn.
 • Disputes not resolved amicably within 30 days shall be referred to arbitration by a sole arbitrator.
-• Arbitration shall be conducted in English.`
+• Arbitration shall be conducted in English.`,
     },
     {
       id: "miscellaneous-provisions",
@@ -196,13 +204,13 @@ const TermsAndConditions = () => {
       content: `• This Agreement constitutes the entire understanding between the Parties.
 • No modification is valid unless made in writing and accepted by both Parties.
 • Continued use of the Platform constitutes acceptance of updated terms.
-• Digital acceptance through the Platform constitutes binding consent.`
-    }
+• Digital acceptance through the Platform constitutes binding consent.`,
+    },
   ];
 
   const userTableOfContents = [
     "A. Introduction",
-    "B. Payments, Taxes, and Refunds", 
+    "B. Payments, Taxes, and Refunds",
     "C. Account",
     "D. Privacy",
     "E. Accessibility",
@@ -215,7 +223,7 @@ const TermsAndConditions = () => {
     "L. Your Submissions",
     "M. Family Sharing",
     "N. Additional Terms",
-    "O. Miscellaneous Provisions"
+    "O. Miscellaneous Provisions",
   ];
 
   const artistTableOfContents = [
@@ -230,18 +238,20 @@ const TermsAndConditions = () => {
     "9. Indemnity and Limitation of Liability",
     "10. Taxes",
     "11. Governing Law and Dispute Resolution",
-    "12. Miscellaneous Provisions"
+    "12. Miscellaneous Provisions",
   ];
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
-  const currentTermsData = activeTab === "user" ? userTermsData : artistTermsData;
-  const currentTableOfContents = activeTab === "user" ? userTableOfContents : artistTableOfContents;
+  const currentTermsData =
+    activeTab === "user" ? userTermsData : artistTermsData;
+  const currentTableOfContents =
+    activeTab === "user" ? userTableOfContents : artistTableOfContents;
 
   return (
     <>
@@ -252,75 +262,80 @@ const TermsAndConditions = () => {
         structuredData={{
           "@context": "https://schema.org",
           "@type": "WebPage",
-          "name": "Terms and Conditions",
-          "description": "Legal terms and conditions governing the use of Reset Music streaming platform",
-          "url": "https://musicreset.com/terms-and-conditions",
-          "mainEntity": {
+          name: "Terms and Conditions",
+          description:
+            "Legal terms and conditions governing the use of Reset Music streaming platform",
+          url: "https://musicreset.com/terms-and-conditions",
+          mainEntity: {
             "@type": "Article",
-            "headline": "Reset Music Terms and Conditions",
-            "datePublished": "2025-09-17",
-            "dateModified": "2025-09-17",
-            "author": {
+            headline: "Reset Music Terms and Conditions",
+            datePublished: "2025-09-17",
+            dateModified: "2025-09-17",
+            author: {
               "@type": "Organization",
-              "name": "Reset Music"
+              name: "Reset Music",
             },
-            "publisher": {
+            publisher: {
               "@type": "Organization",
-              "name": "Reset Music",
-              "url": "https://musicreset.com",
-              "contactPoint": {
+              name: "Reset Music",
+              url: "https://musicreset.com",
+              contactPoint: {
                 "@type": "ContactPoint",
-                "email": "contact@reset93.net",
-                "contactType": "legal department",
-                "areaServed": "Worldwide"
-              }
+                email: "contact@reset93.net",
+                contactType: "legal department",
+                areaServed: "Worldwide",
+              },
             },
-            "about": [
+            about: [
               {
                 "@type": "Thing",
-                "name": "Service Agreement",
-                "description": "Legal agreement between Reset Music and platform users"
+                name: "Service Agreement",
+                description:
+                  "Legal agreement between Reset Music and platform users",
               },
               {
                 "@type": "Thing",
-                "name": "Payment Terms",
-                "description": "Terms governing payments, subscriptions, and refunds"
+                name: "Payment Terms",
+                description:
+                  "Terms governing payments, subscriptions, and refunds",
               },
               {
                 "@type": "Thing",
-                "name": "Usage Rules",
-                "description": "Rules and restrictions for using the music streaming service"
+                name: "Usage Rules",
+                description:
+                  "Rules and restrictions for using the music streaming service",
               },
               {
                 "@type": "Thing",
-                "name": "User Responsibilities",
-                "description": "Obligations and responsibilities of platform users"
-              }
-            ]
+                name: "User Responsibilities",
+                description:
+                  "Obligations and responsibilities of platform users",
+              },
+            ],
           },
-          "breadcrumb": {
+          breadcrumb: {
             "@type": "BreadcrumbList",
-            "itemListElement": [
+            itemListElement: [
               {
                 "@type": "ListItem",
-                "position": 1,
-                "name": "Home",
-                "item": "https://musicreset.com"
+                position: 1,
+                name: "Home",
+                item: "https://musicreset.com",
               },
               {
                 "@type": "ListItem",
-                "position": 2,
-                "name": "Terms and Conditions",
-                "item": "https://musicreset.com/terms-and-conditions"
-              }
-            ]
-          }
+                position: 2,
+                name: "Terms and Conditions",
+                item: "https://musicreset.com/terms-and-conditions",
+              },
+            ],
+          },
         }}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
-        
+
         {/* Header Section */}
         <div className="relative bg-gradient-to-r from-gray-900 to-blue-900/30 border-b border-gray-700/50">
           <div className="max-w-7xl mx-auto px-6 py-16">
@@ -333,11 +348,12 @@ const TermsAndConditions = () => {
                   Terms and Conditions
                 </h1>
               </div>
-              
+
               <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Please read these terms carefully before using the Reset Music Streaming Platform
+                Please read these terms carefully before using the Reset Music
+                Streaming Platform
               </p>
-              
+
               <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   <FiShield className="w-4 h-4" />
@@ -352,8 +368,8 @@ const TermsAndConditions = () => {
                     <button
                       onClick={() => setActiveTab("user")}
                       className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                        activeTab === "user" 
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" 
+                        activeTab === "user"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                           : "text-gray-400 hover:text-white hover:bg-gray-700/50"
                       }`}
                     >
@@ -363,8 +379,8 @@ const TermsAndConditions = () => {
                     <button
                       onClick={() => setActiveTab("artist")}
                       className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                        activeTab === "artist" 
-                          ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25" 
+                        activeTab === "artist"
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
                           : "text-gray-400 hover:text-white hover:bg-gray-700/50"
                       }`}
                     >
@@ -397,7 +413,7 @@ const TermsAndConditions = () => {
                     <FiBookOpen className="w-5 h-5 text-blue-400" />
                     Table of Contents
                   </h2>
-                  
+
                   <nav className="space-y-2">
                     {currentTableOfContents.map((item, index) => {
                       const sectionId = currentTermsData[index]?.id;
@@ -420,11 +436,13 @@ const TermsAndConditions = () => {
             <div className="lg:col-span-3">
               {/* Tab Indicator */}
               <div className="mb-8">
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                  activeTab === "user" 
-                    ? "bg-blue-600/20 text-blue-300 border border-blue-500/30" 
-                    : "bg-purple-600/20 text-purple-300 border border-purple-500/30"
-                }`}>
+                <div
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+                    activeTab === "user"
+                      ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
+                      : "bg-purple-600/20 text-purple-300 border border-purple-500/30"
+                  }`}
+                >
                   {activeTab === "user" ? (
                     <>
                       <FiUser className="w-4 h-4" />
@@ -443,12 +461,23 @@ const TermsAndConditions = () => {
               {activeTab === "artist" && (
                 <div className="mb-8 bg-gray-800/40 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6">
                   <div className="text-center space-y-4">
-                    <h3 className="text-2xl font-bold text-white">ARTIST DISTRIBUTION AGREEMENT</h3>
+                    <h3 className="text-2xl font-bold text-white">
+                      ARTIST DISTRIBUTION AGREEMENT
+                    </h3>
                     <div className="text-sm text-gray-300 space-y-2">
-                      <p><strong>Between:</strong></p>
-                      <p>RESET NETWORKS OPC PRIVATE LIMITED & RESET NETWORKS OÜ</p>
-                      <p><strong>And:</strong></p>
-                      <p>The Artist uploading or distributing creative works via the Platform</p>
+                      <p>
+                        <strong>Between:</strong>
+                      </p>
+                      <p>
+                        RESET NETWORKS OPC PRIVATE LIMITED & RESET NETWORKS OÜ
+                      </p>
+                      <p>
+                        <strong>And:</strong>
+                      </p>
+                      <p>
+                        The Artist uploading or distributing creative works via
+                        the Platform
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -466,9 +495,20 @@ const TermsAndConditions = () => {
                       className="w-full px-6 py-6 text-left hover:bg-gray-700/30 transition-all duration-200"
                     >
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-semibold text-white group-hover:text-blue-300 transition-colors">
+                        <h3
+                          className={`text-xl font-semibold transition-colors ${
+                            activeTab === "user" &&
+                            section.title === "B. Payments, Taxes, and Refunds"
+                              ? "text-blue-400"
+                              : activeTab === "artist" &&
+                                section.title === "3. Platform Fees and Payouts"
+                              ? "text-purple-400"
+                              : "text-white group-hover:text-blue-300"
+                          }`}
+                        >
                           {section.title}
                         </h3>
+
                         <div className="text-gray-400">
                           {expandedSection === section.id ? (
                             <FiChevronDown className="w-5 h-5" />
@@ -478,26 +518,38 @@ const TermsAndConditions = () => {
                         </div>
                       </div>
                     </button>
-                    
+
                     {expandedSection === section.id && (
                       <div className="px-6 pb-6 border-t border-gray-700/50">
                         <div className="pt-4">
                           <div className="prose prose-invert max-w-none">
-                            {section.content.split('\n').map((paragraph, pIndex) => (
-                              <p
-                                key={pIndex}
-                                className="text-gray-300 leading-relaxed mb-4 last:mb-0"
-                              >
-                                {paragraph.startsWith('•') ? (
-                                  <span className="flex items-start gap-3">
-                                    <span className={`mt-2 ${activeTab === "user" ? "text-blue-400" : "text-purple-400"}`}>•</span>
-                                    <span>{paragraph.substring(1).trim()}</span>
-                                  </span>
-                                ) : (
-                                  paragraph
-                                )}
-                              </p>
-                            ))}
+                            {section.content
+                              .split("\n")
+                              .map((paragraph, pIndex) => (
+                                <p
+                                  key={pIndex}
+                                  className="text-gray-300 leading-relaxed mb-4 last:mb-0"
+                                >
+                                  {paragraph.startsWith("•") ? (
+                                    <span className="flex items-start gap-3">
+                                      <span
+                                        className={`mt-2 ${
+                                          activeTab === "user"
+                                            ? "text-blue-400"
+                                            : "text-purple-400"
+                                        }`}
+                                      >
+                                        •
+                                      </span>
+                                      <span>
+                                        {paragraph.substring(1).trim()}
+                                      </span>
+                                    </span>
+                                  ) : (
+                                    paragraph
+                                  )}
+                                </p>
+                              ))}
                           </div>
                         </div>
                       </div>
@@ -507,20 +559,21 @@ const TermsAndConditions = () => {
               </div>
 
               {/* Contact Information */}
-              <div className={`mt-12 rounded-2xl border p-8 ${
-                activeTab === "user" 
-                  ? "bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/20" 
-                  : "bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500/20"
-              }`}>
+              <div
+                className={`mt-12 rounded-2xl border p-8 ${
+                  activeTab === "user"
+                    ? "bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/20"
+                    : "bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500/20"
+                }`}
+              >
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white">
                     Questions About These Terms?
                   </h3>
                   <p className="text-gray-300">
-                    {activeTab === "user" 
+                    {activeTab === "user"
                       ? "If you have any questions about these Terms and Conditions, please contact us."
-                      : "For artist-specific inquiries about content distribution, royalties, or partnership opportunities, contact our artist relations team."
-                    }
+                      : "For artist-specific inquiries about content distribution, royalties, or partnership opportunities, contact our artist relations team."}
                   </p>
                   <div className="space-y-2 text-sm text-gray-400">
                     <p>Reset Music Streaming Platform</p>
@@ -537,47 +590,85 @@ const TermsAndConditions = () => {
               </div>
 
               {/* Agreement Acknowledgment */}
-              <div className={`mt-8 rounded-2xl p-6 ${
-                activeTab === "user" 
-                  ? "bg-amber-900/20 border border-amber-500/30" 
-                  : "bg-purple-900/20 border border-purple-500/30"
-              }`}>
+              <div
+                className={`mt-8 rounded-2xl p-6 ${
+                  activeTab === "user"
+                    ? "bg-amber-900/20 border border-amber-500/30"
+                    : "bg-purple-900/20 border border-purple-500/30"
+                }`}
+              >
                 <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${
-                    activeTab === "user" 
-                      ? "bg-amber-500/20" 
-                      : "bg-purple-500/20"
-                  }`}>
-                    <FiShield className={`w-5 h-5 ${
-                      activeTab === "user" ? "text-amber-400" : "text-purple-400"
-                    }`} />
+                  <div
+                    className={`p-2 rounded-lg ${
+                      activeTab === "user"
+                        ? "bg-amber-500/20"
+                        : "bg-purple-500/20"
+                    }`}
+                  >
+                    <FiShield
+                      className={`w-5 h-5 ${
+                        activeTab === "user"
+                          ? "text-amber-400"
+                          : "text-purple-400"
+                      }`}
+                    />
                   </div>
                   <div>
-                    <h4 className={`font-semibold mb-2 ${
-                      activeTab === "user" ? "text-amber-300" : "text-purple-300"
-                    }`}>
-                      {activeTab === "user" 
-                        ? "By using Reset Music, you acknowledge that:" 
-                        : "By uploading content to Reset Music, you acknowledge that:"
-                      }
+                    <h4
+                      className={`font-semibold mb-2 ${
+                        activeTab === "user"
+                          ? "text-amber-300"
+                          : "text-purple-300"
+                      }`}
+                    >
+                      {activeTab === "user"
+                        ? "By using Reset Music, you acknowledge that:"
+                        : "By uploading content to Reset Music, you acknowledge that:"}
                     </h4>
-                    <ul className={`text-sm space-y-1 ${
-                      activeTab === "user" ? "text-amber-200/80" : "text-purple-200/80"
-                    }`}>
+                    <ul
+                      className={`text-sm space-y-1 ${
+                        activeTab === "user"
+                          ? "text-amber-200/80"
+                          : "text-purple-200/80"
+                      }`}
+                    >
                       {activeTab === "user" ? (
                         <>
-                          <li>• You have read and understood these Terms and Conditions</li>
+                          <li>
+                            • You have read and understood these Terms and
+                            Conditions
+                          </li>
                           <li>• You agree to be bound by these terms</li>
-                          <li>• You are of legal age to enter into this agreement</li>
-                          <li>• You will use the service in compliance with all applicable laws</li>
+                          <li>
+                            • You are of legal age to enter into this agreement
+                          </li>
+                          <li>
+                            • You will use the service in compliance with all
+                            applicable laws
+                          </li>
                         </>
                       ) : (
                         <>
-                          <li>• You have read and understood the Artist Distribution Agreement</li>
-                          <li>• You own all necessary rights to distribute your content</li>
-                          <li>• You agree to the 15% platform fee and royalty structure</li>
-                          <li>• You accept the governing laws based on your location</li>
-                          <li>• You will comply with all content guidelines and specifications</li>
+                          <li>
+                            • You have read and understood the Artist
+                            Distribution Agreement
+                          </li>
+                          <li>
+                            • You own all necessary rights to distribute your
+                            content
+                          </li>
+                          <li>
+                            • You agree to the 15% platform fee and royalty
+                            structure
+                          </li>
+                          <li>
+                            • You accept the governing laws based on your
+                            location
+                          </li>
+                          <li>
+                            • You will comply with all content guidelines and
+                            specifications
+                          </li>
                         </>
                       )}
                     </ul>
