@@ -10,6 +10,11 @@ export const selectSongsPagination = (state) => state.songs?.pagination || { pag
 export const selectSelectedSong = (state) => state.player?.selectedSong || null;
 export const selectSongsState = (state) => state.songs || {};
 
+// ✅ NEW: Current song selectors for getSongById
+export const selectCurrentSong = (state) => state.songs?.currentSong || null;
+export const selectCurrentSongStatus = (state) => state.songs?.status || 'idle';
+export const selectCurrentSongError = (state) => state.songs?.error || null;
+
 // ✅ UPDATED: Default song selectors for player display (from playerSlice)
 export const selectDefaultSong = (state) => state.player?.defaultSong || null;
 export const selectHasPersistentDefault = (state) => !!state.player?.defaultSong;
@@ -423,8 +428,16 @@ export const selectGenreCachedPageData = (genre, page) => (state) => {
   return data[page] || null;
 };
 
-
-
-
-
-
+// ✅ NEW: Memoized selector for current song with metadata
+export const selectCurrentSongWithMetadata = createSelector(
+  [selectCurrentSong, selectCurrentSongStatus, selectCurrentSongError],
+  (currentSong, status, error) => ({
+    song: currentSong,
+    status,
+    error,
+    isLoading: status === 'loading',
+    isSuccess: status === 'succeeded',
+    isError: status === 'failed',
+    hasData: !!currentSong
+  })
+);
