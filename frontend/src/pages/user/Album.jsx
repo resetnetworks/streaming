@@ -444,6 +444,7 @@ export default function Album() {
                       singerName={song.singer}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
+                      onTitleClick={() => navigate(`/song/${song._id}`)} // ✅ MAKE TITLE CLICKABLE
                       isSelected={selectedSong?._id === song._id}
                       // ✅ UPDATED SONG PURCHASE WITH RAZORPAY
                       price={

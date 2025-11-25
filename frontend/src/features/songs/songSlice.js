@@ -11,7 +11,8 @@ import {
   fetchSongsByAlbum,
   fetchSongsByArtist,
   fetchSinglesSongByArtist,
-  fetchSongsByGenre
+  fetchSongsByGenre,
+  getSongById // ✅ NEW: Import getSongById thunk
 } from './songThunks.js';
 
 // ✅ Helper function to ensure object exists
@@ -71,6 +72,11 @@ const songSlice = createSlice({
     clearSongMessage: (state) => {
       state.error = null;
       state.message = null;
+    },
+    
+    // ✅ NEW: Clear current song
+    clearCurrentSong: (state) => {
+      state.currentSong = null;
     },
     
     // ✅ OLD CLEAR LIKED SONGS (NO CACHE)
@@ -270,6 +276,9 @@ const songSlice = createSlice({
       
       // Clear singles by artist
       state.singlesByArtist = {};
+      
+      // Clear current song
+      state.currentSong = null;
     },
     
     setCachedData: (state, action) => {
@@ -375,6 +384,22 @@ const songSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ✅ NEW: Get Song by ID cases
+      .addCase(getSongById.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(getSongById.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentSong = action.payload;
+        state.error = null;
+      })
+      .addCase(getSongById.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.currentSong = null;
+      })
+      
       .addCase(createSong.fulfilled, (state, action) => {
         state.songs.unshift(action.payload);
         state.allSongs.unshift(action.payload);
@@ -410,6 +435,11 @@ const songSlice = createSlice({
         // ✅ Update in all singles
         const singlesIndex = state.allSingles.findIndex((s) => s._id === action.payload._id);
         if (singlesIndex !== -1) state.allSingles[singlesIndex] = action.payload;
+
+        // ✅ Update current song if it matches
+        if (state.currentSong && state.currentSong._id === action.payload._id) {
+          state.currentSong = action.payload;
+        }
 
         // ✅ Update in matching genre cache as well with safety check
         ensureMatchingGenreState(state);
@@ -455,6 +485,11 @@ const songSlice = createSlice({
         state.songs = state.songs.filter((s) => s._id !== action.payload);
         state.allSongs = state.allSongs.filter((s) => s._id !== action.payload);
         state.allSingles = state.allSingles.filter((s) => s._id !== action.payload);
+        
+        // ✅ Clear current song if it matches deleted song
+        if (state.currentSong && state.currentSong._id === action.payload) {
+          state.currentSong = null;
+        }
         
         // ✅ Filter with safety check
         ensureMatchingGenreState(state);
@@ -740,6 +775,7 @@ export const {
   removeSongFromLiked,
   setDefaultSong, // ✅ NEW: Export default song setter
   setRandomDefaultSong, // ✅ NEW: Export random default song setter
+  clearCurrentSong, // ✅ NEW: Export current song clear action
   clearGenreSongs,
   clearSinglesByArtist,
   clearAllSingles, // ✅ NEW: Export singles clear action
@@ -772,5 +808,6 @@ export {
   fetchSongsByAlbum,
   fetchSongsByArtist,
   fetchSinglesSongByArtist,
-  fetchSongsByGenre
+  fetchSongsByGenre,
+  getSongById // ✅ NEW: Export getSongById thunk
 };

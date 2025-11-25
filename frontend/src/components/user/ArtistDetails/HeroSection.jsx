@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -9,44 +9,54 @@ const HeroSection = () => {
   const carouselSlides = [
     {
       id: 1,
-      image: "https://images.unsplash.com/photo-1573120525707-4549889744f2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470",
+      image:
+        "https://images.unsplash.com/photo-1573120525707-4549889744f2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470",
       title: "Reset Music for Artist",
-      subtitle: "Transform your musical journey with cutting-edge technology and unparalleled creative support. Discover new possibilities in music production and artist development.",
+      subtitle:
+        "Transform your musical journey with cutting-edge technology and unparalleled creative support. Discover new possibilities in music production and artist development.",
       stats: "10K+ Artists Joined",
-      cta: "Start Your Journey"
+      cta: "Start Your Journey",
     },
     {
       id: 2,
-      image: "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1476",
+      image:
+        "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1476",
       title: "Reset Music for Artist",
-      subtitle: "Join a community of innovative artists pushing the boundaries of modern music creation. Collaborate, create, and conquer the music industry together.",
+      subtitle:
+        "Join a community of innovative artists pushing the boundaries of modern music creation. Collaborate, create, and conquer the music industry together.",
       stats: "500+ Collaborations",
-      cta: "Join Community"
+      cta: "Join Community",
     },
     {
       id: 3,
-      image: "https://images.unsplash.com/photo-1695866648577-d833bf200754?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470",
+      image:
+        "https://images.unsplash.com/photo-1695866648577-d833bf200754?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470",
       title: "Reset Music for Artist",
-      subtitle: "Your vision, amplified. Experience the future of artist development and distribution with our state-of-the-art platform and tools.",
+      subtitle:
+        "Your vision, amplified. Experience the future of artist development and distribution with our state-of-the-art platform and tools.",
       stats: "AI-Powered Tools",
-      cta: "Explore Features"
+      cta: "Explore Features",
     },
     {
       id: 4,
-      image: "https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470",
+      image:
+        "https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1470",
       title: "Reset Music for Artist",
-      subtitle: "From studio to stage, we provide the tools and platform for your artistic evolution. Grow your audience and master your craft with us.",
+      subtitle:
+        "From studio to stage, we provide the tools and platform for your artistic evolution. Grow your audience and master your craft with us.",
       stats: "Global Reach",
-      cta: "Get Started"
+      cta: "Get Started",
     },
     {
       id: 5,
-      image: "https://images.unsplash.com/photo-1635961726947-0f821cf9ba28?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1632",
+      image:
+        "https://images.unsplash.com/photo-1635961726947-0f821cf9ba28?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1632",
       title: "Reset Music for Artist",
-      subtitle: "Revolutionize your sound with AI-powered tools and expert guidance. Take your music to the next level with our comprehensive artist ecosystem.",
+      subtitle:
+        "Revolutionize your sound with AI-powered tools and expert guidance. Take your music to the next level with our comprehensive artist ecosystem.",
       stats: "24/7 Support",
-      cta: "Learn More"
-    }
+      cta: "Learn More",
+    },
   ];
 
   useEffect(() => {
@@ -70,18 +80,18 @@ const HeroSection = () => {
             key={slide.id}
             className="absolute inset-0 w-full h-full"
             initial={{ opacity: index === 0 ? 1 : 0 }}
-            animate={{ 
-              opacity: index === currentSlide ? 1 : 0 
+            animate={{
+              opacity: index === currentSlide ? 1 : 0,
             }}
-            transition={{ 
+            transition={{
               duration: 1.2,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
           >
-            <div 
+            <div
               className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url(${slide.image})`
+                backgroundImage: `url(${slide.image})`,
               }}
             >
               {/* Enhanced Overlay */}
@@ -92,7 +102,7 @@ const HeroSection = () => {
           </motion.div>
         ))}
       </div>
-      
+
       {/* Main Content Container */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Top Section - Fixed Heading with Changing Subtitle */}
@@ -129,7 +139,7 @@ const HeroSection = () => {
           {/* Static Sign Up Button and Changing Badge Container */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12">
             {/* Static Sign Up Button */}
-            <motion.div 
+            <motion.div
               className="button-wrapper cursor-pointer shadow-sm shadow-black inline-block order-2 sm:order-1"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -139,12 +149,14 @@ const HeroSection = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="custom-button text-base sm:text-lg px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-full shadow-lg transition-all duration-300 transform hover:shadow-xl"
-                onClick={() => { navigate('/register') }}
+                onClick={() => {
+                  navigate("/register");
+                }}
               >
                 Sign Up
               </motion.button>
             </motion.div>
-            
+
             {/* Changing Stats Badge */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -156,7 +168,9 @@ const HeroSection = () => {
                 transition={{ duration: 0.4 }}
               >
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-                <span className="text-sm sm:text-base font-semibold">{carouselSlides[currentSlide].stats}</span>
+                <span className="text-sm sm:text-base font-semibold">
+                  {carouselSlides[currentSlide].stats}
+                </span>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -171,71 +185,112 @@ const HeroSection = () => {
             {/* Mobile-first responsive grid: 1 column on mobile, 2 on small tablets, 3 on desktop */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
               {/* Feature 1 */}
-              <motion.div 
+              <motion.div
                 className="text-center p-4 sm:p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 w-full"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1, duration: 0.6 }}
-                whileHover={{ 
+                whileHover={{
                   y: -5,
-                  transition: { duration: 0.2 }
+                  transition: { duration: 0.2 },
                 }}
               >
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-300 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  <svg
+                    className="w-6 h-6 sm:w-7 sm:h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-white font-semibold text-base sm:text-lg mb-2">Your Music, Your Terms</h3>
+                <h3 className="text-white font-semibold text-base sm:text-lg mb-2">
+                  Your Music, Your Terms
+                </h3>
                 <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
-                  Take full control of your music career. Set your own pricing, distribute your tracks the way you want, 
-                  and ensure every sale pays you directly—no middlemen, no hidden cuts. Your art, your rules, your profit.
+                  Take full control of your music career. Set your own prices,
+                  release your tracks your way, and get paid securely through
+                  Reset Music. We process your payments and ensure your earnings
+                  reach you without hidden cuts.
                 </p>
               </motion.div>
 
               {/* Feature 2 */}
-              <motion.div 
+              <motion.div
                 className="text-center p-4 sm:p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 w-full"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1.2, duration: 0.6 }}
-                whileHover={{ 
+                whileHover={{
                   y: -5,
-                  transition: { duration: 0.2 }
+                  transition: { duration: 0.2 },
                 }}
               >
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-300 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <svg
+                    className="w-6 h-6 sm:w-7 sm:h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-white font-semibold text-base sm:text-lg mb-2">Build Your Community</h3>
+                <h3 className="text-white font-semibold text-base sm:text-lg mb-2">
+                  Build Your Community
+                </h3>
                 <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
-                  Grow your audience by connecting directly with your listeners. Share exclusive updates, early releases, 
-                  and personal stories to build genuine relationships that turn fans into lifelong supporters.
+                  Grow your audience with flexible support options. Offer
+                  subscriptions or one-time access to your tracks you choose how
+                  fans experience and support your music. Total freedom, total
+                  control.
                 </p>
               </motion.div>
 
               {/* Feature 3 */}
-              <motion.div 
+              <motion.div
                 className="text-center p-4 sm:p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 w-full sm:col-span-2 lg:col-span-1"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1.4, duration: 0.6 }}
-                whileHover={{ 
+                whileHover={{
                   y: -5,
-                  transition: { duration: 0.2 }
+                  transition: { duration: 0.2 },
                 }}
               >
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-300 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
-                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <svg
+                    className="w-6 h-6 sm:w-7 sm:h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-white font-semibold text-base sm:text-lg mb-2">Powerful Artist Hub</h3>
+                <h3 className="text-white font-semibold text-base sm:text-lg mb-2">
+                  Upload and Manage with Ease
+                </h3>
                 <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
-                  Manage everything from one place. Track your catalog, view real-time performance analytics, 
-                  understand your audience, and make smarter moves to expand your reach and revenue.
+                  Upload your tracks or albums in few minutes we’ll handle updates
+                  and manage your account for now. Your personal artist
+                  dashboard is on the way with our upcoming platform release.
                 </p>
               </motion.div>
             </div>
@@ -250,9 +305,9 @@ const HeroSection = () => {
             key={index}
             onClick={() => goToSlide(index)}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === currentSlide 
-                ? 'bg-white w-6' 
-                : 'bg-white/50 hover:bg-white/80'
+              index === currentSlide
+                ? "bg-white w-6"
+                : "bg-white/50 hover:bg-white/80"
             }`}
           />
         ))}

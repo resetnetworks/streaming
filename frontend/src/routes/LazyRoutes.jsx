@@ -27,10 +27,11 @@ export const About = lazy(() => import("../pages/user/About"));
 export const CancellationRefundPolicy = lazy(() => import("../pages/user/CancellationRefundPolicy"));
 export const Career = lazy(() => import("../pages/user/Career"));
 export const ArtistDetails = lazy(() => import("../pages/user/ArtistDetails"));
+export const Song = lazy(() => import("../pages/user/Song"));
 
 
 // Artist pages routes
-// export const ArtistRegister = lazy(() => import("../pages/artist/ArtistRegister"));
+export const ArtistRegister = lazy(() => import("../pages/artist/ArtistRegister"));
 
 
 

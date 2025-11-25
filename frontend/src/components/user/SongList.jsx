@@ -18,6 +18,7 @@ const SongList = ({
   singerName,
   seekTime,
   isSelected,
+  onTitleClick, // ✅ ADD THIS PROP
   onPlay,
   songId,
 }) => {
@@ -30,6 +31,15 @@ const SongList = ({
   const handleClick = (e) => {
     if (!e.target.closest(".action-button")) {
       onPlay();
+    }
+  };
+
+  // ✅ ADD TITLE CLICK HANDLER
+  const handleTitleClick = (e) => {
+    e.stopPropagation(); // Prevent triggering onPlay
+    e.preventDefault();
+    if (onTitleClick) {
+      onTitleClick();
     }
   };
 
@@ -73,17 +83,18 @@ const SongList = ({
           }`}
         />
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
-        <h3
-  className="
-    text-white text-lg leading-none
-    sm:truncate  // ✅ larger screens: normal truncate based on container
-  "
->
-  <span className="block sm:hidden">
-    {songName.length > 12 ? songName.slice(0, 11) + "..." : songName}
-  </span>
-  <span className="hidden sm:block">{songName}</span>
-</h3>
+          {/* ✅ MAKE SONG TITLE CLICKABLE */}
+          <button
+            onClick={handleTitleClick}
+            className="text-left w-full hover:underline"
+          >
+            <h3 className="text-white text-lg leading-none sm:truncate">
+              <span className="block sm:hidden">
+                {songName.length > 12 ? songName.slice(0, 11) + "..." : songName}
+              </span>
+              <span className="hidden sm:block">{songName}</span>
+            </h3>
+          </button>
 
           <p className="text-gray-400 text-xs font-light mt-1 truncate">
             {singerName}

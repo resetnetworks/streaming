@@ -9,6 +9,9 @@ export const initialState = {
   // ✅ NEW: All singles state
   allSingles: [],
   
+  // ✅ NEW: Current single song state
+  currentSong: null,
+  
   // ✅ OLD LIKED SONGS STRUCTURE (NO CACHE)
   likedSongs: {
     songs: [],
@@ -91,6 +94,22 @@ export const initialState = {
 };
 
 // ✅ ALL ASYNC THUNKS
+
+// ✅ NEW: Get Song by ID
+export const getSongById = createAsyncThunk(
+  'songs/getSongById',
+  async (id, thunkAPI) => {
+    try {
+      const res = await axios.get(`/songs/${id}`);
+      console.log(res.data)
+      return res.data.song;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || 'Failed to fetch song'
+      );
+    }
+  }
+);
 
 // Create Song
 export const createSong = createAsyncThunk('songs/create', async (formData, thunkAPI) => {

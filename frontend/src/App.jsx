@@ -250,6 +250,14 @@ function App() {
                 }
               />
               <Route
+                path="/song/:songId"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated}>
+                    <Pages.Song />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/search"
                 element={
                   <ProtectedRoute isAuthenticated={isAuthenticated}>
@@ -291,19 +299,17 @@ function App() {
             />
 
             {/* Fallback Route */}
-            <Route
+           <Route
               path="*"
               element={
                 <Navigate to={isAuthenticated ? "/" : "/login"} replace />
               }
             />
-            {/* Artist Dashboard Route */}
-          {/* <Route
+
+            <Route 
             path="/artist/register"
-            element={
-                <Pages.ArtistRegister />
-            }
-          /> */}
+            element={<Pages.ArtistRegister />}
+            />
           </Routes>      
         </Suspense>
       </BrowserRouter>
