@@ -102,7 +102,7 @@ const SongList = ({
         </div>
       </div>
 
-      {isSelected ? (
+      {/* {isSelected ? (
         <div className="equalizer">
           <span className="equalizer-bar"></span>
           <span className="equalizer-bar"></span>
@@ -111,7 +111,7 @@ const SongList = ({
         </div>
       ) : (
         <div></div>
-      )}
+      )} */}
 
       <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
