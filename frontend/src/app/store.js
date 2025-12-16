@@ -14,6 +14,9 @@ import paymentReducer from "../features/payments/userPaymentSlice";
 import payment from "../features/payments/paymentSlice";
 import streamReducer from "../features/stream/streamSlice";
 import adminPaymentReducer from "../features/payments/adminPaymentSlice";
+import artistApplicationReducer from '../features/artistApplications/artistApplicationSlice';
+import artistApplicationAdminReducer from '../features/admin/artistApplicationAdminSlice';
+import monetizationReducer from '../features/monetization/monetizationSlice';
 
 // ========================
 // 🔐 PERSIST CONFIGS
@@ -50,6 +53,9 @@ const appReducer = combineReducers({
   stream: streamReducer,
   payment: payment,
   artistDashboard: adminPaymentReducer,
+  artistApplication: artistApplicationReducer,
+  artistApplicationAdmin: artistApplicationAdminReducer,
+  monetization: monetizationReducer,
 });
 
 // ========================

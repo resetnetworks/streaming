@@ -306,9 +306,20 @@ function App() {
               }
             />
 
+           {/* Artist Routes */}
+
             <Route 
             path="/artist/register"
             element={<Pages.ArtistRegister />}
+            />
+            <Route 
+            path="/artist/dashboard"
+            element={
+            <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                  >
+            <Pages.ArtistDashboard />
+          </RedirectedProtectedRoute>}
             />
           </Routes>      
         </Suspense>

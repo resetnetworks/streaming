@@ -174,7 +174,7 @@ const HeroSection = ({ scrollContainerRef }) => {
           </motion.div>
           
         </motion.div>
-
+     
       </div>
     </div>
   );

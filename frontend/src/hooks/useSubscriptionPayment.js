@@ -105,7 +105,7 @@ export const useSubscriptionPayment = () => {
       toast.error('Payment gateway is not available. Please refresh and try again.');
       return;
     }
-
+ console.log(RAZORPAY_KEY)
     if (!RAZORPAY_KEY) {
       toast.error('Payment configuration error. Please contact support.');
       return;
