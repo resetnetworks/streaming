@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../components/artist/dashboard/sidebar';
+import Sidebar from '../../components/artist/dashboard/Sidebar';
 import BackgroundWrapper from '../../components/BackgroundWrapper';
 import HomeComponent from '../../components/artist/home/HomeComponent';
 import UploadsComponent from '../../components/artist/upload/UploadsComponent';
