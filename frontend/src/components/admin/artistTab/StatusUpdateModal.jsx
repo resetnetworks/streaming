@@ -32,15 +32,12 @@ const StatusUpdateModal = ({
   // Reset everything when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Reset form when modal opens
       setStatusUpdateData({
         status: '',
         reason: '',
         adminNotes: ''
       });
       setValidationError('');
-      
-      // ✅ CRITICAL: Clear Redux error state when modal opens
       dispatch(clearStatusUpdateState());
     }
   }, [isOpen, applicationId, currentStatus, dispatch]);
@@ -48,22 +45,14 @@ const StatusUpdateModal = ({
   // Handle success and close modal
   useEffect(() => {
     if (statusUpdateSuccess && isOpen) {
-      onSuccess && onSuccess();
+      onSuccess?.();
       handleClose();
     }
   }, [statusUpdateSuccess, isOpen, onSuccess]);
 
-  // Handle errors and log them for debugging
-  useEffect(() => {
-    if (statusUpdateError && isOpen) {
-      console.error('❌ Status update error:', statusUpdateError);
-    }
-  }, [statusUpdateError, isOpen]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Clear previous errors
     setValidationError('');
     
     // Validation
@@ -77,19 +66,12 @@ const StatusUpdateModal = ({
       return;
     }
     
-    // Special validation for needs_info
     if (statusUpdateData.status === 'needs_info' && !statusUpdateData.reason.trim()) {
       setValidationError('Reason is required when requesting more information');
       return;
     }
     
     try {
-      console.log('🔄 Submitting status update:', {
-        applicationId,
-        ...statusUpdateData
-      });
-      
-      // Clear any previous errors
       dispatch(clearStatusUpdateState());
       
       const result = await dispatch(updateApplicationStatusForAdmin({
@@ -97,16 +79,11 @@ const StatusUpdateModal = ({
         ...statusUpdateData
       }));
             
-      if (result.type === 'artistApplicationAdmin/updateStatus/fulfilled') {
-        console.log('✅ Update successful:', result.payload);
-        // Success is handled by the useEffect above
-      } else if (result.type === 'artistApplicationAdmin/updateStatus/rejected') {
-        console.error('❌ Update rejected:', result.payload || result.error);
-        // Error will be shown via statusUpdateError selector
+      if (result.type === 'artistApplicationAdmin/updateStatus/rejected') {
+        setValidationError('Failed to update status. Please try again.');
       }
       
     } catch (err) {
-      console.error('💥 Failed to update status:', err);
       setValidationError(err.message || 'An unexpected error occurred');
     }
   };
@@ -203,7 +180,6 @@ const StatusUpdateModal = ({
                     setStatusUpdateData(prev => ({ 
                       ...prev, 
                       status: option.value,
-                      // Clear reason when switching from needs_info
                       ...(prev.status === 'needs_info' && option.value !== 'needs_info' ? { reason: '' } : {})
                     }));
                   }}
@@ -266,12 +242,21 @@ const StatusUpdateModal = ({
             </div>
           </div>
 
+          {/* Error Messages */}
+          {(validationError || statusUpdateError) && (
+            <div className="mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
+              <p className="text-red-400 text-sm">
+                {validationError || statusUpdateError}
+              </p>
+            </div>
+          )}
+
           {/* Success Message */}
           {statusUpdateSuccess && (
             <div className="mt-4 p-3 bg-green-900/30 border border-green-700/50 rounded-lg">
-              <p className="text-green-400 text-sm">✅ Status updated successfully!</p>
+              <p className="text-green-400 text-sm">✓ Status updated successfully!</p>
               <p className="text-gray-400 text-xs mt-1">
-                The application status has been updated. Closing modal...
+                The application status has been updated.
               </p>
             </div>
           )}

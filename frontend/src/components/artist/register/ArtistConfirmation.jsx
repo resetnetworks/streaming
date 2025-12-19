@@ -1,140 +1,129 @@
 // src/components/artist/register/ArtistConfirmation.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { MdCheckCircle, MdOutlineVerified, MdHome } from 'react-icons/md';
 
-const ArtistConfirmation = ({ application }) => {
-  if (!application) {
+const ArtistConfirmation = () => {
+  const { formData, latestApplication } = useSelector((state) => state.artistApplication);
+
+  // Scroll to top when component loads
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  if (!formData && !latestApplication) {
     return (
-      <div className="text-white flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-6 bg-yellow-500/20 rounded-full flex items-center justify-center">
-            <svg className="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold mb-4">Loading Application Details...</h2>
-          <p className="text-slate-300">Please wait while we load your application information.</p>
-        </div>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <h2 className="text-xl font-bold text-white mb-2">Loading...</h2>
+        <p className="text-slate-400 text-sm">
+          Loading your application details
+        </p>
       </div>
     );
   }
 
+  const application = latestApplication || formData;
+  const applicationId = application.id || `ART${Date.now().toString().slice(-6)}`;
+  const submittedDate = application.createdAt || new Date().toISOString();
+
   return (
-    <div className="text-white flex flex-col items-center justify-center min-h-[60vh]">
-      <div className="max-w-2xl mx-auto text-center p-8">
-        {/* Success Icon */}
-        <div className="w-20 h-20 mx-auto mb-6 bg-green-500/20 rounded-full flex items-center justify-center">
-          <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+    <div className="text-white flex flex-col items-center justify-center min-h-[70vh] px-4 py-8">
+      <div className="max-w-[90%] mx-auto text-center">
+
+        {/* Main Message */}
+        <h1 className="text-3xl font-bold text-white mb-4">
+          Application Submitted Successfully!
+        </h1>
+        
+        <div className="bg-slate-800/30 border border-slate-700 rounded-xl w-[45%] p-6 mb-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+            <span className="text-yellow-400 font-medium">Under Verification</span>
+          </div>
+          
+          <p className="text-slate-300 mb-6">
+            Your artist application is now under verification. Once confirmed, you'll get access to your artist dashboard where you can upload music and manage your profile.
+          </p>
+          
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-slate-400">Application ID:</span>
+              <span className="text-white font-mono">{applicationId}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Artist Name:</span>
+              <span className="text-white font-medium">{application.stageName || formData.stageName || "N/A"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Submitted:</span>
+              <span className="text-white">
+                {new Date(submittedDate).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Success Message */}
-        <h2 className="text-3xl font-bold mb-4">Application Submitted Successfully!</h2>
-        <p className="text-slate-300 mb-8">
-          Thank you for submitting your artist application. Our team will review 
-          it within 2-3 business days.
-        </p>
-
-        {/* Application Details Card */}
-        <div className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 mb-8 text-left">
-          <h3 className="text-xl font-semibold mb-4">Application Details</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-slate-400 text-sm">Application ID</p>
-              <p className="text-slate-200 font-mono text-sm">{application.id}</p>
-            </div>
-            
-            <div>
-              <p className="text-slate-400 text-sm">Stage Name</p>
-              <p className="text-slate-200">{application.stageName}</p>
-            </div>
-            
-            <div>
-              <p className="text-slate-400 text-sm">Status</p>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></div>
-                <p className="text-yellow-400 font-medium">Pending Review</p>
+        {/* Simple Next Steps */}
+        <div className="mb-8 w-[45%]">
+          <h3 className="text-lg font-semibold mb-4 text-slate-300">What's Next?</h3>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-blue-400 text-sm">1</span>
               </div>
-            </div>
-            
-            <div>
-              <p className="text-slate-400 text-sm">Submitted On</p>
-              <p className="text-slate-200">
-                {new Date(application.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+              <p className="text-slate-400 text-sm text-left">
+                We'll verify your application within 2-3 business days
               </p>
             </div>
-            
-            <div className="md:col-span-2">
-              <p className="text-slate-400 text-sm">Documents Submitted</p>
-              <p className="text-slate-200">{application.documents?.length || 0} document(s)</p>
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink NA-0 mt-0.5">
+                <span className="text-blue-400 text-sm">2</span>
+              </div>
+              <p className="text-slate-400 text-sm text-left">
+                You'll receive an email confirmation once approved
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-blue-400 text-sm">3</span>
+              </div>
+              <p className="text-slate-400 text-sm text-left">
+                Access your artist dashboard to upload music and manage your profile
+              </p>
             </div>
           </div>
         </div>
 
-        {/* What Happens Next */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4">What Happens Next?</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800/30 p-4 rounded-lg">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mb-3">
-                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h4 className="font-medium mb-1">Document Verification</h4>
-              <p className="text-sm text-slate-400">Our team will verify your submitted documents</p>
-            </div>
-            
-            <div className="bg-slate-800/30 p-4 rounded-lg">
-              <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center mb-3">
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h4 className="font-medium mb-1">Email Notification</h4>
-              <p className="text-sm text-slate-400">You'll receive an email once approved</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* Action Button */}
+        <div className="space-y-4">
           <Link
-            to="/dashboard"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+            to="/home"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 w-full"
           >
-            Go to Dashboard
-          </Link>
-          
-          <Link
-            to="/"
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg border border-slate-600 transition-colors duration-200"
-          >
-            Back to Home
+            <MdHome className="w-5 h-5" />
+            Go to Home Page
           </Link>
           
           <button
             onClick={() => window.print()}
-            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg border border-slate-700 transition-colors duration-200"
+            className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg border border-slate-700 transition-colors duration-200 w-full"
           >
             Print Confirmation
           </button>
         </div>
 
-        {/* Contact Support */}
+        {/* Support Info */}
         <div className="mt-8 pt-6 border-t border-slate-700">
-          <p className="text-slate-400 text-sm">
-            Need help? Contact our support team at{' '}
-            <a href="mailto:support@musicreset.com" className="text-blue-400 hover:text-blue-300">
-              support@musicreset.com
+          <p className="text-slate-400 text-xs">
+            Need help? Contact{' '}
+            <a href="mailto:contact@reset93.net" className="text-blue-400 hover:text-blue-300">
+              contact@reset93.net
             </a>
           </p>
         </div>

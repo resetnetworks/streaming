@@ -174,15 +174,7 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
       formDataToSend.append(`samples[${index}][durationSeconds]`, sample.durationSeconds || '');
     });
     
-    // Debug: Show what's being sent
-    console.log('=== FormData Contents ===');
-    for (let [key, value] of formDataToSend.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
-      } else {
-        console.log(`${key}:`, value);
-      }
-    }
+
     
     return formDataToSend;
   };

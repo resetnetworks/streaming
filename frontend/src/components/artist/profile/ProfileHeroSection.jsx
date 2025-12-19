@@ -3,6 +3,10 @@ import { FiEdit3 } from "react-icons/fi";
 import { PiHeadphonesFill } from "react-icons/pi";
 import { IoLogOutOutline } from "react-icons/io5";
 import MonetizationModal from "../monetization/MonitizationModal";
+import { logoutUser } from "../../../features/auth/authSlice";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const ProfileHeroSection = () => {
   // Example data - Hardcoded values
@@ -10,9 +14,19 @@ const ProfileHeroSection = () => {
     name: "Alex Johnson",
     image: "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     isVerified: true,
-    artistId: "artist-123", // This would come from your backend/context
+    artistId: "artist-123",
     monthlyListeners: "31.7k",
-    isMonetized: false // Track if already monetized
+    isMonetized: false
+  };
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  //logout function
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    toast.success('Logged out successfully');
+    navigate('/login');
   };
 
   // Background image
@@ -24,27 +38,16 @@ const ProfileHeroSection = () => {
 
   // Edit handler function - now opens monetization modal
   const handleEditClick = () => {
-    console.log("Edit button clicked - Opening Monetization Setup");
     setShowMonetizationModal(true);
-  };
-
-  // Logout handler function
-  const handleLogoutClick = () => {
-    console.log("Logout button clicked");
-    // Add your logout functionality here
-    alert("Logout functionality to be implemented");
   };
 
   // Change password handler
   const handleChangePasswordClick = () => {
-    console.log("Change password clicked");
     setShowPasswordModal(true);
-    // Add your change password functionality here
   };
 
   // Handle monetization setup completion
   const handleMonetizationComplete = () => {
-    console.log("Monetization setup completed");
     setShowMonetizationModal(false);
     // You can update the profile state here to show monetized status
   };
@@ -157,7 +160,7 @@ const ProfileHeroSection = () => {
 
             {/* Logout Button - Simplified Blue */}
             <button 
-              onClick={handleLogoutClick}
+              onClick={handleLogout}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 sm:px-6 sm:py-2 md:px-8 md:py-3 rounded-full font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-1 sm:gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
             >
               <span>Logout</span>

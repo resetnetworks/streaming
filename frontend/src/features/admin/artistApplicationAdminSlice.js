@@ -44,7 +44,6 @@ export const getArtistApplicationById = createAsyncThunk(
   async (applicationId, thunkAPI) => {
     try {
       const res = await axios.get(`/v2/admin/artist-applications/${applicationId}`);
-      console.log('Get by ID response:', res.data);
       return res.data.data.application;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -59,7 +58,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
   "artistApplicationAdmin/updateStatus",
   async ({ applicationId, status, adminNotes, reason }, thunkAPI) => {
     try {
-      console.log(`🔄 Updating status for ${applicationId} to ${status}`);
       
       let res;
       let requestData = {};
@@ -78,7 +76,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
             `/v2/admin/artist-applications/${applicationId}/approve`, 
             requestData
           );
-          console.log('✅ Approval response:', res.data);
           // FIX: Handle both response structures
           return {
             application: res.data.data?.application || res.data.application,
@@ -98,13 +95,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
             `/v2/admin/artist-applications/${applicationId}/reject`, 
             requestData
           );
-          console.log('✅ Rejection response:', res.data);
-          console.log('📊 Response structure analysis:', {
-            hasData: !!res.data.data,
-            hasDataApplication: !!res.data.data?.application,
-            hasApplication: !!res.data.application,
-            fullResponse: res.data
-          });
           
           // FIX: Handle both response structures
           let application;
@@ -137,8 +127,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
             `/v2/admin/artist-applications/${applicationId}/request-more-info`, 
             requestData
           );
-          console.log('✅ Needs info response:', res.data);
-          // FIX: Handle both response structures
           return { 
             application: res.data.data?.application || res.data.application,
             status: 'needs_info'
@@ -151,7 +139,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
             `/v2/admin/artist-applications/${applicationId}/status`,
             requestData
           );
-          console.log('✅ Status update response:', res.data);
           // FIX: Handle both response structures
           return { 
             application: res.data.data?.application || res.data.application,
@@ -167,7 +154,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
       
       // Check if it's actually a successful response
       if (err.response?.data?.success === true && err.response.data.application) {
-        console.log('⚠️ API returned success in error format, extracting data');
         // Extract application from error response
         const application = err.response.data.application;
         return thunkAPI.fulfillWithValue({

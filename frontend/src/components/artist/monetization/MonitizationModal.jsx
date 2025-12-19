@@ -1,4 +1,3 @@
-// ✅ ENHANCED MonetizationModal.jsx - Complete Debug Logging
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setupMonetization, resetMonetization } from '../../../features/monetization/monetizationSlice';
@@ -18,27 +17,17 @@ const MonetizationModal = ({ isOpen, onClose, onComplete }) => {
   const [subscriptionPrice, setSubscriptionPrice] = useState('');
   const [cycle, setCycle] = useState('1m');
 
-  // ✅ DEBUG: Track modal lifecycle
   useEffect(() => {
-    console.log('🎵 [MODAL] isOpen changed:', isOpen);
-    console.log('🎵 [MODAL] Current Redux state:', { setupLoading, setupError, setupSuccess });
-    console.log('🎵 [MODAL] localStorage user:', localStorage.getItem('user'));
-    
     if (isOpen) {
-      console.log('🎵 [MODAL] Modal opened - resetting state');
       setSubscriptionPrice('');
       setCycle('1m');
       dispatch(resetMonetization());
     }
-  }, [isOpen, dispatch, setupLoading, setupError, setupSuccess]);
+  }, [isOpen, dispatch]);
 
-  // ✅ Auto close on success with logging
   useEffect(() => {
-    console.log('🎵 [MODAL] setupSuccess changed:', setupSuccess);
     if (setupSuccess && onComplete) {
-      console.log('🎵 [MODAL] Auto-closing modal in 1.5s');
       setTimeout(() => {
-        console.log('🎵 [MODAL] Closing modal & calling onComplete');
         onClose();
         onComplete();
       }, 1500);
@@ -49,20 +38,12 @@ const MonetizationModal = ({ isOpen, onClose, onComplete }) => {
 
   const handleSubmit = () => {
     const price = parseFloat(subscriptionPrice);
-    console.log('🎵 [MODAL] handleSubmit called:', { subscriptionPrice, price, cycle });
     
     if (!subscriptionPrice || price <= 0) {
-      console.log('🎵 [MODAL] Invalid price:', subscriptionPrice);
       alert('Please enter a valid subscription price');
       return;
     }
 
-    console.log('🎵 [MODAL] Dispatching setupMonetization with:', { 
-      subscriptionPrice: price, 
-      cycle 
-    });
-    console.log('🎵 [MODAL] Token before dispatch:', localStorage.getItem('token'));
-    
     dispatch(setupMonetization({ 
       subscriptionPrice: price,
       cycle 
@@ -110,10 +91,7 @@ const MonetizationModal = ({ isOpen, onClose, onComplete }) => {
               <input
                 type="number"
                 value={subscriptionPrice}
-                onChange={(e) => {
-                  console.log('🎵 [MODAL] Price input changed:', e.target.value);
-                  setSubscriptionPrice(e.target.value);
-                }}
+                onChange={(e) => setSubscriptionPrice(e.target.value)}
                 placeholder="e.g., 9.99"
                 className="w-full p-3 border border-gray-300 rounded-md pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 min="0" step="0.01"
@@ -131,10 +109,7 @@ const MonetizationModal = ({ isOpen, onClose, onComplete }) => {
             </label>
             <select
               value={cycle}
-              onChange={(e) => {
-                console.log('🎵 [MODAL] Cycle changed:', e.target.value);
-                setCycle(e.target.value);
-              }}
+              onChange={(e) => setCycle(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={setupLoading}
             >
@@ -181,10 +156,7 @@ const MonetizationModal = ({ isOpen, onClose, onComplete }) => {
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={() => {
-                console.log('🎵 [MODAL] Cancel clicked');
-                onClose();
-              }}
+              onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
               disabled={setupLoading}
             >

@@ -6,15 +6,12 @@ export const setupMonetization = createAsyncThunk(
   "monetization/setup",
   async ({ subscriptionPrice, cycle }, thunkAPI) => {
     try {
-      console.log('🚀 [SLICE] Calling /v2/monetize...');
       const res = await axios.post(`/v2/monetize`, {
         subscriptionPrice,
         cycle,
       });
-      console.log('✅ [SLICE] Success:', res.data);
       return res.data;
     } catch (err) {
-      console.log('❌ [SLICE] Error:', err.response?.status, err.response?.data);
       const msg = err.response?.data?.message || "Monetization failed";
       return thunkAPI.rejectWithValue(msg);
     }
