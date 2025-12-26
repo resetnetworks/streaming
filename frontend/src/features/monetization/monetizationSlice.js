@@ -1,4 +1,3 @@
-// ✅ NO CHANGE NEEDED - Your URLs perfect hain
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance";
 
@@ -18,21 +17,23 @@ export const setupMonetization = createAsyncThunk(
   }
 );
 
-export const getMonetizationStatus = createAsyncThunk(
-  "monetization/getStatus",
-  async ({ operationId, artistId }, thunkAPI) => {
+// ✅ Monetization setup status check thunk
+export const getMyMonetizationSetupStatus = createAsyncThunk(
+  "monetization/getMySetupStatus",
+  async (_, thunkAPI) => {
     try {
-      const res = await axios.get(`/v2/artist/${artistId}/monetization/status/${operationId}`);
+      const res = await axios.get(`/v2/monetize/artists/me/monetization-setup-status`);
+      console.log("status: ",res.status)
+      console.log(res.data)
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to fetch monetization status"
+        err.response?.data?.message || "Failed to fetch monetization setup status"
       );
     }
   }
 );
 
-// ✅ Your slice same hai
 const monetizationSlice = createSlice({
   name: "monetization",
   initialState: {
@@ -40,7 +41,15 @@ const monetizationSlice = createSlice({
     setupError: null,
     setupSuccess: false,
     operationResult: null,
-    currentStatus: null,
+    
+    // ✅ Monetization setup status state
+    setupStatus: {
+      isMonetizationComplete: false,
+      reason: null,
+      setupAt: null,
+      loading: false,
+      error: null
+    }
   },
   reducers: {
     resetMonetization: (state) => {
@@ -48,8 +57,17 @@ const monetizationSlice = createSlice({
       state.setupError = null;
       state.setupSuccess = false;
       state.operationResult = null;
-      state.currentStatus = null;
     },
+    // ✅ Reset setup status
+    resetSetupStatus: (state) => {
+      state.setupStatus = {
+        isMonetizationComplete: false,
+        reason: null,
+        setupAt: null,
+        loading: false,
+        error: null
+      };
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -68,11 +86,25 @@ const monetizationSlice = createSlice({
         state.setupError = action.payload;
         state.setupSuccess = false;
       })
-      .addCase(getMonetizationStatus.fulfilled, (state, action) => {
-        state.currentStatus = action.payload;
+      // ✅ Handle monetization setup status
+      .addCase(getMyMonetizationSetupStatus.pending, (state) => {
+        state.setupStatus.loading = true;
+        state.setupStatus.error = null;
+      })
+      .addCase(getMyMonetizationSetupStatus.fulfilled, (state, action) => {
+        state.setupStatus.loading = false;
+        state.setupStatus.isMonetizationComplete = action.payload.isMonetizationComplete;
+        state.setupStatus.reason = action.payload.reason;
+        state.setupStatus.setupAt = action.payload.setupAt;
+      })
+      .addCase(getMyMonetizationSetupStatus.rejected, (state, action) => {
+        state.setupStatus.loading = false;
+        state.setupStatus.error = action.payload;
+        state.setupStatus.isMonetizationComplete = false;
+        state.setupStatus.reason = "FETCH_ERROR";
       });
   },
 });
 
-export const { resetMonetization } = monetizationSlice.actions;
+export const { resetMonetization, resetSetupStatus } = monetizationSlice.actions;
 export default monetizationSlice.reducer;

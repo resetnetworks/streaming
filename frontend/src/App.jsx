@@ -15,6 +15,7 @@ import Loader from "./components/Loader";
 import {
   ProtectedRoute,
   RedirectedProtectedRoute,
+  ArtistRegisterRoute,
   AdminRoute,
   PublicRoute,
 } from "./components/RouteGuards";
@@ -310,7 +311,13 @@ function App() {
 
             <Route 
             path="/artist/register"
-            element={<Pages.ArtistRegister />}
+            element={
+            // <ArtistRegisterRoute
+            // isAuthenticated={isAuthenticated} 
+            // user={user}>
+            <Pages.ArtistRegister />
+            // </ArtistRegisterRoute>
+            }
             />
             <Route 
             path="/artist/dashboard"

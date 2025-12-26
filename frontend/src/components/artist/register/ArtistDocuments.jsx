@@ -30,6 +30,10 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
   const [sampleUrl, setSampleUrl] = useState('');
   const [sampleTitle, setSampleTitle] = useState('');
 
+  // Ensure documents array exists
+  const documents = formData?.documents || [];
+  const samples = formData?.samples || [];
+
   const handleFileUpload = (e) => {    
     const files = Array.from(e.target.files);
     
@@ -70,7 +74,7 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
   };
 
   const handleRemoveDocument = (index) => {
-    const doc = formData.documents[index];
+    const doc = documents[index];
     if (doc && doc.previewUrl) {
       URL.revokeObjectURL(doc.previewUrl);
     }
@@ -114,15 +118,15 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.stageName?.trim()) {
+    if (!formData?.stageName?.trim()) {
       newErrors.stageName = 'Stage Name is required';
     }
     
-    if (!formData.country) {
+    if (!formData?.country) {
       newErrors.country = 'Country is required';
     }
     
-    if (formData.documents.length === 0) {
+    if (documents.length === 0) {
       newErrors.documents = 'At least one document is required';
     }
     
@@ -138,25 +142,25 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
     const formDataToSend = new FormData();
     
     // 1. Basic Text Fields
-    formDataToSend.append('stageName', formData.stageName?.trim() || '');
-    formDataToSend.append('legalName', `${formData.firstName || ''}${formData.lastName ? ' ' + formData.lastName : ''}`.trim());
-    formDataToSend.append('bio', formData.bio?.trim() || "");
-    formDataToSend.append('country', (formData.country || '').toUpperCase());
+    formDataToSend.append('stageName', formData?.stageName?.trim() || '');
+    formDataToSend.append('legalName', `${formData?.firstName || ''}${formData?.lastName ? ' ' + formData.lastName : ''}`.trim());
+    formDataToSend.append('bio', formData?.bio?.trim() || "");
+    formDataToSend.append('country', (formData?.country || '').toUpperCase());
     
-    // 2. Contact Information - Append as separate fields using bracket notation
-    formDataToSend.append('contact[email]', formData.email || '');
-    if (formData.website && formData.website.trim() !== '') {
+    // 2. Contact Information
+    formDataToSend.append('contact[email]', formData?.email || '');
+    if (formData?.website && formData.website.trim() !== '') {
       formDataToSend.append('contact[website]', formData.website.trim());
     }
     
-    // 3. Social Media Links - Append as array items using bracket notation
-    if (formData.socialMedia && formData.socialMedia.trim() !== '') {
+    // 3. Social Media Links
+    if (formData?.socialMedia && formData.socialMedia.trim() !== '') {
       formDataToSend.append('socials[0][provider]', 'website');
       formDataToSend.append('socials[0][url]', formData.socialMedia.trim());
     }
     
     // 4. Documents - Actual Files and Metadata
-    formData.documents.forEach((doc, index) => {
+    documents.forEach((doc, index) => {
       if (doc.file && doc.file instanceof File) {
         // Append the actual file with a proper name
         formDataToSend.append('documents', doc.file, doc.filename || `document-${index}`);
@@ -167,15 +171,13 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
       }
     });
     
-    // 5. Samples - Append each sample's fields using bracket notation
-    formData.samples.forEach((sample, index) => {
+    // 5. Samples
+    samples.forEach((sample, index) => {
       formDataToSend.append(`samples[${index}][title]`, sample.title || '');
       formDataToSend.append(`samples[${index}][url]`, sample.url || '');
       formDataToSend.append(`samples[${index}][durationSeconds]`, sample.durationSeconds || '');
     });
-    
 
-    
     return formDataToSend;
   };
 
@@ -200,7 +202,7 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
       toast.success("Artist application submitted successfully!");
       
       // Clean up preview URLs
-      formData.documents.forEach(doc => {
+      documents.forEach(doc => {
         if (doc.previewUrl) URL.revokeObjectURL(doc.previewUrl);
       });
       
@@ -228,7 +230,8 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
     }
   };
 
-  const totalDocSize = formData.documents.reduce((sum, doc) => sum + (doc.size || 0), 0);
+  // Fixed reduce calculation with optional chaining
+  const totalDocSize = documents.reduce((sum, doc) => sum + (doc?.size || 0), 0);
 
   return (
     <div className="text-white flex flex-col justify-around items-center">
@@ -245,22 +248,22 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-slate-400">Stage Name:</span>
-                  <span className="text-slate-200 ml-2 font-medium">{formData.stageName || 'Not set'}</span>
+                  <span className="text-slate-200 ml-2 font-medium">{formData?.stageName || 'Not set'}</span>
                   {errors.stageName && <p className="text-red-500 text-xs mt-1">{errors.stageName}</p>}
                 </div>
                 <div>
                   <span className="text-slate-400">Country:</span>
-                  <span className="text-slate-200 ml-2 font-medium">{formData.country || 'Not set'}</span>
+                  <span className="text-slate-200 ml-2 font-medium">{formData?.country || 'Not set'}</span>
                   {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                 </div>
                 <div>
                   <span className="text-slate-400">Email:</span>
-                  <span className="text-slate-200 ml-2">{formData.email || 'Not set'}</span>
+                  <span className="text-slate-200 ml-2">{formData?.email || 'Not set'}</span>
                 </div>
                 <div className="md:col-span-2">
                   <span className="text-slate-400">Bio:</span>
                   <span className="text-slate-200 ml-2">
-                    {formData.bio ? `${formData.bio.substring(0, 50)}${formData.bio.length > 50 ? '...' : ''}` : 'Not provided'}
+                    {formData?.bio ? `${formData.bio.substring(0, 50)}${formData.bio.length > 50 ? '...' : ''}` : 'Not provided'}
                   </span>
                 </div>
               </div>
@@ -323,18 +326,18 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
                 <p className="text-red-500 text-sm mt-2">{errors.documents}</p>
               )}
 
-              {formData.documents.length > 0 && (
+              {documents.length > 0 && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="text-sm font-medium text-slate-300">
-                      Uploaded Documents ({formData.documents.length})
+                      Uploaded Documents ({documents.length})
                     </h4>
                     <span className="text-xs text-slate-500">
                       Total: {(totalDocSize / (1024 * 1024)).toFixed(2)} MB
                     </span>
                   </div>
                   <div className="space-y-2">
-                    {formData.documents.map((doc, index) => (
+                    {documents.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,13 +414,13 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
                 </button>
               </div>
 
-              {formData.samples.length > 0 && (
+              {samples.length > 0 && (
                 <div className="mt-6">
                   <h4 className="text-sm font-medium text-slate-300 mb-2">
-                    Added Samples ({formData.samples.length})
+                    Added Samples ({samples.length})
                   </h4>
                   <div className="space-y-2">
-                    {formData.samples.map((sample, index) => (
+                    {samples.map((sample, index) => (
                       <div key={index} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

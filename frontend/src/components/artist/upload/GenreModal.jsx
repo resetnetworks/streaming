@@ -14,37 +14,27 @@ const GenreModal = ({
 
   // Default genres
   const defaultGenres = [
-    "Hip Hop / Rap",
-    "Electronic",
-    "Rock",
-    "Pop",
-    "R&B / Soul",
-    "Jazz",
-    "Classical",
-    "Reggae",
-    "Country",
-    "Metal",
-    "Folk",
-    "Blues",
-    "World Music",
-    "Experimental",
-    "Ambient",
-    "Lo-Fi",
-    "Indie",
-    "Punk",
-    "Funk",
-    "Disco",
-    "House",
-    "Techno",
-    "Trance",
-    "Drum & Bass",
-    "Dubstep",
-    "Trap",
-    "Alternative",
-    "Singer-Songwriter",
-    "Gospel",
-    "Latin"
-  ];
+  "Electronic",
+  "IDM",
+  "Ambient",
+  "Experimental",
+  "Avant Garde",
+  "Noise",
+  "Downtempo",
+  "Soundtrack",
+  "Industrial",
+  "EBM",
+  "Electro",
+  "Techno",
+  "Dance",
+  "Electronica",
+  "Sound Art",
+  "Jazz",
+  "Classical",
+  "Classical Crossover",
+  "Soundscapes",
+  "Field Recordings"
+];
 
   // Filtered genres based on search
   const filteredGenres = defaultGenres.filter(genre =>

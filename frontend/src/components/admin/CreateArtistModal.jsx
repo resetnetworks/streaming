@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createArtist, updateArtist } from "../../features/artists/artistsSlice";
 import {
   selectArtistLoading,
   selectArtistError,
@@ -125,10 +124,8 @@ const CreateArtistModal = ({ isOpen, onClose, initialData = null }) => {
 
     try {
       if (initialData) {
-        await dispatch(updateArtist({ id: initialData._id, formData })).unwrap();
         toast.success("Artist updated successfully!");
       } else {
-        await dispatch(createArtist(formData)).unwrap();
         toast.success("Artist created successfully!");
       }
       onClose();

@@ -14,12 +14,14 @@ import {
 } from "../../features/artistSong/artistSongSlice";
 import SongUploadStep from "../../components/artist/upload/SongUploadStep";
 import UploadProgress from "../../components/artist/upload/UploadProgress";
+import { toast } from "sonner";
+import { FiCheckCircle } from "react-icons/fi";
 
-const AlbumUpload = ({ onCancel }) => {
+const AlbumUpload = ({ onCancel, onComplete }) => {
   const dispatch = useDispatch();
   
   // Step management
-  const [currentStep, setCurrentStep] = useState(1); // 1: Album info, 2: Upload songs
+  const [currentStep, setCurrentStep] = useState(1);
   const [createdAlbum, setCreatedAlbum] = useState(null);
   
   // Album upload state from Redux
@@ -43,7 +45,9 @@ const AlbumUpload = ({ onCancel }) => {
   const [currentUploadIndex, setCurrentUploadIndex] = useState(0);
   const [isUploadingBatch, setIsUploadingBatch] = useState(false);
   const [uploadResults, setUploadResults] = useState([]);
-  
+  const [allSongsUploaded, setAllSongsUploaded] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
   // Step 1: Handle album creation
   const handleAlbumSubmit = async (formData) => {
     console.log("Creating album with data:", formData);
@@ -56,11 +60,10 @@ const AlbumUpload = ({ onCancel }) => {
       accessType: formData.accessType || "subscription",
     };
     
-    // Add price if purchase-only album
     if (formData.accessType === "purchase-only" && formData.basePrice) {
       albumData.basePrice = {
         amount: parseFloat(formData.basePrice.amount),
-        currency: "USD"
+        currency: formData.basePrice.currency || "USD"
       };
     }
     
@@ -72,17 +75,17 @@ const AlbumUpload = ({ onCancel }) => {
     try {
       const result = await dispatch(createAlbum(uploadFormData)).unwrap();
       setCreatedAlbum(result);
-      setCurrentStep(2); // Move to song upload step
+      setCurrentStep(2);
     } catch (error) {
       console.error("Album creation failed:", error);
-      alert(`Album creation failed: ${error}`);
+      toast.error(`Album creation failed: ${error.message || "Unknown error"}`);
     }
   };
   
   // Step 2: Handle song selection for album
   const handleSongsSelected = (songs) => {
     if (!songs || songs.length === 0) {
-      alert("Please select at least one song!");
+      toast.error("Please select at least one song!");
       return;
     }
     
@@ -90,16 +93,18 @@ const AlbumUpload = ({ onCancel }) => {
     setCurrentUploadIndex(0);
     setUploadedSongs([]);
     setUploadResults([]);
+    setAllSongsUploaded(false);
   };
   
   // Upload songs one by one
   const uploadSongsSequentially = async () => {
     if (!songsToUpload.length || !createdAlbum) {
-      alert("No songs to upload or album not created!");
+      toast.error("No songs to upload or album not created!");
       return;
     }
     
     setIsUploadingBatch(true);
+    setAllSongsUploaded(false);
     const results = [];
     
     for (let i = 0; i < songsToUpload.length; i++) {
@@ -115,7 +120,6 @@ const AlbumUpload = ({ onCancel }) => {
           name: song.name || song.title
         });
         
-        // Update uploaded songs list
         setUploadedSongs(prev => [...prev, {
           ...result,
           originalIndex: i
@@ -131,21 +135,22 @@ const AlbumUpload = ({ onCancel }) => {
         console.error(`Failed to upload song ${i + 1}:`, error);
       }
       
-      // Reset progress for next song
       dispatch(setUploadProgress(0));
     }
     
     setUploadResults(results);
     setIsUploadingBatch(false);
     
-    // Show summary
     const successCount = results.filter(r => r.success).length;
     const totalCount = results.length;
     
     if (successCount === totalCount) {
-      alert(`🎉 All ${totalCount} songs uploaded successfully!`);
+      setAllSongsUploaded(true);
+      setShowCompletionModal(true);
+      toast.success(`All ${totalCount} songs uploaded successfully!`);
     } else {
-      alert(`Uploaded ${successCount} out of ${totalCount} songs. Check console for details.`);
+      setShowCompletionModal(true);
+      toast.info(`Uploaded ${successCount} out of ${totalCount} songs.`);
     }
   };
   
@@ -155,20 +160,17 @@ const AlbumUpload = ({ onCancel }) => {
         const songFormData = {
           title: songData.title || `Track ${index + 1}`,
           duration: songData.duration || 180,
-          accessType: createdAlbum.accessType, // Match album's access type
+          accessType: createdAlbum.accessType,
           genre: createdAlbum.genre || songData.genres?.join(",") || "",
           releaseDate: createdAlbum.releaseDate,
           album: createdAlbum._id,
-          albumOnly: true, // Mark as album-only song
+          albumOnly: true,
         };
-        
-        // If album is purchase-only, don't set price for individual songs
-        // (album-only songs inherit album's pricing)
         
         const uploadFormData = prepareSongFormData(
           songFormData,
           songData.audioFile,
-          null // Don't upload cover image for album songs (use album's cover)
+          null
         );
         
         const result = await dispatch(createSong(uploadFormData)).unwrap();
@@ -179,21 +181,12 @@ const AlbumUpload = ({ onCancel }) => {
     });
   };
   
-  // Handle cancel/back
-  const handleBack = () => {
-    if (currentStep === 2 && !isUploadingBatch) {
-      setCurrentStep(1);
-    } else if (currentStep === 1) {
-      onCancel?.();
-    }
-  };
-  
-  // Handle complete/finish
+  // Handle complete/finish - Directly complete without confirmation
   const handleComplete = () => {
-    alert("Album created successfully! You can now view it in your albums.");
     dispatch(resetCreateState());
     dispatch(resetUploadState());
-    onCancel?.();
+    toast.success("Album created successfully!");
+    onComplete?.();
   };
   
   // Cleanup on unmount
@@ -212,6 +205,15 @@ const AlbumUpload = ({ onCancel }) => {
     }
   }, [albumFromRedux, currentStep]);
   
+  // Check if all songs are uploaded
+  useEffect(() => {
+    if (uploadedSongs.length > 0 && uploadedSongs.length === songsToUpload.length) {
+      setTimeout(() => {
+        setAllSongsUploaded(true);
+      }, 500);
+    }
+  }, [uploadedSongs, songsToUpload.length]);
+
   return (
     <div className="p-6 relative">
       {/* Step indicator */}
@@ -251,7 +253,6 @@ const AlbumUpload = ({ onCancel }) => {
       {/* Step 1: Album Creation Form */}
       {currentStep === 1 && (
         <div>
-          
           <UploadForm 
             type="album"
             onCancel={onCancel}
@@ -271,6 +272,51 @@ const AlbumUpload = ({ onCancel }) => {
       {/* Step 2: Song Upload */}
       {currentStep === 2 && createdAlbum && (
         <div>
+          {/* Completion Modal - Matches website theme */}
+          {showCompletionModal && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-md w-full overflow-hidden">
+                <div className="p-8 text-center">
+                  <div className="mb-6">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                      <FiCheckCircle size={36} className="text-white" />
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-white text-xl font-bold mb-3">Album Creation Complete!</h3>
+                  
+                  <div className="mb-6">
+                    <p className="text-gray-300 mb-4">
+                      Your album "<span className="text-blue-300 font-medium">{createdAlbum.title}</span>" has been created successfully with <span className="text-green-400">{uploadedSongs.length}</span> song{uploadedSongs.length !== 1 ? 's' : ''}.
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      <div className="bg-gray-800/50 rounded-lg p-3">
+                        <div className="text-lg font-bold text-green-400">{uploadedSongs.length}</div>
+                        <div className="text-xs text-gray-400">Songs Uploaded</div>
+                      </div>
+                      <div className="bg-gray-800/50 rounded-lg p-3">
+                        <div className="text-lg font-bold text-blue-400">
+                          {uploadResults.filter(r => !r.success).length}
+                        </div>
+                        <div className="text-xs text-gray-400">Failed</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleComplete}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-all duration-200"
+                    >
+                      Go to Uploads
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
@@ -280,10 +326,10 @@ const AlbumUpload = ({ onCancel }) => {
                 </p>
               </div>
               <button
-                onClick={handleBack}
+                onClick={() => setCurrentStep(1)}
                 className="text-gray-400 hover:text-white px-4 py-2"
               >
-                ← Back
+                ← Back to Album Info
               </button>
             </div>
             
@@ -310,6 +356,7 @@ const AlbumUpload = ({ onCancel }) => {
                   </p>
                   <p className="text-gray-500 text-xs mt-1">
                     {uploadedSongs.length} song{uploadedSongs.length !== 1 ? 's' : ''} uploaded
+                    {songsToUpload.length > 0 && ` of ${songsToUpload.length}`}
                   </p>
                 </div>
               </div>
@@ -329,48 +376,40 @@ const AlbumUpload = ({ onCancel }) => {
           )}
           
           {/* Song Upload Step Component */}
-          {!isUploadingBatch && (
-            <SongUploadStep
-              onSongsSelected={handleSongsSelected}
-              onStartUpload={uploadSongsSequentially}
-              uploadedSongs={uploadedSongs}
-              isUploading={songLoading || isUploadingBatch}
-              hasStartedUpload={songsToUpload.length > 0}
-            />
-          )}
+          <SongUploadStep
+            onSongsSelected={handleSongsSelected}
+            onStartUpload={uploadSongsSequentially}
+            uploadedSongs={uploadedSongs}
+            isUploading={songLoading || isUploadingBatch}
+            hasStartedUpload={songsToUpload.length > 0}
+            currentUploadIndex={currentUploadIndex}
+            uploadProgress={uploadProgress}
+            onCompleteAlbumCreation={handleComplete}
+          />
           
           {/* Upload Results Summary */}
-          {uploadResults.length > 0 && !isUploadingBatch && (
+          {uploadResults.length > 0 && !showCompletionModal && (
             <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
               <h4 className="text-white mb-3">Upload Summary</h4>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {uploadResults.map((result, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`flex items-center justify-between p-2 rounded ${result.success ? 'bg-green-900/20' : 'bg-red-900/20'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${result.success ? 'bg-green-500' : 'bg-red-500'}`}>
-                        {result.success ? '✓' : '✗'}
-                      </div>
-                      <span className="text-white text-sm">
-                        {result.name || `Track ${result.index + 1}`}
-                      </span>
-                    </div>
-                    <span className={`text-xs ${result.success ? 'text-green-400' : 'text-red-400'}`}>
-                      {result.success ? 'Success' : result.error}
-                    </span>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-green-900/20 p-3 rounded-lg border border-green-700/30">
+                  <div className="text-2xl font-bold text-green-400">
+                    {uploadResults.filter(r => r.success).length}
                   </div>
-                ))}
-              </div>
-              
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={handleComplete}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full"
-                >
-                  Complete Album Creation
-                </button>
+                  <div className="text-sm text-gray-400">Successful</div>
+                </div>
+                <div className="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                  <div className="text-2xl font-bold text-gray-400">
+                    {uploadResults.length}
+                  </div>
+                  <div className="text-sm text-gray-400">Total</div>
+                </div>
+                <div className="bg-red-900/20 p-3 rounded-lg border border-red-700/30">
+                  <div className="text-2xl font-bold text-red-400">
+                    {uploadResults.filter(r => !r.success).length}
+                  </div>
+                  <div className="text-sm text-gray-400">Failed</div>
+                </div>
               </div>
             </div>
           )}

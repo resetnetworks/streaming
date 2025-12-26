@@ -46,11 +46,9 @@ const SingleUpload = ({ onCancel }) => {
 
   const handleSubmit = async (formData) => {
     if (isSubmitting) {
-      console.log("Already submitting, please wait...");
       return;
     }
 
-    console.log("Form Data received in SingleUpload:", formData);
     
     if (!formData.tracks || formData.tracks.length === 0) {
       alert("Please upload an audio file!");
@@ -100,10 +98,8 @@ const SingleUpload = ({ onCancel }) => {
         currency: "USD"
       };
       
-      console.log("Purchase-only song with price:", songData.basePrice);
     }
 
-    console.log("Final song data for API:", songData);
 
     const uploadFormData = prepareSongFormData(
       songData,
@@ -114,10 +110,8 @@ const SingleUpload = ({ onCancel }) => {
     try {
       setIsSubmitting(true);
       
-      console.log("Dispatching createSong...");
       await dispatch(createSong(uploadFormData)).unwrap();
       
-      console.log("Upload successful!");
       
     } catch (error) {
       console.error("Upload failed:", error);

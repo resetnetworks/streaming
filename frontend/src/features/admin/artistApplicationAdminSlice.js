@@ -1,12 +1,13 @@
+// src/features/admin/artistApplicationAdminSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance";
 
-// Helper function to build query URL
-const buildQueryURL = (baseURL, params) => {
-  const { status, search, page = 1, limit = 20 } = params || {};
-  let url = `${baseURL}?page=${page}&limit=${limit}`;
+// Helper function to build query URL for backend
+const buildQueryURL = (params) => {
+  const { status, search, page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = params || {};
+  let url = `/v2/admin/artist-applications?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
   
-  if (status) {
+  if (status && status !== 'all') {
     url += `&status=${status}`;
   }
   
@@ -17,19 +18,24 @@ const buildQueryURL = (baseURL, params) => {
   return url;
 };
 
-// Admin Thunks
+// Admin Thunks - All data comes from backend
 export const listArtistApplicationsForAdmin = createAsyncThunk(
   "artistApplicationAdmin/listApplications",
   async (params, thunkAPI) => {
     try {
-      const url = buildQueryURL('/v2/admin/artist-applications', params);
+      const url = buildQueryURL(params);
       const res = await axios.get(url);
       
       return {
-        applications: res.data.data.applications,
-        pagination: res.data.data.pagination,
+        applications: res.data.data.applications || [],
+        pagination: res.data.data.pagination || {},
         stats: res.data.data.stats || {},
-        params: params || {}
+        filters: {
+          status: params?.status || 'all',
+          search: params?.search || '',
+          page: params?.page || 1,
+          limit: params?.limit || 20
+        }
       };
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -53,12 +59,10 @@ export const getArtistApplicationById = createAsyncThunk(
   }
 );
 
-// ✅ FIXED: Generic Status Update with proper response handling
 export const updateApplicationStatusForAdmin = createAsyncThunk(
   "artistApplicationAdmin/updateStatus",
   async ({ applicationId, status, adminNotes, reason }, thunkAPI) => {
     try {
-      
       let res;
       let requestData = {};
       
@@ -76,7 +80,6 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
             `/v2/admin/artist-applications/${applicationId}/approve`, 
             requestData
           );
-          // FIX: Handle both response structures
           return {
             application: res.data.data?.application || res.data.application,
             artist: res.data.data?.artist || res.data.artist,
@@ -84,44 +87,17 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
           };
           
         case 'rejected':
-          // Include reason if provided
-          if (reason) {
-            requestData.notes = reason;
-          } else if (adminNotes) {
-            requestData.notes = adminNotes;
-          }
-          
+          if (reason) requestData.notes = reason;
           res = await axios.post(
             `/v2/admin/artist-applications/${applicationId}/reject`, 
             requestData
           );
-          
-          // FIX: Handle both response structures
-          let application;
-          if (res.data.data?.application) {
-            application = res.data.data.application;
-          } else if (res.data.application) {
-            application = res.data.application;
-          } else if (res.data.data) {
-            // If data itself is the application
-            application = res.data.data;
-          } else {
-            // Fallback - create minimal application object
-            console.warn('No application found in response, creating minimal object');
-            application = {
-              _id: applicationId,
-              id: applicationId,
-              status: 'rejected'
-            };
-          }
-          
           return { 
-            application: application,
+            application: res.data.data?.application || res.data.application,
             status: 'rejected'
           };
           
         case 'needs_info':
-          // Require reason for needs_info
           requestData.notes = reason || adminNotes || '';
           res = await axios.post(
             `/v2/admin/artist-applications/${applicationId}/request-more-info`, 
@@ -133,40 +109,20 @@ export const updateApplicationStatusForAdmin = createAsyncThunk(
           };
           
         default:
-          // For other statuses (pending, cancelled)
           requestData.status = status;
           res = await axios.patch(
             `/v2/admin/artist-applications/${applicationId}/status`,
             requestData
           );
-          // FIX: Handle both response structures
           return { 
             application: res.data.data?.application || res.data.application,
             status: status
           };
       }
     } catch (err) {
-      console.error('❌ Status update error:', {
-        error: err.response?.data || err.message,
-        statusCode: err.response?.status,
-        requestData: { applicationId, status, adminNotes, reason }
-      });
-      
-      // Check if it's actually a successful response
-      if (err.response?.data?.success === true && err.response.data.application) {
-        // Extract application from error response
-        const application = err.response.data.application;
-        return thunkAPI.fulfillWithValue({
-          application: application,
-          status: status
-        });
-      }
-      
-      // Return more detailed error information
+      console.error('Status update error:', err);
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || 
-        err.response?.data?.error || 
-        `Failed to update status to ${status}`
+        err.response?.data?.message || `Failed to update status to ${status}`
       );
     }
   }
@@ -180,7 +136,6 @@ export const addAdminNote = createAsyncThunk(
         `/v2/admin/artist-applications/${applicationId}/notes`,
         { note }
       );
-      // FIX: Handle both response structures
       return res.data.data?.application || res.data.application;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -206,7 +161,7 @@ export const deleteArtistApplication = createAsyncThunk(
 
 // Initial State
 const initialState = {
-  // List of applications for admin
+  // List of applications from backend
   applications: [],
   applicationsLoading: false,
   applicationsError: null,
@@ -231,7 +186,7 @@ const initialState = {
   deleteError: null,
   deleteSuccess: false,
   
-  // Pagination
+  // Pagination from backend
   pagination: {
     page: 1,
     limit: 20,
@@ -241,13 +196,15 @@ const initialState = {
     hasPrev: false,
   },
   
-  // Filters
+  // Filters (used for API calls)
   filters: {
-    status: null,
-    search: null,
+    status: 'all',
+    search: '',
+    page: 1,
+    limit: 20,
   },
   
-  // Stats
+  // Stats from backend
   stats: {
     total: 0,
     pending: 0,
@@ -257,12 +214,9 @@ const initialState = {
     cancelled: 0,
   },
   
-  // Cache & Refresh Control
+  // Refresh control
   lastFetched: null,
-  cacheTimestamp: null,
-  isCached: false,
   shouldRefresh: false,
-  CACHE_DURATION: 5 * 60 * 1000,
 };
 
 // Slice
@@ -281,9 +235,7 @@ const artistApplicationAdminSlice = createSlice({
       state.applicationsLoading = false;
       state.applicationsError = null;
       state.pagination = initialState.pagination;
-      state.filters = initialState.filters;
       state.stats = initialState.stats;
-      state.isCached = false;
       state.shouldRefresh = false;
     },
     
@@ -305,12 +257,8 @@ const artistApplicationAdminSlice = createSlice({
       state.noteSuccess = false;
     },
     
-    clearAllState: (state) => {
-      return { ...initialState };
-    },
-    
     setFilters: (state, action) => {
-      state.filters = { ...state.filters, ...action.payload };
+      state.filters = { ...state.filters, ...action.payload, page: 1 };
       state.shouldRefresh = true;
     },
     
@@ -319,87 +267,17 @@ const artistApplicationAdminSlice = createSlice({
       state.shouldRefresh = true;
     },
     
-    updateApplicationInList: (state, action) => {
-      const index = state.applications.findIndex(
-        app => app._id === action.payload._id
-      );
-      if (index !== -1) {
-        state.applications[index] = { 
-          ...state.applications[index], 
-          ...action.payload 
-        };
-        
-        // Update stats if status changed
-        if (action.payload.status) {
-          const oldStatus = state.applications[index].status;
-          const newStatus = action.payload.status;
-          
-          if (oldStatus !== newStatus) {
-            if (state.stats[oldStatus] > 0) {
-              state.stats[oldStatus]--;
-            }
-            if (state.stats[newStatus] !== undefined) {
-              state.stats[newStatus]++;
-            }
-          }
-        }
-      }
-      
-      if (state.currentApplication && state.currentApplication._id === action.payload._id) {
-        state.currentApplication = { 
-          ...state.currentApplication, 
-          ...action.payload 
-        };
-      }
-    },
-    
-    addNoteToApplication: (state, action) => {
-      const { applicationId, note } = action.payload;
-      
-      if (state.currentApplication && state.currentApplication._id === applicationId) {
-        if (!state.currentApplication.adminNotes) {
-          state.currentApplication.adminNotes = [];
-        }
-        state.currentApplication.adminNotes.push({
-          ...note,
-          _id: `temp_${Date.now()}`,
-          createdAt: new Date().toISOString(),
-        });
-      }
-    },
-    
-    resetSuccessFlags: (state) => {
-      state.statusUpdateSuccess = false;
-      state.deleteSuccess = false;
-      state.noteSuccess = false;
-    },
-    
-    clearCache: (state) => {
-      state.lastFetched = null;
-      state.cacheTimestamp = null;
-      state.isCached = false;
-      state.shouldRefresh = true;
-    },
-    
     markForRefresh: (state) => {
       state.shouldRefresh = true;
-      state.isCached = false;
     },
     
     resetRefreshFlag: (state) => {
       state.shouldRefresh = false;
     },
-    
-    forceRefresh: (state) => {
-      state.shouldRefresh = true;
-      state.isCached = false;
-      state.cacheTimestamp = null;
-      state.lastFetched = null;
-    },
   },
   extraReducers: (builder) => {
     builder
-      // List Applications
+      // List Applications from backend
       .addCase(listArtistApplicationsForAdmin.pending, (state) => {
         state.applicationsLoading = true;
         state.applicationsError = null;
@@ -409,35 +287,9 @@ const artistApplicationAdminSlice = createSlice({
         state.applications = action.payload.applications;
         state.pagination = action.payload.pagination;
         state.stats = action.payload.stats;
-        
-        if (action.payload.params) {
-          state.filters.status = action.payload.params.status;
-          state.filters.search = action.payload.params.search;
-        }
-        
+        state.filters = action.payload.filters;
         state.lastFetched = Date.now();
-        state.cacheTimestamp = Date.now();
-        state.isCached = true;
         state.shouldRefresh = false;
-        
-        if (!action.payload.stats && action.payload.applications) {
-          const stats = {
-            total: action.payload.applications.length,
-            pending: 0,
-            approved: 0,
-            rejected: 0,
-            needs_info: 0,
-            cancelled: 0,
-          };
-          
-          action.payload.applications.forEach(app => {
-            if (stats[app.status] !== undefined) {
-              stats[app.status]++;
-            }
-          });
-          
-          state.stats = stats;
-        }
       })
       .addCase(listArtistApplicationsForAdmin.rejected, (state, action) => {
         state.applicationsLoading = false;
@@ -459,7 +311,7 @@ const artistApplicationAdminSlice = createSlice({
         state.currentApplicationError = action.payload;
       })
       
-      // Update Status (Generic) - FIXED
+      // Update Status
       .addCase(updateApplicationStatusForAdmin.pending, (state) => {
         state.statusUpdateLoading = true;
         state.statusUpdateError = null;
@@ -468,28 +320,11 @@ const artistApplicationAdminSlice = createSlice({
       .addCase(updateApplicationStatusForAdmin.fulfilled, (state, action) => {
         state.statusUpdateLoading = false;
         state.statusUpdateSuccess = true;
-        state.statusUpdateError = null; // ✅ Clear error on success
-        
-        console.log('✅ Status update fulfilled:', action.payload);
+        state.statusUpdateError = null;
         
         const updatedApplication = action.payload.application;
-        
-        if (!updatedApplication) {
-          console.error('❌ No application in response');
-          state.statusUpdateSuccess = false;
-          state.statusUpdateError = 'No application data received';
-          return;
-        }
-        
-        // Ensure application has an _id
-        if (!updatedApplication._id && !updatedApplication.id) {
-          console.error('❌ Application missing ID:', updatedApplication);
-          state.statusUpdateSuccess = false;
-          state.statusUpdateError = 'Application data is invalid';
-          return;
-        }
-        
         const applicationId = updatedApplication._id || updatedApplication.id;
+        const newStatus = updatedApplication.status || action.payload.status;
         
         // Update in applications list
         const appIndex = state.applications.findIndex(
@@ -498,16 +333,9 @@ const artistApplicationAdminSlice = createSlice({
         
         if (appIndex !== -1) {
           const oldStatus = state.applications[appIndex].status;
-          const newStatus = updatedApplication.status || action.payload.status;
+          state.applications[appIndex] = updatedApplication;
           
-          // Update the application with new status
-          state.applications[appIndex] = {
-            ...state.applications[appIndex],
-            ...updatedApplication,
-            status: newStatus
-          };
-          
-          // Update stats if status changed
+          // Update stats
           if (oldStatus !== newStatus) {
             if (state.stats[oldStatus] > 0) {
               state.stats[oldStatus]--;
@@ -522,30 +350,12 @@ const artistApplicationAdminSlice = createSlice({
         if (state.currentApplication && 
             (state.currentApplication._id === applicationId || 
              state.currentApplication.id === applicationId)) {
-          const oldStatus = state.currentApplication.status;
-          const newStatus = updatedApplication.status || action.payload.status;
-          
-          state.currentApplication = {
-            ...state.currentApplication,
-            ...updatedApplication,
-            status: newStatus
-          };
-          
-          // Update stats if status changed
-          if (oldStatus !== newStatus) {
-            if (state.stats[oldStatus] > 0) {
-              state.stats[oldStatus]--;
-            }
-            if (state.stats[newStatus] !== undefined) {
-              state.stats[newStatus]++;
-            }
-          }
+          state.currentApplication = updatedApplication;
         }
         
         state.shouldRefresh = true;
       })
       .addCase(updateApplicationStatusForAdmin.rejected, (state, action) => {
-        console.error('❌ Status update rejected:', action.payload);
         state.statusUpdateLoading = false;
         state.statusUpdateError = action.payload;
         state.statusUpdateSuccess = false;
@@ -595,16 +405,7 @@ const artistApplicationAdminSlice = createSlice({
           state.currentApplication = null;
         }
         
-        // Update stats
-        if (deletedApp && deletedApp.status && state.stats[deletedApp.status] > 0) {
-          state.stats[deletedApp.status]--;
-        }
-        state.stats.total = Math.max(0, state.stats.total - 1);
-        
-        // Update pagination
-        state.pagination.total = Math.max(0, state.pagination.total - 1);
-        state.pagination.totalPages = Math.ceil(state.pagination.total / state.pagination.limit);
-        
+        // Update stats from backend
         state.shouldRefresh = true;
       })
       .addCase(deleteArtistApplication.rejected, (state, action) => {
@@ -621,16 +422,10 @@ export const {
   clearStatusUpdateState,
   clearDeleteState,
   clearNoteState,
-  clearAllState,
   setFilters,
   clearFilters,
-  updateApplicationInList,
-  addNoteToApplication,
-  resetSuccessFlags,
-  clearCache,
   markForRefresh,
   resetRefreshFlag,
-  forceRefresh,
 } = artistApplicationAdminSlice.actions;
 
 export default artistApplicationAdminSlice.reducer;
