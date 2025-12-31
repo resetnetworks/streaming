@@ -3,6 +3,7 @@ import Sidebar from "../../components/artist/dashboard/Sidebar";
 import BackgroundWrapper from "../../components/BackgroundWrapper";
 import HomeComponent from "../../components/artist/home/HomeComponent";
 import UploadsComponent from "../../components/artist/upload/UploadsComponent";
+import ArtistDashboardRevenue from "../../components/artist/revenue/ArtistDashboardRevenue";
 import ProfileComponent from "../../components/artist/profile/ProfileComponent";
 import Topbar from "../../components/artist/dashboard/Topbar";
 import SingleUpload from "./SingleUpload";
@@ -18,6 +19,7 @@ const tabComponents = {
   profile: <ProfileComponent />,
   dashboard: <HomeComponent />,
   uploads: <UploadsComponent />,
+  revenue: <ArtistDashboardRevenue />,
 };
 
 export default function Dashboard() {

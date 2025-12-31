@@ -1,20 +1,25 @@
 import React from "react";
 import IconHeader from "../../user/IconHeader";
 import MobileNavBar from "../../user/MobileNavBar";
-import { FaChartLine, FaRegUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { FaChartLine, FaRegUserCircle, FaBars, FaTimes,FaWallet } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
 import { RxDashboard } from "react-icons/rx";
+import { useSelector } from "react-redux";
 
 const menuItems = [
-  { name: "profile", icon: <FaRegUserCircle size={18} /> },
-  { name: "uploads", icon: <FiMusic size={18} strokeWidth={1.5} /> },
+  { name: "profile", icon: <FaRegUserCircle size={20} /> },
+  { name: "uploads", icon: <FiMusic size={20} strokeWidth={1.5} /> },
   { name: "dashboard", icon: <RxDashboard size={20} /> },
-  { name: "insights", icon: <FaChartLine size={18} /> },
+  { name: "revenue", icon: <FaWallet size={20} /> },
+  // { name: "insights", icon: <FaChartLine size={18} /> },
 ];
 
 const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const { artistProfile, profileLoading } = useSelector((state) => state.artists);
+  const imageUrl = artistProfile?.profileImage;
+  const artistName = artistProfile?.name;
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -70,7 +75,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
 
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-[999] md:hidden">
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] md:hidden">
             <aside 
               id="sidebar"
               className="w-64 bg-[#222126] flex flex-col justify-between pb-4 min-h-screen transform transition-transform duration-300 ease-in-out"
@@ -110,10 +115,10 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
               </div>
               <div className="flex flex-col items-center mb-40 px-2">
                 <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0">
-                  <img src="/profile.jpg" alt="Profile" className="w-full h-full object-cover" />
+                  <img src={imageUrl} alt="Profile image" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-white text-sm tracking-wide text-center max-w-full">
-                  sm entertainment
+                  {artistName}
                 </span>
               </div>
             </aside>
@@ -154,14 +159,19 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
           ))}
         </div>
       </div>
-      <div className="flex flex-col items-center mb-40 px-2">
-        <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0">
-          <img src="/profile.jpg" alt="Profile" className="w-full h-full object-cover" />
-        </div>
-        <span className="text-white text-sm tracking-wide text-center max-w-full">
-          sm entertainment
-        </span>
-      </div>
+     <div className="sticky bottom-64 flex flex-col items-center px-2">
+  <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0">
+    <img
+      src={imageUrl}
+      alt="Profile"
+      className="w-full h-full object-cover block"
+    />
+  </div>
+  <span className="text-white text-sm tracking-wide text-center max-w-full">
+    {artistName}
+  </span>
+</div>
+
     </aside>
   );
 };

@@ -12,7 +12,7 @@ const HeroSection = ({ scrollContainerRef }) => {
     navigate('/home');
   };
   const handleSignUpAsArtist =()=>{
-    window.open('https://forms.wix.com/f/7377232876368036493', '_blank');
+navigate('/artist/register');
   }
 
   return (
