@@ -137,9 +137,9 @@ const ArtistHeroSection = ({
     <div className="relative h-80 w-full">
       {artist ? (
         <>
-          {artist.image ? (
+          {artist?.coverImage ? (
             <img
-              src={artist.image}
+              src={artist?.coverImage}
               className="w-full h-full object-cover opacity-80"
               alt="Artist Background"
             />
@@ -151,7 +151,7 @@ const ArtistHeroSection = ({
           <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/70 to-transparent z-20" />
           
           <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
-            {renderArtistImage(artist?.image, artist?.name)}
+            {renderArtistImage(artist?.profileImage, artist?.name)}
             <div>
               <p className="sm:text-sm text-xs lowercase tracking-widest text-gray-200">artist</p>
               <h1 className="text-2xl md:text-4xl font-bold mt-1">

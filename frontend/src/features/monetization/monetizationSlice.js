@@ -23,7 +23,6 @@ export const getMyMonetizationSetupStatus = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const res = await axios.get(`/v2/monetize/artists/me/monetization-setup-status`);
-      console.log(res.data)
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(

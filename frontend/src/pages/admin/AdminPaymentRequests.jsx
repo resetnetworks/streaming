@@ -311,7 +311,7 @@ const AdminPaymentRequests = () => {
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Amount:</span>
                 <span className="font-bold text-lg text-green-400">
-                  ₹{selectedPayout.amount ? selectedPayout.amount.toFixed(2) : '0.00'}
+                  ${selectedPayout.amount ? selectedPayout.amount.toFixed(2) : '0.00'}
                 </span>
               </div>
             </div>

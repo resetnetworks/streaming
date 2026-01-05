@@ -3,8 +3,10 @@ import IconHeader from "../../user/IconHeader";
 import MobileNavBar from "../../user/MobileNavBar";
 import { FaChartLine, FaRegUserCircle, FaBars, FaTimes,FaWallet } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
+import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
+import { fetchArtistProfile } from "../../../features/artists/artistsSlice";
 
 const menuItems = [
   { name: "profile", icon: <FaRegUserCircle size={20} /> },
@@ -15,6 +17,11 @@ const menuItems = [
 ];
 
 const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
+  const dispatch = useDispatch();
+
+useEffect(() => {
+    dispatch(fetchArtistProfile());
+  }, [dispatch]);
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { artistProfile, profileLoading } = useSelector((state) => state.artists);
@@ -29,6 +36,8 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
         setSidebarOpen(false);
       }
     };
+
+
     
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);

@@ -416,7 +416,7 @@ const Player = () => {
             <button
               className="player-button flex justify-center items-center gap-2"
             >
-              <LuDna className="text-blue-500 text-sm" /> lossless
+            lossless
             </button>
           </div>
           <div className="button-wrapper shadow-md shadow-gray-800">
@@ -424,7 +424,7 @@ const Player = () => {
               className="player-button flex justify-center items-center gap-2"
               title="Refresh default song"
             >
-              <FaRandom className="text-blue-500 text-sm" /> ΛMB
+              ΛMB 
             </button>
           </div>
         </div>

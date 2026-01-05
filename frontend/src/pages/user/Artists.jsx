@@ -249,11 +249,11 @@ const Artists = () => {
                       <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
                         {/* Artist Image */}
                         <div className="relative aspect-square overflow-hidden rounded-xl mb-3">
-                          {artist.image ? (
+                          {artist?.profileImage ? (
                             <img
                               loading="lazy"
-                              src={artist.image}
-                              alt={artist.name || "Artist"}
+                              src={artist?.profileImage}
+                              alt={artist?.name || "Artist"}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           ) : (

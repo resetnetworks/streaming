@@ -260,7 +260,6 @@ const handleSubmit = (e) => {
   // Prevent submission if already submitting
   if (isSubmitting) return;
 
-  console.log("Submitting form...");
 
   // Validate required fields
   if (!title.trim()) {
@@ -319,7 +318,6 @@ const handleSubmit = (e) => {
     ];
   }
 
-  console.log("Form data prepared:", formData);
   onSubmit?.(formData);
 };
 

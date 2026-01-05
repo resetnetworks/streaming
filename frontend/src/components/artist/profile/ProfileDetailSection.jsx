@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 
 const ProfileDetailSection = () => {
   const { artistProfile, profileLoading } = useSelector((state) => state.artists);
+  const currentUser = useSelector((state) => state.auth.user);
   const [formData, setFormData] = useState({
     businessEmail: "",
     country: "",
@@ -19,7 +20,7 @@ const ProfileDetailSection = () => {
   useEffect(() => {
     if (artistProfile) {
       setFormData({
-        businessEmail: artistProfile.businessEmail || "",
+        businessEmail: currentUser.email || "",
         country: artistProfile.country || "",
         website: artistProfile.website || "",
         socialMedia: artistProfile.socialMedia || "",
@@ -126,10 +127,10 @@ const ProfileDetailSection = () => {
       </div>
 
       {/* Online Presence Section */}
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <h2 className="text-white text-lg font-medium mb-4">online presence</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-          {/* Website Field */}
+         
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               website url
@@ -141,7 +142,7 @@ const ProfileDetailSection = () => {
             </div>
           </div>
 
-          {/* Social Media Field */}
+        
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               social media profile
@@ -153,7 +154,7 @@ const ProfileDetailSection = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Bio Section */}
       <div className="mb-8">

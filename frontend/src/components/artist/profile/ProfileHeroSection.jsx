@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ProfileEditForm from "./ProfileEditForm";
-import { fetchArtistProfile } from "../../../features/artists/artistsSlice";
+
 
 const ProfileHeroSection = () => {
   const dispatch = useDispatch();
@@ -29,10 +29,6 @@ const ProfileHeroSection = () => {
   const profileImageInputRef = useRef(null);
   const backgroundImageInputRef = useRef(null);
 
-  // Fetch artist profile on component mount
-  useEffect(() => {
-    dispatch(fetchArtistProfile());
-  }, [dispatch]);
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -217,7 +213,7 @@ const ProfileHeroSection = () => {
           
           {/* Right Side: Logout Button and Change Password */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-8 w-full sm:w-auto">
-            <div className="sm:block hidden">
+            {/* <div className="sm:block hidden">
               <button
                 onClick={handleChangePasswordClick}
                 className="text-gray-300 text-sm hover:text-white transition-colors duration-200 relative group"
@@ -225,7 +221,7 @@ const ProfileHeroSection = () => {
                 change password
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
               </button>
-            </div>
+            </div> */}
 
             <button 
               onClick={handleLogout}

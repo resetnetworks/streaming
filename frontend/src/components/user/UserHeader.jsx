@@ -23,6 +23,8 @@ const UserHeader = () => {
   const { myApplication, fetchLoading } = useSelector(
     (state) => state.artistApplication
   );
+
+ 
   
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -31,7 +33,7 @@ const UserHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isHomePage = location.pathname === "/";
+  const isHomePage = location.pathname === "/home";
 
   // Check if user has artist-pending role for red dot
   const hasArtistPendingRole = user?.role === "artist-pending";
@@ -117,7 +119,7 @@ const UserHeader = () => {
           onClick={() => navigate("/artist/dashboard")}
         >
           <button className="player-button bg-purple-600 hover:bg-purple-700">
-            Artist
+          Dashboard
           </button>
         </div>
       );

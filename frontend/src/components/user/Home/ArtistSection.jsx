@@ -22,6 +22,7 @@ import {
   selectArtistError,
   selectIsPageCached,
 } from "../../../features/artists/artistsSelectors";
+import { clearSongMessage } from "../../../features/songs/songSlice";
 
 // --- Helper: format plan cycle ---
 const cycleLabel = (c) => {
@@ -129,12 +130,12 @@ const ArtistCircle = forwardRef(function ArtistCircle(
       ref={ref}
       type="button"
       onClick={onClick}
-      className="group relative sm:w-48 sm:h-48 h-32 w-32 shrink-0 rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/80 transition-shadow duration-300 ease-in-out shadow-[0_0_15px_rgba(59,130,246,0.15)] shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+      className="group relative sm:w-48 sm:h-48 h-32 w-32 shrink-0 rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/80 transition-shadow duration-300 ease-in-out shadow-[0_0_25px_rgba(59,130,246,0.4)]"
       aria-label={`Open artist ${artist?.name || ""}`}
     >
       <div className="absolute inset-0 rounded-full overflow-hidden">
         <LazyImg
-          src={artist?.image || artist?.avatar || "/images/placeholder.png"}
+          src={artist?.profileImage || artist?.avatar || "/images/placeholder.png"}
           alt={artist?.name || "artist"}
           className="transition-transform duration-300 ease-in-out group-hover:scale-110"
         />

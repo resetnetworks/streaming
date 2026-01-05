@@ -324,6 +324,7 @@ function App() {
             element={
             <RedirectedProtectedRoute
                     isAuthenticated={isAuthenticated}
+                    user={user}
                   >
             <Pages.ArtistDashboard />
           </RedirectedProtectedRoute>}

@@ -236,7 +236,7 @@ const ArtistDashboardRevenue = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="mb-6 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+      {/* <div className="mb-6 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <MdFilterList />
@@ -294,7 +294,7 @@ const ArtistDashboardRevenue = () => {
         >
           {ledger.loading ? 'Applying...' : 'Apply Filters'}
         </button>
-      </div>
+      </div> */}
 
       {/* Ledger and Payouts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -369,7 +369,7 @@ const ArtistDashboardRevenue = () => {
               <button
                 onClick={() => setLedgerPage(prev => Math.max(1, prev - 1))}
                 disabled={ledgerPage === 1 || ledger.loading}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-gray-100 bg-gray-800 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
@@ -377,7 +377,7 @@ const ArtistDashboardRevenue = () => {
               <button
                 onClick={() => setLedgerPage(prev => prev + 1)}
                 disabled={ledger.loading || ledger.items.length < 20}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-gray-100 bg-gray-800 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
@@ -515,15 +515,7 @@ const ArtistDashboardRevenue = () => {
                 </div>
               </div>
               
-              {/* Processing Info */}
-              <div className="mb-6 p-3 bg-gray-800/50 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <MdInfo className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-400">
-                    Payouts are processed within 3-5 business days. A 2.9% + $0.30 processing fee applies.
-                  </p>
-                </div>
-              </div>
+
               
               {/* Action Buttons */}
               <div className="flex gap-3">
