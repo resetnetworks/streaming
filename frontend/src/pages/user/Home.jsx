@@ -107,9 +107,10 @@ const Home = () => {
     setPaymentLoading(false);
     closePaymentOptions();
   };
-
+  console.log("---user data---",currentUser)
   const handleSubscribeDecision = (artist, type, data) => {
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+  
 
     if (type === "purchase") {
       if (alreadySubscribed) {
