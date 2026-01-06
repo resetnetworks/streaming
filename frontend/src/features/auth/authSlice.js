@@ -31,6 +31,7 @@ const storeAuthToLocal = (user) => {
     preferredGenres = [],
     playlist = [],
     purchaseHistory = [],
+    subscribedArtists = [],
     ...otherFields
   } = user;
 
@@ -42,6 +43,9 @@ const storeAuthToLocal = (user) => {
     preferredGenres: preferredGenres.length > 0 ? preferredGenres : existingUser?.preferredGenres || [],
     playlist: playlist.length > 0 ? playlist : existingUser?.playlist || [],
     purchaseHistory: purchaseHistory.length > 0 ? purchaseHistory : existingUser?.purchaseHistory || [],
+     subscribedArtists: subscribedArtists.length > 0 
+    ? subscribedArtists 
+    : existingUser?.subscribedArtists || [],
     purchasedSongs,
     purchasedAlbums,
     likedsong,

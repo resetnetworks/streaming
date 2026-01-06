@@ -4,8 +4,8 @@ import {
   FaUserAlt,
   FaCompactDisc,
   FaMusic,
-  FaCog,
   FaSignOutAlt,
+  FaWallet
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -84,15 +84,15 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
           </li>
           <li className="pt-4 mt-4 border-t border-gray-700">
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => setActiveTab('payments')}
               className={`flex items-center w-full px-4 py-3 rounded-lg ${
                 activeTab === 'settings'
                   ? 'bg-blue-900 text-white'
                   : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
-              <FaCog className="mr-3" />
-              Settings
+              <FaWallet className="mr-3" />
+              payments requests
             </button>
           </li>
         </ul>

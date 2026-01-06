@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import BackgroundWrapper from "../../components/BackgroundWrapper";
 import IconHeader from "../../components/user/IconHeader";
-import ProgressTracker from '../../components/artist/ProgressTracker';
+import ProgressTracker from '../../components/artist/register/ProgressTracker';
 import { MdOutlineEmail, MdPerson, MdPublic, MdLanguage, MdShare, MdCloudUpload } from 'react-icons/md';
 
 const ArtistRegister = () => {
@@ -20,7 +20,6 @@ const ArtistRegister = () => {
       const previewUrl = URL.createObjectURL(file);
       setProfileImage(previewUrl);
       
-      console.log('Selected file:', file);
     }
   };
 

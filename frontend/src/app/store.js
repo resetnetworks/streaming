@@ -6,6 +6,8 @@ import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import authReducer from '../features/auth/authSlice';
 import songReducer from '../features/songs/songSlice';
+import artistSongsReducer from '../features/artistSong/artistSongSlice';
+import artistAlbumsReducer from '../features/artistAlbums/artistAlbumsSlice';
 import playerReducer from '../features/playback/playerSlice';
 import artistsReducer from "../features/artists/artistsSlice";
 import albumsReducer from "../features/albums/albumsSlice";
@@ -14,6 +16,12 @@ import paymentReducer from "../features/payments/userPaymentSlice";
 import payment from "../features/payments/paymentSlice";
 import streamReducer from "../features/stream/streamSlice";
 import adminPaymentReducer from "../features/payments/adminPaymentSlice";
+import adminPayoutsReducer from "../features/payments/adminPayoutsSlice";
+import artistApplicationReducer from '../features/artistApplications/artistApplicationSlice';
+import artistApplicationAdminReducer from '../features/admin/artistApplicationAdminSlice';
+import monetizationReducer from '../features/monetization/monetizationSlice';
+import artistDashboardReducer from "../features/artistDashboard/artistDashboardSlice";
+import artistRevenueReducer from "../features/artistDashboard/artistRevenueSlice";
 
 // ========================
 // 🔐 PERSIST CONFIGS
@@ -42,6 +50,9 @@ const rootPersistConfig = {
 const appReducer = combineReducers({
   auth: authReducer,
   songs: songReducer,
+  artistSongs: artistSongsReducer,
+  artistAlbums: artistAlbumsReducer,
+  artistDashboard: artistDashboardReducer,
   player: persistReducer(playerPersistConfig, playerReducer),
   artists: artistsReducer,
   albums: albumsReducer,
@@ -49,7 +60,12 @@ const appReducer = combineReducers({
   userDashboard: paymentReducer,
   stream: streamReducer,
   payment: payment,
-  artistDashboard: adminPaymentReducer,
+  artistRevenue: artistRevenueReducer,
+  adminPayouts: adminPayoutsReducer,
+  artistDashboardPayments: adminPaymentReducer,
+  artistApplication: artistApplicationReducer,
+  artistApplicationAdmin: artistApplicationAdminReducer,
+  monetization: monetizationReducer,
 });
 
 // ========================

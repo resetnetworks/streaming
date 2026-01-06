@@ -85,7 +85,7 @@ const initialState = {
 };
 
 const artistDashboardSlice = createSlice({
-  name: "artistDashboard",
+  name: "artistDashboardPayments",
   initialState,
   reducers: { resetArtistDashboard: () => initialState },
   extraReducers: (builder) =>

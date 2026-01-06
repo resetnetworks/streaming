@@ -8,6 +8,9 @@ import useNavigation from "../../hooks/useAuthNavigation";
 import PageSEO from "../../components/PageSeo/PageSEO";
 
 
+
+
+
 const About = () => {
   const navigate = useNavigate();
   const { navigateToHome } = useNavigation();

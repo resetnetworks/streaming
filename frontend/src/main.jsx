@@ -7,6 +7,8 @@ import { Provider } from "react-redux";
 import { store, persistor } from "./app/store.js";
 import { PersistGate } from "redux-persist/integration/react";
 import { HelmetProvider } from "react-helmet-async";
+import 'leaflet/dist/leaflet.css';
+
 
 createRoot(document.getElementById("root")).render(
     <HelmetProvider>

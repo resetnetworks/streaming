@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utills/axiosInstance";
 
-// Thunks (same as before - no changes)
+// Thunks
 export const fetchAllArtists = createAsyncThunk(
   "artists/fetchAll",
   async ({ page = 1, limit = 10 } = {}, thunkAPI) => {
@@ -48,6 +48,21 @@ export const fetchArtistBySlug = createAsyncThunk(
   }
 );
 
+// NEW: Fetch artist's own profile
+export const fetchArtistProfile = createAsyncThunk(
+  "artists/fetchProfile",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axios.get("/artists/profile/me");
+      return res.data.data; // Return the data object from response
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch artist profile"
+      );
+    }
+  }
+);
+
 export const createArtist = createAsyncThunk(
   "artists/create",
   async (formData, thunkAPI) => {
@@ -66,19 +81,22 @@ export const createArtist = createAsyncThunk(
   }
 );
 
-export const updateArtist = createAsyncThunk(
-  "artists/update",
-  async ({ id, formData }, thunkAPI) => {
+
+
+// NEW: Update artist's own profile
+export const updateArtistProfile = createAsyncThunk(
+  "artists/updateProfile",
+  async ({ id, formData }, thunkAPI) => { // Destructure parameters properly
     try {
       const res = await axios.put(`/artists/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-      return res.data.artist;
+      return res.data.artist || res.data.data; // Return updated artist data
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to update artist"
+        err.response?.data?.message || "Failed to update artist profile"
       );
     }
   }
@@ -162,6 +180,7 @@ const artistSlice = createSlice({
     allArtists: [],
     fullArtistList: [],
     selectedArtist: null,
+    artistProfile: null, // NEW: Store for artist's own profile
     randomArtist: null,
     randomArtistSongs: [],
     randomArtistPagination: {
@@ -171,6 +190,7 @@ const artistSlice = createSlice({
       totalPages: 0,
     },
     loading: false,
+    profileLoading: false, // NEW: Separate loading for profile
     error: null,
     pagination: {
       page: 1,
@@ -191,7 +211,10 @@ const artistSlice = createSlice({
   reducers: {
     clearSelectedArtist: (state) => {
       state.selectedArtist = null;
-      state.loading = true; // ✅ Show loading when clearing
+      state.loading = true;
+    },
+    clearArtistProfile: (state) => { // NEW: Clear artist profile
+      state.artistProfile = null;
     },
     clearCache: (state) => {
       state.allArtists = [];
@@ -226,6 +249,7 @@ const artistSlice = createSlice({
       state.fullArtistList = [];
       state.isFullListCached = false;
       state.fullListLastFetchTime = null;
+      state.artistProfile = null; // Also clear profile cache
     },
     setCachedData: (state, action) => {
       const { page, artists, pagination } = action.payload;
@@ -249,6 +273,18 @@ const artistSlice = createSlice({
         delete state.subscriberCounts[action.payload];
       } else {
         state.subscriberCounts = {};
+      }
+    },
+    // Helper to update selectedArtist in state when editing
+    updateSelectedArtistLocally: (state, action) => {
+      if (state.selectedArtist && state.selectedArtist._id === action.payload._id) {
+        state.selectedArtist = { ...state.selectedArtist, ...action.payload };
+      }
+    },
+    // NEW: Helper to update artistProfile in state when editing
+    updateArtistProfileLocally: (state, action) => {
+      if (state.artistProfile) {
+        state.artistProfile = { ...state.artistProfile, ...action.payload };
       }
     },
   },
@@ -294,7 +330,7 @@ const artistSlice = createSlice({
       })
 
       .addCase(fetchArtistBySlug.pending, (state) => {
-        state.selectedArtist = null; // ✅ Clear previous data immediately
+        state.selectedArtist = null;
         state.loading = true;
         state.error = null;
       })
@@ -304,6 +340,20 @@ const artistSlice = createSlice({
       })
       .addCase(fetchArtistBySlug.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      // NEW: Handle fetchArtistProfile actions
+      .addCase(fetchArtistProfile.pending, (state) => {
+        state.profileLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchArtistProfile.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.artistProfile = action.payload;
+      })
+      .addCase(fetchArtistProfile.rejected, (state, action) => {
+        state.profileLoading = false;
         state.error = action.payload;
       })
 
@@ -325,26 +375,56 @@ const artistSlice = createSlice({
         state.error = action.payload;
       })
 
-      .addCase(updateArtist.pending, (state) => {
-        state.loading = true;
+
+
+      // NEW: Handle updateArtistProfile actions
+      .addCase(updateArtistProfile.pending, (state) => {
+        state.profileLoading = true;
         state.error = null;
       })
-      .addCase(updateArtist.fulfilled, (state, action) => {
-        state.loading = false;
-        const index = state.allArtists.findIndex(a => a._id === action.payload._id);
-        if (index !== -1) state.allArtists[index] = action.payload;
+      .addCase(updateArtistProfile.fulfilled, (state, action) => {
+        state.profileLoading = false;
+        state.artistProfile = action.payload;
         
-        const fullListIndex = state.fullArtistList.findIndex(a => a._id === action.payload._id);
-        if (fullListIndex !== -1) state.fullArtistList[fullListIndex] = action.payload;
+        // Also update in allArtists array if exists
+        const index = state.allArtists.findIndex(a => a._id === action.payload.id);
+        if (index !== -1) {
+          // Map the profile response to match artist format
+          const updatedArtist = {
+            ...state.allArtists[index],
+            name: action.payload.name,
+            bio: action.payload.bio,
+            location: action.payload.location,
+            country: action.payload.country,
+            profileImage: action.payload.profileImage,
+            coverImage: action.payload.coverImage,
+            subscriptionPrice: action.payload.monetization?.subscriptionPrice,
+            subscriptionPlans: action.payload.monetization?.plans,
+            isMonetizationComplete: action.payload.monetization?.isComplete,
+          };
+          state.allArtists[index] = updatedArtist;
+        }
         
-        state.isCached = false;
-        state.cachedPages = [];
-        state.cachedData = {};
-        state.isFullListCached = false;
-        state.fullListLastFetchTime = null;
+        // Also update in fullArtistList array if exists
+        const fullListIndex = state.fullArtistList.findIndex(a => a._id === action.payload.id);
+        if (fullListIndex !== -1) {
+          const updatedFullArtist = {
+            ...state.fullArtistList[fullListIndex],
+            name: action.payload.name,
+            bio: action.payload.bio,
+            location: action.payload.location,
+            country: action.payload.country,
+            profileImage: action.payload.profileImage,
+            coverImage: action.payload.coverImage,
+            subscriptionPrice: action.payload.monetization?.subscriptionPrice,
+            subscriptionPlans: action.payload.monetization?.plans,
+            isMonetizationComplete: action.payload.monetization?.isComplete,
+          };
+          state.fullArtistList[fullListIndex] = updatedFullArtist;
+        }
       })
-      .addCase(updateArtist.rejected, (state, action) => {
-        state.loading = false;
+      .addCase(updateArtistProfile.rejected, (state, action) => {
+        state.profileLoading = false;
         state.error = action.payload;
       })
 
@@ -419,13 +499,16 @@ const artistSlice = createSlice({
 
 export const { 
   clearSelectedArtist, 
+  clearArtistProfile,
   clearCache, 
   clearFullListCache, 
   clearAllCaches, 
   setCachedData, 
   loadFromCache,
   loadFullListFromCache,
-  clearSubscriberCount
+  clearSubscriberCount,
+  updateSelectedArtistLocally,
+  updateArtistProfileLocally
 } = artistSlice.actions;
 
 export default artistSlice.reducer;

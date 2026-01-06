@@ -1,234 +1,245 @@
-import { useEffect, useRef, useState } from 'react';
+// src/components/admin/artistTab/Artists.jsx
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { FaUserAlt, FaSearch } from 'react-icons/fa';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import { toast } from 'sonner';
 
-import AdminDataTable from "../../components/admin/AdminDataTable";
-import CreateArtistModal from '../../components/admin/CreateArtistModal';
+// Redux imports
+import {
+  listArtistApplicationsForAdmin,
+  clearApplicationsList,
+  clearCurrentApplication,
+  setFilters,
+  clearFilters,
+  markForRefresh,
+  resetRefreshFlag
+} from '../../features/admin/artistApplicationAdminSlice';
 
 import {
-  fetchAllArtistsNoPagination,
-  deleteArtist,
-  loadFullListFromCache
-} from '../../features/artists/artistsSlice';
+  selectArtistApplicationsAdmin,
+  selectArtistApplicationsLoading,
+  selectArtistApplicationsError,
+  selectApplicationPagination,
+  selectApplicationFilters,
+  selectApplicationStats,
+  selectShouldRefreshApplications,
+  selectStatusUpdateLoading,
+  selectStatusUpdateError
+} from '../../features/admin/artistApplicationAdminSelectors';
 
-import {
-  selectFullArtistList,
-  selectArtistLoading,
-  selectArtistError,
-  selectIsFullListCached,
-  selectIsFullListCacheValid
-} from '../../features/artists/artistsSelectors';
+// Component imports
+import AdminArtistHeader from '../../components/admin/artistTab/AdminArtistHeader';
+import AdminArtistStatusFilters from '../../components/admin/artistTab/AdminArtistStatusFilters';
+import AdminArtistApplicationsTable from '../../components/admin/artistTab/AdminArtistApplicationsTable';
+import ApplicationDetail from '../../components/admin/artistTab/ApplicationDetail';
+import StatusUpdateModal from '../../components/admin/artistTab/StatusUpdateModal';
+import AddNoteModal from '../../components/admin/artistTab/AddNoteModal';
+import AlertNotification from '../../components/admin/artistTab/AlertNotification';
 
 const Artists = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editArtist, setEditArtist] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const hasFetchedRef = useRef(false);
+  const [viewMode, setViewMode] = useState('list');
+  const [selectedApplicationId, setSelectedApplicationId] = useState(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [selectedAppForModal, setSelectedAppForModal] = useState(null);
+  
+  // Search and filter states
+  const [searchInput, setSearchInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  // ✅ Redux selectors with cache
-  const artists = useSelector(selectFullArtistList) || [];
-  const loading = useSelector(selectArtistLoading);
-  const error = useSelector(selectArtistError);
-  const isFullListCached = useSelector(selectIsFullListCached);
-  const isFullListCacheValid = useSelector(selectIsFullListCacheValid);
+  // Selectors
+  const applications = useSelector(selectArtistApplicationsAdmin);
+  const loading = useSelector(selectArtistApplicationsLoading);
+  const error = useSelector(selectArtistApplicationsError);
+  const pagination = useSelector(selectApplicationPagination);
+  const filters = useSelector(selectApplicationFilters);
+  const shouldRefresh = useSelector(selectShouldRefreshApplications);
+  const statusUpdateLoading = useSelector(selectStatusUpdateLoading);
+  const statusUpdateError = useSelector(selectStatusUpdateError);
 
-  // ✅ Smart loading with cache system
-  useEffect(() => {
-    if (!hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      
-      // Check if data is cached and valid
-      if (isFullListCached && isFullListCacheValid && artists.length > 0) {
-        // Load from cache
-        dispatch(loadFullListFromCache());
-      } else {
-        // Fetch from server
-        dispatch(fetchAllArtistsNoPagination());
-      }
-    }
-  }, [dispatch, isFullListCached, isFullListCacheValid, artists.length]);
+  const isMountedRef = useRef(true);
 
-  // ✅ Handle browser refresh - reset fetch flag
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      hasFetchedRef.current = false;
+  // Fetch applications from backend
+  const fetchApplications = useCallback((newFilters = {}) => {
+    const params = {
+      page: newFilters.page || pagination.page,
+      limit: pagination.limit,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      search: searchInput || undefined,
+      ...newFilters
     };
+    
+    dispatch(listArtistApplicationsForAdmin(params));
+  }, [dispatch, pagination.page, pagination.limit, statusFilter, searchInput]);
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  // Initial load and refresh
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    
+    if (shouldRefresh || applications.length === 0) {
+      fetchApplications();
+      dispatch(resetRefreshFlag());
+    }
+    
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [shouldRefresh, dispatch, fetchApplications, applications.length]);
 
-  const columns = ['ID', 'Name', 'Songs', 'Albums', 'Actions'];
+  // Handle search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters.search) {
+        dispatch(setFilters({ search: searchInput, page: 1 }));
+        fetchApplications({ page: 1 });
+      }
+    }, 500);
 
-  // ✅ Safe filtering with fallback
-  const filteredArtists = (artists || []).filter((artist) => {
-    if (!artist) return false;
-    
-    const name = artist.name || '';
-    const location = artist.location || '';
-    const searchLower = searchTerm.toLowerCase();
-    
-    return (
-      name.toLowerCase().includes(searchLower) ||
-      location.toLowerCase().includes(searchLower)
-    );
-  });
+    return () => clearTimeout(timer);
+  }, [searchInput, filters.search, dispatch, fetchApplications]);
 
-  const formattedArtists = filteredArtists.map((artist, index) => ({
-    id: index + 1,
-    name: artist.name || 'Unknown Artist',
-    songs: artist.songCount || artist.songs?.length || 0,
-    albums: artist.albumCount || artist.albums?.length || 0,
-    _id: artist._id,
-    artistObj: artist,
-  }));
+  // Handle status filter change
+  useEffect(() => {
+    if (statusFilter !== filters.status) {
+      dispatch(setFilters({ status: statusFilter, page: 1 }));
+      fetchApplications({ page: 1 });
+    }
+  }, [statusFilter, filters.status, dispatch, fetchApplications]);
 
-  const handleEdit = (artist) => {
-    setEditArtist(artist);
-    setIsModalOpen(true);
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    dispatch(setFilters({ page: newPage }));
+    fetchApplications({ page: newPage });
   };
 
-  const handleDelete = (artist) => {
-    if (window.confirm(`Are you sure you want to delete "${artist.name}"?`)) {
-      dispatch(deleteArtist(artist._id)).then((result) => {
-        if (result.type === 'artists/delete/fulfilled') {
-          // No need to manually fetch again as cache will be cleared in reducer
-        }
-      });
+  // View details
+  const handleViewDetails = (application) => {
+    setSelectedApplicationId(application._id || application.id);
+    setViewMode('detail');
+  };
+
+  // Back to list
+  const handleBackToList = () => {
+    setViewMode('list');
+    setSelectedApplicationId(null);
+    setSelectedAppForModal(null);
+    dispatch(clearCurrentApplication());
+  };
+
+  // Refresh data
+  const handleRefresh = () => {
+    dispatch(markForRefresh());
+    fetchApplications();
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchInput('');
+    setStatusFilter('all');
+    dispatch(clearFilters());
+    fetchApplications({ page: 1 });
+  };
+
+  // Open status modal
+  const handleOpenStatusModal = (application) => {
+    setSelectedApplicationId(application._id || application.id);
+    setSelectedAppForModal(application);
+    setIsStatusModalOpen(true);
+  };
+
+  // Handle status update success
+  const handleStatusUpdateSuccess = () => {
+    toast.success('Status updated successfully');
+    setIsStatusModalOpen(false);
+    setSelectedAppForModal(null);
+    
+    // Refresh current view
+    if (viewMode === 'detail') {
+      dispatch(clearCurrentApplication());
+    } else {
+      fetchApplications();
     }
   };
 
-  const handleViewPayments = (artistId) => {
-    navigate(`/admin/payments/${artistId}`);
-  };
-
-  // ✅ Handle modal close and refresh data if needed
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditArtist(null);
-    
-    // If cache is invalid after modal operations, refetch
-    if (!isFullListCacheValid) {
-      dispatch(fetchAllArtistsNoPagination());
+  // Handle error alerts
+  useEffect(() => {
+    if (statusUpdateError) {
+      toast.error(statusUpdateError);
     }
-  };
+  }, [statusUpdateError]);
 
   return (
-    <div className="p-6">
-      {/* Top bar always visible */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-white">Artists</h2>
-        
-        </div>
+    <div className="p-4 md:p-6">
+      {/* Header */}
+      <AdminArtistHeader
+        searchTerm={searchInput}
+        setSearchTerm={setSearchInput}
+        onRefresh={handleRefresh}
+        loading={loading}
+      />
 
-        <div className="relative w-full md:w-80">
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name or location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
 
-        <button
-          onClick={() => {
-            setEditArtist(null);
-            setIsModalOpen(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center transition-colors duration-200"
-        >
-          <FaUserAlt className="mr-2" /> Add Artist
-        </button>
-      </div>
 
-      {/* ✅ Search results info */}
-      {searchTerm && (
-        <div className="mb-4 text-sm text-gray-400">
-          Showing {filteredArtists.length} of {artists.length} artists
-          {filteredArtists.length !== artists.length && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="ml-2 text-blue-400 hover:text-blue-300 underline"
-            >
-              Clear search
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Main Section */}
-      {loading ? (
-        <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-          <div className="space-y-4">
-            <Skeleton height={60} count={5} />
-          </div>
-        </SkeletonTheme>
-      ) : error ? (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
-          <p className="text-red-400 text-sm mb-2">Error: {error}</p>
-          <button
-            onClick={() => dispatch(fetchAllArtistsNoPagination())}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm"
-          >
-            Retry
-          </button>
-        </div>
-      ) : formattedArtists.length === 0 ? (
-        <div className="text-center py-10">
-          {searchTerm ? (
-            <div className="text-gray-400">
-              <p className="mb-2">No artists found matching "{searchTerm}"</p>
-              <button
-                onClick={() => setSearchTerm('')}
-                className="text-blue-400 hover:text-blue-300 underline"
-              >
-                Clear search to see all artists
-              </button>
-            </div>
-          ) : (
-            <div className="text-gray-400">
-              <p className="mb-4">No artists found. Click "Add Artist" to create one.</p>
-              <button
-                onClick={() => {
-                  setEditArtist(null);
-                  setIsModalOpen(true);
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md inline-flex items-center"
-              >
-                <FaUserAlt className="mr-2" /> Add First Artist
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <AdminDataTable
-          title=""
-          columns={columns}
-          data={formattedArtists}
-          loading={false}
-          error={null}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onViewPayments={handleViewPayments}
+      {/* Error Display */}
+      {error && (
+        <AlertNotification
+          type="error"
+          message={error}
+          show={!!error}
+          autoClose={5000}
         />
       )}
 
-      {/* ✅ Enhanced Modal */}
-      <CreateArtistModal
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        initialData={editArtist}
-      />
+      {/* Main Content */}
+      {viewMode === 'list' ? (
+        <AdminArtistApplicationsTable
+          applications={applications}
+          pagination={pagination}
+          loading={loading}
+          onViewDetails={handleViewDetails}
+          onOpenStatusModal={handleOpenStatusModal}
+          onPageChange={handlePageChange}
+        />
+      ) : (
+        <ApplicationDetail
+          applicationId={selectedApplicationId}
+          onBack={handleBackToList}
+          onOpenStatusModal={() => {
+            if (selectedApplicationId) {
+              const currentApp = applications.find(app => 
+                app._id === selectedApplicationId || app.id === selectedApplicationId
+              );
+              setSelectedAppForModal(currentApp);
+              setIsStatusModalOpen(true);
+            }
+          }}
+          onOpenNotesModal={() => setIsNotesModalOpen(true)}
+        />
+      )}
+
+      {/* Status Update Modal */}
+      {isStatusModalOpen && selectedAppForModal && (
+        <StatusUpdateModal
+          applicationId={selectedApplicationId}
+          currentStatus={selectedAppForModal.status}
+          isOpen={isStatusModalOpen}
+          onClose={() => {
+            setIsStatusModalOpen(false);
+            setSelectedAppForModal(null);
+          }}
+          onSuccess={handleStatusUpdateSuccess}
+        />
+      )}
+
+      {/* Add Note Modal */}
+      {isNotesModalOpen && (
+        <AddNoteModal
+          applicationId={selectedApplicationId}
+          isOpen={isNotesModalOpen}
+          onClose={() => setIsNotesModalOpen(false)}
+          onSuccess={handleStatusUpdateSuccess}
+        />
+      )}
     </div>
   );
 };

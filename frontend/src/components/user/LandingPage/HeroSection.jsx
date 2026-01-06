@@ -12,7 +12,7 @@ const HeroSection = ({ scrollContainerRef }) => {
     navigate('/home');
   };
   const handleSignUpAsArtist =()=>{
-    window.open('https://forms.wix.com/f/7377232876368036493', '_blank');
+navigate('/artist/register');
   }
 
   return (
@@ -106,10 +106,10 @@ const HeroSection = ({ scrollContainerRef }) => {
           
           {/* Monthly Subscription Card */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.8, duration: 0.6 }}
-            whileHover={{ y: -10, scale: 1.02 }}
+            // initial={{ opacity: 0, y: 50 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // transition={{ delay: 1.8, duration: 0.6 }}
+            // whileHover={{ y: -10, scale: 1.02 }}
             className="group bg-white/5 backdrop-blur-sm border border-white/10 hover:border-blue-400/40 rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -125,10 +125,10 @@ const HeroSection = ({ scrollContainerRef }) => {
 
           {/* Multi-Currency Card */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2, duration: 0.6 }}
-            whileHover={{ y: -10, scale: 1.02 }}
+            // initial={{ opacity: 0, y: 50 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // transition={{ delay: 2, duration: 0.6 }}
+            // whileHover={{ y: -10, scale: 1.02 }}
             className="group bg-white/5 backdrop-blur-sm border border-white/10 hover:border-blue-400/40 rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -156,10 +156,10 @@ const HeroSection = ({ scrollContainerRef }) => {
 
           {/* UI/UX Card */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.2, duration: 0.6 }}
-            whileHover={{ y: -10, scale: 1.02 }}
+            // initial={{ opacity: 0, y: 50 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // transition={{ delay: 2.2, duration: 0.6 }}
+            // whileHover={{ y: -10, scale: 1.02 }}
             className="group bg-white/5 backdrop-blur-sm border border-white/10 hover:border-blue-400/40 rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer"
           >
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -174,7 +174,7 @@ const HeroSection = ({ scrollContainerRef }) => {
           </motion.div>
           
         </motion.div>
-
+     
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { setSelectedSong, play } from "../features/playback/playerSlice";
+import { hasArtistSubscriptionInPurchaseHistory } from "./subscriptions"; // import karo
 
 export const handlePlaySong = (song, currentUser, dispatch) => {
   // First check if song is already purchased - no modal needed
@@ -15,15 +16,11 @@ export const handlePlaySong = (song, currentUser, dispatch) => {
     return { requiresSubscription: false };
   }
 
-  // Then check subscription requirement
+  // ✅ NEW: Use updated helper with subscribedArtists array
   if (song.accessType === "subscription") {
-    const hasArtistSubscription = currentUser?.purchaseHistory?.some(
-      purchase => 
-        purchase.itemType === "artist-subscription" && 
-        purchase.itemId === song.artist?._id
-    );
-
-    if (!hasArtistSubscription) {
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+    
+    if (!alreadySubscribed) {
       return { 
         requiresSubscription: true, 
         artist: song.artist,

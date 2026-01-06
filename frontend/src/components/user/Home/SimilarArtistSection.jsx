@@ -99,7 +99,7 @@ const SimilarArtistSection = ({
       <div className="flex md:gap-2 gap-4 items-center">
         <img
           src={
-            randomArtist?.image ||
+            randomArtist?.profileImage ||
             "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqfAcDALkSsCqPtfyFv69i8j0k_ZXVBM-Juw&s"
           }
           alt={randomArtist.name}

@@ -10,6 +10,7 @@ import Dashboard from './Dashboard';
 import Artists from './Artists';
 import Albums from "./Album";
 import Songs from './Songs';
+import AdminPaymentRequests from './AdminPaymentRequests';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -31,6 +32,8 @@ const Admin = () => {
         return <Albums albums={albums} onAlbumUpdate={handleAlbumUpdate} />;
       case 'songs':
         return <Songs songs={songs} />;
+      case 'payments':
+        return <AdminPaymentRequests />;
       default:
         return <Dashboard artists={artists} albums={albums} songs={songs} />;
     }
