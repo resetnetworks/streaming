@@ -621,7 +621,7 @@ const handleSubmit = (e) => {
                   singles.
                 </p>
                 <p className="text-blue-500/60 text-base mt-1">
-                  Supported file types: .wav, .aif, .flac, .mp3
+                  Supported file types: .wav, .aif, .flac
                 </p>
               </div>
             </div>
@@ -631,7 +631,7 @@ const handleSubmit = (e) => {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleTrackUpload}
-                accept=".wav,.aif,.aiff,.flac,.mp3"
+                accept=".wav,.aif,.aiff,.flac"
                 className="hidden"
               />
               <button

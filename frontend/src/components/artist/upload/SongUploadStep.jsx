@@ -257,7 +257,7 @@ const SongUploadStep = ({
           type="file"
           ref={fileInputRef}
           onChange={handleFileSelect}
-          accept=".wav,.aif,.aiff,.flac,.mp3"
+          accept=".wav,.aif,.aiff,.flac"
           multiple
           className="hidden"
         />
@@ -270,7 +270,7 @@ const SongUploadStep = ({
         
         <h3 className="text-white text-xl mb-2">Select Songs for Album</h3>
         <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          Upload multiple audio files to add to your album. You can select WAV, AIFF, FLAC, or MP3 files.
+          Upload multiple audio files to add to your album. You can select WAV, AIFF or files FLAC.
         </p>
         
         <button

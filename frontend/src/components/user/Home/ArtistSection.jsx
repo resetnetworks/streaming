@@ -140,7 +140,7 @@ const ArtistCircle = forwardRef(function ArtistCircle(
           className="transition-transform duration-300 ease-in-out group-hover:scale-110"
         />
       </div>
-      <div className="absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.15)_10%,_transparent_80%)]"></div>
+      <div className="absolute inset-0 rounded-full"></div>
       <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center rounded-full bg-gradient-to-t from-black/80 to-transparent from-0% to-60%">
         <h3 className="w-full text-sm font-semibold text-white truncate text-shadow">
           {artist?.name || "Unknown Artist"}

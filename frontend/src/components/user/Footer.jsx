@@ -7,9 +7,7 @@ import {
   FaMusic,
   FaHeadphones,
   FaVolumeUp,
-  FaHeart,
   FaEnvelope,
-  FaPhone,
   FaLock,
   FaUserShield,
   FaShieldAlt
@@ -64,126 +62,174 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Discover */}
           <div className="space-y-6">
-  <h3 className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2" style={{ fontFamily: 'Jura' }}>
-    <IoMusicalNotes />
-    <span>Discover</span>
-  </h3>
-  <nav className="space-y-4">
-    {[
-      { name: 'Artists', link: '/artists' },
-      { name: 'Search', link: '/search' },
-      { name: 'Purchases', link: '/purchases' },
-      { name: 'Liked', link: '/liked-songs' },
-    ].map(({ name, link }) => (
-      <a
-        key={name}
-        href={link}
-        className="block text-gray-300 hover:text-[#3b82f6] transition-all duration-300"
-        style={{ fontFamily: 'Jura' }}
-      >
-        {name}
-      </a>
-    ))}
-  </nav>
-</div>
-
-
-      {/* Protection Features */}
-<div className="space-y-6">
-  <h3 className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2" style={{ fontFamily: 'Jura' }}>
-    <FaHeadphones />
-    <span>Protected</span>
-  </h3>
-  <div className="space-y-4">
-    {[
-      { icon: FaShieldAlt, name: 'SSL Encryption'},
-      { icon: FaLock, name: 'DMCA PROTECTED'},
-      { icon: FaUserShield, name: 'DDoS Protection'},
-    ].map(({ icon: Icon, name, description }) => (
-      <div key={name} className="subscription-wrapper w-full">
-        <div
-          className={`subscription-card w-full p-3 flex items-center space-x-3 text-gray-300 transform group cursor-pointer`}
-          style={{ fontFamily: 'Jura' }}
-        >
-          <Icon className="text-xl group-hover:scale-110 transition-transform" />
-          <div>
-            <span className="block font-medium">{name}</span>
+            <h3
+              className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2"
+              style={{ fontFamily: 'Jura' }}
+            >
+              <IoMusicalNotes />
+              <span>Discover</span>
+            </h3>
+            <nav className="space-y-4">
+              {[
+                { name: 'Artists', link: '/artists' },
+                { name: 'Search', link: '/search' },
+                { name: 'Purchases', link: '/purchases' },
+                { name: 'Liked', link: '/liked-songs' },
+              ].map(({ name, link }) => (
+                <a
+                  key={name}
+                  href={link}
+                  className="block text-gray-300 hover:text-[#3b82f6] transition-all duration-300"
+                  style={{ fontFamily: 'Jura' }}
+                >
+                  {name}
+                </a>
+              ))}
+            </nav>
           </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
 
+          {/* Legal Links (moved up, replacing Protected) */}
+          <div className="space-y-6">
+            <h3
+              className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2"
+              style={{ fontFamily: 'Jura' }}
+            >
+              <FaHeadphones />
+              <span>Legal</span>
+            </h3>
+            <nav className="space-y-3 text-sm">
+              <Link
+                to="/privacy-policy"
+                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                style={{ fontFamily: 'Jura' }}
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                to="/careers"
+                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                style={{ fontFamily: 'Jura' }}
+              >
+                Careers
+              </Link>
+              <Link
+                to="/data-deletion"
+                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                style={{ fontFamily: 'Jura' }}
+              >
+                Data Deletion
+              </Link>
+              <Link
+                to="/contact-us"
+                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                style={{ fontFamily: 'Jura' }}
+              >
+                Support
+              </Link>
+              <Link
+                to="/terms-and-conditions"
+                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                style={{ fontFamily: 'Jura' }}
+              >
+                Terms &amp; Conditions
+              </Link>
+            </nav>
+          </div>
 
           {/* Contact & Social */}
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2" style={{ fontFamily: 'Jura' }}>
+            <h3
+              className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2"
+              style={{ fontFamily: 'Jura' }}
+            >
               <FaEnvelope />
               <span>Connect</span>
             </h3>
             
             {/* Contact Info */}
-           <div className="space-y-4 text-sm">
-  {[
-    { icon: FaEnvelope, text: 'contact@reset93.net', href: 'mailto:contact@reset93.net' },
-  ].map(({ icon: Icon, text, href }, index) => (
-    <div key={index} className="player-wrapper w-full">
-      <a 
-        href={href}
-        className="player-card p-3 flex items-center space-x-3 text-gray-300 hover:text-white transform"
-      >
-        <Icon className="text-[#3b82f6]" />
-        <span style={{ fontFamily: 'Jura' }}>{text}</span>
-      </a>
-    </div>
-  ))}
-</div>
-
+            <div className="space-y-4 text-sm">
+              {[
+                { icon: FaEnvelope, text: 'contact@reset93.net', href: 'mailto:contact@reset93.net' },
+              ].map(({ icon: Icon, text, href }, index) => (
+                <div key={index} className="player-wrapper w-full">
+                  <a 
+                    href={href}
+                    className="player-card p-3 flex items-center space-x-3 text-gray-300 hover:text-white transform"
+                  >
+                    <Icon className="text-[#3b82f6]" />
+                    <span style={{ fontFamily: 'Jura' }}>{text}</span>
+                  </a>
+                </div>
+              ))}
+            </div>
 
             {/* Social Media */}
-           <div>
-  <h4 className="text-sm font-medium text-[#88b2ef] mb-4" style={{ fontFamily: 'Jura' }}>Follow the Beat</h4>
-  <div className="flex space-x-3">
-    {[
-      { icon: FaInstagram, color: 'hover:text-pink-400', link: 'https://www.instagram.com/reset.networks' },
-      { icon: FaTwitter, color: 'hover:text-[#1e3bf4]', link: 'https://x.com/reset_networks' },
-      { icon: FaFacebook, color: 'hover:text-[#3b82f6]', link: 'https://www.facebook.com/reset.networks' },
-      { icon: FaYoutube, color: 'hover:text-red-400', link: 'https://www.youtube.com/channel/UCHwxzEv41zMXDVoWiJ3Qx1w' },
-    ].map(({ icon: Icon, color, link }, index) => (
-      <div key={index} className="play-pause-wrapper">
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`play-pause-button flex items-center justify-center text-gray-400 ${color} transition-all duration-300 hover:scale-110 transform`}
-        >
-          <Icon className="text-sm" />
-        </a>
-      </div>
-    ))}
-  </div>
-</div>
-
+            <div>
+              <h4
+                className="text-sm font-medium text-[#88b2ef] mb-4"
+                style={{ fontFamily: 'Jura' }}
+              >
+                Follow the Beat
+              </h4>
+              <div className="flex space-x-3">
+                {[
+                  { icon: FaInstagram, color: 'hover:text-pink-400', link: 'https://www.instagram.com/reset.networks' },
+                  { icon: FaTwitter, color: 'hover:text-[#1e3bf4]', link: 'https://x.com/reset_networks' },
+                  { icon: FaFacebook, color: 'hover:text-[#3b82f6]', link: 'https://www.facebook.com/reset.networks' },
+                  { icon: FaYoutube, color: 'hover:text-red-400', link: 'https://www.youtube.com/channel/UCHwxzEv41zMXDVoWiJ3Qx1w' },
+                ].map(({ icon: Icon, color, link }, index) => (
+                  <div key={index} className="play-pause-wrapper">
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`play-pause-button flex items-center justify-center text-gray-400 ${color} transition-all duration-300 hover:scale-110 transform`}
+                    >
+                      <Icon className="text-sm" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8">
           <div className="gradiant-line mb-6"></div>
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-gray-400 text-sm flex items-center space-x-2" style={{ fontFamily: 'Jura' }}>
-              <span>© 2025 RESET NETWORKS (OPC) PRIVATE LIMITED.</span>
+          <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+            {/* Left: Copyright + Protected (low emphasis) */}
+            <div className="space-y-2">
+              <div
+                className="text-gray-400 text-sm flex items-center space-x-2"
+                style={{ fontFamily: 'Jura' }}
+              >
+                <span>© 2025 RESET NETWORKS (OPC) PRIVATE LIMITED.</span>
+              </div>
+              {/* Protected moved down here, subtle */}
+              <div
+                className="flex flex-wrap items-center gap-4 text-xs text-gray-500"
+                style={{ fontFamily: 'Jura' }}
+              >
+                <div className="flex items-center space-x-2">
+                  <FaShieldAlt className="text-[13px] opacity-70" />
+                  <span>SSL Encryption</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaLock className="text-[13px] opacity-70" />
+                  <span>DMCA Protected</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaUserShield className="text-[13px] opacity-70" />
+                  <span>DDoS Protection</span>
+                </div>
+              </div>
             </div>
-            <div className="flex space-x-6 text-sm text-gray-400" style={{ fontFamily: 'Jura' }}>
-              <Link to="/privacy-policy" className="hover:text-[#3b82f6] transition-colors">Privacy Policy</Link>
-              <Link to="/careers" className="hover:text-[#3b82f6] transition-colors">Careers</Link>
-              <Link to="/data-deletion" className="hover:text-[#3b82f6] transition-colors">Data Deletion</Link>
-              <Link to="/contact-us" className="hover:text-[#3b82f6] transition-colors">Support</Link>
-              <Link to="/terms-and-conditions" className="hover:text-[#3b82f6] transition-colors">Terms & Conditions</Link>
-            </div>
+
+            {/* Right side empty now (legal moved up), but keep flex for balance */}
+            <div className="hidden md:block" />
           </div>
         </div>
       </div>
