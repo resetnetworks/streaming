@@ -13,28 +13,29 @@ const GenreModal = ({
   const modalRef = useRef(null);
 
   // Default genres
-  const defaultGenres = [
-  "Electronic",
-  "IDM",
-  "Ambient",
-  "Experimental",
-  "Avant Garde",
-  "Noise",
-  "Downtempo",
-  "Soundtrack",
-  "Industrial",
-  "EBM",
-  "Electro",
-  "Techno",
-  "Dance",
-  "Electronica",
-  "Sound Art",
-  "Jazz",
-  "Classical",
-  "Classical Crossover",
-  "Soundscapes",
-  "Field Recordings"
+const defaultGenres = [
+  "electronic",
+  "idm",
+  "ambient",
+  "experimental",
+  "avant garde",
+  "noise",
+  "downtempo",
+  "soundtrack",
+  "industrial",
+  "ebm",
+  "electro",
+  "techno",
+  "dance",
+  "electronica",
+  "sound art",
+  "jazz",
+  "classical",
+  "classical crossover",
+  "soundscapes",
+  "field recordings"
 ];
+
 
   // Filtered genres based on search
   const filteredGenres = defaultGenres.filter(genre =>

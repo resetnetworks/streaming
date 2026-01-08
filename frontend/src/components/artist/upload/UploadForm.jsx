@@ -12,7 +12,7 @@ import {
   FiTag,
   FiHash,
   FiDollarSign,
-  FiChevronDown, // Add this import
+  FiChevronDown,
 } from "react-icons/fi";
 import GenreModal from "./GenreModal";
 
@@ -213,11 +213,6 @@ const UploadForm = ({
     setTracks([]);
   };
 
-  // --- Track Name Editing Functions ---
-  const startEditingTrack = (track) => {
-    setEditingTrackId(track.id);
-    setEditTrackName(track.name);
-  };
 
   const saveTrackName = (trackId) => {
     if (editTrackName.trim() === "") {
@@ -253,80 +248,79 @@ const UploadForm = ({
     }
   };
 
-// --- Submit Logic ---
-const handleSubmit = (e) => {
-  e.preventDefault();
+  // --- Submit Logic ---
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  // Prevent submission if already submitting
-  if (isSubmitting) return;
+    // Prevent submission if already submitting
+    if (isSubmitting) return;
 
-
-  // Validate required fields
-  if (!title.trim()) {
-    alert(`Please enter ${type === "album" ? "album" : "song"} title!`);
-    return;
-  }
-
-  if (selectedGenres.length === 0) {
-    alert("Please select at least one genre!");
-    return;
-  }
-
-  // Validate price for purchase-only
-  if (accessType === "purchase-only") {
-    if (!validatePrice(price)) {
-      alert("Please enter a valid price greater than 0!");
+    // Validate required fields
+    if (!title.trim()) {
+      alert(`Please enter ${type === "album" ? "album" : "song"} title!`);
       return;
     }
-  }
 
-  // Only check track for song upload
-  if (type === "song") {
-    if (tracks.length === 0) {
-      alert("Please upload an audio file!");
+    if (selectedGenres.length === 0) {
+      alert("Please select at least one genre!");
       return;
     }
-  }
 
-  // Prepare data for API
-  let formData = {
-    title: title.trim(),
-    date: date,
-    description: description,
-    isrc: isrc,
-    genres: selectedGenres,
-    coverImage: coverImage,
-    accessType: accessType,
-    // Only include basePrice if purchase-only
-    ...(accessType === "purchase-only" && {
-      basePrice: {
-        amount: parseFloat(price),
-        currency: "USD",
-      },
-    }),
+    // Validate price for purchase-only
+    if (accessType === "purchase-only") {
+      if (!validatePrice(price)) {
+        alert("Please enter a valid price greater than 0!");
+        return;
+      }
+    }
+
+    // Only check track for song upload
+    if (type === "song") {
+      if (tracks.length === 0) {
+        alert("Please upload an audio file!");
+        return;
+      }
+    }
+
+    // Prepare data for API
+    let formData = {
+      title: title.trim(),
+      date: date,
+      description: description,
+      isrc: isrc,
+      genres: selectedGenres,
+      coverImage: coverImage,
+      accessType: accessType,
+      // Only include basePrice if purchase-only
+      ...(accessType === "purchase-only" && {
+        basePrice: {
+          amount: parseFloat(price),
+          currency: "USD",
+        },
+      }),
+    };
+
+    // Add track data only for songs, not for albums
+    if (type === "song" && tracks.length > 0) {
+      const track = tracks[0];
+      formData.tracks = [
+        {
+          name: track.name,
+          file: track.file,
+          duration: track.duration,
+        },
+      ];
+    }
+
+    onSubmit?.(formData);
   };
 
-  // Add track data only for songs, not for albums
-  if (type === "song" && tracks.length > 0) {
-    const track = tracks[0];
-    formData.tracks = [
-      {
-        name: track.name,
-        file: track.file,
-        duration: track.duration,
-      },
-    ];
-  }
-
-  onSubmit?.(formData);
-};
-
   return (
-    <form onSubmit={handleSubmit} className="w-full p-4 flex flex-col gap-8">
+    <form onSubmit={handleSubmit} className="w-full p-4 md:p-6 flex flex-col gap-8">
       {/* SECTION 1: Basic Info (Cover, Title, Date) */}
-      <div className="flex flex-col md:flex-row gap-6 items-start border-b border-gray-800 pb-8">
+      <div className="flex flex-col lg:flex-row gap-6 items-start border-b border-gray-800 pb-8">
         {/* Left Side: Image Upload */}
-        <div className="w-full md:w-[250px] shrink-0">
+        <div className="w-full lg:w-[250px] shrink-0">
           <div className="h-[250px]">
             <input
               type="file"
@@ -337,7 +331,7 @@ const handleSubmit = (e) => {
             />
             <label
               htmlFor="cover-upload"
-              className="cursor-pointer block w-full h-full relative overflow-hidden group rounded-md"
+              className="cursor-pointer block w-full h-full relative overflow-hidden group rounded-xl bg-gradient-to-br from-gray-900 to-black border border-gray-800"
             >
               {coverImage ? (
                 <img
@@ -350,47 +344,44 @@ const handleSubmit = (e) => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center relative border border-gray-700">
-                  <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-30">
-                    {[...Array(12)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-[2px] bg-white"
-                        style={{ height: `${Math.random() * 50 + 20}%` }}
-                      ></div>
-                    ))}
-                  </div>
-                  <span className="relative z-10 text-white/70 font-mono text-base lowercase tracking-widest bg-black/40 px-3 py-1 rounded">
-                    Upload Art
-                  </span>
+                <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                  <div className="text-gray-400 text-4xl mb-2">+</div>
+                  <span className="text-gray-500 text-sm font-medium">Upload Cover Art</span>
+                  <span className="text-gray-600 text-xs mt-1 text-center">Click to browse or drag & drop</span>
                 </div>
               )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-sm font-medium">Change Image</span>
+              </div>
             </label>
           </div>
         </div>
 
         {/* Right Side: Inputs */}
         <div className="flex-1 flex flex-col gap-5 w-full">
-          <div className="flex flex-col md:flex-row gap-4">
+          {/* Title and Date Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Title Input */}
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-gray-400 text-base lowercase tracking-wide">
+            <div className="flex flex-col gap-2">
+              <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
                 {type === "album" ? "Album" : "Song"} Title
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 placeholder="Enter song title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-[#121214] text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
+                className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
                 required
               />
             </div>
 
             {/* Date Input */}
-            <div className="flex-1 flex flex-col gap-2 relative">
-              <label className="text-gray-400 text-base lowercase tracking-wide">
+            <div className="flex flex-col gap-2 relative">
+              <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
                 Release Date
+                <span className="text-red-500">*</span>
               </label>
               <div className="relative w-full">
                 <input
@@ -398,7 +389,7 @@ const handleSubmit = (e) => {
                   placeholder="YYYY-MM-DD"
                   value={date}
                   onChange={handleDateChange}
-                  className="w-full bg-[#121214] text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600 pr-10"
+                  className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600 pr-10"
                 />
                 <input
                   type="date"
@@ -414,13 +405,15 @@ const handleSubmit = (e) => {
                   <FiCalendar size={18} />
                 </div>
               </div>
+              <div className="text-gray-500 text-xs">Format: YYYY-MM-DD</div>
             </div>
           </div>
 
-          {/* Access Type Selection - UPDATED WITH DROPDOWN */}
+          {/* Access Type Selection */}
           <div className="flex flex-col gap-2" ref={accessDropdownRef}>
-            <label className="text-gray-400 text-base lowercase tracking-wide">
+            <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
               Access Type
+              <span className="text-red-500">*</span>
             </label>
 
             {/* Dropdown Trigger */}
@@ -428,7 +421,7 @@ const handleSubmit = (e) => {
               <button
                 type="button"
                 onClick={() => setShowAccessDropdown(!showAccessDropdown)}
-                className="w-full bg-[#121214] border border-gray-800 rounded-lg px-4 py-3 flex items-center justify-between hover:border-gray-600 transition-colors"
+                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 flex items-center justify-between hover:border-gray-600 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -443,10 +436,10 @@ const handleSubmit = (e) => {
                     <IconComponent size={16} />
                   </div>
                   <div className="text-left">
-                    <div className="text-white text-sm">
+                    <div className="text-white text-sm font-medium">
                       {selectedAccessType.label}
                     </div>
-                    <div className="text-gray-500 text-base">
+                    <div className="text-gray-500 text-xs">
                       {selectedAccessType.description}
                     </div>
                   </div>
@@ -461,7 +454,7 @@ const handleSubmit = (e) => {
 
               {/* Dropdown Menu */}
               {showAccessDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-[#121214] border border-gray-800 rounded-lg shadow-xl z-20 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-20 overflow-hidden">
                   {ACCESS_TYPE_OPTIONS.map((option) => {
                     const OptionIcon = option.icon;
                     return (
@@ -469,8 +462,8 @@ const handleSubmit = (e) => {
                         key={option.value}
                         type="button"
                         onClick={() => handleAccessTypeSelect(option.value)}
-                        className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-900 transition-colors ${
-                          accessType === option.value ? "bg-gray-900" : ""
+                        className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-800 transition-colors ${
+                          accessType === option.value ? "bg-gray-800" : ""
                         }`}
                       >
                         <div
@@ -485,10 +478,10 @@ const handleSubmit = (e) => {
                           <OptionIcon size={16} />
                         </div>
                         <div className="flex-1">
-                          <div className="text-white text-sm">
+                          <div className="text-white text-sm font-medium">
                             {option.label}
                           </div>
-                          <div className="text-gray-500 text-base">
+                          <div className="text-gray-500 text-xs">
                             {option.description}
                           </div>
                         </div>
@@ -501,17 +494,17 @@ const handleSubmit = (e) => {
                 </div>
               )}
             </div>
-
-            <p className="text-gray-500 text-base">
+            <div className="text-gray-500 text-xs">
               How users can access this {type === "album" ? "album" : "song"}
-            </p>
+            </div>
           </div>
 
           {/* Price Input (only for purchase-only) */}
           {accessType === "purchase-only" && (
             <div className="flex flex-col gap-2">
-              <label className="text-gray-400 text-base lowercase tracking-wide">
+              <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
                 Price (USD)
+                <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-4">
                 <div className="relative flex-1">
@@ -520,7 +513,7 @@ const handleSubmit = (e) => {
                   </div>
                   <input
                     type="number"
-                    placeholder="Amount in USD"
+                    placeholder="0.00"
                     value={price}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -532,56 +525,61 @@ const handleSubmit = (e) => {
                         setPrice(value);
                       }
                     }}
-                    className="w-full bg-[#121214] text-white pl-10 pr-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors"
+                    className="w-full bg-gray-900 text-white pl-10 pr-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors"
                     min="0"
                     step="0.01"
                     required={accessType === "purchase-only"}
                   />
                 </div>
-                <div className="w-32 bg-[#1a1a1d] text-gray-400 px-4 py-3 rounded-lg border border-gray-800 flex items-center justify-center">
+                <div className="w-32 bg-gray-900 text-gray-400 px-4 py-3 rounded-lg border border-gray-800 flex items-center justify-center text-sm">
                   USD ($)
                 </div>
               </div>
-              <p className="text-gray-500 text-base">
+              <div className="text-gray-500 text-xs">
                 Set price for individual purchase (USD only)
-              </p>
+              </div>
             </div>
           )}
 
           {/* ISRC Number */}
           <div className="flex flex-col gap-2">
-            <label className="text-gray-400 text-base lowercase tracking-wide flex items-center gap-2">
+            <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
               <FiHash size={12} />
-              {type === "album" ? "upc" : "isrc"} number
-              <span className="text-blue-400 text-base font-normal normal-case">
-                (Optional)
-              </span>
+              {type === "album" ? "UPC" : "ISRC"} Number
+              <span className="text-blue-400 text-xs font-normal">(Optional)</span>
             </label>
             <input
               type="text"
               placeholder="e.g., US-ABC-12-34567"
               value={isrc}
-              onChange={(e) => setIsrc(e.target.value.tolowercase())}
-              className="w-full bg-[#121214] text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
+              onChange={(e) => setIsrc(e.target.value.toLowerCase())}
+              className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
             />
+            <div className="text-gray-500 text-xs">
+              International Standard Recording Code
+            </div>
           </div>
 
           {/* Description */}
-          <div className="flex-1 flex flex-col gap-2">
-            <label className="text-gray-400 text-base lowercase tracking-wide">
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
               Description
+              <span className="text-blue-400 text-xs font-normal">(Optional)</span>
             </label>
             <textarea
               placeholder="Tell us about this song..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-[125px] bg-[#121214] text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
+              className="w-full h-[120px] bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600 resize-none"
             />
+            <div className="text-gray-500 text-xs">
+              Share the story or inspiration behind this {type === "album" ? "album" : "song"}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* SECTION 2: ADD TRACK */}
+      {/* SECTION 2: ADD TRACK (KEEPING ORIGINAL STYLING) */}
       {type === "album" ? (
         <div></div>
       ) : (
@@ -703,13 +701,6 @@ const handleSubmit = (e) => {
                     ) : (
                       <div className="flex items-center gap-2">
                         <span className="text-white text-sm">{track.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => startEditingTrack(track)}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <FiEdit2 size={14} />
-                        </button>
                       </div>
                     )}
                   </div>
@@ -732,32 +723,20 @@ const handleSubmit = (e) => {
                       </span>
                     </div>
                   </div>
-
-                  {/* File Size */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-gray-400 text-base lowercase">
-                      File Size
-                    </label>
-                    <span className="text-white text-sm">
-                      {track.file
-                        ? `${(track.file.size / (1024 * 1024)).toFixed(2)} MB`
-                        : "N/A"}
-                    </span>
-                  </div>
                 </div>
               </div>
             ))}
         </div>
       )}
 
-      {/* SECTION 3: GENRE SELECTION */}
+      {/* SECTION 3: GENRE SELECTION (KEEPING ORIGINAL STYLING) */}
       <div className="mt-6 border-t border-gray-800 pt-6">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h3 className="text-gray-300 text-lg font-normal lowercase tracking-wide">
-              select genres
+              select genres*
             </h3>
-            <div className="text-gray-500 text-base">
+            <div className="text-gray-200 text-base">
               {selectedGenres.length}/3 selected
             </div>
           </div>

@@ -505,33 +505,7 @@ const SongUploadStep = ({
           )}
         </div>
       )}
-      
-      {/* Overall upload progress */}
-      {isUploading && songsWithStatus.length > 0 && (
-        <div className="bg-gray-900/50 rounded-lg border border-gray-700 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-white text-sm">Overall Progress</h4>
-            <span className="text-blue-400 text-sm">
-              {Math.round((currentUploadIndex / songsWithStatus.length) * 100 + 
-                (uploadProgress / songsWithStatus.length))}%
-            </span>
-          </div>
-          
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-              style={{ 
-                width: `${(currentUploadIndex / songsWithStatus.length) * 100 + 
-                (uploadProgress / songsWithStatus.length)}%` 
-              }}
-            ></div>
-          </div>
-          
-          <p className="text-gray-400 text-xs mt-2 text-center">
-            Uploading {currentUploadIndex + 1} of {songsWithStatus.length} songs
-          </p>
-        </div>
-      )}
+
     </div>
   );
 };

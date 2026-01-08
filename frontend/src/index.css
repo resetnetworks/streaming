@@ -1,8 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Jura:wght@300..700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Jura';
+  src: url('./assets/fonts/Jura-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-display: swap;
+}
+
 
 html,
 body {
