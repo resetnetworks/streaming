@@ -1,4 +1,4 @@
-// ProfileHeroSection.js - UPDATED VERSION
+// ProfileHeroSection.js - CORRECTED VERSION
 import React, { useState, useEffect, useRef } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import { CgRepeat } from "react-icons/cg";
@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ProfileEditForm from "./ProfileEditForm";
-
+import { fetchArtistProfile } from "../../../features/artists/artistsSlice"; // IMPORT ADDED
 
 const ProfileHeroSection = () => {
   const dispatch = useDispatch();
@@ -28,7 +28,6 @@ const ProfileHeroSection = () => {
   
   const profileImageInputRef = useRef(null);
   const backgroundImageInputRef = useRef(null);
-
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -64,30 +63,43 @@ const ProfileHeroSection = () => {
     setShowEditForm(true);
   };
 
-  const handleSaveProfile = (updatedData) => {
-    // Profile will be updated in Redux via the updateArtistProfile thunk
-    setShowEditForm(false);
-    // Refetch profile to get updated data
-    dispatch(fetchArtistProfile());
-    toast.success('Profile updated successfully');
+  const handleSaveProfile = async (updatedData) => {
+    try {
+      // Close the edit form first
+      setShowEditForm(false);
+      
+      // Refetch profile to get updated data
+      await dispatch(fetchArtistProfile());
+      
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Error refetching profile:', error);
+      toast.error('Profile saved but could not refresh data');
+    }
   };
 
   // Check if monetization is complete
   const isMonetized = setupStatus?.isMonetizationComplete || localStorage.getItem('artistMonetized') === 'true';
 
-  // Calculate monthly listeners (you might want to get this from API)
+  // Calculate subscription fees
   const calculateSubscriptionFees = () => {
-    const amount = artistProfile?.monetization?.plans?.[0]?.basePrice?.amount ?? 10;
-    const cycle  = artistProfile?.monetization?.plans?.[0]?.cycle ?? "month";
-    if(cycle === "1m") {
-      return `$${amount.toFixed(2)} / month`;
-    } else if(cycle === "3m") {
-      return `$${amount.toFixed(2)} / 3 months`;
-    } else if(cycle === "6m") {
-      return `$${amount.toFixed(2)} / 6 months`;
+    if (!artistProfile?.monetization?.plans?.[0]) {
+      return "$10.00 / month"; // Default fallback
     }
-
-
+    
+    const amount = artistProfile.monetization.plans[0].basePrice?.amount ?? 10;
+    const cycle = artistProfile.monetization.plans[0].cycle ?? "1m";
+    
+    switch(cycle) {
+      case "1m":
+        return `$${amount.toFixed(2)} / month`;
+      case "3m":
+        return `$${amount.toFixed(2)} / 3 months`;
+      case "6m":
+        return `$${amount.toFixed(2)} / 6 months`;
+      default:
+        return `$${amount.toFixed(2)} / month`;
+    }
   };
 
   return (
@@ -213,32 +225,23 @@ const ProfileHeroSection = () => {
           
           {/* Right Side: Logout Button and Change Password */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-8 w-full sm:w-auto">
-            {/* <div className="sm:block hidden">
-              <button
-                onClick={handleChangePasswordClick}
-                className="text-gray-300 text-sm hover:text-white transition-colors duration-200 relative group"
-              >
-                change password
-                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
-              </button>
-            </div> */}
-
             <button 
               onClick={handleLogout}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 sm:px-6 sm:py-2.5 md:px-7 md:py-2.5 rounded-full font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-1.5 sm:gap-2 text-sm w-full sm:w-auto justify-center"
+              disabled={profileLoading}
             >
-              <span>Logout</span>
-              <IoLogOutOutline className="text-base" />
+              {profileLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <span>Logout</span>
+                  <IoLogOutOutline className="text-base" />
+                </>
+              )}
             </button>
-
-            <div className="sm:hidden block w-full">
-              <button
-                onClick={handleChangePasswordClick}
-                className="text-gray-300 text-sm hover:text-white transition-colors duration-200 w-full text-center py-2"
-              >
-                change password
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -261,6 +264,7 @@ const ProfileHeroSection = () => {
               <button
                 onClick={() => setShowPasswordModal(false)}
                 className="text-gray-400 hover:text-white"
+                disabled={profileLoading}
               >
                 ✕
               </button>
@@ -273,6 +277,7 @@ const ProfileHeroSection = () => {
                   type="password"
                   className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="Enter current password"
+                  disabled={profileLoading}
                 />
               </div>
               <div>
@@ -281,6 +286,7 @@ const ProfileHeroSection = () => {
                   type="password"
                   className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="Enter new password"
+                  disabled={profileLoading}
                 />
               </div>
               <div>
@@ -289,6 +295,7 @@ const ProfileHeroSection = () => {
                   type="password"
                   className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="Confirm new password"
+                  disabled={profileLoading}
                 />
               </div>
             </div>
@@ -297,6 +304,7 @@ const ProfileHeroSection = () => {
               <button
                 onClick={() => setShowPasswordModal(false)}
                 className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-all duration-200 font-medium border border-gray-700"
+                disabled={profileLoading}
               >
                 Cancel
               </button>
@@ -306,8 +314,9 @@ const ProfileHeroSection = () => {
                   toast.success('Password changed successfully');
                 }}
                 className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all duration-200 font-medium"
+                disabled={profileLoading}
               >
-                Change Password
+                {profileLoading ? 'Saving...' : 'Change Password'}
               </button>
             </div>
           </div>
