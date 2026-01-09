@@ -395,7 +395,7 @@ const Search = () => {
                         title={artist.name}
                         price="Artist"
                         singer="Artist"
-                        image={artist.image || "/images/placeholder.png"}
+                        image={artist.profileImage || "/images/placeholder.png"}
                         onPlay={() => navigate(`/artist/${artist.slug}`)}
                       />
                     ))}

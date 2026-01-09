@@ -315,6 +315,23 @@ const UploadForm = ({
     onSubmit?.(formData);
   };
 
+  // Helper function to get type-specific text
+  const getTypeText = () => {
+    return {
+      titleLabel: type === "album" ? "Album" : "Song",
+      titlePlaceholder: type === "album" ? "Enter album title" : "Enter song title",
+      descriptionPlaceholder: type === "album" ? "Tell us about this album..." : "Tell us about this song...",
+      accessDescription: `How users can access this ${type === "album" ? "album" : "song"}`,
+      isrcLabel: type === "album" ? "UPC" : "ISRC",
+      isrcPlaceholder: type === "album" ? "e.g., 123456789012" : "e.g., US-ABC-12-34567",
+      isrcDescription: type === "album" ? "Universal Product Code" : "International Standard Recording Code",
+      descriptionLabel: `Share the story or inspiration behind this ${type === "album" ? "album" : "song"}`,
+      submitButton: type === "album" ? "create album" : "upload song"
+    };
+  };
+
+  const typeText = getTypeText();
+
   return (
     <form onSubmit={handleSubmit} className="w-full p-4 md:p-6 flex flex-col gap-8">
       {/* SECTION 1: Basic Info (Cover, Title, Date) */}
@@ -364,12 +381,12 @@ const UploadForm = ({
             {/* Title Input */}
             <div className="flex flex-col gap-2">
               <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
-                {type === "album" ? "Album" : "Song"} Title
+                {typeText.titleLabel} Title
                 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="Enter song title"
+                placeholder={typeText.titlePlaceholder}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
@@ -495,7 +512,7 @@ const UploadForm = ({
               )}
             </div>
             <div className="text-gray-500 text-xs">
-              How users can access this {type === "album" ? "album" : "song"}
+              {typeText.accessDescription}
             </div>
           </div>
 
@@ -541,22 +558,22 @@ const UploadForm = ({
             </div>
           )}
 
-          {/* ISRC Number */}
+          {/* ISRC/UPC Number */}
           <div className="flex flex-col gap-2">
             <label className="text-gray-300 text-sm font-medium flex items-center gap-1">
               <FiHash size={12} />
-              {type === "album" ? "UPC" : "ISRC"} Number
+              {typeText.isrcLabel} Number
               <span className="text-blue-400 text-xs font-normal">(Optional)</span>
             </label>
             <input
               type="text"
-              placeholder="e.g., US-ABC-12-34567"
+              placeholder={typeText.isrcPlaceholder}
               value={isrc}
               onChange={(e) => setIsrc(e.target.value.toLowerCase())}
               className="w-full bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600"
             />
             <div className="text-gray-500 text-xs">
-              International Standard Recording Code
+              {typeText.isrcDescription}
             </div>
           </div>
 
@@ -567,13 +584,13 @@ const UploadForm = ({
               <span className="text-blue-400 text-xs font-normal">(Optional)</span>
             </label>
             <textarea
-              placeholder="Tell us about this song..."
+              placeholder={typeText.descriptionPlaceholder}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full h-[120px] bg-gray-900 text-white px-4 py-3 rounded-lg outline-none border border-gray-800 focus:border-blue-500 transition-colors placeholder-gray-600 resize-none"
             />
             <div className="text-gray-500 text-xs">
-              Share the story or inspiration behind this {type === "album" ? "album" : "song"}
+              {typeText.descriptionLabel}
             </div>
           </div>
         </div>
@@ -822,7 +839,7 @@ const UploadForm = ({
               <span>Uploading...</span>
             </div>
           ) : (
-            `${type === "album" ? "create album" : "upload song"}`
+            typeText.submitButton
           )}
         </button>
       </div>

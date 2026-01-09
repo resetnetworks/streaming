@@ -98,10 +98,11 @@ const ArtistAboutSection = ({
       {artist ? (
         <>
           <div className="w-full h-72 md:w-1/4">
-            {artist.image ? (
+          {console.log(artist)}
+            {artist?.profileImage ? (
               <img
-                src={artist.image}
-                alt={`Artist ${artist.name}`}
+                src={artist?.profileImage}
+                alt={`Artist ${artist?.name}`}
                 className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
               />
             ) : (
@@ -125,9 +126,9 @@ const ArtistAboutSection = ({
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
               {artist?.bio || "This artist has not provided a biography yet."}{" "}
-              <span className="text-blue-400 cursor-pointer hover:underline">
+              {/* <span className="text-blue-400 cursor-pointer hover:underline">
                 View more
-              </span>
+              </span> */}
             </p>
             <div className="mt-6 pt-4 border-t border-white/10">
               <h3 className="text-lg font-semibold text-blue-400 mb-2">

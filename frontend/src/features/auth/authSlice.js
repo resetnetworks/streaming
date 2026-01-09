@@ -120,13 +120,13 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     return user;
     
   } catch (err) {
-    console.error("❌ Registration error:", err);
+    console.error("❌ Registration error:", err?.response?.data?.message);
     
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete axios.defaults.headers.common["Authorization"];
     
-     const errorMessage = err.response?.data?.msg || 
+     const errorMessage = err.response?.data?.message || 
                         err.response?.data?.error ||
                         err.message || 
                         "Login failed";
@@ -134,6 +134,8 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     return thunkAPI.rejectWithValue(errorMessage);
   }
 });
+
+// features/auth/authSlice.js में loginUser function को update करें:
 
 export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAPI) => {
   try {
@@ -162,10 +164,40 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
     return user;
     
   } catch (err) {
-        const errorMessage = err.response?.data?.msg || 
-                        err.response?.data?.error ||
-                        err.message || 
-                        "Login failed";
+    // ✅ IMPROVED ERROR HANDLING
+    let errorMessage = "Login failed";
+    
+    if (err.response) {
+      // Server responded with error
+      const { data, status } = err.response;
+      
+      if (status === 403) {
+        errorMessage = data.message || "Invalid email or password";
+      } else if (status === 400) {
+        errorMessage = data.message || "Bad request";
+      } else if (status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else {
+        errorMessage = data.message || `Error: ${status}`;
+      }
+    } else if (err.request) {
+      // Request made but no response
+      errorMessage = "No response from server. Check your internet connection.";
+    } else {
+      // Something else happened
+      errorMessage = err.message || "An unexpected error occurred";
+    }
+    
+    // ✅ Clear local storage on login error
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    delete axios.defaults.headers.common["Authorization"];
+    
+    // ✅ Show toast notification (optional)
+    if (typeof window !== 'undefined') {
+      toast.error(errorMessage);
+    }
+    
     return thunkAPI.rejectWithValue(errorMessage);
   }
 });

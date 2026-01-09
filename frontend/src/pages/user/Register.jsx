@@ -12,6 +12,7 @@ import axios from "../../utills/axiosInstance";
 import BackgroundWrapper from "../../components/BackgroundWrapper";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { validators } from "../../utills/validators";
+import { CircleGeometry } from "three/src/Three.Core.js";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -67,6 +68,7 @@ const Register = () => {
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
       setJustRegistered(true);
     } catch (err) {
+      console.log(err)
       toast.error(err || "Registration failed");
     }
   };
