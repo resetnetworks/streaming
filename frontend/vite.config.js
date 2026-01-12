@@ -6,5 +6,8 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['apexcharts', 'react-apexcharts'],
+  },
+  build: {
+    chunkSizeWarningLimit: 1600, // Warning limit increase
   }
 });
