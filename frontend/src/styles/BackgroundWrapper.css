@@ -10,8 +10,7 @@
   min-height: 100vh;
   background: linear-gradient(180deg, #000000 0%, #011639 100%);
   background-attachment: fixed;
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: hidden; /* ✅ Single overflow property */
 }
 
 .background-container::before {
@@ -45,13 +44,14 @@
   mix-blend-mode: overlay;
 }
 
-/* ✅ SOLUTION: Width control + height clamping */
+/* ✅ Fixed: Use absolute positioning with vw units */
 .diagonal-overlay-1 {
   position: absolute;
   top: -200px;
-  left: -100px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-15deg); /* ✅ Center align */
   width: 100vw;
-  max-width: 1400px; /* ✅ Maximum width limit */
+  min-width: 100%;
   height: 40px;
   background: linear-gradient(
     45deg,
@@ -64,19 +64,19 @@
     rgba(61, 61, 61, 0.24) 84%,
     rgba(0, 0, 0, 0) 99%
   );
-  transform: rotate(-15deg);
   opacity: 0.7;
   mix-blend-mode: overlay;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); /* ✅ Clip overflow */
-  overflow: hidden; /* ✅ Hide overflow */
+  will-change: transform; /* ✅ Performance optimization */
+  pointer-events: none; /* ✅ Prevent interference */
 }
 
 .diagonal-overlay-2 {
   position: absolute;
   top: -180px;
-  left: -180px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-12deg);
   width: 100vw;
-  max-width: 1400px; /* ✅ Maximum width limit */
+  min-width: 100%;
   height: 35px;
   background: linear-gradient(
     45deg,
@@ -90,19 +90,19 @@
     rgba(59, 59, 59, 0.23) 87%,
     rgba(0, 0, 0, 0) 99%
   );
-  transform: rotate(-12deg);
   opacity: 0.7;
   mix-blend-mode: overlay;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  overflow: hidden;
+  will-change: transform;
+  pointer-events: none;
 }
 
 .diagonal-overlay-3 {
   position: absolute;
   bottom: 200px;
-  left: -200px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-15deg);
   width: 100vw;
-  max-width: 1400px; /* ✅ Maximum width limit */
+  min-width: 100%;
   height: 40px;
   background: linear-gradient(
     45deg,
@@ -115,19 +115,19 @@
     rgba(61, 61, 61, 0.24) 84%,
     rgba(0, 0, 0, 0) 99%
   );
-  transform: rotate(-15deg);
   opacity: 0.7;
   mix-blend-mode: overlay;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  overflow: hidden;
+  will-change: transform;
+  pointer-events: none;
 }
 
 .diagonal-overlay-4 {
   position: absolute;
   bottom: 180px;
-  left: -180px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-12deg);
   width: 100vw;
-  max-width: 1400px; /* ✅ Maximum width limit */
+  min-width: 100%;
   height: 35px;
   background: linear-gradient(
     45deg,
@@ -141,11 +141,10 @@
     rgba(59, 59, 59, 0.23) 87%,
     rgba(0, 0, 0, 0) 99%
   );
-  transform: rotate(-12deg);
   opacity: 0.7;
   mix-blend-mode: overlay;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  overflow: hidden;
+  will-change: transform;
+  pointer-events: none;
 }
 
 .pattern-overlay {
@@ -161,6 +160,7 @@
   background-position: 0 0, 25px 25px;
   opacity: 0.4;
   mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 .content-wrapper {
@@ -170,47 +170,36 @@
   min-height: 100vh;
 }
 
-/* ✅ UPDATED: Large screen fixes with max-width */
-@media (min-width: 1300px) {
+/* ✅ REMOVED problematic media queries causing scroll issues */
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
   .background-container {
-    overflow-y: visible; /* ✅ Allow natural scroll */
+    overflow: hidden; /* ✅ Keep hidden on mobile */
   }
   
   .diagonal-overlay-1,
   .diagonal-overlay-2,
   .diagonal-overlay-3,
-  .diagonal-overlay-4,
-  .diagonal-overlay-5,
-  .diagonal-overlay-6 {
-    max-width: 1400px; /* ✅ Fixed max width */
+  .diagonal-overlay-4 {
+    width: 120vw; /* ✅ Slightly wider to prevent gaps */
+    min-width: 120vw;
   }
-}
-
-/* ✅ ULTRA WIDE screens (1550px+) - strict control */
-@media (min-width: 1550px) {
-  .diagonal-overlay-1,
-  .diagonal-overlay-2,
-  .diagonal-overlay-3,
-  .diagonal-overlay-4,
-  .diagonal-overlay-5,
-  .diagonal-overlay-6 {
-    width: 1400px; /* ✅ Fixed width instead of 100vw */
-    max-width: 1400px;
+  
+  .diagonal-overlay-1 {
+    top: -150px;
   }
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
-  .diagonal-overlay-1,
-  .diagonal-overlay-2,
-  .diagonal-overlay-3,
-  .diagonal-overlay-4,
-  .diagonal-overlay-5,
-  .diagonal-overlay-6 {
-    width: 110%;
-    max-width: none; /* ✅ Remove max-width on mobile */
-    left: -100px;
-    right: -100px;
+  
+  .diagonal-overlay-2 {
+    top: -130px;
+  }
+  
+  .diagonal-overlay-3 {
+    bottom: 150px;
+  }
+  
+  .diagonal-overlay-4 {
+    bottom: 130px;
   }
 }
 
@@ -219,10 +208,8 @@
   .diagonal-overlay-1,
   .diagonal-overlay-2,
   .diagonal-overlay-3,
-  .diagonal-overlay-4,
-  .diagonal-overlay-5,
-  .diagonal-overlay-6 {
-    width: 105%;
-    max-width: none; /* ✅ Remove max-width on tablet */
+  .diagonal-overlay-4 {
+    width: 110vw;
+    min-width: 110vw;
   }
 }
