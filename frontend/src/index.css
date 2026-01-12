@@ -1,18 +1,27 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @font-face {
   font-family: 'Jura';
-  src: url('./assets/fonts/Jura-Regular.woff2') format('woff2');
+  src:
+    local(jura)
+    url('./assets/fonts/Jura-Regular.woff2') format('woff2'),
+    url('./assets/fonts/Jura-Regular.woff') format('woff');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-
 
 html,
 body {
   font-family: "jura";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   margin: 0;
   padding: 0;
   min-height: 100%;
