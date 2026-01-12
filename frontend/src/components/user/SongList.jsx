@@ -90,7 +90,7 @@ const SongList = ({
           >
             <h3 className="text-white text-lg leading-none sm:truncate">
               <span className="block sm:hidden">
-                {songName.length > 12 ? songName.slice(0, 9) + "..." : songName}
+                {songName.length > 12 ? songName.slice(0, 7) + "..." : songName}
               </span>
               <span className="hidden sm:block">{songName}</span>
             </h3>
