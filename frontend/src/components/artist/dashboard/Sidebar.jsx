@@ -1,11 +1,11 @@
 import React from "react";
 import IconHeader from "../../user/IconHeader";
 import MobileNavBar from "../../user/MobileNavBar";
-import { FaChartLine, FaRegUserCircle, FaBars, FaTimes,FaWallet } from "react-icons/fa";
+import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
 import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { fetchArtistProfile } from "../../../features/artists/artistsSlice";
 
 const menuItems = [
@@ -19,9 +19,10 @@ const menuItems = [
 const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
   const dispatch = useDispatch();
 
-useEffect(() => {
+  useEffect(() => {
     dispatch(fetchArtistProfile());
   }, [dispatch]);
+  
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { artistProfile, profileLoading } = useSelector((state) => state.artists);
@@ -37,8 +38,6 @@ useEffect(() => {
       }
     };
 
-
-    
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -122,11 +121,19 @@ useEffect(() => {
                   ))}
                 </div>
               </div>
-              <div className="flex flex-col items-center mb-40 px-2">
+              {/* Clickable Profile Section for Mobile */}
+              <div 
+                className="flex flex-col items-center mb-40 px-2 cursor-pointer"
+                onClick={() => handleMenuItemClick("profile")}
+              >
                 <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0">
-                  <img src={imageUrl} alt="Profile image" className="w-full h-full object-cover" />
+                  <img 
+                    src={imageUrl} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
-                <span className="text-white text-sm tracking-wide text-center max-w-full">
+                <span className="text-white text-sm tracking-wide text-center max-w-full hover:text-blue-400 transition-colors">
                   {artistName}
                 </span>
               </div>
@@ -168,19 +175,22 @@ useEffect(() => {
           ))}
         </div>
       </div>
-     <div className="sticky bottom-64 flex flex-col items-center px-2">
-  <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0">
-    <img
-      src={imageUrl}
-      alt="Profile"
-      className="w-full h-full object-cover block"
-    />
-  </div>
-  <span className="text-white text-sm tracking-wide text-center max-w-full">
-    {artistName}
-  </span>
-</div>
-
+      {/* Clickable Profile Section for Desktop */}
+      <div 
+        className="sticky bottom-64 flex flex-col items-center px-2 cursor-pointer group"
+        onClick={() => setSelectedTab("profile")}
+      >
+        <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0 group-hover:border-blue-400 transition-colors">
+          <img
+            src={imageUrl}
+            alt="Profile"
+            className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+        <span className="text-white text-sm tracking-wide text-center max-w-full group-hover:text-blue-400 transition-colors">
+          {artistName}
+        </span>
+      </div>
     </aside>
   );
 };

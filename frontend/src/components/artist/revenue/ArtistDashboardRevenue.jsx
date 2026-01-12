@@ -51,15 +51,16 @@ const ArtistDashboardRevenue = () => {
     end: ''
   });
 
-  // Currency formatter
-  const formatCurrency = (amount) => {
-    if (!balance.data?.currency) return `$${amount || '0.00'}`;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: balance.data.currency || 'USD',
-      minimumFractionDigits: 2
-    }).format(amount || 0);
-  };
+ // Currency formatter - Always show in USD with $ symbol
+const formatCurrency = (amount) => {
+  const numericAmount = parseFloat(amount) || 0;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(numericAmount);
+};
 
   // Date formatter
   const formatDate = (dateString) => {
