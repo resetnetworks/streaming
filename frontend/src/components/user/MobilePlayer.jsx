@@ -665,7 +665,7 @@ const MobilePlayer = () => {
           <div className="text-center flex-1 px-4">
             <div className="text-sm font-medium text-blue-400">NOW PLAYING</div>
             <div className="text-lg font-bold truncate max-w-xs mx-auto">
-              {currentSong?.title}
+              {currentSong?.title.slice(0,25)}..
             </div>
           </div>
 

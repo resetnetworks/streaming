@@ -57,8 +57,6 @@ export default function Album() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log("---Hello---")
-
   const album = useSelector(selectAlbumDetails);
   const loading = useSelector(selectAlbumsLoading);
   const selectedSong = useSelector((state) => state.player.selectedSong);
