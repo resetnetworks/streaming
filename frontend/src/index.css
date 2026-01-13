@@ -6,10 +6,7 @@
 @font-face {
   font-family: 'Jura';
   src:
-    local(jura)
-    url('./assets/fonts/Jura-Regular.woff2') format('woff2'),
-    url('./assets/fonts/Jura-Regular.woff') format('woff');
-  font-weight: 400;
+  url('./assets/fonts/Jura-Medium.woff2') format('woff2');
   font-style: normal;
   font-display: swap;
   -webkit-font-smoothing: antialiased;

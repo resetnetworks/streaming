@@ -210,7 +210,7 @@ const ArtistAlbumsSection = ({
                 <AlbumCard
                   key={album._id}
                   ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
-                  tag={`#${album.title || "music"}`}
+                  tag={`${album.title || "music"}`}
                   artists={album.artist?.name || "Various Artists"}
                   image={album.coverImage || "/images/placeholder.png"}
                   price={getAlbumPriceDisplay(album)}

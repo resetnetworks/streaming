@@ -118,7 +118,7 @@ const UserHeader = () => {
           className="button-wrapper shadow-md shadow-gray-800 user-menu-container"
           onClick={() => navigate("/artist/dashboard")}
         >
-          <button className="player-button bg-purple-600 hover:bg-purple-700">
+          <button className="player-button font-bold bg-purple-600 hover:bg-purple-700">
           Dashboard
           </button>
         </div>
