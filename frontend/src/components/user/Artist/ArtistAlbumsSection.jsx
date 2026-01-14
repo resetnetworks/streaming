@@ -1,17 +1,12 @@
 // src/components/user/Artist/ArtistAlbumsSection.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import AlbumCard from "../AlbumCard";
-import { getAlbumsByArtist } from "../../../features/albums/albumsSlice";
-import {
-  selectArtistAlbums,
-  selectArtistAlbumPagination,
-} from "../../../features/albums/albumsSelector";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import CurrencySelectionModal from "../CurrencySelectionModal";
+import { useArtistAlbums } from "../../../hooks/api/useAlbums";
 
 const ArtistAlbumsSection = ({ 
   artistId, 
@@ -20,58 +15,45 @@ const ArtistAlbumsSection = ({
   processingPayment, 
   paymentLoading 
 }) => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const recentScrollRef = useRef(null);
   
-  const [albumsPage, setAlbumsPage] = useState(1);
-  const [albumsStatus, setAlbumsStatus] = useState("idle");
-  const [hasMoreAlbums, setHasMoreAlbums] = useState(true);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
 
-  const artistAlbums = useSelector(selectArtistAlbums);
-  const artistAlbumPagination = useSelector(selectArtistAlbumPagination);
+  // React Query hook for artist albums
+  const { 
+    data: artistAlbumsData,
+    isLoading: albumsLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage
+  } = useArtistAlbums(artistId, 10);
 
-  const { lastElementRef: albumsLastRef } = useInfiniteScroll({
-    hasMore: hasMoreAlbums && albumsPage < artistAlbumPagination.totalPages,
-    loading: albumsStatus === "loading",
-    onLoadMore: () => setAlbumsPage(prev => prev + 1)
-  });
-
-  useEffect(() => {
-    setAlbumsPage(1);
-    setHasMoreAlbums(true);
-    setAlbumsStatus("idle");
-  }, [artistId]);
-
-  const fetchAlbums = async (page) => {
-    if (albumsStatus === "loading") return;
-    setAlbumsStatus("loading");
-    try {
-      await dispatch(getAlbumsByArtist({ artistId, page, limit: 10 })).unwrap();
-      if (page >= artistAlbumPagination.totalPages) {
-        setHasMoreAlbums(false);
-      }
-    } catch (error) {
-      console.error("Failed to fetch albums:", error);
-    } finally {
-      setAlbumsStatus("idle");
-    }
+  // Extract albums from all pages
+  const artistAlbums = artistAlbumsData?.pages?.flatMap(page => page.albums) || [];
+  
+  // Extract pagination info
+  const artistAlbumPagination = artistAlbumsData?.pages?.[0]?.pagination || {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
   };
 
-  useEffect(() => {
-    if (albumsPage > 1 && hasMoreAlbums) {
-      fetchAlbums(albumsPage);
-    }
-  }, [albumsPage, hasMoreAlbums]);
+  // Use infinite scroll hook
+  const { lastElementRef: albumsLastRef } = useInfiniteScroll({
+    hasMore: !!hasNextPage,
+    loading: isFetchingNextPage,
+    onLoadMore: fetchNextPage
+  });
 
   const handleScroll = (direction = "right") => {
     const scrollAmount = direction === "right" ? 200 : -200;
     recentScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
-  // Currency helper functions - same as AlbumsSection
+  // Currency helper functions
   const getCurrencySymbol = (currency) => {
     const symbols = {
       'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
@@ -128,7 +110,7 @@ const ArtistAlbumsSection = ({
     setSelectedAlbum(null);
   };
 
-  // Album price display logic - same as AlbumsSection
+  // Album price display logic
   const getAlbumPriceDisplay = (album) => {
     // Priority 1: Agar user ne album pehle se khareed liya hai
     if (currentUser?.purchasedAlbums?.includes(album._id)) {
@@ -146,7 +128,6 @@ const ArtistAlbumsSection = ({
       if (album.basePrice && album.basePrice.amount > 0) {
         const basePrice = album.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
-        
         
         return (
           <button
@@ -197,7 +178,7 @@ const ArtistAlbumsSection = ({
           ref={recentScrollRef}
           className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
         >
-          {albumsStatus === "loading" && artistAlbums.length === 0 ? (
+          {albumsLoading && artistAlbums.length === 0 ? (
             [...Array(5)].map((_, idx) => (
               <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
                 <Skeleton height={160} width={160} className="rounded-xl" />
@@ -217,8 +198,8 @@ const ArtistAlbumsSection = ({
                   onClick={() => navigate(`/album/${album.slug}`)}
                 />
               ))}
-              {albumsStatus === "loading" &&
-                hasMoreAlbums &&
+              {isFetchingNextPage &&
+                hasNextPage &&
                 [...Array(2)].map((_, idx) => (
                   <div key={`album-loading-${idx}`} className="min-w-[160px]">
                     <Skeleton height={160} width={160} className="rounded-xl" />

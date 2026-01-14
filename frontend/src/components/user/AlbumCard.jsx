@@ -31,7 +31,7 @@ const AlbumCard = ({
       <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-800/40 md:p-4 p-3 gap-2 sm:gap-0">
         <p className="text-xs text-white text-wrap text-left">{artists}</p>
         {price && (
-          <div className="text-xs">
+          <div className="text-xs font-bold">
             {typeof price === "string" ? price : price}
           </div>
         )}

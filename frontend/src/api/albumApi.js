@@ -18,10 +18,16 @@ export const albumApi = {
   // Get albums by artist with pagination
   fetchByArtist: async ({ artistId, page = 1, limit = 10 }) => {
     const res = await axios.get(`/albums/artist/${artistId}?page=${page}&limit=${limit}`);
+    // API से जो response आता है उसके structure को match करें
     return {
-      albums: res.data.albums,
-      pagination: res.data.pagination,
-      artistInfo: res.data.artist,
+      albums: res.data.albums || [], // यहाँ albums array है
+      pagination: res.data.pagination || {
+        page,
+        limit,
+        total: 0,
+        totalPages: 1
+      },
+      artistInfo: res.data.artist || null,
       page,
     };
   },

@@ -1,6 +1,6 @@
 // src/hooks/useUpload.js
 import { useMutation } from "@tanstack/react-query";
-import { uploadApi } from "../api/uploadApi";
+import { uploadApi } from "../../api/uploadApi";
 import { toast } from "sonner";
 
 export const useUploadSong = () => {

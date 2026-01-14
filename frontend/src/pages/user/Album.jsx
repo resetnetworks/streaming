@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 // ✅ REACT QUERY for album data
-import { useAlbum } from "../../hooks/useAlbums";
+import { useAlbum } from "../../hooks/api/useAlbums";
 
 // ✅ REDUX for artists (temporary), player, auth, payment
 import { fetchAllArtists } from "../../features/artists/artistsSlice";

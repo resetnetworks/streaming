@@ -79,7 +79,7 @@ const ArtistSongsSection = ({ artistId, artist }) => {
 
   return (
     <>
-      <div className="flex justify-between mt-6 px-6 text-lg text-white">
+      {/* <div className="flex justify-between mt-6 px-6 text-lg text-white">
         <h2>All Songs</h2>
         {artistSongs.length > 5 && (
           <button
@@ -89,9 +89,9 @@ const ArtistSongsSection = ({ artistId, artist }) => {
             {showAllSongs ? "Show less" : "See all"}
           </button>
         )}
-      </div>
+      </div> */}
       
-      <div className="px-6 py-4 flex flex-col gap-4">
+      <div className="px-6 py-1 flex flex-col gap-4">
         {songsStatus === "loading" && artistSongs.length === 0 ? (
           [...Array(5)].map((_, idx) => (
             <div key={`song-skeleton-${idx}`} className="flex items-center gap-4">

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -16,31 +16,19 @@ import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import SubscribeModal from "../../components/user/SubscribeModal";
 import PaymentErrorNotification from "../../components/user/Artist/PaymentErrorNotification";
 
-import { 
-  fetchArtistBySlug,
-  fetchSubscriberCount,
-  clearSelectedArtist,
-} from "../../features/artists/artistsSlice";
-import { selectSelectedArtist } from "../../features/artists/artistsSelectors";
-import { fetchUserSubscriptions } from "../../features/payments/userPaymentSlice";
-import { resetPaymentState } from "../../features/payments/paymentSlice";
+import { useArtist, useSubscriberCount } from "../../hooks/api/useArtists";
+import { useArtistAlbumsSimple } from "../../hooks/api/useAlbums";
 import { selectPaymentError } from "../../features/payments/paymentSelectors";
-import { getAlbumsByArtist } from "../../features/albums/albumsSlice";
-import { fetchSongsByArtist } from "../../features/songs/songSlice";
 import { useSubscriptionPayment } from "../../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 
 const Artist = () => {
   const { artistId } = useParams();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const heroSectionRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
-  
-  // Add explicit loading state
-  const [isArtistLoading, setIsArtistLoading] = useState(true);
   
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -50,7 +38,23 @@ const Artist = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   
-  const artist = useSelector(selectSelectedArtist);
+  // React Query hooks
+  const { 
+    data: artist, 
+    isLoading: isArtistLoading, 
+    error: artistError 
+  } = useArtist(artistId);
+  
+  const { 
+    data: subscriberCountData 
+  } = useSubscriberCount(artist?._id);
+  
+  // Simple query use करें infinite query की जगह
+  const { 
+    data: artistAlbumsData,
+    isLoading: albumsLoading
+  } = useArtistAlbumsSimple(artistId, 10);
+  
   const paymentError = useSelector(selectPaymentError);
   const currentUser = useSelector((state) => state.auth.user);
   
@@ -83,50 +87,6 @@ const Artist = () => {
     }
     return () => observer.disconnect();
   }, []);
-
-  // Clear previous artist data and set loading state when artistId changes
-  useEffect(() => {
-    dispatch(clearSelectedArtist());
-    setIsArtistLoading(true);
-  }, [artistId, dispatch]);
-
-  useEffect(() => {
-    if (artistId) {
-      const fetchArtistData = async () => {
-        try {
-          // Fetch all artist-related data
-          await Promise.all([
-            dispatch(fetchArtistBySlug(artistId)),
-            dispatch(fetchUserSubscriptions()),
-            dispatch(getAlbumsByArtist({ artistId, page: 1, limit: 10 })),
-            dispatch(fetchSongsByArtist({ artistId, page: 1, limit: 10 }))
-          ]);
-        } catch (error) {
-          console.error('Error fetching artist data:', error);
-        } finally {
-          // Set loading to false after all requests complete
-          setIsArtistLoading(false);
-        }
-      };
-      
-      fetchArtistData();
-    }
-  }, [dispatch, artistId]);
-
-  useEffect(() => {
-    if (artist?._id) {
-      dispatch(fetchSubscriberCount(artist._id));
-    }
-  }, [dispatch, artist?._id]);
-
-  useEffect(() => {
-    dispatch(resetPaymentState());
-    return () => {
-      dispatch(resetPaymentState());
-    };
-  }, [dispatch]);
-
-  // ... rest of your handler functions remain the same
 
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
@@ -214,17 +174,16 @@ const Artist = () => {
         <UserHeader />
         <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
           <div className="min-h-screen">
-            {/* You can add specific skeleton components here or let child components handle it */}
             <div ref={heroSectionRef}>
               <ArtistHeroSection
-                artist={null} // Pass null to trigger skeleton in child component
+                artist={null}
                 artistId={artistId}
                 currentUser={currentUser}
                 isInView={isInView}
                 openSubscriptionOptions={openSubscriptionOptions}
                 subscriptionLoading={subscriptionLoading}
                 setSubscriptionLoading={setSubscriptionLoading}
-                isLoading={true} // Add loading prop
+                isLoading={true}
               />
             </div>
             
@@ -278,6 +237,9 @@ const Artist = () => {
   const artistSlug = artist?.slug || artist?._id;
   const canonicalUrl = `https://musicreset.com/artist/${artistSlug}`;
 
+  // Data को सही format में पास करें
+  const albumsData = artistAlbumsData?.albums || [];
+
   return (
     <>
       <PageSEO
@@ -306,6 +268,7 @@ const Artist = () => {
             openSubscriptionOptions={openSubscriptionOptions}
             subscriptionLoading={subscriptionLoading}
             setSubscriptionLoading={setSubscriptionLoading}
+            subscriberCountData={subscriberCountData}
           />
         </div>
         
@@ -322,6 +285,8 @@ const Artist = () => {
           onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
+          albums={albumsData} // Direct albums array pass करें
+          albumsLoading={albumsLoading}
         />
         
         <ArtistSinglesSection
@@ -344,7 +309,7 @@ const Artist = () => {
         
         <PaymentErrorNotification 
           error={paymentError}
-          onDismiss={() => dispatch(resetPaymentState())}
+          onDismiss={() => {/* Handle dismiss if needed */}}
         />
         
         <SubscriptionMethodModal

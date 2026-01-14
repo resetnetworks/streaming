@@ -1,6 +1,6 @@
-// src/hooks/useAlbums.js
+// src/hooks/api/useAlbums.js
 import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { albumApi } from "../api/albumApi";
+import { albumApi } from "../../api/albumApi";
 import { toast } from "sonner";
 
 // 🎯 Query Keys (IMPORTANT for caching)
@@ -57,9 +57,18 @@ export const useArtistAlbums = (artistId, limit = 10) => {
     queryFn: ({ pageParam = 1 }) =>
       albumApi.fetchByArtist({ artistId, page: pageParam, limit }),
     getNextPageParam: (lastPage) => {
-      const { page, totalPages } = lastPage.pagination;
-      return page < totalPages ? page + 1 : undefined;
+      const { page, totalPages } = lastPage.pagination || {};
+      return page && totalPages && page < totalPages ? page + 1 : undefined;
     },
+    enabled: !!artistId,
+  });
+};
+
+// Get artist albums without infinite scroll (regular query)
+export const useArtistAlbumsSimple = (artistId, limit = 10) => {
+  return useQuery({
+    queryKey: [...albumKeys.artist(artistId), 'simple'],
+    queryFn: () => albumApi.fetchByArtist({ artistId, page: 1, limit }),
     enabled: !!artistId,
   });
 };
@@ -91,6 +100,9 @@ export const useCreateAlbum = () => {
     onSuccess: (newAlbum) => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: albumKeys.lists() });
+      if (newAlbum.artist) {
+        queryClient.invalidateQueries({ queryKey: albumKeys.artist(newAlbum.artist) });
+      }
       toast.success("Album created successfully!");
     },
   });
@@ -124,6 +136,9 @@ export const useUpdateAlbum = () => {
       // Invalidate affected queries
       queryClient.invalidateQueries({ queryKey: albumKeys.lists() });
       queryClient.invalidateQueries({ queryKey: albumKeys.detail(updatedAlbum._id) });
+      if (updatedAlbum.artist) {
+        queryClient.invalidateQueries({ queryKey: albumKeys.artist(updatedAlbum.artist) });
+      }
       toast.success("Album updated successfully!");
     },
   });
