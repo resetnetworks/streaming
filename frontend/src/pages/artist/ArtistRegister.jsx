@@ -46,8 +46,6 @@ const ArtistRegister = () => {
           setSkipApplicationCheck(true);
           setShowExistingApplication(false);
           
-          // Show a message or redirect to artist dashboard
-          console.log("User is already an artist, skipping application process");
         } else {
           // If not artist, fetch application if exists
           dispatch(getMyArtistApplication());

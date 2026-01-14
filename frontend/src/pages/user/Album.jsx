@@ -1,34 +1,36 @@
+// src/pages/Album.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
-import UserHeader from "../../components/user/UserHeader";
-import SongList from "../../components/user/SongList";
-import PageSEO from "../../components/PageSeo/PageSEO";
 
+// ✅ REACT QUERY for album data
+import { useAlbum } from "../../hooks/useAlbums";
 
-import { fetchAlbumById } from "../../features/albums/albumsSlice";
-import {
-  selectAlbumDetails,
-  selectAlbumsLoading,
-} from "../../features/albums/albumsSelector";
-
+// ✅ REDUX for artists (temporary), player, auth, payment
 import { fetchAllArtists } from "../../features/artists/artistsSlice";
 import { selectAllArtists } from "../../features/artists/artistsSelectors";
 
-// ✅ UPDATED IMPORTS - Add setPlaybackContext
+// ✅ REDUX for player
 import { setSelectedSong, play, setPlaybackContext } from "../../features/playback/playerSlice";
-import { formatDuration } from "../../utills/helperFunctions";
 
-// ✅ ADD RAZORPAY IMPORTS
+// ✅ REDUX for payment
 import { initiateRazorpayItemPayment, resetPaymentState } from "../../features/payments/paymentSlice";
 import { addPurchasedSong, addPurchasedAlbum } from "../../features/auth/authSlice";
+
+// Components
+import UserHeader from "../../components/user/UserHeader";
+import SongList from "../../components/user/SongList";
+import PageSEO from "../../components/PageSeo/PageSEO";
 
 // Skeleton
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-// ✅ ADD RAZORPAY SCRIPT LOADER
+// Helper functions
+import { formatDuration } from "../../utills/helperFunctions";
+
+// ✅ RAZORPAY Script Loader
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     if (window.Razorpay) {
@@ -43,6 +45,7 @@ const loadRazorpayScript = () => {
   });
 };
 
+// Format date helper
 function formatDate(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString(undefined, {
@@ -57,41 +60,57 @@ export default function Album() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const album = useSelector(selectAlbumDetails);
-  const loading = useSelector(selectAlbumsLoading);
+  // ✅ REACT QUERY: Album data
+  const { 
+    data: album, 
+    isLoading: albumLoading, 
+    error: albumError,
+    refetch: refetchAlbum 
+  } = useAlbum(albumId);
+
+  // ✅ REDUX: Artist data (temporary)
+  const artists = useSelector(selectAllArtists);
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
-  const artists = useSelector(selectAllArtists);
-
-  // ✅ ADD RAZORPAY PAYMENT STATE
   const paymentLoading = useSelector((state) => state.payment.loading);
+
+  // Local states
   const [processingPayment, setProcessingPayment] = useState(false);
   const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
 
+  // ✅ Load artists from Redux
   useEffect(() => {
-    if (albumId) dispatch(fetchAlbumById(albumId));
     dispatch(fetchAllArtists());
-  }, [albumId, dispatch]);
+  }, [dispatch]);
 
-  // ✅ ADD CLEAR PAYMENT STATE ON MOUNT
+  // ✅ Clear payment state on mount
   useEffect(() => {
     dispatch(resetPaymentState());
   }, [dispatch]);
 
-  // ✅ UPDATED PLAY SONG HANDLER - SET ALBUM CONTEXT
+  // ✅ Handle album loading error
+  useEffect(() => {
+    if (albumError) {
+      toast.error("Failed to load album");
+      console.error("Album loading error:", albumError);
+    }
+  }, [albumError]);
+
+  // ✅ Play song handler
   const handlePlaySong = (song) => {
-    // Set album playback context when playing from album
+    if (!album) return;
+    
     dispatch(setPlaybackContext({
       type: 'album',
       id: album._id,
-      songs: songs // All songs in this album
+      songs: album.songs
     }));
     
     dispatch(setSelectedSong(song));
     dispatch(play());
   };
 
-  // ✅ ADD RAZORPAY PURCHASE HANDLER
+  // ✅ Purchase handler
   const handlePurchaseClick = async (item, type) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
@@ -107,13 +126,11 @@ export default function Album() {
     try {
       setProcessingPayment(true);
       
-      // Load Razorpay script first
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         throw new Error("Failed to load Razorpay script");
       }
       
-      // Dispatch Razorpay order creation
       const result = await dispatch(initiateRazorpayItemPayment({
         itemType: type,
         itemId: item._id,
@@ -131,7 +148,7 @@ export default function Album() {
     }
   };
 
-  // ✅ ADD RAZORPAY CHECKOUT HANDLER
+  // ✅ Razorpay checkout handler
   const handleRazorpayCheckout = async (order, item, type) => {
     try {
       const options = {
@@ -143,28 +160,23 @@ export default function Album() {
         description: `Purchase ${type}: ${item.title || item.name}`,
         image: `${window.location.origin}/icon.png`,
         handler: function (response) {
-          // Immediately close modal and show success
           if (currentRazorpayInstance) {
             try {
               currentRazorpayInstance.close();
-            } catch (e) {
-              // Razorpay instance already closed
-            }
+            } catch (e) {}
           }
 
-          // ✅ IMMEDIATELY UPDATE REDUX STATE
+          // Update Redux state
           if (type === "song") {
             dispatch(addPurchasedSong(item._id));
           } else if (type === "album") {
             dispatch(addPurchasedAlbum(item._id));
           }
 
-          // Show success message
           toast.success(`Successfully purchased ${item.title || item.name}!`, {
             duration: 5000,
           });
           
-          // Reset states
           setProcessingPayment(false);
           setCurrentRazorpayInstance(null);
           dispatch(resetPaymentState());
@@ -194,10 +206,6 @@ export default function Album() {
       const rzp = new window.Razorpay(options);
       setCurrentRazorpayInstance(rzp);
       
-      rzp.on('payment.success', function (response) {
-        // Additional success handling if needed
-      });
-
       rzp.on('payment.error', function (error) {
         toast.error('Payment failed. Please try again.');
         setProcessingPayment(false);
@@ -213,12 +221,15 @@ export default function Album() {
     }
   };
 
-  const artistName =
-    typeof album?.artist === "object"
-      ? album?.artist?.name
-      : artists.find((a) => a._id === album?.artist)?.name || "Unknown Artist";
+  // ✅ Get artist name
+  const artistName = React.useMemo(() => {
+    if (!album || !artists) return "Unknown Artist";
+    if (typeof album.artist === "object") return album.artist.name;
+    const artist = artists.find((a) => a._id === album.artist);
+    return artist?.name || "Unknown Artist";
+  }, [album, artists]);
 
-  // ✅ NEW: Get artist slug for navigation
+  // ✅ Get artist slug
   const getArtistSlug = () => {
     if (typeof album?.artist === "object" && album?.artist?.slug) {
       return album?.artist?.slug;
@@ -227,72 +238,32 @@ export default function Album() {
     return artistData?.slug || null;
   };
 
-  // ✅ REVERSE THE SONGS ORDER IS REMOVED - SHOW AS IS
+  // ✅ Check purchase status
   const songs = album?.songs ? [...album.songs] : [];
-
-  // Check if album is purchased
   const isAlbumPurchased = currentUser?.purchasedAlbums?.includes(album?._id);
-
-  // ✅ NEW: Check if album is subscription type
   const isSubscriptionAlbum = album?.accessType === 'subscription' || album?.price === 0;
-
-  // ✅ CALCULATE TOTAL DURATION
   const totalDuration = songs.reduce((total, song) => total + (song.duration || 0), 0);
 
-  // Generate color from artist name (same logic as Artist page)
+  // ✅ Generate artist color
   const getArtistColor = (name) => {
     if (!name) return "bg-blue-600";
     const colors = [
-      "bg-blue-600",
-      "bg-purple-600",
-      "bg-pink-600",
-      "bg-red-600",
-      "bg-orange-600",
-      "bg-yellow-600",
-      "bg-blue-600",
-      "bg-teal-600",
-      "bg-indigo-600",
+      "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-red-600", 
+      "bg-orange-600", "bg-yellow-600", "bg-teal-600", "bg-indigo-600"
     ];
-    const hash = name
-      .split("")
-      .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+    const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
     return colors[hash % colors.length];
   };
 
   const artistColor = getArtistColor(artistName);
-  if (!album || loading) {
-    return null;
-  }
 
-
-  return (
-   <>
-   <PageSEO
-  title={`Album: ${album.title} by ${artistName} | Reset Music`}
-  description={`Access the album '${album.title}' by ${artistName} exclusively as a Reset Music. Stream all ${songs.length}.`}
-  canonicalUrl={`https://musicreset.com/album/${albumId}`}
-  structuredData={{
-    "@context": "https://schema.org",
-    "@type": "MusicAlbum",
-    "name": album.title,
-    "description": album.description,
-    "image": album.coverImage,
-    "url": `https://musicreset.com/album/${albumId}`,
-    "byArtist": {
-      "@type": "MusicGroup",
-      "name": artistName,
-    },
-    "numTracks": songs.length,
-    "datePublished": album.releaseDate
-  }}
-  noIndex={true}
-/>
-
-      <UserHeader />
-      <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
-          {/* Header */}
-          {loading || !album || artists.length === 0 ? (
+  // ✅ Loading state
+  if (albumLoading) {
+    return (
+      <>
+        <UserHeader />
+        <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+          <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
             <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
               <Skeleton width={232} height={232} className="rounded-lg" />
               <div className="flex-1 flex flex-col gap-2">
@@ -308,111 +279,10 @@ export default function Album() {
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
-              {album.coverImage ? (
-                <img
-                  src={album.coverImage}
-                  alt="Album Cover"
-                  className="w-[232px] h-[232px] object-cover rounded-lg shadow-lg"
-                />
-              ) : (
-                <div
-                  className={`w-[232px] h-[232px] ${artistColor} rounded-lg shadow-lg flex items-center justify-center text-white font-bold md:text-4xl`}
-                >
-                  {album.title ? album.title.charAt(0).toUpperCase() : "A"}
-                </div>
-              )}
-              <div>
-                <div className="text-sm font-bold tracking-widest uppercase opacity-80">
-                  Album
-                </div>
-                <h1 className="text-3xl md:text-6xl font-extrabold my-2">
-                  {album.title}
-                </h1>
-                <p className="md:text-lg text-sm text-gray-400">{album.description}</p>
-                <div className="flex items-center gap-2 mt-4 flex-wrap text-sm md:text-base text-gray-300">
-                  <span className="font-semibold">{artistName}</span>
-                  <span className="text-base md:text-xl">•</span>
-                  <span>{formatDate(album.releaseDate)}</span>
-                  <span className="text-base md:text-xl">•</span>
-                  <span>{songs.length} songs</span>
-                  {/* ✅ ADD TOTAL DURATION */}
-                  <span className="text-base md:text-xl">•</span>
-                  <span>{formatDuration(totalDuration)}</span>
-                </div>
-                
-                {/* ✅ UPDATED: Purchase Button OR Subscription Button */}
-                <div className="flex items-center gap-4 mt-6">
-                  {/* Purchase Button for Paid Albums */}
-                  {album.price > 0 && !isSubscriptionAlbum && (
-                    <>
-                      <span className="text-lg font-semibold text-blue-400">
-                        ₹{album.price}
-                      </span>
-                      {isAlbumPurchased ? (
-                        <span className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold">
-                          Purchased
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handlePurchaseClick(album, "album")}
-                          disabled={processingPayment || paymentLoading}
-                          className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
-                            processingPayment || paymentLoading
-                              ? "bg-gray-500 cursor-not-allowed text-gray-300"
-                              : "bg-blue-600 hover:bg-blue-700 text-white"
-                          }`}
-                        >
-                          {processingPayment || paymentLoading 
-                            ? "Processing..." 
-                            : "Purchase Album"
-                          }
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  {/* ✅ NEW: Subscription Button for Subscription Albums */}
-                  {isSubscriptionAlbum && getArtistSlug() && (
-                    <>
-                      <span className="md:text-lg text-sm font-semibold text-blue-400">
-                        Subscription
-                      </span>
-                      <button
-                        onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                        className="md:px-6 px-4 md:py-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
-                      >
-                        <span className="md:text-lg text-sm">View Artist</span>
-                        <svg 
-                          className="w-4 h-4" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M9 5l7 7-7 7" 
-                          />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Song List */}
-          {loading || !album || artists.length === 0 ? (
-            <div className="flex flex-col gap-4">
+            
+            <div className="flex flex-col gap-4 mt-8">
               {[...Array(5)].map((_, idx) => (
-                <div
-                  key={`song-skeleton-${idx}`}
-                  className="flex items-center gap-4"
-                >
+                <div key={idx} className="flex items-center gap-4">
                   <Skeleton width={50} height={50} className="rounded-full" />
                   <div className="flex flex-col gap-1">
                     <Skeleton width={160} height={14} />
@@ -421,32 +291,176 @@ export default function Album() {
                 </div>
               ))}
             </div>
-          ) : songs.length === 0 ? (
+          </div>
+        </SkeletonTheme>
+      </>
+    );
+  }
+
+  // ✅ Error state
+  if (albumError || !album) {
+    return (
+      <>
+        <UserHeader />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Album not found</h2>
+            <p className="text-gray-400 mb-6">The album you're looking for doesn't exist or has been removed.</p>
+            <button 
+              onClick={() => navigate("/")}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-colors"
+            >
+              Browse Albums
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ✅ Main render
+  return (
+    <>
+      <PageSEO
+        title={`Album: ${album.title} by ${artistName} | Reset Music`}
+        description={`Access the album '${album.title}' by ${artistName}. Stream all ${songs.length} songs.`}
+        canonicalUrl={`https://musicreset.com/album/${albumId}`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "MusicAlbum",
+          "name": album.title,
+          "description": album.description,
+          "image": album.coverImage,
+          "url": `https://musicreset.com/album/${albumId}`,
+          "byArtist": {
+            "@type": "MusicGroup",
+            "name": artistName,
+          },
+          "numTracks": songs.length,
+          "datePublished": album.releaseDate
+        }}
+        noIndex={true}
+      />
+
+      <UserHeader />
+      <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+        <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
+          {/* Album Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
+            {album.coverImage ? (
+              <img
+                src={album.coverImage}
+                alt="Album Cover"
+                className="w-[232px] h-[232px] object-cover rounded-lg shadow-lg"
+              />
+            ) : (
+              <div
+                className={`w-[232px] h-[232px] ${artistColor} rounded-lg shadow-lg flex items-center justify-center text-white font-bold md:text-4xl`}
+              >
+                {album.title ? album.title.charAt(0).toUpperCase() : "A"}
+              </div>
+            )}
+            <div>
+              <div className="text-sm font-bold tracking-widest uppercase opacity-80">
+                Album
+              </div>
+              <h1 className="text-3xl md:text-6xl font-extrabold my-2">
+                {album.title}
+              </h1>
+              <p className="md:text-lg text-sm text-gray-400">{album.description}</p>
+              <div className="flex items-center gap-2 mt-4 flex-wrap text-sm md:text-base text-gray-300">
+                <span className="font-semibold">{artistName}</span>
+                <span className="text-base md:text-xl">•</span>
+                <span>{formatDate(album.releaseDate)}</span>
+                <span className="text-base md:text-xl">•</span>
+                <span>{songs.length} songs</span>
+                <span className="text-base md:text-xl">•</span>
+                <span>{formatDuration(totalDuration)}</span>
+              </div>
+              
+              {/* Purchase/Subscription Buttons */}
+              <div className="flex items-center gap-4 mt-6">
+                {album.price > 0 && !isSubscriptionAlbum && (
+                  <>
+                    <span className="text-lg font-semibold text-blue-400">
+                      ₹{album.price}
+                    </span>
+                    {isAlbumPurchased ? (
+                      <span className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold">
+                        Purchased
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handlePurchaseClick(album, "album")}
+                        disabled={processingPayment || paymentLoading}
+                        className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
+                          processingPayment || paymentLoading
+                            ? "bg-gray-500 cursor-not-allowed text-gray-300"
+                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                        }`}
+                      >
+                        {processingPayment || paymentLoading 
+                          ? "Processing..." 
+                          : "Purchase Album"
+                        }
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {isSubscriptionAlbum && getArtistSlug() && (
+                  <>
+                    <span className="md:text-lg text-sm font-semibold text-blue-400">
+                      Subscription
+                    </span>
+                    <button
+                      onClick={() => navigate(`/artist/${getArtistSlug()}`)}
+                      className="md:px-6 px-4 md:py-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+                    >
+                      <span className="md:text-lg text-sm">View Artist</span>
+                      <svg 
+                        className="w-4 h-4" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M9 5l7 7-7 7" 
+                        />
+                      </svg>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Song List */}
+          {songs.length === 0 ? (
             <div className="text-center text-gray-400 mt-8 text-lg">
               No songs in this album.
             </div>
           ) : (
             <>
-              {/* ✅ SONGS WITH NUMBERING */}
               {songs.map((song, index) => (
                 <div key={song._id} className="mb-4 flex items-center gap-4">
-                  {/* ✅ TRACK NUMBER ON LEFT */}
                   <div className="w-8 text-center text-gray-400 font-medium">
                     {index + 1}
                   </div>
                   
-                  {/* ✅ SONG COMPONENT */}
                   <div className="flex-1">
                     <SongList
                       songId={song._id}
                       img={song.coverImage || album.coverImage}
-                      songName={song.title} // ✅ REMOVED SLICE - FULL NAME NOW
+                      songName={song.title}
                       singerName={song.singer}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
-                      onTitleClick={() => navigate(`/song/${song._id}`)} // ✅ MAKE TITLE CLICKABLE
+                      onTitleClick={() => navigate(`/song/${song._id}`)}
                       isSelected={selectedSong?._id === song._id}
-                      // ✅ UPDATED SONG PURCHASE WITH RAZORPAY
                       price={
                         song.accessType === "purchase-only" && !isAlbumPurchased ? (
                           currentUser?.purchasedSongs?.includes(song._id) ? (
@@ -481,7 +495,7 @@ export default function Album() {
           )}
         </div>
 
-        {/* ✅ ADD LOADING OVERLAY */}
+        {/* Payment Loading Overlay */}
         {(processingPayment || paymentLoading) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
@@ -494,7 +508,6 @@ export default function Album() {
           </div>
         )}
 
-        {/* ✅ ADD SUCCESS TOAST ENHANCEMENT */}
         <style jsx="true" global="true">{`
           [data-sonner-toast] {
             background: rgb(31, 41, 55) !important;

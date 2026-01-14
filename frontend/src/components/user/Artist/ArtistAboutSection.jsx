@@ -98,7 +98,6 @@ const ArtistAboutSection = ({
       {artist ? (
         <>
           <div className="w-full h-72 md:w-1/4">
-          {console.log(artist)}
             {artist?.profileImage ? (
               <img
                 src={artist?.profileImage}
