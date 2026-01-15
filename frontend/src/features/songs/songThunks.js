@@ -101,7 +101,6 @@ export const getSongById = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const res = await axios.get(`/songs/${id}`);
-      console.log(res.data)
       return res.data.song;
     } catch (err) {
       return thunkAPI.rejectWithValue(

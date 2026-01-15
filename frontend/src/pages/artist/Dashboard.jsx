@@ -174,12 +174,6 @@ export default function Dashboard() {
     setShowUploadModal(false);
   };
 
-  // Handle album creation success
-  const handleAlbumCreated = (albumData) => {
-    console.log("Album created:", albumData);
-    // Show success notification if needed
-  };
-
   // Handle batch upload progress
   const handleBatchProgress = (data) => {
     setBatchProgressData(data);
@@ -251,7 +245,6 @@ export default function Dashboard() {
               <AlbumUpload
                 onCancel={handleCancelUpload}
                 onComplete={handleUploadComplete}
-                onAlbumCreated={handleAlbumCreated}
                 onBatchProgress={handleBatchProgress}
               />
             ) : (

@@ -50,7 +50,6 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
 
   // Step 1: Handle album creation
   const handleAlbumSubmit = async (formData) => {
-    console.log("Creating album with data:", formData);
     
     const albumData = {
       title: formData.title,
