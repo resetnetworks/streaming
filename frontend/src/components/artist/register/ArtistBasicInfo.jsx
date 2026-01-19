@@ -96,7 +96,7 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
         {/* Artist Name Field */}
         <div className="w-full mb-1">
           <label htmlFor="firstName" className="md:text-xl text-lg">
-            artist name
+            full name
           </label>
         </div>
         <div className="w-full relative">

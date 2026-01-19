@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 import GenreModal from "./GenreModal";
 import { toast } from "sonner";
+import { compressCoverImage } from "../../../utills/imageCompression";
 
 // Access type options array
 const ACCESS_TYPE_OPTIONS = [
@@ -114,10 +115,30 @@ const UploadForm = ({
     return !isNaN(numPrice) && numPrice > 0;
   };
 
-  const handleCoverImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) setCoverImage(file);
-  };
+const handleCoverImageChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // basic validation
+  if (!file.type.startsWith("image/")) {
+    toast.error("Invalid image format");
+    return;
+  }
+
+  if (file.size / 1024 / 1024 > 10) {
+    toast.error("Image too large (max 10MB)");
+    return;
+  }
+
+  try {
+    const compressedImage = await compressCoverImage(file);
+    setCoverImage(compressedImage);
+  } catch (err) {
+    console.error(err);
+    toast.error("Image optimization failed", { id: "image" });
+  }
+};
+
 
   const handleDateChange = (e) => {
     const val = e.target.value;

@@ -5,6 +5,7 @@ import { FaYoutube, FaInstagram, FaFacebookSquare, FaSpotify, FaSoundcloud, FaGl
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { updateArtistProfile } from "../../../features/artists/artistsSlice"; // CORRECT IMPORT
+import { compressArtistCoverImage,compressProfileImage } from "../../../utills/imageCompression";
 
 const ProfileEditForm = ({ 
   profile, 
@@ -107,27 +108,34 @@ const ProfileEditForm = ({
     }));
   };
 
-  const handleImageChange = (e, type) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const imageUrl = event.target.result;
-        setPreviewImage(prev => ({
-          ...prev,
-          [type]: imageUrl
-        }));
-      };
-      reader.readAsDataURL(file);
-      
-      // Store the file
-      if (type === 'profile') {
-        setProfileImageFile(file);
-      } else {
-        setCoverImageFile(file);
-      }
+const handleImageChange = async (e, type) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    return;
+  }
+
+  try {
+    let compressedFile;
+    if (type === "profile") {
+      compressedFile = await compressProfileImage(file);
+      setProfileImageFile(compressedFile);
+    } else {
+      compressedFile = await compressArtistCoverImage(file);
+      setCoverImageFile(compressedFile);
     }
-  };
+
+    // Preview ke liye
+    setPreviewImage(prev => ({
+      ...prev,
+      [type]: URL.createObjectURL(compressedFile),
+    }));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const handleSocialAdd = () => {
     if (newSocial.url.trim()) {
