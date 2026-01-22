@@ -221,15 +221,14 @@ const SimilarArtistSection = () => {
         {singles.map((song) => (
           <RecentPlays
             key={`song-${song._id}`}
+            onTitleClick={() => navigate(`/song/${song?.slug || song?._id}`)}
             title={song.title}
             price="Subs.." // Default subscription text
-            singer={song.artist?.name || randomArtist.name}
             image={song.coverImage || song.album?.coverImage || "/images/placeholder.png"}
             onPlay={() => handleSongPlay(song)}
             isSelected={selectedSong?._id === song._id}
           />
         ))}
-
         
         {/* Show Albums first */}
         {albums.map((album) => (

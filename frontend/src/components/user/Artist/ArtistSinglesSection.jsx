@@ -1,19 +1,14 @@
 // src/components/user/Artist/ArtistSinglesSection.jsx
-import React, { useState, useRef, useEffect } from "react";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import React, { useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import RecentPlays from "../RecentPlays";
-import { 
-  selectSinglesByArtist, 
-  selectHasArtistSingles,
-  selectSinglesByArtistPagination 
-} from "../../../features/songs/songSelectors";
-import { fetchSinglesSongByArtist } from "../../../features/songs/songSlice";
 import { setSelectedSong, play } from "../../../features/playback/playerSlice";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
-import { hasArtistSubscriptionInPurchaseHistory } from "../../../utills/subscriptions"; // ✅ Import subscription utility
 import CurrencySelectionModal from "../CurrencySelectionModal";
+import { useArtistSingles } from "../../../hooks/api/useSongs";
+import { useNavigate } from "react-router-dom";
 
 const getArtistColor = (name) => {
   if (!name) return "bg-blue-600";
@@ -28,68 +23,42 @@ const getArtistColor = (name) => {
 const ArtistSinglesSection = ({ 
   artistId, 
   currentUser, 
+  artist,
   onPurchaseClick, 
-  onSubscribeRequired, // ✅ Add this prop
+  onSubscribeRequired,
   processingPayment, 
   paymentLoading 
 }) => {
   const dispatch = useDispatch();
   const singlesScrollRef = useRef(null);
+  const navigate = useNavigate()
 
-  // Currency modal states
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedSong, setSelectedSongForPurchase] = useState(null);
 
   const currentSelectedSong = useSelector((state) => state.player.selectedSong);
   
-  // ✅ Get artist data for subscription check
-  const artist = useSelector((state) => state.artists.selectedArtist);
-  
-  // ✅ Updated selectors for singles by artist
-  const artistSinglesData = useSelector(
-    (state) => selectSinglesByArtist(state, artistId),
-    shallowEqual
-  );
-
-  const hasArtistSingles = useSelector(
-    (state) => selectHasArtistSingles(state, artistId)
-  );
-
-  const singlesPagination = useSelector(
-    (state) => selectSinglesByArtistPagination(state, artistId),
-    shallowEqual
-  );
-
-  const singlesStatus = useSelector((state) => state.songs.status);
-
   const {
-    songs: artistSingles = [],
-    pages: totalPages = 1,
-  } = artistSinglesData || {};
+    data: singlesData,
+    isLoading: singlesLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage
+  } = useArtistSingles(artistId, 20);
 
-  // ✅ Fetch singles on component mount
-  useEffect(() => {
-    if (artistId && !hasArtistSingles) {
-      dispatch(fetchSinglesSongByArtist({ 
-        artistId, 
-        page: 1, 
-        limit: 20 
-      }));
-    }
-  }, [dispatch, artistId, hasArtistSingles]);
+  const artistSingles = singlesData?.pages?.flatMap(page => page.songs) || [];
+  
+  const singlesPagination = singlesData?.pages?.[0]?.pagination || {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  };
 
   const { lastElementRef: singlesLastRef } = useInfiniteScroll({
-    hasMore: singlesPagination.hasMore,
-    loading: singlesStatus === "loading",
-    onLoadMore: () => {
-      if (singlesPagination.hasMore && singlesStatus !== "loading") {
-        dispatch(fetchSinglesSongByArtist({ 
-          artistId, 
-          page: singlesPagination.page + 1, 
-          limit: 20 
-        }));
-      }
-    }
+    hasMore: !!hasNextPage,
+    loading: isFetchingNextPage,
+    onLoadMore: fetchNextPage
   });
 
   const handlePlaySong = (song) => {
@@ -102,7 +71,6 @@ const ArtistSinglesSection = ({
     singlesScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
-  // Currency helper functions
   const getCurrencySymbol = (currency) => {
     const symbols = {
       'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
@@ -126,20 +94,7 @@ const ArtistSinglesSection = ({
     return currencies;
   };
 
-  // ✅ Updated purchase click handler with subscription check
   const handleSongPurchaseClick = (song) => {
-    // First check if user is subscribed to the artist
-    const isSubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
-    
-    if (!isSubscribed) {
-      // User is not subscribed, show subscribe modal
-      if (onSubscribeRequired) {
-        onSubscribeRequired(artist, "purchase", song);
-      }
-      return;
-    }
-
-    // User is subscribed, proceed with currency selection
     const availableCurrencies = getAvailableCurrencies(song);
     
     if (availableCurrencies.length > 1) {
@@ -172,21 +127,16 @@ const ArtistSinglesSection = ({
     setSelectedSongForPurchase(null);
   };
 
-  // Song price display logic
   const getSongPriceDisplay = (song) => {
-    // Priority 1: Agar user ne song pehle se khareed liya hai
     if (currentUser?.purchasedSongs?.includes(song._id)) {
       return "Purchased";
     }
 
-    // Priority 2: Agar access type 'subscription' hai
     if (song.accessType === "subscription") {
       return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
     }
 
-    // Priority 3: Agar access type 'purchase-only' hai
     if (song.accessType === "purchase-only") {
-      // Check karein ki price valid hai aur 0 se zyada hai
       if (song.basePrice && song.basePrice.amount > 0) {
         const basePrice = song.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
@@ -198,7 +148,11 @@ const ArtistSinglesSection = ({
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700"
             }`}
-            onClick={() => handleSongPurchaseClick(song)}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleSongPurchaseClick(song);
+            }}
             disabled={processingPayment || paymentLoading}
           >
             {processingPayment || paymentLoading ? "..." : `Buy ${symbol}${basePrice.amount}`}
@@ -206,13 +160,11 @@ const ArtistSinglesSection = ({
         );
       }
       
-      // Agar purchase-only hai lekin price 0 hai, to "album" dikhayein (part of album)
       if (song.basePrice && song.basePrice.amount === 0) {
         return "album";
       }
     }
 
-    // Default case
     return "Free";
   };
 
@@ -233,8 +185,7 @@ const ArtistSinglesSection = ({
     );
   };
 
-  // Don't render if no singles available
-  if (!hasArtistSingles && singlesStatus !== "loading" && artistSingles.length === 0) {
+  if (!singlesLoading && artistSingles.length === 0) {
     return null;
   }
 
@@ -243,6 +194,9 @@ const ArtistSinglesSection = ({
       <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
         <h2>Singles</h2>
         <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-400">
+            Page {singlesPagination.page} of {singlesPagination.totalPages}
+          </span>
           <LuSquareChevronLeft
             className="text-white cursor-pointer hover:text-blue-800 text-lg"
             onClick={() => handleScroll("left")}
@@ -258,7 +212,7 @@ const ArtistSinglesSection = ({
         ref={singlesScrollRef}
         className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
       >
-        {singlesStatus === "loading" && artistSingles.length === 0
+        {singlesLoading && artistSingles.length === 0
           ? [...Array(5)].map((_, idx) => (
               <div key={`single-skeleton-${idx}`} className="min-w-[160px]">
                 <Skeleton height={160} width={160} className="rounded-xl" />
@@ -267,6 +221,7 @@ const ArtistSinglesSection = ({
             ))
           : artistSingles.map((song, idx) => (
               <RecentPlays
+                onTitleClick={() => navigate(`/song/${song.slug}`)}
                 ref={idx === artistSingles.length - 1 ? singlesLastRef : null}
                 key={song._id}
                 title={song.title}
@@ -282,15 +237,16 @@ const ArtistSinglesSection = ({
               />
             ))}
         
-        {/* Show loading indicator for pagination */}
-        {singlesStatus === "loading" && artistSingles.length > 0 && (
-          <div className="min-w-[160px] flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          </div>
+        {isFetchingNextPage && hasNextPage && artistSingles.length > 0 && (
+          [...Array(2)].map((_, idx) => (
+            <div key={`single-loading-${idx}`} className="min-w-[160px]">
+              <Skeleton height={160} width={160} className="rounded-xl" />
+              <Skeleton width={120} height={16} className="mt-2" />
+            </div>
+          ))
         )}
       </div>
 
-      {/* Currency Selection Modal - Only shows if user is already subscribed */}
       <CurrencySelectionModal
         open={showCurrencyModal}
         onClose={handleCloseCurrencyModal}

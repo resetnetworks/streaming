@@ -35,13 +35,13 @@ const SongList = ({
   };
 
   // ✅ ADD TITLE CLICK HANDLER
-  // const handleTitleClick = (e) => {
-  //   e.stopPropagation(); // Prevent triggering onPlay
-  //   e.preventDefault();
-  //   if (onTitleClick) {
-  //     onTitleClick();
-  //   }
-  // };
+  const handleTitleClick = (e) => {
+    e.stopPropagation(); // Prevent triggering onPlay
+    e.preventDefault();
+    if (onTitleClick) {
+      onTitleClick();
+    }
+  };
 
   const debouncedLikeToggle = useCallback(
     debounce(async (songId, wasLiked) => {
@@ -85,14 +85,14 @@ const SongList = ({
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
           {/* ✅ MAKE SONG TITLE CLICKABLE */}
           <button
-            // onClick={handleTitleClick}
+            onClick={handleTitleClick}
             className="text-left w-full"
           >
             <h3 className="text-white text-lg leading-none sm:truncate">
-              <span className="block sm:hidden">
+              <span className="block sm:hidden hover:underline">
                 {songName.length > 12 ? songName.slice(0, 7) + "..." : songName}
               </span>
-              <span className="hidden sm:block">{songName}</span>
+              <span className="hidden sm:block hover:underline">{songName}</span>
             </h3>
           </button>
 

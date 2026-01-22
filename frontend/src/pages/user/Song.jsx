@@ -1,28 +1,41 @@
-import React, { useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FaPlay, FaShoppingCart, FaCheck, FaPause } from "react-icons/fa";
+import { BsHeart, BsHeartFill, BsShare } from "react-icons/bs";
+import { FiMoreHorizontal } from "react-icons/fi";
+import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
+import { toast } from "sonner";
+
 import UserHeader from "../../components/user/UserHeader";
-import PageSEO from "../../components/PageSeo/PageSEO";
+import ShareDropdown from "../../components/user/ShareDropdown";
+import RecentPlays from "../../components/user/RecentPlays";
+import AlbumCard from "../../components/user/AlbumCard";
+import { formatDuration } from "../../utills/helperFunctions";
+import SubscribeModal from "../../components/user/SubscribeModal";
+import PaymentMethodModal from "../../components/user/PaymentMethodModal";
+import LoadingOverlay from "../../components/user/Home/LoadingOverlay";
+
+// React Query imports
+import { useSong, useArtistSingles } from "../../hooks/api/useSongs";
+import { useArtistAlbumsSimple } from "../../hooks/api/useAlbums";
 
 // Redux imports
-import { 
-  selectCurrentSong, 
-  selectCurrentSongStatus, 
-  selectCurrentSongError 
-} from "../../features/songs/songSelectors";
-import { getSongById } from "../../features/songs/songSlice";
-import { setSelectedSong, play } from "../../features/playback/playerSlice";
+import {
+  setSelectedSong,
+  play,
+  pause,
+} from "../../features/playback/playerSlice";
+import { toggleLikeSong } from "../../features/auth/authSlice";
+import { selectLikedSongIds } from "../../features/auth/authSelectors";
+
+// Subscription utilities
+import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
+import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 
 // Skeleton
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-
-function formatDuration(seconds) {
-  if (!seconds) return "0:00";
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
 
 function formatDate(dateStr) {
   if (!dateStr) return "Unknown date";
@@ -34,107 +47,316 @@ function formatDate(dateStr) {
   });
 }
 
+const getArtistColor = (name) => {
+  if (!name) return "bg-blue-600";
+  const colors = [
+    "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-red-600",
+    "bg-orange-600", "bg-yellow-600", "bg-green-600", "bg-teal-600", "bg-indigo-600",
+  ];
+  const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+  return colors[hash % colors.length];
+};
+
 export default function Song() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { songId } = useParams();
   
-  // Redux state
-  const song = useSelector(selectCurrentSong);
-  const status = useSelector(selectCurrentSongStatus);
-  const error = useSelector(selectCurrentSongError);
-  const loading = status === 'loading';
+  // State for modals
+  const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
+  const [modalArtist, setModalArtist] = useState(null);
+  const [modalType, setModalType] = useState(null);
+  const [modalData, setModalData] = useState(null);
+  
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [isHoveringCover, setIsHoveringCover] = useState(false);
+  
+  // ✅ Payment Gateway hook
+  const { 
+    showPaymentOptions,
+    pendingPayment,
+    openPaymentOptions,
+    handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
+    closePaymentOptions,
+    getPaymentDisplayInfo
+  } = usePaymentGateway();
+  
+  // ✅ Separate loading states for actual payment processing
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  
+  const singlesScrollRef = useRef(null);
+  const albumsScrollRef = useRef(null);
 
-  // Mock current user - replace with actual user state
-  const currentUser = {
-    purchasedSongs: [], // Empty for demo
-    _id: "user123"
-  };
+  // React Query for fetching song data
+  const { data: song, isLoading, isError, error } = useSong(songId);
 
-  // Fetch song data when component mounts or ID changes
-  useEffect(() => {
-    if (songId) {
-      dispatch(getSongById(songId));
-    }
-  }, [dispatch, songId]);
+  // Get artist ID from song
+  const artistId = song?.artist?._id || song?.artist;
 
-  // Handle play song
+  // Fetch artist's singles
+  const {
+    data: singlesData,
+    isLoading: singlesLoading,
+  } = useArtistSingles(artistId, 10);
+
+  // Fetch artist's albums
+  const {
+    data: artistAlbumsData,
+    isLoading: albumsLoading
+  } = useArtistAlbumsSimple(artistId, 10);
+
+  // Current user from Redux
+  const currentUser = useSelector((state) => state.auth?.user);
+  
+  // Get liked songs
+  const likedSongIds = useSelector(selectLikedSongIds);
+  const isLiked = likedSongIds.includes(songId);
+
+  // Get player state directly from Redux store
+  const isPlaying = useSelector((state) => state.player?.isPlaying || false);
+  const currentSong = useSelector((state) => state.player?.currentSong);
+  const isCurrentSongPlaying = currentSong?._id === songId && isPlaying;
+
+  // Check if song belongs to an album
+  const isFromAlbum = Boolean(
+    song?.album && Object.keys(song.album).length > 0
+  );
+
+  // Handle play/pause song
   const handlePlaySong = () => {
     if (song) {
-      dispatch(setSelectedSong(song));
-      dispatch(play());
+      // Play the song
+      if (currentSong?._id === songId && isPlaying) {
+        dispatch(pause());
+      } else {
+        dispatch(setSelectedSong(song));
+        dispatch(play());
+      }
+    }
+  };
+
+  // Handle play other songs - FIXED
+  const handlePlayOtherSong = (songData) => { 
+    // Play the song
+    dispatch(setSelectedSong(songData));
+    dispatch(play());
+  };
+
+  // Handle title click for singles - FIXED: Directly navigate
+  const handleSingleTitleClick = (single) => {
+    navigate(`/song/${single.slug || single._id}`);
+  };
+
+  // Handle cover image click
+  const handleCoverClick = () => {
+    handlePlaySong();
+  };
+
+  // Toggle favorite
+  const handleToggleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const resultAction = await dispatch(toggleLikeSong(songId));
+      if (toggleLikeSong.fulfilled.match(resultAction)) {
+        toast.success(
+          !isLiked ? "Added to Liked Songs" : "Removed from Liked Songs"
+        );
+      } else if (toggleLikeSong.rejected.match(resultAction)) {
+        toast.error(resultAction.payload || "Failed to update like");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
     }
   };
 
   // Check if song is purchased
   const isSongPurchased = currentUser?.purchasedSongs?.includes(song?._id);
-  const isSubscriptionSong = song?.accessType === 'subscription' || song?.price === 0;
+  const isSubscriptionSong = song?.accessType === "subscription";
 
-  // Generate color from artist name
-  const getArtistColor = (name) => {
-    if (!name) return "bg-blue-600";
-    const colors = [
-      "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-red-600", 
-      "bg-orange-600", "bg-yellow-600", "bg-teal-600", "bg-indigo-600"
-    ];
-    const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-    return colors[hash % colors.length];
+  // ✅ Purchase handler
+  const handlePurchaseClick = (item, itemType, currencyData = null) => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    openPaymentOptions(item, itemType, currencyData);
   };
 
-  const artistColor = getArtistColor(song?.artist?.name || song?.singer);
+  // ✅ Wrapper for payment method selection
+  const handlePaymentMethodSelect = async (gateway) => {
+    try {
+      setProcessingPayment(true);
+      setPaymentLoading(true);
+      
+      await originalHandlePaymentMethodSelect(gateway);
+      
+    } catch (error) {
+      console.error('Payment method selection error:', error);
+    } finally {
+      setTimeout(() => {
+        setProcessingPayment(false);
+        setPaymentLoading(false);
+      }, 1000);
+    }
+  };
 
-  // Show error state
-  if (status === 'failed') {
-    return (
-      <>
-        <UserHeader />
-        <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
-          <div className="flex flex-col items-center justify-center h-96">
-            <h1 className="text-2xl font-bold text-red-400 mb-4">Error Loading Song</h1>
-            <p className="text-gray-400 mb-6">{error || "Failed to load song details"}</p>
-            <button
-              onClick={() => navigate(-1)}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-colors"
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // ✅ Enhanced close handler
+  const handleClosePaymentOptions = () => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    closePaymentOptions();
+  };
+
+  const handleSubscribeDecision = (artist, type, data) => {
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+    
+    if (type === "purchase") {
+      if (alreadySubscribed) {
+        handlePurchaseClick(data, "song");
+        return;
+      }
+      setModalArtist(artist);
+      setModalType(type);
+      setModalData(data);
+      setSubscribeModalOpen(true);
+      return;
+    }
+  };
+
+  // Handle subscribe modal close
+  const handleSubscribeModalClose = () => {
+    setSubscribeModalOpen(false);
+    setModalType(null);
+    setModalArtist(null);
+    setModalData(null);
+  };
+
+  // Extract artist singles
+  const artistSingles = singlesData?.pages?.[0]?.songs || [];
+  // Filter out current song from singles
+  const filteredSingles = artistSingles.filter(single => single._id !== songId).slice(0, 10);
+
+  // Extract artist albums
+  const artistAlbums = artistAlbumsData?.albums || [];
+  // Filter out current album if song is from album
+  const filteredAlbums = isFromAlbum && song?.album?._id 
+    ? artistAlbums.filter(album => album._id !== song.album._id)
+    : artistAlbums;
+
+  // Scroll handlers
+  const handleScroll = (direction = "right", section = "singles") => {
+    const scrollAmount = direction === "right" ? 200 : -200;
+    if (section === "singles") {
+      singlesScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    } else {
+      albumsScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  // Get song price display
+  const getSongPriceDisplay = (songItem) => {
+    if (currentUser?.purchasedSongs?.includes(songItem._id)) {
+      return "Purchased";
+    }
+
+    if (songItem.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Sirf purchase-only wale items ke liye buy button
+    if (songItem.accessType === "purchase-only") {
+      if (songItem.basePrice && songItem.basePrice.amount > 0) {
+        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, songItem.artist);
+        
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (alreadySubscribed) {
+                handlePurchaseClick(songItem, "song");
+              } else {
+                handleSubscribeDecision(songItem.artist, "purchase", songItem);
+              }
+            }}
+            className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded transition-colors relative"
+          >
+            {`Buy $${songItem.basePrice.amount}`}
+          </button>
+        );
+      }
+      
+      if (songItem.basePrice && songItem.basePrice.amount === 0) {
+        return "Free";
+      }
+    }
+
+    return "Free";
+  };
+
+  // Get album price display
+  const getAlbumPriceDisplay = (album) => {
+    if (currentUser?.purchasedAlbums?.includes(album._id)) {
+      return "Purchased";
+    }
+
+    if (album.accessType === "subscription") {
+      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    }
+
+    // Sirf purchase-only wale albums ke liye buy button
+    if (album.accessType === "purchase-only") {
+      if (album.basePrice && album.basePrice.amount > 0) {
+        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, album.artist);
+        
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (alreadySubscribed) {
+                handlePurchaseClick(album, "album");
+              } else {
+                handleSubscribeDecision(album.artist, "purchase", album);
+              }
+            }}
+            className="text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded transition-colors relative"
+          >
+            {`Buy $${album.basePrice.amount}`}
+          </button>
+        );
+      }
+      
+      if (album.basePrice && album.basePrice.amount === 0) {
+        return "Free";
+      }
+    }
+
+    return null;
+  };
+
+  // Main purchase button handler for current song
+  const handleMainPurchaseClick = () => {
+    if (!song) return;
+    
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
+    
+    if (alreadySubscribed) {
+      handlePurchaseClick(song, "song");
+    } else {
+      handleSubscribeDecision(song.artist, "purchase", song);
+    }
+  };
 
   return (
     <>
-      <PageSEO
-        title={song ? `${song.title} by ${song.artist?.name || song.singer} | Reset Music` : "Loading Song | Reset Music"}
-        description={song ? `Listen to "${song.title}" by ${song.artist?.name || song.singer} exclusively on Reset Music. ${song.description}` : "Loading song details..."}
-        canonicalUrl={song ? `https://musicreset.com/song/${song._id}` : "https://musicreset.com"}
-        structuredData={song ? {
-          "@context": "https://schema.org",
-          "@type": "MusicRecording",
-          "name": song.title,
-          "description": song.description,
-          "image": song.coverImage,
-          "url": `https://musicreset.com/song/${song._id}`,
-          "byArtist": {
-            "@type": "MusicGroup",
-            "name": song.artist?.name || song.singer,
-          },
-          "duration": `PT${Math.floor(song.duration / 60)}M${song.duration % 60}S`,
-          "datePublished": song.releaseDate
-        } : null}
-        noIndex={true}
-      />
-
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
-
+        <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8 relative">
           {/* Main Song Header */}
-          {loading ? (
+          {isLoading ? (
             <div className="flex flex-col lg:flex-row items-start lg:items-end gap-8 pb-8">
-              <Skeleton width={320} height={320} className="rounded-lg" />
+              <Skeleton width={320} height={320} className="rounded-2xl" />
               <div className="flex-1 flex flex-col gap-3">
                 <Skeleton width={60} height={16} />
                 <Skeleton width={400} height={40} />
@@ -150,246 +372,340 @@ export default function Song() {
               </div>
             </div>
           ) : song ? (
-            <div className="flex flex-col lg:flex-row items-start lg:items-end gap-8 pb-8">
-              
-              {/* Song Cover */}
-              <div className="relative group">
-                {song.coverImage ? (
-                  <img
-                    src={song.coverImage}
-                    alt={`${song.title} cover`}
-                    className="w-[320px] h-[320px] object-cover rounded-lg shadow-2xl transition-transform group-hover:scale-105"
-                  />
-                ) : (
-                  <div
-                    className={`w-[320px] h-[320px] ${artistColor} rounded-lg shadow-2xl flex items-center justify-center text-white font-bold text-6xl transition-transform group-hover:scale-105`}
-                  >
-                    {song.title ? song.title.charAt(0).toUpperCase() : "S"}
+            <>
+              <div className="flex flex-col lg:flex-row items-start lg:items-end gap-8 pb-8">
+                {/* Song Cover with Hover Play Button */}
+                <div
+                  className="relative group"
+                  onMouseEnter={() => setIsHoveringCover(true)}
+                  onMouseLeave={() => setIsHoveringCover(false)}
+                >
+                  <div className="relative w-full max-w-[320px] cursor-pointer">
+                        <img
+                          src={song?.coverImage || song?.album?.coverImage}
+                          alt={`${song.title} cover`}
+                          className="w-[320px] h-[320px] object-cover rounded-2xl shadow-2xl transition-all duration-300"
+                          onClick={handleCoverClick}
+                        />
+                        {/* Hover Overlay with Play Button */}
+                        <div
+                          className={`absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                            isHoveringCover ? "opacity-100" : "opacity-0"
+                          }`}
+                          onClick={handleCoverClick}
+                        >
+                          <button className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
+                            {isCurrentSongPlaying ? (
+                              <FaPause className="w-6 h-6 text-white" />
+                            ) : (
+                              <FaPlay className="w-6 h-6 text-white ml-1" />
+                            )}
+                          </button>
+                        </div>
+                    
                   </div>
-                )}
-                
-                {/* Play Button Overlay */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-lg transition-all duration-300 flex items-center justify-center">
-                  <button 
-                    onClick={handlePlaySong}
-                    className="w-20 h-20 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100 shadow-lg"
-                  >
-                    <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Song Details */}
-              <div className="flex-1">
-                <div className="text-sm font-bold tracking-widest uppercase opacity-80 mb-2">
-                  Song
-                </div>
-                
-                <h1 className="text-4xl lg:text-6xl font-extrabold mb-4 leading-tight">
-                  {song.title}
-                </h1>
-                
-                <p className="text-lg text-gray-300 mb-4 leading-relaxed max-w-2xl">
-                  {song.description}
-                </p>
-
-                {/* Song Meta Info */}
-                <div className="flex items-center gap-2 mb-6 flex-wrap text-sm lg:text-base text-gray-300">
-                  {song.artist && (
-                    <>
-                      <button 
-                        onClick={() => navigate(`/artist/${song.artist.slug}`)}
-                        className="font-semibold text-white hover:text-blue-400 transition-colors underline-offset-2 hover:underline"
-                      >
-                        {song.artist.name}
-                      </button>
-                      <span className="text-xl">•</span>
-                    </>
-                  )}
-                  <span>{formatDate(song.releaseDate)}</span>
-                  <span className="text-xl">•</span>
-                  <span>{formatDuration(song.duration)}</span>
                 </div>
 
-                {/* Genre Tags */}
-                {song.genre && song.genre.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {song.genre.map((genre, index) => (
-                      <span 
-                        key={index}
-                        className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-full transition-colors cursor-pointer"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  
-                  {/* Main Play Button */}
-                  <button 
-                    onClick={handlePlaySong}
-                    className="flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    <span>Play</span>
-                  </button>
-
-                  {/* Purchase/Subscription Info */}
-                  {song.price > 0 && !isSubscriptionSong && (
-                    <>
-                      <span className="text-xl font-bold text-blue-400">
-                        ₹{song.price}
-                      </span>
-                      {isSongPurchased ? (
-                        <span className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold flex items-center gap-2">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                          </svg>
-                          Purchased
-                        </span>
-                      ) : (
-                        <button className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                          Purchase Song
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  {isSubscriptionSong && (
-                    <span className="px-6 py-3 bg-purple-600 text-white rounded-full font-semibold flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                      </svg>
-                      Subscription Access
+                {/* Song Details */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-bold tracking-widest opacity-80">
+                      track
                     </span>
+                    {song.explicit && (
+                      <span className="px-2 py-0.5 bg-gray-700 text-xs rounded-sm">
+                        explicit
+                      </span>
+                    )}
+                  </div>
+
+                  <h1 className="text-4xl lg:text-6xl font-black mb-4 leading-tight text-white">
+                    {song.title}
+                  </h1>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    {song?.artist && (
+                      <button
+                        onClick={() => navigate(`/artist/${song?.artist?.slug}`)}
+                        className="text-lg text-gray-300 hover:text-white transition-colors hover:underline"
+                      >
+                        {song?.artist?.name}
+                      </button>
+                    )}
+                    <span className="text-gray-500">•</span>
+                    <span className="text-gray-400">
+                      {formatDate(song?.releaseDate)}
+                    </span>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-gray-400">
+                      {formatDuration(song?.duration)}
+                    </span>
+                  </div>
+
+                  <p className="text-lg text-gray-300 mb-6 leading-relaxed max-w-2xl">
+                    {song.description}
+                  </p>
+
+                  {/* Genre Tags */}
+                  {song.genre && song.genre.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {song.genre.map((genre, index) => (
+                        <button
+                          key={index}
+                          onClick={() => navigate(`/genre/${genre.toLowerCase()}`)}
+                          className="px-4 py-1.5 bg-gray-800/50 text-white text-sm rounded-full border border-gray-700"
+                        >
+                          {genre}
+                        </button>
+                      ))}
+                    </div>
                   )}
 
-                  {/* Add to Favorites */}
-                  <button className="p-3 border-2 border-gray-600 hover:border-white text-gray-400 hover:text-white rounded-full transition-all duration-200 group">
-                    <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {/* Purchase/Subscription Info - Sirf purchase-only ke liye */}
+                    {song.accessType === "purchase-only" && song.basePrice?.amount > 0 && (
+                      <>
+                        <div className="px-3 py-1 sm:px-5 sm:py-3 bg-gray-800 rounded-full border border-gray-700">
+                          <span className="sm:text-xl text-base font-bold text-white">
+                            ${song.basePrice.amount}
+                          </span>
+                        </div>
+                        {isSongPurchased ? (
+                          <button className="px-6 py-3.5 bg-green-600 text-white rounded-full font-semibold flex items-center gap-2">
+                            <FaCheck className="w-4 h-4" />
+                            Purchased
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={handleMainPurchaseClick}
+                            className="px-6 py-3.5 bg-blue-600 text-white rounded-full font-semibold flex items-center gap-2"
+                          >
+                            <FaShoppingCart className="w-4 h-4" />
+                            Purchase Song
+                          </button>
+                        )}
+                      </>
+                    )}
 
-                  {/* Share Button */}
-                  <button className="p-3 border-2 border-gray-600 hover:border-white text-gray-400 hover:text-white rounded-full transition-all duration-200 group">
-                    <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                    </svg>
-                  </button>
-
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {/* Related Content Section */}
-          {song && (
-            <div className="border-t border-gray-700 pt-8">
-              
-              {/* Album Info */}
-              {song.album && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
-                    From the Album
-                  </h3>
-                  <button 
-                    onClick={() => navigate(`/album/${song.album.slug}`)}
-                    className="flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all duration-200 group max-w-md"
-                  >
-                    {song.album.coverImage ? (
-                      <img 
-                        src={song.album.coverImage} 
-                        alt={song.album.title}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className={`w-16 h-16 ${artistColor} rounded-lg flex items-center justify-center text-white font-bold text-xl`}>
-                        {song.album.title.charAt(0).toUpperCase()}
+                    {song.accessType === "subscription" && (
+                      <div className="subscription-wrapper">
+                        <button className="subscription-card px-6 py-3.5 flex items-center gap-2">
+                          Subscription Access
+                        </button>
                       </div>
                     )}
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold group-hover:text-blue-400 transition-colors">
+
+                    {/* Like Button */}
+                    <button
+                      onClick={handleToggleLike}
+                      className="p-3.5 rounded-full text-gray-300 border border-gray-700 hover:bg-gray-800/50 hover:text-red-600 transition-colors group"
+                    >
+                      {isLiked ? (
+                        <BsHeartFill className="w-5 h-5 text-red-600" />
+                      ) : (
+                        <BsHeart className="w-5 h-5 group-hover:text-red-700" />
+                      )}
+                    </button>
+
+                    {/* Share Button with Dropdown Component */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowShareMenu(!showShareMenu)}
+                        className="p-3.5 text-gray-300 rounded-full border border-gray-700 hover:bg-gray-800/50 hover:text-blue-400 transition-colors group"
+                      >
+                        <BsShare className="w-5 h-5 group-hover:text-blue-400" />
+                      </button>
+
+                      <ShareDropdown
+                        isOpen={showShareMenu}
+                        onClose={() => setShowShareMenu(false)}
+                        url={`${window.location}`}
+                        title={song.title}
+                        text={`Listen to "${song.title}" by ${
+                          song.artist?.name || song.singer
+                        } on Reset Music`}
+                      />
+                    </div>
+
+                    {/* More Options Button */}
+                    {/* <button
+                      onClick={() => setShowMoreOptions(!showMoreOptions)}
+                      className="p-3.5 text-gray-300 rounded-full border border-gray-700 hover:cursor-pointer hover:bg-gray-800/50 transition-colors"
+                    >
+                      <FiMoreHorizontal className="w-5 h-5" />
+                    </button> */}
+                  </div>
+                  {/* Album Info if from album */}
+                  {isFromAlbum && song?.album && (
+                    <div className="mt-2">
+                      <span className="text-gray-400 text-sm">From album: </span>
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/album/${song?.album?.slug || song?.album?._id}`
+                          )
+                        }
+                        className="text-white font-medium hover:underline"
+                      >
                         {song.album.title}
-                      </div>
-                      <div className="text-gray-400 text-sm">Album • {song.artist?.name || song.singer}</div>
+                      </button>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-
-              {/* Artist Info */}
-              {song.artist && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Artist
-                  </h3>
-                  <button 
-                    onClick={() => navigate(`/artist/${song.artist.slug}`)}
-                    className="flex items-center gap-4 p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all duration-200 group max-w-md"
-                  >
-                    {song.artist.image ? (
-                      <img 
-                        src={song.artist.image} 
-                        alt={song.artist.name}
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className={`w-16 h-16 ${artistColor} rounded-full flex items-center justify-center text-white font-bold text-xl`}>
-                        {song.artist.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold group-hover:text-purple-400 transition-colors">
-                        {song.artist.name}
-                      </div>
-                      <div className="text-gray-400 text-sm">Artist</div>
-                    </div>
-                    <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-
-              {/* Lyrics Section Placeholder */}
-              <div>
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Lyrics
-                </h3>
-                <div className="bg-gray-800 rounded-lg p-6">
-                  <p className="text-gray-400 text-center italic">
-                    Lyrics not available for this track
-                  </p>
+                  )}
                 </div>
               </div>
 
-            </div>
-          )}
+              {/* Artist Info Section */}
+              {song?.artist && (
+                <div className="pt-4 mb-8 border-t border-gray-700">
+                  <div className="flex items-center gap-2 sm:gap-4 mb-6">
+                    <div className="h-12 w-1 bg-blue-600 rounded-full"></div>
+                    <h2 className="sm:text-2xl text-md font-bold text-white">
+                      Artist: {song.artist.name}
+                    </h2>
+                    <button
+                      onClick={() => navigate(`/artist/${song.artist.slug}`)}
+                      className="ml-auto px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
+                    >
+                      View Artist Profile →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* More Songs by This Artist Section */}
+              {filteredSingles.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-xl font-bold text-white">
+                      more tracks by {song?.artist?.name || song?.singer}
+                    </h2>
+                    <div className="sm:flex hidden items-center gap-2">
+                      <LuSquareChevronLeft
+                        className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                        onClick={() => handleScroll("left", "singles")}
+                      />
+                      <LuSquareChevronRight
+                        className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                        onClick={() => handleScroll("right", "singles")}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    ref={singlesScrollRef}
+                    className="flex gap-4 overflow-x-auto pb-6 no-scrollbar"
+                  >
+                    {singlesLoading ? (
+                      [...Array(5)].map((_, idx) => (
+                        <div key={`single-skeleton-${idx}`} className="min-w-[180px]">
+                          <Skeleton height={160} width={160} className="rounded-xl" />
+                          <Skeleton width={140} height={16} className="mt-2" />
+                          <Skeleton width={100} height={14} className="mt-1" />
+                        </div>
+                      ))
+                    ) : (
+                      filteredSingles.map((single) => (
+                        <RecentPlays
+                          key={single._id}
+                          title={single.title}
+                          image={
+                            single.coverImage ? (
+                              single.coverImage
+                            ) : (
+                              <div
+                                className={`w-full h-40 ${getArtistColor(single.artist?.name || single.singer)} flex items-center justify-center text-white font-bold text-2xl`}
+                              >
+                                {single.title ? single.title.charAt(0).toUpperCase() : "S"}
+                              </div>
+                            )
+                          }
+                          onPlay={() => handlePlayOtherSong(single)}
+                          onTitleClick={() => handleSingleTitleClick(single)}
+                          isSelected={currentSong?._id === single._id}
+                          price={getSongPriceDisplay(single)}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Albums by This Artist Section */}
+              {filteredAlbums.length > 0 && (
+                <div className="mt-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-xl font-bold text-white">
+                      albums by {song?.artist?.name || song?.singer}
+                    </h2>
+                    <div className="sm:flex hidden items-center gap-2">
+                      <LuSquareChevronLeft
+                        className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                        onClick={() => handleScroll("left", "albums")}
+                      />
+                      <LuSquareChevronRight
+                        className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                        onClick={() => handleScroll("right", "albums")}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    ref={albumsScrollRef}
+                    className="flex gap-4 overflow-x-auto pb-6 no-scrollbar"
+                  >
+                    {albumsLoading ? (
+                      [...Array(5)].map((_, idx) => (
+                        <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
+                          <Skeleton height={160} width={160} className="rounded-xl" />
+                          <Skeleton width={120} height={16} className="mt-2" />
+                        </div>
+                      ))
+                    ) : (
+                      filteredAlbums.slice(0, 10).map((album) => (
+                        <AlbumCard
+                          key={album._id}
+                          tag={`${album.title || "music"}`}
+                          artists={album.artist?.name || "Various Artists"}
+                          image={album.coverImage || "/images/placeholder.png"}
+                          price={getAlbumPriceDisplay(album)}
+                          onClick={() => navigate(`/album/${album.slug}`)}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       </SkeletonTheme>
+      
+      {/* Modals */}
+      <LoadingOverlay show={processingPayment || paymentLoading} />
+      
+      <SubscribeModal
+        open={subscribeModalOpen}
+        artist={modalArtist}
+        type={modalType}
+        itemData={modalData}
+        onClose={handleSubscribeModalClose}
+        onNavigate={() => {
+          setSubscribeModalOpen(false);
+          if (modalArtist?.slug) navigate(`/artist/${modalArtist.slug}`);
+        }}
+      />
+
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        open={showPaymentOptions}
+        onClose={handleClosePaymentOptions}
+        onSelectMethod={handlePaymentMethodSelect}
+        item={pendingPayment?.item}
+        itemType={pendingPayment?.itemType}
+        currencyData={pendingPayment?.currencyData}
+        getPaymentDisplayInfo={getPaymentDisplayInfo}
+      />
     </>
   );
 }

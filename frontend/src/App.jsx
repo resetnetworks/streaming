@@ -33,13 +33,6 @@ import {
 
 import * as Pages from "./routes/LazyRoutes";
 
-// 🟦 Stripe
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-
-// ⚠️ Use your actual publishable key here (from .env or directly)
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-
 function App() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -107,7 +100,6 @@ function App() {
   if (initialLoad) return <Loader />;
 
   return (
-    <Elements stripe={stripePromise}>
       <BrowserRouter>
       <ScrollToTop />
       {/* paypal success handler */}
@@ -331,10 +323,11 @@ function App() {
             />
           </Routes>      
         </Suspense>
+        <Toaster richColors position="top-center" />
       </BrowserRouter>
 
-      <Toaster richColors position="top-center" />
-    </Elements>
+      
+  
   );
 }
 

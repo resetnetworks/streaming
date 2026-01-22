@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
-
+import { useNavigate } from "react-router-dom";
 import SongList from "../SongList";
 import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import { handlePlaySong } from "../../../utills/songHelpers";
@@ -29,6 +29,7 @@ const AllTracksSection = ({
   
   const currentUser = useSelector((state) => state.auth.user);
   const selectedSong = useSelector((state) => state.player.selectedSong);
+  const navigate = useNavigate()
 
   // ✅ Singles selectors only
   const allSingles = useSelector(selectAllSingles);
@@ -154,6 +155,7 @@ const AllTracksSection = ({
                 >
                   {column.map((single) => (
                     <SongList
+                      onTitleClick={() => navigate(`/song/${single?.slug}`)}
                       key={single._id}
                       songId={single._id}
                       img={single.coverImage || "/images/placeholder.png"}

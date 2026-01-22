@@ -14,7 +14,6 @@ import ArtistAboutSection from "../../components/user/Artist/ArtistAboutSection"
 import SubscriptionMethodModal from "../../components/user/SubscriptionMethodModal";
 import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import SubscribeModal from "../../components/user/SubscribeModal";
-import PaymentErrorNotification from "../../components/user/Artist/PaymentErrorNotification";
 
 import { useArtist, useSubscriberCount } from "../../hooks/api/useArtists";
 import { useArtistAlbumsSimple } from "../../hooks/api/useAlbums";
@@ -292,6 +291,7 @@ const Artist = () => {
         <ArtistSinglesSection
           artistId={artistId}
           currentUser={currentUser}
+          artist={artist}
           onPurchaseClick={handlePurchaseClick}
           onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
@@ -307,10 +307,6 @@ const Artist = () => {
           setSubscriptionLoading={setSubscriptionLoading}
         />
         
-        <PaymentErrorNotification 
-          error={paymentError}
-          onDismiss={() => {/* Handle dismiss if needed */}}
-        />
         
         <SubscriptionMethodModal
           open={showSubscriptionOptions}
