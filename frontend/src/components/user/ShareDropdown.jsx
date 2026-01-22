@@ -109,10 +109,10 @@ const ShareDropdown = ({
           animate="visible"
           exit="exit"
           variants={dropdownVariants}
-          className={`absolute -right-8 top-full mt-2 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[200px] z-50 shadow-2xl ${className}`}
+          className={`absolute -right-8 top-full mt-2 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[140px] sm:min-w-[200px] z-50 shadow-2xl ${className}`}
         >
-          <div className="px-4 py-2 border-b border-gray-700">
-            <p className="text-sm font-semibold text-gray-300">Share</p>
+          <div className="sm:px-4 sm:py-2 px-2 py-1 border-b border-gray-700">
+            <p className="sm:text-sm text-xs font-semibold text-gray-300">Share</p>
           </div>
           
           <motion.button
@@ -123,8 +123,8 @@ const ShareDropdown = ({
             onClick={() => handleShare('copy')}
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-800/50 transition-colors"
           >
-            <FaCopy className="w-4 h-4 text-blue-400" />
-            <span className="text-sm">Copy Link</span>
+            <FaCopy className=" w-4 h-4 text-blue-400" />
+            <span className="sm:text-sm text-xs">Copy Link</span>
           </motion.button>
           
           <motion.button
@@ -136,7 +136,7 @@ const ShareDropdown = ({
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-800/50 transition-colors"
           >
             <FaXTwitter className="w-4 h-4 text-gray-300" />
-            <span className="text-sm">Twitter</span>
+            <span className="sm:text-sm text-xs">Twitter</span>
           </motion.button>
           
           <motion.button
@@ -148,7 +148,7 @@ const ShareDropdown = ({
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-800/50 transition-colors"
           >
             <FaFacebook className="w-4 h-4 text-blue-600" />
-            <span className="text-sm">Facebook</span>
+            <span className="sm:text-sm text-xs">Facebook</span>
           </motion.button>
           
           <motion.button
@@ -160,7 +160,7 @@ const ShareDropdown = ({
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-800/50 transition-colors"
           >
             <FaWhatsapp className="w-4 h-4 text-green-500" />
-            <span className="text-sm">WhatsApp</span>
+            <span className="sm:text-sm text-xs">WhatsApp</span>
           </motion.button>
         
           {navigator.share && (
@@ -173,7 +173,7 @@ const ShareDropdown = ({
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-800/50 transition-colors border-t border-gray-700 mt-1"
             >
               <BsShare className="w-4 h-4 text-purple-400" />
-              <span className="text-sm">Share via...</span>
+              <span className="sm:text-sm text-xs">Share via...</span>
             </motion.button>
           )}
         </motion.div>

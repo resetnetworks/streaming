@@ -336,9 +336,9 @@ export default function Album() {
       <>
         <UserHeader />
         <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-          <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
-            <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
-              <Skeleton width={240} height={240} className="rounded-xl" />
+          <div className="min-h-screen text-white px-4 sm:px-8 pt-6 sm:pt-10 pb-8">
+            <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-8 pb-6">
+              <Skeleton className="w-full max-w-[200px] h-[200px] sm:w-[240px] sm:h-[240px] rounded-xl" />
               <div className="flex-1 flex flex-col gap-2">
                 <Skeleton width={80} height={18} />
                 <Skeleton width={300} height={36} />
@@ -375,7 +375,7 @@ export default function Album() {
     return (
       <>
         <UserHeader />
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center px-4">
           <div className="text-center p-8">
             <h2 className="text-2xl font-bold text-white mb-4">
               Album not found
@@ -421,12 +421,12 @@ export default function Album() {
 
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8">
+        <div className="min-h-screen text-white px-4 sm:px-8 pt-6 sm:pt-10 pb-8">
           {/* Album Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-8 pb-6">
-            {/* Album Cover with Click to Play - FIXED SIZE */}
+          <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-8 pb-6">
+            {/* Album Cover with Click to Play - RESPONSIVE */}
             <div
-              className="relative cursor-pointer flex-shrink-0"
+              className="relative cursor-pointer flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0"
               onMouseEnter={() => setIsHoveringCover(true)}
               onMouseLeave={() => setIsHoveringCover(false)}
               onClick={handlePlayAlbum}
@@ -434,7 +434,7 @@ export default function Album() {
               <img
                 src={album.coverImage}
                 alt="Album Cover"
-                className="w-[240px] h-[240px] md:w-[280px] md:h-[280px] object-cover rounded-xl shadow-2xl transition-opacity duration-300"
+                className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-opacity duration-300"
               />
               {/* Hover Overlay with Play Icon */}
               <div
@@ -442,9 +442,9 @@ export default function Album() {
                   isHoveringCover ? "opacity-100" : "opacity-0"
                 }`}
               >
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
                   <svg
-                    className="w-8 h-8 text-white ml-1"
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-0.5 sm:ml-1"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -454,49 +454,49 @@ export default function Album() {
               </div>
             </div>
 
-            <div className="flex-1">
-              <div className="text-sm font-bold tracking-widest uppercase opacity-80">
+            <div className="flex-1 w-full">
+              <div className="text-xs sm:text-sm font-bold tracking-widest uppercase opacity-80">
                 Album
               </div>
-              <h1 className="text-3xl md:text-6xl font-extrabold my-2">
+              <h1 className="text-2xl sm:text-3xl md:text-6xl font-extrabold my-1 sm:my-2">
                 {album.title}
               </h1>
-              <p className="md:text-lg text-sm text-gray-400">
+              <p className="text-sm sm:text-base md:text-lg text-gray-400">
                 {album.description}
               </p>
-              <div className="flex items-center gap-2 mt-4 flex-wrap text-sm md:text-base text-gray-300">
+              <div className="flex items-center gap-1 sm:gap-2 mt-3 sm:mt-4 flex-wrap text-xs sm:text-sm md:text-base text-gray-300">
                 <button
                   className="font-semibold cursor-pointer hover:underline"
                   onClick={() => navigate(`/artist/${getArtistSlug()}`)}
                 >
                   {artistName}
                 </button>
-                <span className="text-base md:text-xl">•</span>
+                <span className="text-sm md:text-xl">•</span>
                 <span>{formatDate(album.releaseDate)}</span>
-                <span className="text-base md:text-xl">•</span>
+                <span className="text-sm md:text-xl">•</span>
                 <span>{songs.length} songs</span>
-                <span className="text-base md:text-xl">•</span>
+                <span className="text-sm md:text-xl">•</span>
                 <span>{formatDuration(totalDuration)}</span>
               </div>
 
               {/* Purchase/Subscription Buttons */}
-              <div className="flex items-center gap-4 mt-6">
+              <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
                 {album?.basePrice?.amount > 0 && !isSubscriptionAlbum && (
                   <>
-                    <div className="px-3 py-1 sm:px-5 sm:py-3 bg-gray-800 rounded-full border border-gray-700">
-                      <span className="sm:text-xl text-base font-bold text-white">
+                    <div className="px-2 py-0.5 sm:px-3 sm:py-1 md:px-5 md:py-3 bg-gray-800 rounded-full border border-gray-700">
+                      <span className="text-base sm:text-lg md:text-xl font-bold text-white">
                         ${album.basePrice.amount}
                       </span>
                     </div>
                     {isAlbumPurchased ? (
-                      <span className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold">
+                      <span className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-full font-semibold text-sm sm:text-base">
                         Purchased
                       </span>
                     ) : (
                       <button
                         onClick={() => handlePurchaseClick(album, "album")}
                         disabled={processingPayment || paymentLoading}
-                        className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-200 shadow-md text-sm sm:text-base ${
                           processingPayment || paymentLoading
                             ? "bg-gray-500 cursor-not-allowed text-gray-300"
                             : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -512,16 +512,16 @@ export default function Album() {
 
                 {isSubscriptionAlbum && getArtistSlug() && (
                   <>
-                    <span className="md:text-lg text-sm font-semibold text-blue-400">
+                    <span className="text-sm sm:text-base md:text-lg font-semibold text-blue-400">
                       Subscription
                     </span>
                     <button
                       onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                      className="md:px-6 px-4 md:py-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
                     >
-                      <span className="md:text-lg text-sm">View Artist</span>
+                      <span>View Artist</span>
                       <svg
-                        className="w-4 h-4"
+                        className="w-3 h-3 sm:w-4 sm:h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -537,18 +537,18 @@ export default function Album() {
                   </>
                 )}
 
-                   {/* Share Button with Dropdown Component */}
+                {/* Share Button with Dropdown Component */}
                 <div className="relative">
                   <button
                     onClick={() => setShowShareMenu(!showShareMenu)}
-                    className={`p-3.5 rounded-full border border-gray-700 transition-colors group ${
+                    className={`p-2 sm:p-2.5 md:p-3.5 rounded-full border transition-colors group ${
                       showShareMenu
-                        ? "bg-gray-800/50 text-blue-400" // Active state
-                        : "text-gray-300 hover:bg-gray-800/50 hover:text-blue-400" // Normal state
+                        ? "bg-gray-800/50 text-blue-400 border-blue-400" // Active state
+                        : "text-gray-300 border-gray-700 hover:bg-gray-800/50 hover:text-blue-400" // Normal state
                     }`}
                   >
                     <BsShare
-                      className={`w-5 h-5 transition-colors ${
+                      className={`w-4 h-4 sm:w-5 sm:h-5 ${
                         showShareMenu
                           ? "text-blue-400"
                           : "group-hover:text-blue-400"
@@ -562,9 +562,10 @@ export default function Album() {
                     url={`${window.location}`}
                     title={album.title}
                     text={`Listen to "${album.title}" by ${
-                      album.artist?.name || album.singer
+                      album.artist?.name || artistName
                     } on Reset Music`}
-                    isActive={showShareMenu} // ✅ Pass active state
+                    isActive={showShareMenu}
+                    className="lg:right-0 right-[-80px] sm:right-[-40px]" // Responsive positioning
                   />
                 </div>
               </div>
@@ -573,14 +574,17 @@ export default function Album() {
 
           {/* Song List */}
           {songs.length === 0 ? (
-            <div className="text-center text-gray-400 mt-8 text-lg">
+            <div className="text-center text-gray-400 mt-6 sm:mt-8 text-base sm:text-lg">
               No songs in this album.
             </div>
           ) : (
-            <>
+            <div className="mt-6 sm:mt-8">
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-4">
+                Tracklist
+              </h2>
               {songs.map((song, index) => (
-                <div key={song._id} className="mb-4 flex items-center gap-4">
-                  <div className="w-8 text-center text-gray-400 font-medium">
+                <div key={song._id} className="mb-3 sm:mb-4 flex items-center gap-3 sm:gap-4">
+                  <div className="w-6 sm:w-8 text-center text-gray-400 font-medium text-sm sm:text-base">
                     {index + 1}
                   </div>
                   <div className="flex-1">
@@ -602,7 +606,7 @@ export default function Album() {
                             "Purchased"
                           ) : (
                             <button
-                              className={`text-white text-xs px-2 py-1 rounded transition-colors ${
+                              className={`text-white text-[10px] xs:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors ${
                                 processingPayment || paymentLoading
                                   ? "bg-gray-500 cursor-not-allowed"
                                   : "bg-indigo-600 hover:bg-indigo-700"
@@ -625,20 +629,20 @@ export default function Album() {
                   </div>
                 </div>
               ))}
-            </>
+            </div>
           )}
         </div>
 
         {/* Payment Loading Overlay */}
         {(processingPayment || paymentLoading) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="bg-gray-800 rounded-lg p-6 sm:p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-500"></div>
               <div className="text-center">
-                <p className="text-white text-lg font-semibold">
+                <p className="text-white text-base sm:text-lg font-semibold">
                   Processing Payment
                 </p>
-                <p className="text-gray-300 text-sm mt-1">
+                <p className="text-gray-300 text-xs sm:text-sm mt-1">
                   Please wait, do not close this window
                 </p>
               </div>
