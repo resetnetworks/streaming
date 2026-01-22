@@ -463,6 +463,26 @@ export default function Song() {
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-4 flex-wrap">
+
+                     {/* Share Button with Dropdown Component */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowShareMenu(!showShareMenu)}
+                        className="p-3.5 text-gray-300 rounded-full border border-gray-700 hover:bg-gray-800/50 hover:text-blue-400 transition-colors group"
+                      >
+                        <BsShare className="w-5 h-5 group-hover:text-blue-400" />
+                      </button>
+
+                      <ShareDropdown
+                        isOpen={showShareMenu}
+                        onClose={() => setShowShareMenu(false)}
+                        url={`${window.location}`}
+                        title={song.title}
+                        text={`Listen to "${song.title}" by ${
+                          song.artist?.name || song.singer
+                        } on Reset Music`}
+                      />
+                    </div>
                     {/* Purchase/Subscription Info - Sirf purchase-only ke liye */}
                     {song.accessType === "purchase-only" && song.basePrice?.amount > 0 && (
                       <>
@@ -508,25 +528,7 @@ export default function Song() {
                       )}
                     </button>
 
-                    {/* Share Button with Dropdown Component */}
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowShareMenu(!showShareMenu)}
-                        className="p-3.5 text-gray-300 rounded-full border border-gray-700 hover:bg-gray-800/50 hover:text-blue-400 transition-colors group"
-                      >
-                        <BsShare className="w-5 h-5 group-hover:text-blue-400" />
-                      </button>
-
-                      <ShareDropdown
-                        isOpen={showShareMenu}
-                        onClose={() => setShowShareMenu(false)}
-                        url={`${window.location}`}
-                        title={song.title}
-                        text={`Listen to "${song.title}" by ${
-                          song.artist?.name || song.singer
-                        } on Reset Music`}
-                      />
-                    </div>
+                   
 
                     {/* More Options Button */}
                     {/* <button
