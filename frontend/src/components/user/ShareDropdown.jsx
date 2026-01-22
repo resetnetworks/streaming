@@ -16,6 +16,7 @@ const ShareDropdown = ({
   text, 
   isOpen, 
   onClose, 
+  isActive,
   className = "" 
 }) => {
   const handleShare = async (platform) => {
@@ -108,7 +109,7 @@ const ShareDropdown = ({
           animate="visible"
           exit="exit"
           variants={dropdownVariants}
-          className={`absolute left-0 top-full mt-2 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[200px] z-50 shadow-2xl ${className}`}
+          className={`absolute -right-8 top-full mt-2 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[200px] z-50 shadow-2xl ${className}`}
         >
           <div className="px-4 py-2 border-b border-gray-700">
             <p className="text-sm font-semibold text-gray-300">Share</p>

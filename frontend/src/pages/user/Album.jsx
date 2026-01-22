@@ -481,23 +481,6 @@ export default function Album() {
 
               {/* Purchase/Subscription Buttons */}
               <div className="flex items-center gap-4 mt-6">
-                 {/* ✅ Share Button */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowShareMenu(!showShareMenu)}
-                    className="p-3.5 text-gray-300 rounded-full border border-gray-700 hover:bg-gray-800/50 hover:text-blue-400 transition-colors group"
-                  >
-                    <BsShare className="w-5 h-5 group-hover:text-blue-400" />
-                  </button>
-
-                  <ShareDropdown
-                    isOpen={showShareMenu}
-                    onClose={() => setShowShareMenu(false)}
-                    url={`${window.location}`}
-                    title={album.title}
-                    text={`Check out "${album.title}" by ${artistName} on Reset Music`}
-                  />
-                </div>
                 {album?.basePrice?.amount > 0 && !isSubscriptionAlbum && (
                   <>
                     <div className="px-3 py-1 sm:px-5 sm:py-3 bg-gray-800 rounded-full border border-gray-700">
@@ -554,7 +537,36 @@ export default function Album() {
                   </>
                 )}
 
-               
+                   {/* Share Button with Dropdown Component */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                    className={`p-3.5 rounded-full border border-gray-700 transition-colors group ${
+                      showShareMenu
+                        ? "bg-gray-800/50 text-blue-400" // Active state
+                        : "text-gray-300 hover:bg-gray-800/50 hover:text-blue-400" // Normal state
+                    }`}
+                  >
+                    <BsShare
+                      className={`w-5 h-5 transition-colors ${
+                        showShareMenu
+                          ? "text-blue-400"
+                          : "group-hover:text-blue-400"
+                      }`}
+                    />
+                  </button>
+
+                  <ShareDropdown
+                    isOpen={showShareMenu}
+                    onClose={() => setShowShareMenu(false)}
+                    url={`${window.location}`}
+                    title={album.title}
+                    text={`Listen to "${album.title}" by ${
+                      album.artist?.name || album.singer
+                    } on Reset Music`}
+                    isActive={showShareMenu} // ✅ Pass active state
+                  />
+                </div>
               </div>
             </div>
           </div>

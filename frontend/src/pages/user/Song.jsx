@@ -50,10 +50,19 @@ function formatDate(dateStr) {
 const getArtistColor = (name) => {
   if (!name) return "bg-blue-600";
   const colors = [
-    "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-red-600",
-    "bg-orange-600", "bg-yellow-600", "bg-green-600", "bg-teal-600", "bg-indigo-600",
+    "bg-blue-600",
+    "bg-purple-600",
+    "bg-pink-600",
+    "bg-red-600",
+    "bg-orange-600",
+    "bg-yellow-600",
+    "bg-green-600",
+    "bg-teal-600",
+    "bg-indigo-600",
   ];
-  const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+  const hash = name
+    .split("")
+    .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
   return colors[hash % colors.length];
 };
 
@@ -61,31 +70,31 @@ export default function Song() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { songId } = useParams();
-  
+
   // State for modals
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
-  
+
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [isHoveringCover, setIsHoveringCover] = useState(false);
-  
+
   // ✅ Payment Gateway hook
-  const { 
+  const {
     showPaymentOptions,
     pendingPayment,
     openPaymentOptions,
     handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
     closePaymentOptions,
-    getPaymentDisplayInfo
+    getPaymentDisplayInfo,
   } = usePaymentGateway();
-  
+
   // ✅ Separate loading states for actual payment processing
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  
+
   const singlesScrollRef = useRef(null);
   const albumsScrollRef = useRef(null);
 
@@ -96,20 +105,18 @@ export default function Song() {
   const artistId = song?.artist?._id || song?.artist;
 
   // Fetch artist's singles
-  const {
-    data: singlesData,
-    isLoading: singlesLoading,
-  } = useArtistSingles(artistId, 10);
+  const { data: singlesData, isLoading: singlesLoading } = useArtistSingles(
+    artistId,
+    10
+  );
 
   // Fetch artist's albums
-  const {
-    data: artistAlbumsData,
-    isLoading: albumsLoading
-  } = useArtistAlbumsSimple(artistId, 10);
+  const { data: artistAlbumsData, isLoading: albumsLoading } =
+    useArtistAlbumsSimple(artistId, 10);
 
   // Current user from Redux
   const currentUser = useSelector((state) => state.auth?.user);
-  
+
   // Get liked songs
   const likedSongIds = useSelector(selectLikedSongIds);
   const isLiked = likedSongIds.includes(songId);
@@ -138,7 +145,7 @@ export default function Song() {
   };
 
   // Handle play other songs - FIXED
-  const handlePlayOtherSong = (songData) => { 
+  const handlePlayOtherSong = (songData) => {
     // Play the song
     dispatch(setSelectedSong(songData));
     dispatch(play());
@@ -189,11 +196,10 @@ export default function Song() {
     try {
       setProcessingPayment(true);
       setPaymentLoading(true);
-      
+
       await originalHandlePaymentMethodSelect(gateway);
-      
     } catch (error) {
-      console.error('Payment method selection error:', error);
+      console.error("Payment method selection error:", error);
     } finally {
       setTimeout(() => {
         setProcessingPayment(false);
@@ -210,8 +216,11 @@ export default function Song() {
   };
 
   const handleSubscribeDecision = (artist, type, data) => {
-    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
-    
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
+      currentUser,
+      artist
+    );
+
     if (type === "purchase") {
       if (alreadySubscribed) {
         handlePurchaseClick(data, "song");
@@ -236,22 +245,31 @@ export default function Song() {
   // Extract artist singles
   const artistSingles = singlesData?.pages?.[0]?.songs || [];
   // Filter out current song from singles
-  const filteredSingles = artistSingles.filter(single => single._id !== songId).slice(0, 10);
+  const filteredSingles = artistSingles
+    .filter((single) => single._id !== songId)
+    .slice(0, 10);
 
   // Extract artist albums
   const artistAlbums = artistAlbumsData?.albums || [];
   // Filter out current album if song is from album
-  const filteredAlbums = isFromAlbum && song?.album?._id 
-    ? artistAlbums.filter(album => album._id !== song.album._id)
-    : artistAlbums;
+  const filteredAlbums =
+    isFromAlbum && song?.album?._id
+      ? artistAlbums.filter((album) => album._id !== song.album._id)
+      : artistAlbums;
 
   // Scroll handlers
   const handleScroll = (direction = "right", section = "singles") => {
     const scrollAmount = direction === "right" ? 200 : -200;
     if (section === "singles") {
-      singlesScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      singlesScrollRef?.current?.scrollBy({
+        left: scrollAmount,
+        behavior: "smooth",
+      });
     } else {
-      albumsScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      albumsScrollRef?.current?.scrollBy({
+        left: scrollAmount,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -262,14 +280,19 @@ export default function Song() {
     }
 
     if (songItem.accessType === "subscription") {
-      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+      return (
+        <span className="text-blue-400 text-xs font-semibold">subs..</span>
+      );
     }
 
     // Sirf purchase-only wale items ke liye buy button
     if (songItem.accessType === "purchase-only") {
       if (songItem.basePrice && songItem.basePrice.amount > 0) {
-        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, songItem.artist);
-        
+        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
+          currentUser,
+          songItem.artist
+        );
+
         return (
           <button
             onClick={(e) => {
@@ -286,7 +309,7 @@ export default function Song() {
           </button>
         );
       }
-      
+
       if (songItem.basePrice && songItem.basePrice.amount === 0) {
         return "Free";
       }
@@ -302,14 +325,19 @@ export default function Song() {
     }
 
     if (album.accessType === "subscription") {
-      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+      return (
+        <span className="text-blue-400 text-xs font-semibold">subs..</span>
+      );
     }
 
     // Sirf purchase-only wale albums ke liye buy button
     if (album.accessType === "purchase-only") {
       if (album.basePrice && album.basePrice.amount > 0) {
-        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, album.artist);
-        
+        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
+          currentUser,
+          album.artist
+        );
+
         return (
           <button
             onClick={(e) => {
@@ -326,7 +354,7 @@ export default function Song() {
           </button>
         );
       }
-      
+
       if (album.basePrice && album.basePrice.amount === 0) {
         return "Free";
       }
@@ -338,9 +366,12 @@ export default function Song() {
   // Main purchase button handler for current song
   const handleMainPurchaseClick = () => {
     if (!song) return;
-    
-    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, song.artist);
-    
+
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
+      currentUser,
+      song.artist
+    );
+
     if (alreadySubscribed) {
       handlePurchaseClick(song, "song");
     } else {
@@ -381,28 +412,27 @@ export default function Song() {
                   onMouseLeave={() => setIsHoveringCover(false)}
                 >
                   <div className="relative w-full max-w-[320px] cursor-pointer">
-                        <img
-                          src={song?.coverImage || song?.album?.coverImage}
-                          alt={`${song.title} cover`}
-                          className="w-[320px] h-[320px] object-cover rounded-2xl shadow-2xl transition-all duration-300"
-                          onClick={handleCoverClick}
-                        />
-                        {/* Hover Overlay with Play Button */}
-                        <div
-                          className={`absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                            isHoveringCover ? "opacity-100" : "opacity-0"
-                          }`}
-                          onClick={handleCoverClick}
-                        >
-                          <button className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
-                            {isCurrentSongPlaying ? (
-                              <FaPause className="w-6 h-6 text-white" />
-                            ) : (
-                              <FaPlay className="w-6 h-6 text-white ml-1" />
-                            )}
-                          </button>
-                        </div>
-                    
+                    <img
+                      src={song?.coverImage || song?.album?.coverImage}
+                      alt={`${song.title} cover`}
+                      className="w-[320px] h-[320px] object-cover rounded-2xl shadow-2xl transition-all duration-300"
+                      onClick={handleCoverClick}
+                    />
+                    {/* Hover Overlay with Play Button */}
+                    <div
+                      className={`absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                        isHoveringCover ? "opacity-100" : "opacity-0"
+                      }`}
+                      onClick={handleCoverClick}
+                    >
+                      <button className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
+                        {isCurrentSongPlaying ? (
+                          <FaPause className="w-6 h-6 text-white" />
+                        ) : (
+                          <FaPlay className="w-6 h-6 text-white ml-1" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -426,7 +456,9 @@ export default function Song() {
                   <div className="flex items-center gap-3 mb-4">
                     {song?.artist && (
                       <button
-                        onClick={() => navigate(`/artist/${song?.artist?.slug}`)}
+                        onClick={() =>
+                          navigate(`/artist/${song?.artist?.slug}`)
+                        }
                         className="text-lg text-gray-300 hover:text-white transition-colors hover:underline"
                       >
                         {song?.artist?.name}
@@ -452,7 +484,9 @@ export default function Song() {
                       {song.genre.map((genre, index) => (
                         <button
                           key={index}
-                          onClick={() => navigate(`/genre/${genre.toLowerCase()}`)}
+                          onClick={() =>
+                            navigate(`/genre/${genre.toLowerCase()}`)
+                          }
                           className="px-4 py-1.5 bg-gray-800/50 text-white text-sm rounded-full border border-gray-700"
                         >
                           {genre}
@@ -463,50 +497,32 @@ export default function Song() {
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-4 flex-wrap">
-
-                     {/* Share Button with Dropdown Component */}
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowShareMenu(!showShareMenu)}
-                        className="p-3.5 text-gray-300 rounded-full border border-gray-700 hover:bg-gray-800/50 hover:text-blue-400 transition-colors group"
-                      >
-                        <BsShare className="w-5 h-5 group-hover:text-blue-400" />
-                      </button>
-
-                      <ShareDropdown
-                        isOpen={showShareMenu}
-                        onClose={() => setShowShareMenu(false)}
-                        url={`${window.location}`}
-                        title={song.title}
-                        text={`Listen to "${song.title}" by ${
-                          song.artist?.name || song.singer
-                        } on Reset Music`}
-                      />
-                    </div>
+                   
                     {/* Purchase/Subscription Info - Sirf purchase-only ke liye */}
-                    {song.accessType === "purchase-only" && song.basePrice?.amount > 0 && (
-                      <>
-                        <div className="px-3 py-1 sm:px-5 sm:py-3 bg-gray-800 rounded-full border border-gray-700">
-                          <span className="sm:text-xl text-base font-bold text-white">
-                            ${song.basePrice.amount}
-                          </span>
-                        </div>
-                        {isSongPurchased ? (
-                          <button className="px-6 py-3.5 bg-green-600 text-white rounded-full font-semibold flex items-center gap-2">
-                            <FaCheck className="w-4 h-4" />
-                            Purchased
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={handleMainPurchaseClick}
-                            className="px-6 py-3.5 bg-blue-600 text-white rounded-full font-semibold flex items-center gap-2"
-                          >
-                            <FaShoppingCart className="w-4 h-4" />
-                            Purchase Song
-                          </button>
-                        )}
-                      </>
-                    )}
+                    {song.accessType === "purchase-only" &&
+                      song.basePrice?.amount > 0 && (
+                        <>
+                          <div className="px-3 py-1 sm:px-5 sm:py-3 bg-gray-800 rounded-full border border-gray-700">
+                            <span className="sm:text-xl text-base font-bold text-white">
+                              ${song.basePrice.amount}
+                            </span>
+                          </div>
+                          {isSongPurchased ? (
+                            <button className="px-6 py-3.5 bg-green-600 text-white rounded-full font-semibold flex items-center gap-2">
+                              <FaCheck className="w-4 h-4" />
+                              Purchased
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleMainPurchaseClick}
+                              className="px-6 py-3.5 bg-blue-600 text-white rounded-full font-semibold flex items-center gap-2"
+                            >
+                              <FaShoppingCart className="w-4 h-4" />
+                              Purchase Song
+                            </button>
+                          )}
+                        </>
+                      )}
 
                     {song.accessType === "subscription" && (
                       <div className="subscription-wrapper">
@@ -528,7 +544,36 @@ export default function Song() {
                       )}
                     </button>
 
-                   
+                     {/* Share Button with Dropdown Component */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowShareMenu(!showShareMenu)}
+                        className={`p-3.5 rounded-full border border-gray-700 transition-colors group ${
+                          showShareMenu
+                            ? "bg-gray-800/50 text-blue-400" // Active state
+                            : "text-gray-300 hover:bg-gray-800/50 hover:text-blue-400" // Normal state
+                        }`}
+                      >
+                        <BsShare
+                          className={`w-5 h-5 transition-colors ${
+                            showShareMenu
+                              ? "text-blue-400"
+                              : "group-hover:text-blue-400"
+                          }`}
+                        />
+                      </button>
+
+                      <ShareDropdown
+                        isOpen={showShareMenu}
+                        onClose={() => setShowShareMenu(false)}
+                        url={`${window.location}`}
+                        title={song.title}
+                        text={`Listen to "${song.title}" by ${
+                          song.artist?.name || song.singer
+                        } on Reset Music`}
+                        isActive={showShareMenu} // ✅ Pass active state
+                      />
+                    </div>
 
                     {/* More Options Button */}
                     {/* <button
@@ -541,7 +586,9 @@ export default function Song() {
                   {/* Album Info if from album */}
                   {isFromAlbum && song?.album && (
                     <div className="mt-2">
-                      <span className="text-gray-400 text-sm">From album: </span>
+                      <span className="text-gray-400 text-sm">
+                        From album:{" "}
+                      </span>
                       <button
                         onClick={() =>
                           navigate(
@@ -598,37 +645,54 @@ export default function Song() {
                     ref={singlesScrollRef}
                     className="flex gap-4 overflow-x-auto pb-6 no-scrollbar"
                   >
-                    {singlesLoading ? (
-                      [...Array(5)].map((_, idx) => (
-                        <div key={`single-skeleton-${idx}`} className="min-w-[180px]">
-                          <Skeleton height={160} width={160} className="rounded-xl" />
-                          <Skeleton width={140} height={16} className="mt-2" />
-                          <Skeleton width={100} height={14} className="mt-1" />
-                        </div>
-                      ))
-                    ) : (
-                      filteredSingles.map((single) => (
-                        <RecentPlays
-                          key={single._id}
-                          title={single.title}
-                          image={
-                            single.coverImage ? (
-                              single.coverImage
-                            ) : (
-                              <div
-                                className={`w-full h-40 ${getArtistColor(single.artist?.name || single.singer)} flex items-center justify-center text-white font-bold text-2xl`}
-                              >
-                                {single.title ? single.title.charAt(0).toUpperCase() : "S"}
-                              </div>
-                            )
-                          }
-                          onPlay={() => handlePlayOtherSong(single)}
-                          onTitleClick={() => handleSingleTitleClick(single)}
-                          isSelected={currentSong?._id === single._id}
-                          price={getSongPriceDisplay(single)}
-                        />
-                      ))
-                    )}
+                    {singlesLoading
+                      ? [...Array(5)].map((_, idx) => (
+                          <div
+                            key={`single-skeleton-${idx}`}
+                            className="min-w-[180px]"
+                          >
+                            <Skeleton
+                              height={160}
+                              width={160}
+                              className="rounded-xl"
+                            />
+                            <Skeleton
+                              width={140}
+                              height={16}
+                              className="mt-2"
+                            />
+                            <Skeleton
+                              width={100}
+                              height={14}
+                              className="mt-1"
+                            />
+                          </div>
+                        ))
+                      : filteredSingles.map((single) => (
+                          <RecentPlays
+                            key={single._id}
+                            title={single.title}
+                            image={
+                              single.coverImage ? (
+                                single.coverImage
+                              ) : (
+                                <div
+                                  className={`w-full h-40 ${getArtistColor(
+                                    single.artist?.name || single.singer
+                                  )} flex items-center justify-center text-white font-bold text-2xl`}
+                                >
+                                  {single.title
+                                    ? single.title.charAt(0).toUpperCase()
+                                    : "S"}
+                                </div>
+                              )
+                            }
+                            onPlay={() => handlePlayOtherSong(single)}
+                            onTitleClick={() => handleSingleTitleClick(single)}
+                            isSelected={currentSong?._id === single._id}
+                            price={getSongPriceDisplay(single)}
+                          />
+                        ))}
                   </div>
                 </div>
               )}
@@ -656,25 +720,38 @@ export default function Song() {
                     ref={albumsScrollRef}
                     className="flex gap-4 overflow-x-auto pb-6 no-scrollbar"
                   >
-                    {albumsLoading ? (
-                      [...Array(5)].map((_, idx) => (
-                        <div key={`album-skeleton-${idx}`} className="min-w-[160px]">
-                          <Skeleton height={160} width={160} className="rounded-xl" />
-                          <Skeleton width={120} height={16} className="mt-2" />
-                        </div>
-                      ))
-                    ) : (
-                      filteredAlbums.slice(0, 10).map((album) => (
-                        <AlbumCard
-                          key={album._id}
-                          tag={`${album.title || "music"}`}
-                          artists={album.artist?.name || "Various Artists"}
-                          image={album.coverImage || "/images/placeholder.png"}
-                          price={getAlbumPriceDisplay(album)}
-                          onClick={() => navigate(`/album/${album.slug}`)}
-                        />
-                      ))
-                    )}
+                    {albumsLoading
+                      ? [...Array(5)].map((_, idx) => (
+                          <div
+                            key={`album-skeleton-${idx}`}
+                            className="min-w-[160px]"
+                          >
+                            <Skeleton
+                              height={160}
+                              width={160}
+                              className="rounded-xl"
+                            />
+                            <Skeleton
+                              width={120}
+                              height={16}
+                              className="mt-2"
+                            />
+                          </div>
+                        ))
+                      : filteredAlbums
+                          .slice(0, 10)
+                          .map((album) => (
+                            <AlbumCard
+                              key={album._id}
+                              tag={`${album.title || "music"}`}
+                              artists={album.artist?.name || "Various Artists"}
+                              image={
+                                album.coverImage || "/images/placeholder.png"
+                              }
+                              price={getAlbumPriceDisplay(album)}
+                              onClick={() => navigate(`/album/${album.slug}`)}
+                            />
+                          ))}
                   </div>
                 </div>
               )}
@@ -682,10 +759,10 @@ export default function Song() {
           ) : null}
         </div>
       </SkeletonTheme>
-      
+
       {/* Modals */}
       <LoadingOverlay show={processingPayment || paymentLoading} />
-      
+
       <SubscribeModal
         open={subscribeModalOpen}
         artist={modalArtist}
