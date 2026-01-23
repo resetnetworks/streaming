@@ -593,7 +593,7 @@ export default function Album() {
                       img={song.coverImage || album.coverImage}
                       songName={song.title}
                       songSlug={song?.slug || song?._id}
-                      singerName={song.singer}
+                      singerName={album.artist?.name || artistName}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
                       onTitleClick={() =>
