@@ -3,6 +3,7 @@ import Hls from "hls.js";
 import { useSelector, useDispatch } from "react-redux";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import { fetchStreamUrl } from "../../features/stream/streamSlice";
+import ShareDropdown from "./ShareDropdown";
 import {
   selectAllSongs,
   selectSelectedSong,
@@ -45,14 +46,12 @@ const formatTime = (seconds) => {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
-const handleFeatureSoon = () => {
-  toast.success("This feature will be available soon");
-};
-
 const Player = () => {
   const dispatch = useDispatch();
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector(selectSelectedSong);
+    // ✅ Share menu state
+    const [showShareMenu, setShowShareMenu] = useState(false);
   
   // ✅ UPDATED: Enhanced selectors with persistent default functionality
   const defaultSong = useSelector(selectDefaultSong);
@@ -463,10 +462,28 @@ const Player = () => {
             className="text-md text-white cursor-pointer"
             onClick={handleNext}
           />
-          <IoIosMore
-            className="text-md text-white"
-            onClick={handleFeatureSoon}
-          />
+          {/* Share Button with Dropdown Component */}
+                <div className="relative">
+              
+                    <IoIosMore
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                      className={` text-base ${
+                        showShareMenu
+                          ? "text-blue-400"
+                          : "group-hover:text-blue-400"
+                      }`}
+                    />
+
+                  <ShareDropdown
+                    isOpen={showShareMenu}
+                    onClose={() => setShowShareMenu(false)}
+                    url={`${window.location.origin}/song/${currentSong?.slug || currentSong?._id}`}
+                    title={currentSong?.title}
+                    text={`Listen to "${currentSong?.title}" on Reset Music`}
+                    isActive={showShareMenu}
+                    className="lg:right-0 right-[-80px] sm:right-[-40px]" // Responsive positioning
+                  />
+                </div>
         </div>
 
         <div className="player-gradiant-line mt-4"></div>

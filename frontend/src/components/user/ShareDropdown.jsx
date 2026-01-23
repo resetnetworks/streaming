@@ -112,7 +112,7 @@ const ShareDropdown = ({
           className={`absolute -right-8 top-full mt-2 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[140px] sm:min-w-[200px] z-50 shadow-2xl ${className}`}
         >
           <div className="sm:px-4 sm:py-2 px-2 py-1 border-b border-gray-700">
-            <p className="sm:text-sm text-xs font-semibold text-gray-300">Share</p>
+            <p className="sm:text-sm text-left text-xs font-semibold text-gray-300">Share</p>
           </div>
           
           <motion.button

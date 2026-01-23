@@ -592,6 +592,7 @@ export default function Album() {
                       songId={song._id}
                       img={song.coverImage || album.coverImage}
                       songName={song.title}
+                      songSlug={song?.slug || song?._id}
                       singerName={song.singer}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}

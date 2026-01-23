@@ -1,7 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
+import { FaCopy } from "react-icons/fa";
+import { FaXTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa6";
+import { BsShare } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleLikeSong } from "../../features/auth/authSlice";
 import { selectLikedSongIds } from "../../features/auth/authSelectors";
@@ -18,29 +21,93 @@ const SongList = ({
   singerName,
   seekTime,
   isSelected,
-  onTitleClick, // ✅ ADD THIS PROP
+  onTitleClick,
   onPlay,
   songId,
+  songSlug, // ✅ NEW PROP: Song slug for URL
+  shareUrl, // ✅ NEW PROP: Direct URL if available
 }) => {
   const dispatch = useDispatch();
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = React.useRef(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // ✅ Get the liked song IDs just once
   const likedSongIds = useSelector(selectLikedSongIds);
   const isLiked = likedSongIds.includes(songId);
 
   const handleClick = (e) => {
-    if (!e.target.closest(".action-button")) {
+    if (!e.target.closest(".action-button") && !e.target.closest(".share-menu")) {
       onPlay();
     }
   };
 
   // ✅ ADD TITLE CLICK HANDLER
   const handleTitleClick = (e) => {
-    e.stopPropagation(); // Prevent triggering onPlay
+    e.stopPropagation();
     e.preventDefault();
     if (onTitleClick) {
       onTitleClick();
     }
+  };
+
+  // ✅ SHARE HANDLERS
+  const handleCopyUrl = async () => {
+    const url = shareUrl || `${window.location.origin}/song/${songSlug || songId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+      setShowShareMenu(false);
+    } catch (error) {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleShare = (platform) => {
+    const url = shareUrl || `${window.location.origin}/song/${songSlug || songId}`;
+    const shareText = `Listen to "${songName}" by ${singerName} on Reset Music`;
+
+    switch (platform) {
+      case 'twitter':
+        window.open(
+          `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`,
+          '_blank'
+        );
+        break;
+      case 'facebook':
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+          '_blank'
+        );
+        break;
+      case 'whatsapp':
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + url)}`,
+          '_blank'
+        );
+        break;
+      default:
+        if (navigator.share) {
+          navigator.share({
+            title: songName,
+            text: shareText,
+            url: url,
+          });
+        } else {
+          handleCopyUrl();
+        }
+    }
+    setShowShareMenu(false);
   };
 
   const debouncedLikeToggle = useCallback(
@@ -69,7 +136,7 @@ const SongList = ({
 
   return (
     <div
-      className={`flex w-full justify-between p-2 cursor-pointer ${
+      className={`flex w-full justify-between p-2 cursor-pointer relative ${
         isSelected ? "border-b border-blue-500" : "border-b border-gray-600"
       }`}
       onClick={handleClick}
@@ -102,17 +169,6 @@ const SongList = ({
         </div>
       </div>
 
-      {/* {isSelected ? (
-        <div className="equalizer">
-          <span className="equalizer-bar"></span>
-          <span className="equalizer-bar"></span>
-          <span className="equalizer-bar"></span>
-          <span className="equalizer-bar"></span>
-        </div>
-      ) : (
-        <div></div>
-      )} */}
-
       <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
           <MdAccessTimeFilled
@@ -135,10 +191,87 @@ const SongList = ({
           )}
         </button>
 
-        <FiMoreHorizontal
-          className="action-button text-white text-lg hover:cursor-pointer"
-          onClick={handleFeatureSoon}
-        />
+        {/* ✅ SHARE DROPDOWN */}
+        <div className="relative share-menu" ref={shareMenuRef}>
+          <button
+            className="action-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowShareMenu(!showShareMenu);
+            }}
+          >
+            <FiMoreHorizontal
+              className={`text-lg hover:cursor-pointer ${
+                showShareMenu ? "text-blue-400" : "text-white"
+              }`}
+            />
+          </button>
+
+          {showShareMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[160px] z-50 shadow-2xl">
+              <div className="px-3 py-1.5 border-b border-gray-700">
+                <p className="text-xs font-semibold text-gray-300">Share</p>
+              </div>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopyUrl();
+                }}
+                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
+              >
+                <FaCopy className="w-3 h-3 text-blue-400" />
+                <span>Copy Link</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare('twitter');
+                }}
+                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
+              >
+                <FaXTwitter className="w-3 h-3 text-gray-300" />
+                <span>Twitter</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare('facebook');
+                }}
+                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
+              >
+                <FaFacebook className="w-3 h-3 text-blue-600" />
+                <span>Facebook</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare('whatsapp');
+                }}
+                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
+              >
+                <FaWhatsapp className="w-3 h-3 text-green-500" />
+                <span>WhatsApp</span>
+              </button>
+            
+              {navigator.share && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare('native');
+                  }}
+                  className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm border-t border-gray-700 mt-1"
+                >
+                  <BsShare className="w-3 h-3 text-purple-400" />
+                  <span>Share via...</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
