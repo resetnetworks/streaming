@@ -16,6 +16,11 @@ Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: import.meta.env.MODE,
   enabled: import.meta.env.MODE === "production",
+  ignoreErrors: [
+    "Authentication token missing",
+    "Unauthorized",
+    "401"
+  ],
   tracesSampleRate: 0.2,
 });
 
