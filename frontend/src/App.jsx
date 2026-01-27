@@ -1,4 +1,5 @@
 import React, { useEffect, useState, Suspense } from "react";
+import * as Sentry from "@sentry/react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster } from "sonner";
@@ -44,30 +45,53 @@ function App() {
   const shouldInitializeDefault = useSelector(selectShouldInitializeDefault);
   const availableSongsCollections = useSelector(selectAvailableSongsForDefault);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      dispatch(getMyProfile()).finally(() => setInitialLoad(false));
-    } else {
-      setInitialLoad(false);
-    }
-  }, [dispatch, isAuthenticated]);
+useEffect(() => {
+  if (!isAuthenticated) {
+    dispatch(getMyProfile())
+      .unwrap()
+      .catch((error) => {
+        Sentry.captureException(error);
+      })
+      .finally(() => setInitialLoad(false));
+  } else {
+    setInitialLoad(false);
+  }
+}, [dispatch, isAuthenticated]);
+
+useEffect(() => {
+  if (user?._id) {
+    Sentry.setUser({
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    });
+  } else {
+    Sentry.setUser(null); // logout case
+  }
+}, [user]);
+
+
 
   // ✅ NEW: Initialize default song on app start
-  useEffect(() => {
-    if (isAuthenticated && !initialLoad) {
-      // First, try to load default song from localStorage
+useEffect(() => {
+  if (isAuthenticated && !initialLoad) {
+    try {
       dispatch(loadDefaultSongFromStorage());
-      
-      // If no default song exists and we have songs available, set a random one
+
       if (shouldInitializeDefault && availableSongsCollections.length > 0) {
-        // Get all available songs from all collections
-        const allAvailableSongs = availableSongsCollections.flatMap(collection => collection.songs);
+        const allAvailableSongs =
+          availableSongsCollections.flatMap(c => c.songs);
+
         if (allAvailableSongs.length > 0) {
           dispatch(setRandomDefaultFromSongs(allAvailableSongs));
         }
       }
+    } catch (error) {
+      Sentry.captureException(error);
     }
-  }, [isAuthenticated, initialLoad, shouldInitializeDefault, availableSongsCollections, dispatch]);
+  }
+}, [isAuthenticated, initialLoad, shouldInitializeDefault, availableSongsCollections]);
+
 
   // 🔐 Disable Right Click & Inspect Shortcut
   useEffect(() => {
