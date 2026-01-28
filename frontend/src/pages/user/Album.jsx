@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { BsShare } from "react-icons/bs";
+import { RiPlayFill } from "react-icons/ri";
 
 // ✅ REACT QUERY for album data
 import { useAlbum } from "../../hooks/api/useAlbums";
@@ -425,34 +426,32 @@ export default function Album() {
           {/* Album Header */}
           <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-8 pb-6">
             {/* Album Cover with Click to Play - RESPONSIVE */}
-            <div
-              className="relative cursor-pointer flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0"
-              onMouseEnter={() => setIsHoveringCover(true)}
-              onMouseLeave={() => setIsHoveringCover(false)}
-              onClick={handlePlayAlbum}
-            >
-              <img
-                src={album.coverImage}
-                alt="Album Cover"
-                className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-opacity duration-300"
-              />
-              {/* Hover Overlay with Play Icon */}
-              <div
-                className={`absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center transition-opacity duration-300 ${
-                  isHoveringCover ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
-                  <svg
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-white ml-0.5 sm:ml-1"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+           {/* Album Cover with Click to Play - RESPONSIVE */}
+<div
+  className="relative cursor-pointer flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0 group"
+  onMouseEnter={() => setIsHoveringCover(true)}
+  onMouseLeave={() => setIsHoveringCover(false)}
+  onClick={handlePlayAlbum}
+>
+  <img
+    src={album.coverImage}
+    alt="Album Cover"
+    className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 group-hover:brightness-75"
+  />
+  
+  {/* Hover Overlay with Play Icon - RecentPlays की तरह */}
+  <div className="absolute inset-0 group-hover:bg-black group-hover:bg-opacity-20 transition-opacity duration-300">
+    <button 
+      onClick={(e) => {
+        e.stopPropagation();
+        handlePlayAlbum();
+      }}
+      className="absolute bottom-2 left-2 bg-gray-200 text-black p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+    >
+      <RiPlayFill size={16} />
+    </button>
+  </div>
+</div>
 
             <div className="flex-1 w-full">
               <div className="text-xs sm:text-sm font-bold tracking-widest uppercase opacity-80">
@@ -593,7 +592,6 @@ export default function Album() {
                       img={song.coverImage || album.coverImage}
                       songName={song.title}
                       songSlug={song?.slug || song?._id}
-                      singerName={album.artist?.name || artistName}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
                       onTitleClick={() =>

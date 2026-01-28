@@ -162,10 +162,6 @@ const SongList = ({
               <span className="hidden sm:block hover:underline">{songName}</span>
             </h3>
           </button>
-
-          <p className="text-gray-400 text-xs font-light mt-1 truncate">
-            {singerName}
-          </p>
         </div>
       </div>
 
