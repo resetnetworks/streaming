@@ -477,7 +477,7 @@ const Player = () => {
                   <ShareDropdown
                     isOpen={showShareMenu}
                     onClose={() => setShowShareMenu(false)}
-                    url={`${window.location.origin}/song/${currentSong?.slug || currentSong?._id}`}
+                    url={`${window.location.origin}/song/${currentSong?._id || currentSong?.slug}`}
                     title={currentSong?.title}
                     text={`Listen to "${currentSong?.title}" on Reset Music`}
                     isActive={showShareMenu}

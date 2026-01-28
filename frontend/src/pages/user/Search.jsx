@@ -374,7 +374,7 @@ const Search = () => {
                         key={song._id}
                         title={song.title}
                         price={getSongPriceComponent(song)}
-                        singer={song.artist?.name || "Unknown"}
+                       
                         image={song.coverImage || "/images/placeholder.png"}
                         onPlay={() => handlePlaySong(song)}
                         isSelected={selectedSong?._id === song._id}
