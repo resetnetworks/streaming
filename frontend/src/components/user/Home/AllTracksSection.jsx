@@ -1,5 +1,5 @@
 // src/components/user/Home/AllTracksSection.jsx
-import React, { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect, useState} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
@@ -37,6 +37,13 @@ const AllTracksSection = ({
   const singlesStatus = useSelector(selectSongsStatus);
   const isSinglesCached = useSelector(selectIsSinglesCached);
   const isSinglesCacheValid = useSelector(selectIsSinglesCacheValid);
+    // ✅ NEW: Track active song share dropdown
+    const [activeSongShareDropdown, setActiveSongShareDropdown] = useState(null);
+
+     // ✅ Handle song share dropdown toggle
+  const handleSongShareDropdownToggle = (songId) => {
+    setActiveSongShareDropdown(prev => prev === songId ? null : songId);
+  };
 
   // ✅ Fetch singles on component mount if not cached or cache invalid
   useEffect(() => {
@@ -165,6 +172,11 @@ const AllTracksSection = ({
                       seekTime={formatDuration(single.duration)}
                       onPlay={() => onPlaySong(single)}
                       isSelected={selectedSong?._id === single._id}
+                       // ✅ NEW PROPS for share dropdown control
+                      shareUrl={`${window.location.origin}/song/${single?.slug || song?._id}`}
+                      isShareDropdownOpen={activeSongShareDropdown === single._id}
+                      onShareDropdownToggle={() => handleSongShareDropdownToggle(single._id)}
+                      onShareMenuClose={() => setActiveSongShareDropdown(null)}
                     />
                   ))}
                 </div>

@@ -1,4 +1,3 @@
-// src/pages/Album.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -99,8 +98,11 @@ export default function Album() {
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
 
-  // ✅ Share menu state
+  // ✅ Share menu state - UPDATED: Album level share dropdown
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  // ✅ NEW: Track active song share dropdown
+  const [activeSongShareDropdown, setActiveSongShareDropdown] = useState(null);
 
   // ✅ Clear payment state on mount
   useEffect(() => {
@@ -306,6 +308,11 @@ export default function Album() {
     setModalData(null);
   };
 
+  // ✅ Handle song share dropdown toggle
+  const handleSongShareDropdownToggle = (songId) => {
+    setActiveSongShareDropdown(prev => prev === songId ? null : songId);
+  };
+
   // ✅ Get artist name
   const artistName = React.useMemo(() => {
     if (!album) return "Unknown Artist";
@@ -426,32 +433,31 @@ export default function Album() {
           {/* Album Header */}
           <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-8 pb-6">
             {/* Album Cover with Click to Play - RESPONSIVE */}
-           {/* Album Cover with Click to Play - RESPONSIVE */}
-<div
-  className="relative cursor-pointer flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0 group"
-  onMouseEnter={() => setIsHoveringCover(true)}
-  onMouseLeave={() => setIsHoveringCover(false)}
-  onClick={handlePlayAlbum}
->
-  <img
-    src={album.coverImage}
-    alt="Album Cover"
-    className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 group-hover:brightness-75"
-  />
-  
-  {/* Hover Overlay with Play Icon - RecentPlays की तरह */}
-  <div className="absolute inset-0 group-hover:bg-black group-hover:bg-opacity-20 transition-opacity duration-300">
-    <button 
-      onClick={(e) => {
-        e.stopPropagation();
-        handlePlayAlbum();
-      }}
-      className="absolute bottom-2 left-2 bg-gray-200 text-black p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-    >
-      <RiPlayFill size={16} />
-    </button>
-  </div>
-</div>
+            <div
+              className="relative cursor-pointer flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0 group"
+              onMouseEnter={() => setIsHoveringCover(true)}
+              onMouseLeave={() => setIsHoveringCover(false)}
+              onClick={handlePlayAlbum}
+            >
+              <img
+                src={album.coverImage}
+                alt="Album Cover"
+                className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 group-hover:brightness-75"
+              />
+              
+              {/* Hover Overlay with Play Icon - RecentPlays की तरह */}
+              <div className="absolute inset-0 group-hover:bg-black group-hover:bg-opacity-20 transition-opacity duration-300">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlayAlbum();
+                  }}
+                  className="absolute bottom-2 left-2 bg-gray-200 text-black p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                >
+                  <RiPlayFill size={16} />
+                </button>
+              </div>
+            </div>
 
             <div className="flex-1 w-full">
               <div className="text-xs sm:text-sm font-bold tracking-widest uppercase opacity-80">
@@ -624,6 +630,11 @@ export default function Album() {
                           "Subs.."
                         )
                       }
+                      // ✅ NEW PROPS for share dropdown control
+                      shareUrl={`${window.location.origin}/song/${song?.slug || song?._id}`}
+                      isShareDropdownOpen={activeSongShareDropdown === song._id}
+                      onShareDropdownToggle={() => handleSongShareDropdownToggle(song._id)}
+                      onShareMenuClose={() => setActiveSongShareDropdown(null)}
                     />
                   </div>
                 </div>

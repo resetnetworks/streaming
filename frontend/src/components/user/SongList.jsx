@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
@@ -24,27 +24,38 @@ const SongList = ({
   onTitleClick,
   onPlay,
   songId,
-  songSlug, // ✅ NEW PROP: Song slug for URL
-  shareUrl, // ✅ NEW PROP: Direct URL if available
+  songSlug,
+  shareUrl,
+  // ✅ NEW PROPS for parent-controlled share dropdown
+  isShareDropdownOpen,
+  onShareDropdownToggle,
+  onShareMenuClose,
 }) => {
   const dispatch = useDispatch();
-  const [showShareMenu, setShowShareMenu] = useState(false);
   const shareMenuRef = React.useRef(null);
-
-  // Close dropdown when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) {
-        setShowShareMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  
+  // Local state for backward compatibility
+  const [localShowShareMenu, setLocalShowShareMenu] = useState(false);
+  
+  // Use parent-controlled state if provided, otherwise use local state
+  const showShareMenu = isShareDropdownOpen !== undefined 
+    ? isShareDropdownOpen 
+    : localShowShareMenu;
 
   // ✅ Get the liked song IDs just once
   const likedSongIds = useSelector(selectLikedSongIds);
   const isLiked = likedSongIds.includes(songId);
+
+  // ✅ Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) {
+        handleCloseShareMenu();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onShareMenuClose]);
 
   const handleClick = (e) => {
     if (!e.target.closest(".action-button") && !e.target.closest(".share-menu")) {
@@ -61,13 +72,35 @@ const SongList = ({
     }
   };
 
-  // ✅ SHARE HANDLERS
+  // ✅ SHARE MENU HANDLERS
+  const handleShareMenuToggle = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (onShareDropdownToggle) {
+      // Parent component को notify करें
+      onShareDropdownToggle();
+    } else {
+      // Local state का उपयोग करें (backward compatibility)
+      setLocalShowShareMenu(!localShowShareMenu);
+    }
+  };
+
+  const handleCloseShareMenu = () => {
+    if (onShareMenuClose) {
+      onShareMenuClose();
+    } else {
+      setLocalShowShareMenu(false);
+    }
+  };
+
+  // ✅ SHARE ACTIONS
   const handleCopyUrl = async () => {
     const url = shareUrl || `${window.location.origin}/song/${songSlug || songId}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Link copied to clipboard!');
-      setShowShareMenu(false);
+      handleCloseShareMenu();
     } catch (error) {
       toast.error('Failed to copy link');
     }
@@ -107,9 +140,10 @@ const SongList = ({
           handleCopyUrl();
         }
     }
-    setShowShareMenu(false);
+    handleCloseShareMenu();
   };
 
+  // ✅ LIKE HANDLER
   const debouncedLikeToggle = useCallback(
     debounce(async (songId, wasLiked) => {
       try {
@@ -191,10 +225,7 @@ const SongList = ({
         <div className="relative share-menu" ref={shareMenuRef}>
           <button
             className="action-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowShareMenu(!showShareMenu);
-            }}
+            onClick={handleShareMenuToggle}
           >
             <FiMoreHorizontal
               className={`text-lg hover:cursor-pointer ${
