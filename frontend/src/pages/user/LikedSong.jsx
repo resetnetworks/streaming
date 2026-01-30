@@ -1,21 +1,9 @@
-// src/pages/LikedSongs.jsx
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useUnlikeSong, useLikedSongs } from "../../hooks/api/useSongs";
 import PageSEO from "../../components/PageSeo/PageSEO";
-import {
-  fetchLikedSongs,
-  clearLikedSongs,
-  removeSongFromLiked,
-} from "../../features/songs/songSlice";
-import {
-  selectLikedSongs,
-  selectLikedSongsPage,
-  selectLikedSongsPages,
-  selectLikedSongsTotal,
-  selectSongsStatus,
-} from "../../features/songs/songSelectors";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
-import { toggleLikeSong } from "../../features/auth/authSlice";
+import { removeSongFromLiked } from "../../features/songs/songSlice";
 import SongList from "../../components/user/SongList";
 import { formatDuration } from "../../utills/helperFunctions";
 import UserHeader from "../../components/user/UserHeader";
@@ -24,91 +12,66 @@ import "react-loading-skeleton/dist/skeleton.css";
 
 const LikedSongs = () => {
   const dispatch = useDispatch();
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [localSongs, setLocalSongs] = useState([]);
-  const limit = 20;
-
-  const songs = useSelector(selectLikedSongs);
-  const total = useSelector(selectLikedSongsTotal);
-  const page = useSelector(selectLikedSongsPage);
-  const pages = useSelector(selectLikedSongsPages);
-  const status = useSelector(selectSongsStatus);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useLikedSongs();
+  
+  const unlikeMutation = useUnlikeSong();
+  
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const playerStatus = useSelector((state) => state.player.status);
 
-  const observer = useRef();
+  // Flatten all songs from pages
+  const allSongs = data?.pages.flatMap(page => page.songs) || [];
+  const totalSongs = data?.pages[0]?.total || 0;
 
-  const lastSongElementRef = useCallback(
-    (node) => {
-      if (loadingMore) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && page < pages) {
-            loadMoreSongs();
-          }
-        },
-        { threshold: 0.1 }
-      );
-      if (node) observer.current.observe(node);
-    },
-    [loadingMore, page, pages]
-  );
-
-  useEffect(() => {
-    dispatch(fetchLikedSongs({ page: 1, limit }));
-    return () => {
-      dispatch(clearLikedSongs());
-      if (observer.current) observer.current.disconnect();
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    setLocalSongs(songs);
-  }, [songs]);
-
-  const loadMoreSongs = async () => {
-    if (loadingMore || page >= pages) return;
-    setLoadingMore(true);
-    try {
-      await dispatch(fetchLikedSongs({ page: page + 1, limit }));
-    } finally {
-      setLoadingMore(false);
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handlePlaySong = (songId) => {
-    dispatch(setSelectedSong(songId));
-    if (playerStatus !== "playing" || selectedSong !== songId) {
+  const handlePlaySong = (song) => {
+    dispatch(setSelectedSong(song._id));
+    if (playerStatus !== "playing" || selectedSong !== song._id) {
       dispatch(play());
     }
   };
 
-  const handleToggleLike = async (songId) => {
-    const result = await dispatch(toggleLikeSong(songId));
-    if (result.meta.requestStatus === "fulfilled") {
-      dispatch(removeSongFromLiked(songId)); // update Redux
-      setLocalSongs((prev) => prev.filter((song) => song._id !== songId)); // update local state
-    }
+  const handleUnlikeSong = async (songId) => {
+    unlikeMutation.mutate(songId);
+    // Update Redux store
+    dispatch(removeSongFromLiked(songId));
   };
 
-  const hasMore = page < pages && localSongs.length < total;
+  if (isError) {
+    return (
+      <div className="min-h-screen w-[96%] py-8 px-4">
+        <p className="text-red-400">Failed to load liked songs</p>
+      </div>
+    );
+  }
 
   return (
     <>
       <PageSEO
-      title="Reset Music Streaming Liked Songs | Your Favorite Tracks"
-      description="Discover your liked songs on Reset Music Streaming. Stream and manage your favorite tracks all in one place."
-      canonicalUrl="https://musicreset.com/liked-songs"
-      structuredData={{
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        "name": "Reset Music liked Songs",
-        "description": "A collection of your liked songs on Reset Music Streaming platform.",
-        "url": "https://musicreset.com/liked-songs",
-      }}
-      noIndex={true}
-    />
+        title="Reset Music Streaming Liked Songs | Your Favorite Tracks"
+        description="Discover your liked songs on Reset Music Streaming."
+        canonicalUrl="https://musicreset.com/liked-songs"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Reset Music liked Songs",
+          "description": "Your liked songs collection",
+          "url": "https://musicreset.com/liked-songs",
+        }}
+        noIndex={true}
+      />
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen w-[96%] py-8 px-4">
@@ -116,14 +79,14 @@ const LikedSongs = () => {
             <h2 className="md:text-3xl text-2xl font-bold text-white">
               Liked Songs
             </h2>
-            {total > 0 && (
+            {totalSongs > 0 && (
               <span className="text-gray-400">
-                {total} {total === 1 ? "song" : "songs"}
+                {totalSongs} {totalSongs === 1 ? "song" : "songs"}
               </span>
             )}
           </div>
 
-          {status === "loading" && localSongs.length === 0 ? (
+          {isLoading && allSongs.length === 0 ? (
             <div className="space-y-4">
               {[...Array(10)].map((_, idx) => (
                 <div
@@ -141,7 +104,7 @@ const LikedSongs = () => {
                 </div>
               ))}
             </div>
-          ) : localSongs.length === 0 ? (
+          ) : allSongs.length === 0 ? (
             <div className="text-white px-4 py-2">
               <h2 className="text-lg md:text-xl font-semibold">
                 You haven't liked any songs yet.
@@ -152,13 +115,8 @@ const LikedSongs = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {localSongs.map((song, index) => (
+              {allSongs.map((song, index) => (
                 <div
-                  ref={
-                    index === localSongs.length - 1
-                      ? lastSongElementRef
-                      : null
-                  }
                   key={song._id}
                   className="flex items-center justify-between bg-white/10 rounded-xl shadow-lg p-4 hover:bg-white/20 transition relative my-2 mx-0 group"
                 >
@@ -178,18 +136,28 @@ const LikedSongs = () => {
                       selectedSong === song._id &&
                       playerStatus === "playing"
                     }
-                    onLikeToggle={() => handleToggleLike(song._id)}
+                    onLikeToggle={() => handleUnlikeSong(song._id)}
+                    isLiked={true}
                   />
                 </div>
               ))}
 
-              {loadingMore && (
+              {isFetchingNextPage && (
                 <div className="flex justify-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
                 </div>
               )}
 
-              {!hasMore && localSongs.length > 0 && (
+              {hasNextPage && !isFetchingNextPage && (
+                <button
+                  onClick={loadMore}
+                  className="text-center text-white py-4 hover:text-gray-300 transition"
+                >
+                  Load more
+                </button>
+              )}
+
+              {!hasNextPage && allSongs.length > 0 && (
                 <p className="text-center text-gray-400 py-4">
                   You've reached the end of your liked songs
                 </p>
