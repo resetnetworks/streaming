@@ -40,7 +40,7 @@ const queryClient = new QueryClient({
 /* -------------------- APP RENDER -------------------- */
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p>Something went wrong</p>}>
+    <Sentry.ErrorBoundary fallback={<p>Something went wrong | refresh the page</p>}>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <Provider store={store}>
