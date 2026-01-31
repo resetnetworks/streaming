@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
+import * as Sentry from "@sentry/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -10,33 +10,6 @@ import App from "./App.jsx";
 import { store, persistor } from "./app/store.js";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
-
-/* -------------------- CHUNK LOAD FAIL SAFETY (FINAL) -------------------- */
-const reloadOnChunkFail = () => {
-  if (!sessionStorage.getItem("chunk_reload")) {
-    sessionStorage.setItem("chunk_reload", "true");
-    window.location.reload();
-  }
-};
-
-window.addEventListener("error", (event) => {
-  if (
-    event?.message?.includes("Loading chunk") ||
-    event?.message?.includes("Failed to fetch dynamically imported module")
-  ) {
-    reloadOnChunkFail();
-  }
-});
-
-window.addEventListener("unhandledrejection", (event) => {
-  if (
-    typeof event?.reason?.message === "string" &&
-    event.reason.message.includes("Failed to fetch dynamically imported module")
-  ) {
-    reloadOnChunkFail();
-  }
-});
-
 
 /* -------------------- SENTRY INIT -------------------- */
 Sentry.init({
@@ -48,28 +21,27 @@ Sentry.init({
     "Unauthorized",
     "401",
     "Failed to fetch dynamically imported module",
-    "Loading chunk",
+    "Load failed"
   ],
-  beforeSend(event) {
-    const message = event?.exception?.values?.[0]?.value;
-    if (
-      message?.includes("Failed to fetch dynamically imported module") ||
-      message?.includes("Loading chunk")
-    ) {
-      return null; // drop event
+  beforeSend(event, hint) {
+    const error = hint.originalException;
+    if (error && error.message && error.message.includes("Failed to fetch dynamically imported module")) {
+      return null; // Don't send this to Sentry
     }
     return event;
   },
   tracesSampleRate: 0.2,
 });
 
+
+
 /* -------------------- REACT QUERY -------------------- */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      retry: 1,
+      staleTime: 5 * 60 * 1000,        // Cache data for 5 minutes
+      refetchOnWindowFocus: false,     // Prevent refetch on tab switch
+      retry: 1,                        // Retry failed request once
     },
   },
 });
@@ -77,7 +49,7 @@ const queryClient = new QueryClient({
 /* -------------------- APP RENDER -------------------- */
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p>Something went wrong | refreshing…</p>}>
+    <Sentry.ErrorBoundary fallback={<p>Something went wrong | refresh the page</p>}>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <Provider store={store}>
