@@ -11,19 +11,32 @@ import { store, persistor } from "./app/store.js";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
 
-/* -------------------- CHUNK LOAD FAIL SAFETY (VERY IMPORTANT) -------------------- */
+/* -------------------- CHUNK LOAD FAIL SAFETY (FINAL) -------------------- */
+const reloadOnChunkFail = () => {
+  if (!sessionStorage.getItem("chunk_reload")) {
+    sessionStorage.setItem("chunk_reload", "true");
+    window.location.reload();
+  }
+};
+
 window.addEventListener("error", (event) => {
   if (
-    event?.message?.includes("Failed to fetch dynamically imported module") ||
-    event?.message?.includes("Loading chunk")
+    event?.message?.includes("Loading chunk") ||
+    event?.message?.includes("Failed to fetch dynamically imported module")
   ) {
-    // avoid infinite reload loop
-    if (!sessionStorage.getItem("chunk_reload")) {
-      sessionStorage.setItem("chunk_reload", "true");
-      window.location.reload();
-    }
+    reloadOnChunkFail();
   }
 });
+
+window.addEventListener("unhandledrejection", (event) => {
+  if (
+    typeof event?.reason?.message === "string" &&
+    event.reason.message.includes("Failed to fetch dynamically imported module")
+  ) {
+    reloadOnChunkFail();
+  }
+});
+
 
 /* -------------------- SENTRY INIT -------------------- */
 Sentry.init({
@@ -35,8 +48,18 @@ Sentry.init({
     "Unauthorized",
     "401",
     "Failed to fetch dynamically imported module",
-    "Loading chunk"
+    "Loading chunk",
   ],
+  beforeSend(event) {
+    const message = event?.exception?.values?.[0]?.value;
+    if (
+      message?.includes("Failed to fetch dynamically imported module") ||
+      message?.includes("Loading chunk")
+    ) {
+      return null; // drop event
+    }
+    return event;
+  },
   tracesSampleRate: 0.2,
 });
 
