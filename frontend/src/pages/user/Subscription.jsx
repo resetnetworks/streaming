@@ -52,7 +52,7 @@ const Subscription = () => {
                   : "text-[#9ca3af]"
               }`}
             >
-              Annually
+              Annually.  this is for testing
             </button>
           </div>
 
