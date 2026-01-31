@@ -19,8 +19,17 @@ Sentry.init({
   ignoreErrors: [
     "Authentication token missing",
     "Unauthorized",
-    "401"
+    "401",
+    "Failed to fetch dynamically imported module",
+    "Load failed"
   ],
+  beforeSend(event, hint) {
+    const error = hint.originalException;
+    if (error && error.message && error.message.includes("Failed to fetch dynamically imported module")) {
+      return null; // Don't send this to Sentry
+    }
+    return event;
+  },
   tracesSampleRate: 0.2,
 });
 
