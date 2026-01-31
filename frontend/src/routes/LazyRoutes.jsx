@@ -7,7 +7,7 @@ export const ForgotPassword = lazy(() => import("../pages/user/ForgotPassword"))
 export const ResetPassword = lazy(() => import("../pages/user/ResetPassword"));
 export const FavouriteGen = lazy(() => import("../pages/user/FavouriteGen"));
 export const Home = lazy(() => import("../pages/user/Home"));
-export const AlbumsPage = lazy(() => import("../pages/user/AlbumsPage"));
+// export const AlbumsPage = lazy(() => import("../pages/user/AlbumsPage"));
 export const Artists = lazy(() => import("../pages/user/Artists"));
 export const Artist = lazy(() => import("../pages/user/Artist"));
 export const LikedSong = lazy(() => import("../pages/user/LikedSong"));
