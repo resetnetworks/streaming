@@ -13,6 +13,7 @@ import BackgroundWrapper from "../../components/BackgroundWrapper";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { validators } from "../../utills/validators";
 import { CircleGeometry } from "three/src/Three.Core.js";
+import IconHeader from "../../components/user/IconHeader";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -135,8 +136,7 @@ const Register = () => {
 
       <BackgroundWrapper>
         <section className="w-full min-h-screen flex flex-col items-center">
-          <img src={assets.reset_icon} className="w-10 py-3 block" alt="Reset Icon" />
-          <div className="gradiant-line"></div>
+          <IconHeader/>
 
           <div className="text-white sm:mt-auto mt-0 mb-auto flex flex-col justify-around items-center">
             <h1 className="text-4xl my-6">
