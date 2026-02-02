@@ -16,13 +16,12 @@ Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: import.meta.env.MODE,
   enabled: import.meta.env.MODE === "production",
-  // ignoreErrors: [
-  //   "Authentication token missing",
-  //   "Unauthorized",
-  //   "401",
-  //   "Failed to fetch dynamically imported module",
-  //   "Load failed"
-  // ],
+  ignoreErrors: [
+    "Authentication token missing",
+    "Unauthorized",
+    "401",
+    "Failed to fetch dynamically imported module",
+  ],
   beforeSend(event, hint) {
     const error = hint.originalException;
     if (error && error.message && error.message.includes("Failed to fetch dynamically imported module")) {
