@@ -19,7 +19,7 @@ const AlbumCard = ({
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(16, 21, 62, 0.56) 36.83%, #0E43CA 100%)",
+              "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(16, 21, 62, 0.56) 68.83%, #0E43CA 100%)",
           }}
         />
         <div className="absolute bottom-4 left-0 right-0 flex justify-center text-wrap text-center items-center h-4">

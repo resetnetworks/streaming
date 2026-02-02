@@ -30,7 +30,7 @@ const GenreCard = ({ cards = [] }) => {
               className="w-full h-full object-cover"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#10153e8f] to-[#0E43CA]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0e43ca]" />
             <p className="absolute text-nowrap bottom-2 left-1/2 transform -translate-x-1/2 text-white font-semibold text-sm">
               {first.title}
             </p>
@@ -57,7 +57,7 @@ const GenreCard = ({ cards = [] }) => {
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#10153e8f] to-[#0E43CA]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0e43ca]" />
               <p className="absolute text-nowrap bottom-2 left-1/2 transform -translate-x-1/2 text-white font-semibold text-sm">
                 {card.title}
               </p>
