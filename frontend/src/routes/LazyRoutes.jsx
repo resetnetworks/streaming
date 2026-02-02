@@ -17,7 +17,7 @@ export const ForgotPassword = lazyWithRetry(() => import("../pages/user/ForgotPa
 export const ResetPassword = lazyWithRetry(() => import("../pages/user/ResetPassword"));
 export const FavouriteGen = lazyWithRetry(() => import("../pages/user/FavouriteGen"));
 export const Home = lazyWithRetry(() => import("../pages/user/Home"));
-// export const AlbumsPage = lazyWithRetry(() => import("../pages/user/AlbumsPage"));
+export const AlbumsPage = lazyWithRetry(() => import("../pages/user/AlbumsPage"));
 export const Artists = lazyWithRetry(() => import("../pages/user/Artists"));
 export const Artist = lazyWithRetry(() => import("../pages/user/Artist"));
 export const LikedSong = lazyWithRetry(() => import("../pages/user/LikedSong"));

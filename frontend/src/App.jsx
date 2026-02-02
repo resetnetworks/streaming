@@ -215,6 +215,17 @@ useEffect(() => {
                 }
               />
               <Route
+                path="/albums"
+                element={
+                  <RedirectedProtectedRoute
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                  >
+                    <Pages.AlbumsPage />
+                  </RedirectedProtectedRoute>
+                }
+              />
+              <Route
                 path="/artists"
                 element={
                   <RedirectedProtectedRoute

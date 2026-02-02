@@ -316,7 +316,7 @@ export default function Album() {
   // ✅ Get artist name
   const artistName = React.useMemo(() => {
     if (!album) return "Unknown Artist";
-    if (typeof album.artist === "object") return album.artist.name;
+    if (typeof album?.artist === "object") return album?.artist?.name;
     return "Unknown Artist";
   }, [album]);
 
@@ -439,8 +439,9 @@ export default function Album() {
               onMouseLeave={() => setIsHoveringCover(false)}
               onClick={handlePlayAlbum}
             >
+              {console.log(album)}
               <img
-                src={album.coverImage}
+                src={album?.coverImage}
                 alt="Album Cover"
                 className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 group-hover:brightness-75"
               />
@@ -490,7 +491,7 @@ export default function Album() {
                   <>
                     <div className="px-2 py-0.5 sm:px-3 sm:py-1 md:px-5 md:py-3 bg-gray-800 rounded-full border border-gray-700">
                       <span className="text-base sm:text-lg md:text-xl font-bold text-white">
-                        ${album.basePrice.amount}
+                        ${album?.basePrice?.amount}
                       </span>
                     </div>
                     {isAlbumPurchased ? (
@@ -595,8 +596,8 @@ export default function Album() {
                   <div className="flex-1">
                     <SongList
                       songId={song._id}
-                      img={song.coverImage || album.coverImage}
-                      songName={song.title}
+                      img={song?.coverImage || album?.coverImage}
+                      songName={song?.title}
                       songSlug={song?.slug || song?._id}
                       seekTime={formatDuration(song.duration)}
                       onPlay={() => handlePlaySong(song)}
