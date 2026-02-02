@@ -77,7 +77,7 @@ const Footer = () => {
                 { name: 'Search', link: '/search' },
                 { name: 'Purchases', link: '/purchases' },
                 { name: 'Liked', link: '/liked-songs' },
-                { name: 'Sign up as artist', link: '/artist/register' },
+                { name: 'Become an Artist', link: '/artist/register' },
               ].map(({ name, link }) => (
                 <a
                   key={name}
