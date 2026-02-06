@@ -34,7 +34,6 @@ const AlbumsSection = ({
 
   // Flatten all pages into a single array
   const allAlbums = data?.pages?.flatMap(page => page.data || []) || [];
-  console.log(allAlbums)
 
 
 

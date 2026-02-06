@@ -172,3 +172,54 @@ export const useDeleteSong = () => {
     },
   });
 };
+
+export const useUnlikeSong = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: songApi.unlikeSong,
+
+    // 🔥 Optimistic Update
+    onMutate: async (songId) => {
+      await queryClient.cancelQueries({ queryKey: songKeys.liked() });
+
+      const previousData = queryClient.getQueryData(
+        songKeys.likedList({ limit: 20 })
+      );
+
+      // Remove song from cache instantly
+      queryClient.setQueryData(
+        songKeys.likedList({ limit: 20 }),
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              songs: page.songs.filter((s) => s._id !== songId),
+            })),
+          };
+        }
+      );
+
+      return { previousData };
+    },
+
+    // ❌ Rollback if error
+    onError: (err, songId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          songKeys.likedList({ limit: 20 }),
+          context.previousData
+        );
+      }
+      toast.error("Failed to unlike song");
+    },
+
+    // ✅ Final sync
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: songKeys.liked() });
+    },
+  });
+};
