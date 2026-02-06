@@ -6,23 +6,10 @@ import React, {
   forwardRef,
   useState,
 } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-
-// --- TODO: Adjust these import paths to match your project structure ---
-import {
-  fetchAllArtists,
-  loadFromCache,
-} from "../../../features/artists/artistsSlice";
-import {
-  selectAllArtists,
-  selectArtistLoading,
-  selectArtistError,
-  selectIsPageCached,
-} from "../../../features/artists/artistsSelectors";
-import { clearSongMessage } from "../../../features/songs/songSlice";
+import { useArtists } from "../../../hooks/api/useArtists"; // Updated import
 
 // --- Helper: format plan cycle ---
 const cycleLabel = (c) => {
@@ -156,23 +143,17 @@ const ArtistCircle = forwardRef(function ArtistCircle(
 
 // Main Section Component
 const ArtistSection = ({ title = "Featured Artists", onNavigateArtist }) => {
-  const dispatch = useDispatch();
+  // Use React Query hook to fetch artists
+  const { data, isLoading, error, isPreviousData } = useArtists({ 
+    page: 1, 
+    limit: 12 
+  });
 
-  const artists = useSelector(selectAllArtists) || [];
-  const loading = useSelector(selectArtistLoading);
-  const error = useSelector(selectArtistError);
-
-  const isPageOneCached = useSelector(selectIsPageCached(1));
+  // Extract artists and pagination from data
+  const artists = data?.data || []; // Note: Your API response has data array
+  const pagination = data?.pagination;
 
   const scrollRef = useRef(null);
-
-  useEffect(() => {
-    if (isPageOneCached) {
-      dispatch(loadFromCache(1));
-    } else if (artists.length === 0) {
-      dispatch(fetchAllArtists({ page: 1, limit: 12 }));
-    }
-  }, [dispatch, isPageOneCached, artists.length]);
 
   const handleScroll = (dir = "right") => {
     if (!scrollRef.current) return;
@@ -229,7 +210,7 @@ const ArtistSection = ({ title = "Featured Artists", onNavigateArtist }) => {
         tabIndex={0}
         onKeyDown={onKeyDown}
       >
-        {loading ? (
+        {isLoading ? (
           [...Array(8)].map((_, i) => (
             <div key={`artist-skel-${i}`} className="sm:w-48 sm:h-48 h-32 w-32 shrink-0">
               <Skeleton
@@ -248,7 +229,7 @@ const ArtistSection = ({ title = "Featured Artists", onNavigateArtist }) => {
         ) : artists.length > 0 ? (
           artists.map((artist) => (
             <div
-              key={artist._id || artist.slug}
+              key={artist._id || artist.id || artist.slug}
               style={{ scrollSnapAlign: "start" }}
               className="shrink-0"
             >

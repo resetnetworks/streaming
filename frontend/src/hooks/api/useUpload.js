@@ -28,7 +28,6 @@ export const useUploadSong = () => {
       };
     },
     onSuccess: (data) => {
-      toast.success("Song uploaded successfully to S3!");
       return data; // Return S3 key for further use
     },
     onError: (error) => {
@@ -43,7 +42,6 @@ export const useSaveSongMetadata = () => {
   return useMutation({
     mutationFn: uploadApi.saveSongToDb,
     onSuccess: (song) => {
-      toast.success("Song saved successfully!");
       return song;
     },
     onError: (error) => {

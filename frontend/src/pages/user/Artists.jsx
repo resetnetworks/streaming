@@ -1,19 +1,8 @@
 // src/pages/Artists.jsx
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchAllArtists, loadFromCache } from "../../features/artists/artistsSlice";
+import { useArtists, usePrefetchArtistsPage } from "../../hooks/api/useArtists";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { useNavigate } from "react-router-dom";
-import {
-  selectAllArtists,
-  selectArtistLoading,
-  selectArtistError,
-  selectArtistPagination,
-  selectIsCached,
-  selectCachedPages,
-  selectIsPageCached,
-  selectCachedPageData,
-} from "../../features/artists/artistsSelectors";
 import UserHeader from "../../components/user/UserHeader";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -53,35 +42,29 @@ const formatPrice = (amount, currency) => {
 };
 
 const Artists = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // Redux selectors with cache
-  const artists = useSelector(selectAllArtists) || [];
-  const loading = useSelector(selectArtistLoading);
-  const error = useSelector(selectArtistError);
-  const pagination = useSelector(selectArtistPagination) || { page: 1, totalPages: 1, limit: 12 };
-  const isCached = useSelector(selectIsCached);
-  const cachedPages = useSelector(selectCachedPages);
-
-  const [initialFetchDone, setInitialFetchDone] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const limit = 12;
 
-  // Check if current page is cached
-  const isPageCached = useSelector(selectIsPageCached(currentPage));
-  const cachedPageData = useSelector(selectCachedPageData(currentPage));
+  // React Query fetch
+  const {
+    data: artistsData,
+    isLoading: loading,
+    error,
+    isPreviousData,
+    refetch,
+  } = useArtists({ page: currentPage, limit });
 
-  // Initial load with cache check
-  useEffect(() => {
-    if (!initialFetchDone) {
-      if (isPageCached && cachedPageData) {
-        dispatch(loadFromCache(currentPage));
-      } else {
-        dispatch(fetchAllArtists({ page: currentPage, limit: 12 }));
-      }
-      setInitialFetchDone(true);
-    }
-  }, [dispatch, initialFetchDone, currentPage, isPageCached, cachedPageData]);
+  // Prefetch next page
+  const prefetchNextPage = usePrefetchArtistsPage();
+
+  // Extract data from response
+  const artists = artistsData?.data || [];
+  const pagination = artistsData?.pagination || { 
+    page: currentPage, 
+    totalPages: 1, 
+    total: 0 
+  };
 
   // Navigation handler
   const handleArtistClick = (slug) => {
@@ -90,42 +73,26 @@ const Artists = () => {
     }
   };
 
-  // Enhanced pagination handlers with cache
+  // Pagination handlers
   const handlePrevPage = () => {
     if (pagination.page > 1) {
-      const newPage = pagination.page - 1;
-      setCurrentPage(newPage);
-      const isNewPageCached = cachedPages.includes(newPage);
-      if (isNewPageCached) {
-        dispatch(loadFromCache(newPage));
-      } else {
-        dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
-      }
+      setCurrentPage(pagination.page - 1);
     }
   };
 
   const handleNextPage = () => {
     if (pagination.page < pagination.totalPages) {
-      const newPage = pagination.page + 1;
-      setCurrentPage(newPage);
-      const isNewPageCached = cachedPages.includes(newPage);
-      if (isNewPageCached) {
-        dispatch(loadFromCache(newPage));
-      } else {
-        dispatch(fetchAllArtists({ page: newPage, limit: 12 }));
-      }
+      setCurrentPage(pagination.page + 1);
+      // Prefetch next page
+      prefetchNextPage(pagination.page + 1, limit);
     }
   };
 
   const handlePageClick = (pageNumber) => {
     if (pageNumber !== pagination.page) {
       setCurrentPage(pageNumber);
-      const isPageCachedCheck = cachedPages.includes(pageNumber);
-      if (isPageCachedCheck) {
-        dispatch(loadFromCache(pageNumber));
-      } else {
-        dispatch(fetchAllArtists({ page: pageNumber, limit: 12 }));
-      }
+      // Prefetch clicked page
+      prefetchNextPage(pageNumber, limit);
     }
   };
 
@@ -171,20 +138,19 @@ const Artists = () => {
 
   return (
     <>
-
-    <PageSEO
-  title="Discover & Stream Artists - Reset Music Streaming"
-  description="Explore our exclusive Reset Music artists collection. Access profiles, music, and subscriptions available only to members."
-  canonicalUrl="https://musicreset.com/artists"
-  structuredData={{
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": "Reset Music Artists",
-    "description": "List of artists featured on Reset Music streaming platform. Members can discover, stream, and subscribe to their favorite artists.",
-    "url": "https://musicreset.com/artists",
-  }}
-  noIndex={true}
-/>
+      <PageSEO
+        title="Discover & Stream Artists - Reset Music Streaming"
+        description="Explore our exclusive Reset Music artists collection. Access profiles, music, and subscriptions available only to members."
+        canonicalUrl="https://musicreset.com/artists"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Reset Music Artists",
+          "description": "List of artists featured on Reset Music streaming platform. Members can discover, stream, and subscribe to their favorite artists.",
+          "url": "https://musicreset.com/artists",
+        }}
+        noIndex={true}
+      />
 
       <UserHeader />
 
@@ -205,6 +171,12 @@ const Artists = () => {
             <div className="mb-8 mx-auto max-w-lg">
               <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-center">
                 <p className="text-red-400">Failed to load artists. Please try again.</p>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-2 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Retry
+                </button>
               </div>
             </div>
           )}
@@ -232,9 +204,9 @@ const Artists = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12">
-              {(artists || [])
+              {artists
                 .map((artist, index) => {
-                  if (!artist || !artist._id) return null;
+                  if (!artist || !artist.id) return null;
 
                   const plans = Array.isArray(artist.subscriptionPlans)
                     ? artist.subscriptionPlans.filter(Boolean)
@@ -242,7 +214,7 @@ const Artists = () => {
 
                   return (
                     <div
-                      key={artist._id}
+                      key={artist.id}
                       onClick={() => handleArtistClick(artist.slug)}
                       className="group cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:scale-105"
                     >
@@ -286,7 +258,7 @@ const Artists = () => {
                                 if (!c || amount == null) return null;
                                 return (
                                   <span
-                                    key={`${artist._id}-plan-${idx}-${c}`}
+                                    key={`${artist.id}-plan-${idx}-${c}`}
                                     className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium"
                                   >
                                     {formatPrice(amount, currency)}/{readable}
@@ -312,7 +284,7 @@ const Artists = () => {
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
                 onClick={handlePrevPage}
-                disabled={pagination.page <= 1}
+                disabled={pagination.page <= 1 || isPreviousData}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-900 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-blue-500/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 ← Prev
@@ -323,11 +295,12 @@ const Artists = () => {
                   <button
                     key={pageNum}
                     onClick={() => handlePageClick(pageNum)}
+                    disabled={isPreviousData}
                     className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${
                       pageNum === pagination.page
                         ? "bg-gradient-to-r from-blue-600 to-blue-900 text-white shadow-lg"
                         : "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50"
-                    } ${cachedPages.includes(pageNum) ? "ring-2 ring-green-500/30" : ""}`}
+                    }`}
                   >
                     {pageNum}
                   </button>
@@ -336,7 +309,7 @@ const Artists = () => {
 
               <button
                 onClick={handleNextPage}
-                disabled={pagination.page >= pagination.totalPages}
+                disabled={pagination.page >= pagination.totalPages || isPreviousData}
                 className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-cyan-500/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 Next →
@@ -344,7 +317,7 @@ const Artists = () => {
             </div>
           )}
 
-          {!loading && (!artists || artists.length === 0) && !error && (
+          {!loading && artists.length === 0 && !error && (
             <div className="text-center py-12">
               <FaMicrophone className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl text-gray-400 mb-2">No Artists Found</h3>

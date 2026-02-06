@@ -3,31 +3,28 @@ import axios from "../utills/axiosInstance";
 
 // All API calls for artists (pure functions, no state)
 export const artistApi = {
-  // Get all artists with pagination
+  // Get all artists with pagination - FIXED
   fetchAll: async ({ page = 1, limit = 10 } = {}) => {
     const res = await axios.get(`/artists?page=${page}&limit=${limit}`);
-    return {
-      artists: res.data.artists,
-      pagination: res.data.pagination,
-    };
+    return res.data; // ✅ Direct response return karein
   },
 
   // Get all artists without pagination
   fetchAllNoPagination: async () => {
     const res = await axios.get(`/artists/all`);
-    return res.data.artists;
+    return res.data.data || res.data.artists;
   },
 
   // Get artist by slug or ID
   fetchById: async (id) => {
     const res = await axios.get(`/artists/${id}`);
-    return res.data.artist;
+    return res.data.data || res.data.artist;
   },
 
   // Get artist's own profile
   fetchProfile: async () => {
     const res = await axios.get("/artists/profile/me");
-    return res.data.data; // Return the data object from response
+    return res.data.data;
   },
 
   // Create new artist
@@ -35,7 +32,7 @@ export const artistApi = {
     const res = await axios.post("/artists", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return res.data.artist;
+    return res.data.data || res.data.artist;
   },
 
   // Update artist's own profile
@@ -43,7 +40,7 @@ export const artistApi = {
     const res = await axios.put(`/artists/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return res.data.artist || res.data.data; // Return updated artist data
+    return res.data.data || res.data.artist;
   },
 
   // Delete artist
@@ -55,7 +52,7 @@ export const artistApi = {
   // Fetch random artist with songs
   fetchRandomArtistWithSongs: async ({ page = 1, limit = 10 } = {}) => {
     const res = await axios.get(`/discover/random-artist?page=${page}&limit=${limit}`);
-    return res.data;
+    return res.data.data || res.data;
   },
 
   // Search artists
@@ -64,8 +61,8 @@ export const artistApi = {
       `/artists?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
     );
     return {
-      artists: res.data.results,
-      pagination: {
+      data: res.data.data || res.data.results,
+      pagination: res.data.pagination || {
         page: res.data.page,
         limit,
         total: res.data.total,
@@ -79,7 +76,7 @@ export const artistApi = {
     const res = await axios.get(`/admin/dashboard/subscriber-count/${artistId}`);
     return {
       artistId,
-      ...res.data,
+      ...res.data.data,
     };
   },
 };

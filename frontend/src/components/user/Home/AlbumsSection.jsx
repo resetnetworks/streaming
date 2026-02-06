@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState, useRef } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 
 import AlbumCard from "../AlbumCard";
-import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
-import { fetchAllAlbums } from "../../../features/albums/albumsSlice";
+import { useAlbumsInfinite } from "../../../hooks/api/useAlbums";
 import CurrencySelectionModal from "../CurrencySelectionModal";
 
 const AlbumsSection = ({ 
@@ -14,44 +13,40 @@ const AlbumsSection = ({
   processingPayment, 
   paymentLoading 
 }) => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   
-  const [albumsPage, setAlbumsPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
 
-  const currentUser = useSelector((state) => state.auth.user);
-  const albumsStatus = useSelector((state) => state.albums.loading);
-  const albumsTotalPages = useSelector((state) => state.albums.pagination.totalPages);
-  const allAlbums = useSelector((state) => state.albums.allAlbums);
+  const currentUser = useSelector((state) => state?.auth?.user);
 
-  // STRING TRUNCATION HELPER FUNCTION - YAHAN ADD KIYA GAYA HAI
+  // Use React Query for infinite scroll
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useAlbumsInfinite({ limit: 10 });
+
+
+  // Flatten all pages into a single array
+  const allAlbums = data?.pages?.flatMap(page => page.data || []) || [];
+  console.log(allAlbums)
+
+
+
+  // STRING TRUNCATION HELPER FUNCTION
   const truncateTitle = (title, maxLength = 50) => {
     if (!title) return "";
     if (title.length <= maxLength) return title;
     return title.substring(0, maxLength) + "...";
   };
 
-  const { lastElementRef } = useInfiniteScroll({
-    hasMore: albumsPage < (albumsTotalPages || 1),
-    loading: albumsStatus || loadingMore,
-    onLoadMore: () => {
-      if (albumsPage < (albumsTotalPages || 1) && !loadingMore) {
-        setLoadingMore(true);
-        setAlbumsPage(prev => prev + 1);
-      }
-    }
-  });
-
-  useEffect(() => {
-    dispatch(fetchAllAlbums({ page: albumsPage, limit: 10 }))
-      .then(() => {
-        setLoadingMore(false);
-      });
-  }, [dispatch, albumsPage]);
+  // Infinite scroll handler
+  const lastElementRef = useRef(null);
 
   const handleScroll = (direction = "right") => {
     if (!scrollRef.current) return;
@@ -73,12 +68,12 @@ const AlbumsSection = ({
   };
 
   const getAvailableCurrencies = (album) => {
-    if (!album.basePrice || !album.convertedPrices) return [];
+    if (!album?.basePrice || !album?.convertedPrices) return [];
     
     const currencies = [
-      { currency: album.basePrice.currency, amount: album.basePrice.amount, isBaseCurrency: true },
-      ...album.convertedPrices.map(price => ({
-        currency: price.currency, amount: price.amount, isBaseCurrency: false
+      { currency: album?.basePrice?.currency, amount: album?.basePrice?.amount, isBaseCurrency: true },
+      ...album?.convertedPrices.map(price => ({
+        currency: price?.currency, amount: price?.amount, isBaseCurrency: false
       }))
     ];
     
@@ -94,7 +89,7 @@ const AlbumsSection = ({
     } else if (availableCurrencies.length === 1) {
       const currency = availableCurrencies[0];
       onPurchaseClick(album, "album", {
-        currency: currency.currency, amount: currency.amount, symbol: getCurrencySymbol(currency.currency)
+        currency: currency?.currency, amount: currency?.amount, symbol: getCurrencySymbol(currency?.currency)
       });
     }
   };
@@ -115,17 +110,17 @@ const AlbumsSection = ({
   };
   
   const getAlbumPriceDisplay = (album) => {
-    if (currentUser?.purchasedAlbums?.includes(album._id)) {
+    if (currentUser?.purchasedAlbums?.includes(album.id)) {
       return "Purchased";
     }
 
-    if (album.accessType === "subscription") {
+    if (album?.accessType === "subscription") {
       return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
     }
 
-    if (album.accessType === "purchase-only") {
-      if (album.basePrice && album.basePrice.amount > 0) {
-        const basePrice = album.basePrice;
+    if (album?.accessType === "purchase-only") {
+      if (album?.basePrice && album?.basePrice?.amount > 0) {
+        const basePrice = album?.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
         
         return (
@@ -143,12 +138,37 @@ const AlbumsSection = ({
         );
       }
       
-      if (album.basePrice && album.basePrice.amount === 0) {
+      if (album?.basePrice && album?.basePrice?.amount === 0) {
         return "Free";
       }
     }
 
     return null;
+  };
+
+  // Intersection Observer callback for infinite scroll
+  const observerCallback = (entries) => {
+    const [entry] = entries;
+    if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  // Set up intersection observer for the last element
+  const setLastElementRef = (node) => {
+    if (lastElementRef.current) {
+      // Cleanup previous observer
+      // (Observer will be cleaned up automatically when element is unmounted)
+    }
+
+    if (node) {
+      lastElementRef.current = node;
+      const observer = new IntersectionObserver(observerCallback, {
+        threshold: 0.1,
+        root: scrollRef.current,
+      });
+      observer.observe(node);
+    }
   };
 
   return (
@@ -183,7 +203,7 @@ const AlbumsSection = ({
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
       >
-        {albumsStatus && allAlbums.length === 0
+        {status === "loading" && allAlbums.length === 0
           ? [...Array(7)].map((_, idx) => (
               <div
                 key={`album-skeleton-${idx}`}
@@ -195,20 +215,20 @@ const AlbumsSection = ({
             ))
           : allAlbums.map((album, idx) => (
               <div
-                key={album._id}
-                ref={idx === allAlbums.length - 1 ? lastElementRef : null}
+                key={album?.id || idx}
+                ref={idx === allAlbums.length - 1 ? setLastElementRef : null}
               >
                 <AlbumCard
-                  tag={truncateTitle(album.title || "Album")} // YAHAN CHANGE KIYA GAYA HAI
-                  artists={album.artist?.name || "Various Artists"}
-                  image={album.coverImage || "/images/placeholder.png"}
+                  tag={truncateTitle(album.title || "Album")}
+                  artists={album?.artist?.name || "Various Artists"}
+                  image={album?.coverImage || "/images/placeholder.png"}
                   price={getAlbumPriceDisplay(album)}
-                  onClick={() => navigate(`/album/${album.slug}`)}
+                  onClick={() => navigate(`/album/${album?.slug}`)}
                 />
               </div>
             ))}
         
-        {loadingMore && albumsPage < albumsTotalPages && (
+        {isFetchingNextPage && (
           <div className="min-w-[160px] flex flex-col gap-2 skeleton-wrapper">
             <Skeleton height={160} width={160} className="rounded-xl" />
             <Skeleton width={100} height={12} />
@@ -216,7 +236,7 @@ const AlbumsSection = ({
         )}
       </div>
 
-     <CurrencySelectionModal
+      <CurrencySelectionModal
         open={showCurrencyModal}
         onClose={handleCloseCurrencyModal}
         onSelectCurrency={handleCurrencySelect}

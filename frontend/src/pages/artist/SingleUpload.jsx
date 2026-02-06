@@ -49,11 +49,6 @@ const SingleUpload = ({ onCancel }) => {
       return;
     }
 
-    
-    if (!formData.tracks || formData.tracks.length === 0) {
-      alert("Please upload an audio file!");
-      return;
-    }
 
     const track = formData.tracks[0];
     const audioFile = track.file;
