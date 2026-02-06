@@ -113,7 +113,7 @@ const ArtistAlbumsSection = ({
   // Album price display logic
   const getAlbumPriceDisplay = (album) => {
     // Priority 1: Agar user ne album pehle se khareed liya hai
-    if (currentUser?.purchasedAlbums?.includes(album._id)) {
+    if (currentUser?.purchasedAlbums?.includes(album.id)) {
       return "Purchased";
     }
 
@@ -145,7 +145,7 @@ const ArtistAlbumsSection = ({
       }
       
       // Agar purchase-only hai lekin price 0 hai, to "Free" dikhayein
-      if (album.basePrice && album.basePrice.amount === 0) {
+      if (album?.basePrice && album?.basePrice?.amount === 0) {
         return "Free";
       }
     }
@@ -189,7 +189,7 @@ const ArtistAlbumsSection = ({
             <>
               {artistAlbums.map((album, idx) => (
                 <AlbumCard
-                  key={album._id}
+                  key={album.id}
                   ref={idx === artistAlbums.length - 1 ? albumsLastRef : null}
                   tag={`${album.title || "music"}`}
                   artists={album.artist?.name || "Various Artists"}

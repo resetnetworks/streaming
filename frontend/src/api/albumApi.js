@@ -13,7 +13,7 @@ export const albumApi = {
   // Get single album by ID or slug
   fetchById: async (id) => {
     const res = await axios.get(`/albums/${id}`);
-    return res.data.album;
+    return res.data.data;
   },
 
   // Get albums by artist with pagination (optimized version)

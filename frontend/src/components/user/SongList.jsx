@@ -11,10 +11,6 @@ import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
 
-const handleFeatureSoon = () => {
-  toast.success("This feature will be available soon");
-};
-
 const SongList = ({
   img,
   songName,

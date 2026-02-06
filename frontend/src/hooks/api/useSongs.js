@@ -145,7 +145,7 @@ export const useUpdateSong = () => {
   return useMutation({
     mutationFn: songApi.update,
     onSuccess: (song) => {
-      queryClient.invalidateQueries({ queryKey: songKeys.detail(song._id) });
+      queryClient.invalidateQueries({ queryKey: songKeys.detail(song.id) });
       queryClient.invalidateQueries({
         queryKey: songKeys.artist(song.artist),
       });
@@ -197,7 +197,7 @@ export const useUnlikeSong = () => {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              songs: page.songs.filter((s) => s._id !== songId),
+              songs: page.songs.filter((s) => s.id !== songId),
             })),
           };
         }
