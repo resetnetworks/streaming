@@ -17,14 +17,6 @@ import {
 import GenreModal from "./GenreModal";
 import { toast } from "sonner";
 import { compressCoverImage } from "../../../utills/imageCompression";
-import {
-  useUploadSong,
-  useCompleteSongUpload,
-} from "../../../hooks/api/useUpload";
-import { useSaveSongMetadata } from "../../../hooks/api/useUpload";
-import { useCreateSong } from "../../../hooks/api/useSongs";
-import { useCreateAlbum } from "../../../hooks/api/useAlbums";
-import { useS3Upload } from "../../../hooks/api/useS3Upload";
 
 // Access type options array
 const ACCESS_TYPE_OPTIONS = [
@@ -50,11 +42,15 @@ const UploadForm = ({
   onCancel,
   onSubmit,
   isSubmitting = false,
+  // New props for external upload progress
+  audioUploadProgress = 0,
+  coverImageUploadProgress = 0,
+  isUploadingAudio = false,
+  isUploadingCover = false,
 }) => {
   // --- Basic Info State ---
   const [coverImage, setCoverImage] = useState(initialData.coverImage || null);
   const [coverImageFile, setCoverImageFile] = useState(null);
-  const [coverImageKey, setCoverImageKey] = useState("");
   const [title, setTitle] = useState(initialData.title || "");
   const [date, setDate] = useState(initialData.date || "");
   const [description, setDescription] = useState(initialData.description || "");
@@ -77,21 +73,6 @@ const UploadForm = ({
   const [tracks, setTracks] = useState(initialData.tracks || []);
   const [editingTrackId, setEditingTrackId] = useState(null);
   const [editTrackName, setEditTrackName] = useState("");
-
-  // --- Upload Progress State ---
-  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
-  const [coverImageUploadProgress, setCoverImageUploadProgress] = useState(0);
-  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
-
-  // --- React Query Hooks ---
-  const uploadSongMutation = useUploadSong();
-  const saveSongMutation = useSaveSongMetadata();
-  const createSongMutation = useCreateSong();
-  const { uploadSongCover } = useS3Upload();
-  const createAlbumMutation = useCreateAlbum();
-
-
 
   const hiddenDateInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -141,7 +122,7 @@ const UploadForm = ({
     return !isNaN(numPrice) && numPrice > 0;
   };
 
-  // --- Cover Image Upload with Presigned URL ---
+  // --- Cover Image Handling ---
   const handleCoverImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -158,48 +139,27 @@ const UploadForm = ({
     }
 
     try {
-      // Compress image first
-      const compressedImage = await compressCoverImage(file);
-      
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(compressedImage);
-      setCoverImage(previewUrl);
-      setCoverImageFile(compressedImage);
+      // Compress image
+      const compressedBlob = await compressCoverImage(file);
+
+// 🔥 Blob → File (MIME type preserve)
+const compressedFile = new File(
+  [compressedBlob],
+  file.name,
+  { type: file.type }
+);
+
+const previewUrl = URL.createObjectURL(compressedFile);
+
+setCoverImage(previewUrl);
+setCoverImageFile(compressedFile);
+
       
     } catch (err) {
       console.error(err);
       toast.error("Image optimization failed", { id: "image" });
     }
   };
-
-const uploadCoverImageToS3 = async () => {
-  if (!coverImageFile) {
-    throw new Error('No cover image selected');
-  }
-
-  setIsUploadingCover(true);
-
-  try {
-    const webpFile = new File(
-      [coverImageFile],
-      `cover_${Date.now()}.webp`,
-      { type: 'image/webp' }
-    );
-
-    // 🔥 clean, direct key
-    const key = await uploadSongCover({ file: webpFile });
-
-    setCoverImageKey(key);
-    return key;
-
-  } finally {
-    setIsUploadingCover(false);
-  }
-};
-
-
-
-
 
   const handleDateChange = (e) => {
     const val = e.target.value;
@@ -268,7 +228,7 @@ const uploadCoverImageToS3 = async () => {
     });
   };
 
-  // --- Track Upload Logic with Audio Duration ---
+  // --- Track Upload Logic ---
   const handleTrackUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -297,7 +257,6 @@ const uploadCoverImageToS3 = async () => {
       file: file,
       duration: "Loading...",
       order: 1,
-      audioKey: "", // Will be set after upload
     };
 
     setTracks([tempTrack]);
@@ -305,40 +264,6 @@ const uploadCoverImageToS3 = async () => {
     // Then update with actual duration
     const duration = await getAudioDuration(file);
     setTracks([{ ...tempTrack, duration }]);
-  };
-
-  // --- Upload Audio Track to S3 ---
-  const uploadAudioToS3 = async () => {
-    if (tracks.length === 0) {
-      throw new Error("No audio track selected");
-    }
-
-    const track = tracks[0];
-    setIsUploadingAudio(true);
-    setAudioUploadProgress(0);
-
-    try {
-      // Upload audio using the upload hook
-      const uploadResult = await uploadSongMutation.mutateAsync({
-        file: track.file,
-        onProgress: (progress) => {
-          setAudioUploadProgress(progress);
-        },
-        fileType: "audio" // To differentiate between audio and image
-      });
-
-      // Update track with S3 key
-      const updatedTrack = { ...track, audioKey: uploadResult.s3Key };
-      setTracks([updatedTrack]);
-      
-      return uploadResult.s3Key;
-
-    } catch (error) {
-      console.error("Audio upload failed:", error);
-      throw error;
-    } finally {
-      setIsUploadingAudio(false);
-    }
   };
 
   const removeTrack = () => {
@@ -391,8 +316,8 @@ const uploadCoverImageToS3 = async () => {
     }
   };
 
-  // --- Submit Logic with Presigned Upload Flow ---
-  const handleSubmit = async (e) => {
+  // --- Submit Handler ---
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     // Prevent submission if already submitting
@@ -422,118 +347,57 @@ const uploadCoverImageToS3 = async () => {
       }
     }
 
-    try {
-      // Show uploading toast
-      toast.loading("Uploading files to S3...", { id: "upload" });
-
-      // Step 1: Upload cover image to S3
-      const coverImageKey = await uploadCoverImageToS3();
-      
-      // Step 2: Upload audio track to S3 (only for songs)
-      let audioKey = "";
-      if (type === "song" && tracks.length > 0) {
-        audioKey = await uploadAudioToS3();
-      }
-
-
-      const convertDurationToSeconds = (durationString) => {
-  if (durationString === "Loading..." || !durationString) {
-    return 180; // Default 3 minutes
-  }
-  
-  try {
-    // Format: "MM:SS"
-    const parts = durationString.split(":");
-    if (parts.length === 2) {
-      const minutes = parseInt(parts[0], 10);
-      const seconds = parseInt(parts[1], 10);
-      return (minutes * 60) + seconds;
+    // Validate audio track for songs
+    if (type === "song" && tracks.length === 0) {
+      toast.error("Please upload an audio track!");
+      return;
     }
-    return 180; // Default fallback
-  } catch (error) {
-    console.error("Error converting duration:", error);
-    return 180;
-  }
-};
-      // Step 3: Prepare song metadata
-const songData = {
-  title: title.trim(),
-  releaseDate: date,
-  description: description,
-  // ISRC को validate करें - optional बनाएं
-  ...(isrc.trim() && { isrc: isrc.trim() }),
-  genres: selectedGenres,
-  coverImageKey: coverImageKey,
-  accessType: accessType,
-  albumOnly: type === "album",
-  // Only include basePrice if purchase-only
-  ...(accessType === "purchase-only" && {
-    basePrice: {
-      amount: parseFloat(price),
-      currency: "USD",
-    },
-  }),
-  // Add audioKey only for songs
-  ...(type === "song" && tracks.length > 0 && {
-    audioKey: audioKey,
-    // Duration को seconds में convert करें
-    duration: convertDurationToSeconds(tracks[0].duration),
-    fileName: tracks[0].name,
-  }),
-};
 
-      // Step 4: Save song metadata to database using React Query mutation
-      toast.loading("Saving song metadata...", { id: "save" });
-      
-  let createdItem = null;
-
-if (type === "song") {
-  createdItem = await createSongMutation.mutateAsync(songData);
-}
-
-if (type === "album") {
-  const albumData = {
-    title: title.trim(),
-    releaseDate: date,
-    description,
-    ...(isrc.trim() && { upc: isrc.trim() }),
-    genres: selectedGenres,
-    coverImageKey,              // 🔥 SAME KEY LOGIC
-    accessType,
-    ...(accessType === "purchase-only" && {
-      basePrice: {
+    // Prepare form data to pass to parent
+    const formData = {
+      type,
+      title: title.trim(),
+      date,
+      description,
+      isrc: isrc.trim(),
+      genres: selectedGenres,
+      coverImageFile,
+      accessType,
+      price: accessType === "purchase-only" ? parseFloat(price) : null,
+      tracks: tracks.map(track => ({
+        ...track,
+        // Convert duration to seconds for backend
+        durationInSeconds: track.duration === "Loading..." ? 180 : convertDurationToSeconds(track.duration)
+      })),
+      basePrice: accessType === "purchase-only" ? {
         amount: parseFloat(price),
-        currency: "USD",
-      },
-    }),
+        currency: "USD"
+      } : null
+    };
+
+    // Call parent onSubmit with form data
+    if (onSubmit) {
+      onSubmit(formData);
+    }
   };
 
-  createdItem = await createAlbumMutation.mutateAsync(albumData);
-}
-
-      
-      toast.dismiss("save");
-      toast.dismiss("upload");
-      toast.success(`${type === "album" ? "Album" : "Song"} uploaded successfully!`);
-
-      // Step 5: Call the onSubmit callback with the saved song
-      if (onSubmit) {
-        onSubmit(createdItem);
+  // Helper to convert duration to seconds
+  const convertDurationToSeconds = (durationString) => {
+    if (durationString === "Loading..." || !durationString) {
+      return 180; // Default 3 minutes
+    }
+    
+    try {
+      const parts = durationString.split(":");
+      if (parts.length === 2) {
+        const minutes = parseInt(parts[0], 10);
+        const seconds = parseInt(parts[1], 10);
+        return (minutes * 60) + seconds;
       }
-
+      return 180;
     } catch (error) {
-      console.error("Upload failed:", error);
-      toast.dismiss("upload");
-      toast.dismiss("save");
-      
-      if (error.message.includes("Unauthorized") || error.message.includes("401")) {
-        toast.error("Session expired. Please login again.");
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 2000);
-      } else {
-        toast.error(error.message || "Upload failed. Please try again.");
-      }
+      console.error("Error converting duration:", error);
+      return 180;
     }
   };
 
@@ -556,6 +420,10 @@ if (type === "album") {
 
   return (
     <form onSubmit={handleSubmit} className="w-full p-4 md:p-6 flex flex-col gap-8">
+      {/* FORM CONTENT - Same as before */}
+      {/* ... rest of your JSX remains exactly the same ... */}
+      {/* The JSX structure doesn't change, only the handleSubmit function changes */}
+      
       {/* SECTION 1: Basic Info (Cover, Title, Date) */}
       <div
         className={`flex flex-col lg:flex-row gap-6 items-start pb-8 ${
@@ -651,7 +519,7 @@ if (type === "album") {
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500"
                 required
-                disabled={isUploadingAudio || isUploadingCover}
+                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
               />
             </div>
 
@@ -668,7 +536,7 @@ if (type === "album") {
                   value={date}
                   onChange={handleDateChange}
                   className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 pr-10"
-                  disabled={isUploadingAudio || isUploadingCover}
+                  disabled={isSubmitting || isUploadingAudio || isUploadingCover}
                 />
                 <input
                   type="date"
@@ -701,7 +569,7 @@ if (type === "album") {
                 type="button"
                 onClick={() => setShowAccessDropdown(!showAccessDropdown)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 flex items-center justify-between hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isUploadingAudio || isUploadingCover}
+                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -809,7 +677,7 @@ if (type === "album") {
                     min="0"
                     step="0.01"
                     required={accessType === "purchase-only"}
-                    disabled={isUploadingAudio || isUploadingCover}
+                    disabled={isSubmitting || isUploadingAudio || isUploadingCover}
                   />
                 </div>
                 <div className="w-32 bg-gray-800 text-gray-400 px-4 py-3 rounded-lg border border-gray-700 flex items-center justify-center text-sm">
@@ -833,7 +701,7 @@ if (type === "album") {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 resize-none"
-              disabled={isUploadingAudio || isUploadingCover}
+              disabled={isSubmitting || isUploadingAudio || isUploadingCover}
             />
             <div className="text-gray-400 text-xs">
               {typeText.descriptionLabel}
@@ -866,7 +734,7 @@ if (type === "album") {
               onChange={handleTrackUpload} 
               accept=".wav,.aif,.aiff,.flac,.mp3,.m4a" 
               className="hidden" 
-              disabled={tracks.length > 0 || isUploadingAudio}
+              disabled={tracks.length > 0 || isUploadingAudio || isSubmitting}
             />
             
             {/* Top Accent Line */}
@@ -939,7 +807,7 @@ if (type === "album") {
                 <button 
                   onClick={() => removeTrack(track.id)} 
                   className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1.5 px-3 py-1 bg-red-400/10 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isUploadingAudio}
+                  disabled={isSubmitting || isUploadingAudio}
                 >
                   <FiTrash2 size={14} /> remove
                 </button>
@@ -958,14 +826,14 @@ if (type === "album") {
                         onChange={(e) => setEditTrackName(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" ? saveTrackName(track.id) : e.key === "Escape" && cancelEditing()}
                         className="flex-1 bg-gray-900/50 text-white px-4 py-2 rounded-lg border border-blue-500/50 outline-none text-sm" 
-                        disabled={isUploadingAudio}
+                        disabled={isSubmitting || isUploadingAudio}
                       />
                       <button onClick={() => saveTrackName(track.id)} className="text-emerald-400 p-2"><FiCheck size={18}/></button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 group/name cursor-pointer" onClick={() => startEditing(track.id, track.name)}>
                       <span className="text-white text-base font-medium group-hover:text-blue-400 transition-colors">{track.name}</span>
-                      {!isUploadingAudio && (
+                      {!(isSubmitting || isUploadingAudio) && (
                         <FiEdit2 size={14} className="text-gray-500 opacity-0 group-hover/name:opacity-100 transition-opacity" />
                       )}
                     </div>
@@ -1015,7 +883,7 @@ if (type === "album") {
                   type="button"
                   onClick={() => removeGenre(genre)}
                   className="text-gray-400 hover:text-red-400 transition-colors ml-1 p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isUploadingAudio || isUploadingCover}
+                  disabled={isSubmitting || isUploadingAudio || isUploadingCover}
                 >
                   <FiX size={14} />
                 </button>
@@ -1028,7 +896,7 @@ if (type === "album") {
             type="button"
             onClick={openGenreModal}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 hover:bg-gray-800/30 transition-colors group font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={selectedGenres.length >= 3 || isUploadingAudio || isUploadingCover}
+            disabled={selectedGenres.length >= 3 || isSubmitting || isUploadingAudio || isUploadingCover}
           >
             <FiPlus size={18} className="group-hover:text-blue-400 transition-colors" />
             <span className="text-sm">

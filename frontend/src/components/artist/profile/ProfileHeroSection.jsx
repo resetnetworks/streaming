@@ -16,7 +16,11 @@ const ProfileHeroSection = () => {
   const navigate = useNavigate();
   
   const { data: artistProfile, isLoading, refetch } = useArtistProfile();
-  const { uploadImage, isLoading: isUploading } = useS3Upload();
+  const {
+  uploadArtistImage,
+  isArtistImageUploading: isUploading
+} = useS3Upload();
+
   
   const profileImageInputRef = useRef(null);
   const coverImageInputRef = useRef(null);
@@ -137,7 +141,7 @@ const ProfileHeroSection = () => {
       });
       
       // Upload compressed file
-      await uploadImage({ 
+      await uploadArtistImage({ 
         file: webpFile, 
         type: selectedImageType 
       });
