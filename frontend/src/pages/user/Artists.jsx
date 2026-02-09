@@ -57,7 +57,6 @@ const Artists = () => {
 
   // Prefetch next page
   const prefetchNextPage = usePrefetchArtistsPage();
-
   // Extract data from response
   const artists = artistsData?.data || [];
   const pagination = artistsData?.pagination || { 
@@ -206,7 +205,7 @@ const Artists = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12">
               {artists
                 .map((artist, index) => {
-                  if (!artist || !artist.id) return null;
+                  if (!artist || !artist._id) return null;
 
                   const plans = Array.isArray(artist.subscriptionPlans)
                     ? artist.subscriptionPlans.filter(Boolean)
@@ -214,7 +213,7 @@ const Artists = () => {
 
                   return (
                     <div
-                      key={artist.id}
+                      key={artist._id}
                       onClick={() => handleArtistClick(artist.slug)}
                       className="group cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:scale-105"
                     >
@@ -258,7 +257,7 @@ const Artists = () => {
                                 if (!c || amount == null) return null;
                                 return (
                                   <span
-                                    key={`${artist.id}-plan-${idx}-${c}`}
+                                    key={`${artist._id}-plan-${idx}-${c}`}
                                     className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium"
                                   >
                                     {formatPrice(amount, currency)}/{readable}

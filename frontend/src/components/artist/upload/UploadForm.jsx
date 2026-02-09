@@ -17,6 +17,14 @@ import {
 import GenreModal from "./GenreModal";
 import { toast } from "sonner";
 import { compressCoverImage } from "../../../utills/imageCompression";
+import {
+  useUploadSong,
+  useCompleteSongUpload,
+} from "../../../hooks/api/useUpload";
+import { useSaveSongMetadata } from "../../../hooks/api/useUpload";
+import { useCreateSong } from "../../../hooks/api/useSongs";
+import { useCreateAlbum } from "../../../hooks/api/useAlbums";
+import { useS3Upload } from "../../../hooks/api/useS3Upload";
 
 // Access type options array
 const ACCESS_TYPE_OPTIONS = [
@@ -42,11 +50,11 @@ const UploadForm = ({
   onCancel,
   onSubmit,
   isSubmitting = false,
-  isUploading = false, // New prop for upload progress
 }) => {
   // --- Basic Info State ---
   const [coverImage, setCoverImage] = useState(initialData.coverImage || null);
   const [coverImageFile, setCoverImageFile] = useState(null);
+  const [coverImageKey, setCoverImageKey] = useState("");
   const [title, setTitle] = useState(initialData.title || "");
   const [date, setDate] = useState(initialData.date || "");
   const [description, setDescription] = useState(initialData.description || "");
@@ -69,6 +77,21 @@ const UploadForm = ({
   const [tracks, setTracks] = useState(initialData.tracks || []);
   const [editingTrackId, setEditingTrackId] = useState(null);
   const [editTrackName, setEditTrackName] = useState("");
+
+  // --- Upload Progress State ---
+  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
+  const [coverImageUploadProgress, setCoverImageUploadProgress] = useState(0);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  // --- React Query Hooks ---
+  const uploadSongMutation = useUploadSong();
+  const saveSongMutation = useSaveSongMetadata();
+  const createSongMutation = useCreateSong();
+  const { uploadSongCover } = useS3Upload();
+  const createAlbumMutation = useCreateAlbum();
+
+
 
   const hiddenDateInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -118,6 +141,7 @@ const UploadForm = ({
     return !isNaN(numPrice) && numPrice > 0;
   };
 
+  // --- Cover Image Upload with Presigned URL ---
   const handleCoverImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -147,6 +171,35 @@ const UploadForm = ({
       toast.error("Image optimization failed", { id: "image" });
     }
   };
+
+const uploadCoverImageToS3 = async () => {
+  if (!coverImageFile) {
+    throw new Error('No cover image selected');
+  }
+
+  setIsUploadingCover(true);
+
+  try {
+    const webpFile = new File(
+      [coverImageFile],
+      `cover_${Date.now()}.webp`,
+      { type: 'image/webp' }
+    );
+
+    // 🔥 clean, direct key
+    const key = await uploadSongCover({ file: webpFile });
+
+    setCoverImageKey(key);
+    return key;
+
+  } finally {
+    setIsUploadingCover(false);
+  }
+};
+
+
+
+
 
   const handleDateChange = (e) => {
     const val = e.target.value;
@@ -244,6 +297,7 @@ const UploadForm = ({
       file: file,
       duration: "Loading...",
       order: 1,
+      audioKey: "", // Will be set after upload
     };
 
     setTracks([tempTrack]);
@@ -251,6 +305,40 @@ const UploadForm = ({
     // Then update with actual duration
     const duration = await getAudioDuration(file);
     setTracks([{ ...tempTrack, duration }]);
+  };
+
+  // --- Upload Audio Track to S3 ---
+  const uploadAudioToS3 = async () => {
+    if (tracks.length === 0) {
+      throw new Error("No audio track selected");
+    }
+
+    const track = tracks[0];
+    setIsUploadingAudio(true);
+    setAudioUploadProgress(0);
+
+    try {
+      // Upload audio using the upload hook
+      const uploadResult = await uploadSongMutation.mutateAsync({
+        file: track.file,
+        onProgress: (progress) => {
+          setAudioUploadProgress(progress);
+        },
+        fileType: "audio" // To differentiate between audio and image
+      });
+
+      // Update track with S3 key
+      const updatedTrack = { ...track, audioKey: uploadResult.s3Key };
+      setTracks([updatedTrack]);
+      
+      return uploadResult.s3Key;
+
+    } catch (error) {
+      console.error("Audio upload failed:", error);
+      throw error;
+    } finally {
+      setIsUploadingAudio(false);
+    }
   };
 
   const removeTrack = () => {
@@ -303,12 +391,12 @@ const UploadForm = ({
     }
   };
 
-  // --- Submit Logic (Only collects data) ---
-  const handleSubmit = (e) => {
+  // --- Submit Logic with Presigned Upload Flow ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Prevent submission if already submitting
-    if (isSubmitting || isUploading) return;
+    if (isSubmitting || isUploadingAudio || isUploadingCover) return;
 
     // Validate required fields
     if (!coverImageFile) {
@@ -334,46 +422,119 @@ const UploadForm = ({
       }
     }
 
-    // Only check track for song upload
-    if (type === "song") {
-      if (tracks.length === 0) {
-        toast.error("Please upload an audio file!");
-        return;
+    try {
+      // Show uploading toast
+      toast.loading("Uploading files to S3...", { id: "upload" });
+
+      // Step 1: Upload cover image to S3
+      const coverImageKey = await uploadCoverImageToS3();
+      
+      // Step 2: Upload audio track to S3 (only for songs)
+      let audioKey = "";
+      if (type === "song" && tracks.length > 0) {
+        audioKey = await uploadAudioToS3();
+      }
+
+
+      const convertDurationToSeconds = (durationString) => {
+  if (durationString === "Loading..." || !durationString) {
+    return 180; // Default 3 minutes
+  }
+  
+  try {
+    // Format: "MM:SS"
+    const parts = durationString.split(":");
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      return (minutes * 60) + seconds;
+    }
+    return 180; // Default fallback
+  } catch (error) {
+    console.error("Error converting duration:", error);
+    return 180;
+  }
+};
+      // Step 3: Prepare song metadata
+const songData = {
+  title: title.trim(),
+  releaseDate: date,
+  description: description,
+  // ISRC को validate करें - optional बनाएं
+  ...(isrc.trim() && { isrc: isrc.trim() }),
+  genres: selectedGenres,
+  coverImageKey: coverImageKey,
+  accessType: accessType,
+  albumOnly: type === "album",
+  // Only include basePrice if purchase-only
+  ...(accessType === "purchase-only" && {
+    basePrice: {
+      amount: parseFloat(price),
+      currency: "USD",
+    },
+  }),
+  // Add audioKey only for songs
+  ...(type === "song" && tracks.length > 0 && {
+    audioKey: audioKey,
+    // Duration को seconds में convert करें
+    duration: convertDurationToSeconds(tracks[0].duration),
+    fileName: tracks[0].name,
+  }),
+};
+
+      // Step 4: Save song metadata to database using React Query mutation
+      toast.loading("Saving song metadata...", { id: "save" });
+      
+  let createdItem = null;
+
+if (type === "song") {
+  createdItem = await createSongMutation.mutateAsync(songData);
+}
+
+if (type === "album") {
+  const albumData = {
+    title: title.trim(),
+    releaseDate: date,
+    description,
+    ...(isrc.trim() && { upc: isrc.trim() }),
+    genres: selectedGenres,
+    coverImageKey,              // 🔥 SAME KEY LOGIC
+    accessType,
+    ...(accessType === "purchase-only" && {
+      basePrice: {
+        amount: parseFloat(price),
+        currency: "USD",
+      },
+    }),
+  };
+
+  createdItem = await createAlbumMutation.mutateAsync(albumData);
+}
+
+      
+      toast.dismiss("save");
+      toast.dismiss("upload");
+      toast.success(`${type === "album" ? "Album" : "Song"} uploaded successfully!`);
+
+      // Step 5: Call the onSubmit callback with the saved song
+      if (onSubmit) {
+        onSubmit(createdItem);
+      }
+
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.dismiss("upload");
+      toast.dismiss("save");
+      
+      if (error.message.includes("Unauthorized") || error.message.includes("401")) {
+        toast.error("Session expired. Please login again.");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        toast.error(error.message || "Upload failed. Please try again.");
       }
     }
-
-    // Prepare form data
-    const formData = {
-      title: title.trim(),
-      date: date,
-      description: description,
-      isrc: isrc.trim(),
-      genres: selectedGenres,
-      coverImageFile: coverImageFile,
-      accessType: accessType,
-      // Only include basePrice if purchase-only
-      ...(accessType === "purchase-only" && {
-        basePrice: {
-          amount: parseFloat(price),
-          currency: "USD",
-        },
-      }),
-    };
-
-    // Add track data only for songs
-    if (type === "song" && tracks.length > 0) {
-      const track = tracks[0];
-      formData.tracks = [
-        {
-          name: track.name,
-          file: track.file,
-          duration: track.duration,
-        },
-      ];
-    }
-
-    // Pass form data to parent component
-    onSubmit?.(formData);
   };
 
   // Helper function to get type-specific text
@@ -387,7 +548,7 @@ const UploadForm = ({
       isrcPlaceholder: type === "album" ? "e.g., 123456789012" : "e.g., US-ABC-12-34567",
       isrcDescription: type === "album" ? "Universal Product Code" : "International Standard Recording Code",
       descriptionLabel: `Share the story or inspiration behind this ${type === "album" ? "album" : "song"}`,
-      submitButton: isUploading ? "Uploading..." : (type === "album" ? "create album" : "upload song")
+      submitButton: type === "album" ? "create album" : "upload song"
     };
   };
 
@@ -420,11 +581,33 @@ const UploadForm = ({
                 border border-gray-700 hover:border-gray-600 transition-colors"
             >
               {coverImage ? (
-                <img
-                  src={coverImage}
-                  alt="Cover Preview"
-                  className="w-full h-full object-cover"
-                />
+                <div className="relative w-full h-full">
+                  <img
+                    src={coverImage}
+                    alt="Cover Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Upload Progress Overlay */}
+                  {isUploadingCover && (
+                    <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 mb-2">
+                        <div className="relative w-full h-full">
+                          <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
+                          <div 
+                            className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
+                            style={{
+                              transform: `rotate(${coverImageUploadProgress * 3.6}deg)`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      <span className="text-white text-sm">
+                        {Math.round(coverImageUploadProgress)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center p-4">
                   <div className="text-gray-500 text-4xl mb-2 group-hover:text-gray-400 transition-colors">
@@ -468,7 +651,7 @@ const UploadForm = ({
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500"
                 required
-                disabled={isSubmitting || isUploading}
+                disabled={isUploadingAudio || isUploadingCover}
               />
             </div>
 
@@ -485,7 +668,7 @@ const UploadForm = ({
                   value={date}
                   onChange={handleDateChange}
                   className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 pr-10"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isUploadingAudio || isUploadingCover}
                 />
                 <input
                   type="date"
@@ -518,7 +701,7 @@ const UploadForm = ({
                 type="button"
                 onClick={() => setShowAccessDropdown(!showAccessDropdown)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 flex items-center justify-between hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting || isUploading}
+                disabled={isUploadingAudio || isUploadingCover}
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -562,7 +745,6 @@ const UploadForm = ({
                         className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-700/80 transition-colors ${
                           accessType === option.value ? "bg-gray-700/80" : ""
                         }`}
-                        disabled={isSubmitting || isUploading}
                       >
                         <div
                           className={`p-2 rounded-lg ${
@@ -627,7 +809,7 @@ const UploadForm = ({
                     min="0"
                     step="0.01"
                     required={accessType === "purchase-only"}
-                    disabled={isSubmitting || isUploading}
+                    disabled={isUploadingAudio || isUploadingCover}
                   />
                 </div>
                 <div className="w-32 bg-gray-800 text-gray-400 px-4 py-3 rounded-lg border border-gray-700 flex items-center justify-center text-sm">
@@ -651,7 +833,7 @@ const UploadForm = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 resize-none"
-              disabled={isSubmitting || isUploading}
+              disabled={isUploadingAudio || isUploadingCover}
             />
             <div className="text-gray-400 text-xs">
               {typeText.descriptionLabel}
@@ -674,7 +856,7 @@ const UploadForm = ({
 
           {/* Big Clickable Upload Area */}
           <label className={`relative overflow-hidden group border-2 border-dashed transition-all cursor-pointer rounded-2xl min-h-[180px] flex flex-col items-center justify-center p-8 text-center
-            ${(tracks.length > 0 || isUploading) 
+            ${(tracks.length > 0 || isUploadingAudio) 
               ? "opacity-50 pointer-events-none border-gray-700 bg-gray-800/20" 
               : "bg-gray-800/40 border-blue-500 hover:bg-gray-800/60 shadow-xl"}`}>
             
@@ -684,7 +866,7 @@ const UploadForm = ({
               onChange={handleTrackUpload} 
               accept=".wav,.aif,.aiff,.flac,.mp3,.m4a" 
               className="hidden" 
-              disabled={tracks.length > 0 || isUploading}
+              disabled={tracks.length > 0 || isUploadingAudio}
             />
             
             {/* Top Accent Line */}
@@ -692,28 +874,56 @@ const UploadForm = ({
 
             {/* Center Icon Section */}
             <div className="mb-5 w-20 h-20 rounded-full border border-blue-500/30 bg-blue-500/5 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform duration-300">
-              <div className="relative">
-                <FiMusic size={32} />
-                <div className="absolute -bottom-2 -right-2">
-                  <FiUpload size={16} />
+              {isUploadingAudio ? (
+                <div className="relative w-12 h-12">
+                  <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
+                  <div 
+                    className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
+                    style={{
+                      transform: `rotate(${audioUploadProgress * 3.6}deg)`
+                    }}
+                  ></div>
                 </div>
-              </div>
+              ) : (
+                <div className="relative">
+                  <FiMusic size={32} />
+                  <div className="absolute -bottom-2 -right-2">
+                    <FiUpload size={16} />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Text Content */}
             <div className="space-y-2">
               <h4 className="text-white text-xl font-semibold tracking-tight">
-                {tracks.length > 0 ? "Track Successfully Selected" : "Click anywhere to upload track"}
+                {isUploadingAudio 
+                  ? `Uploading... ${audioUploadProgress}%`
+                  : tracks.length > 0 
+                  ? "Track Successfully Selected" 
+                  : "Click anywhere to upload track"}
               </h4>
               <p className="text-gray-400 text-sm max-w-[280px] mx-auto leading-relaxed">
-                {tracks.length > 0 
+                {isUploadingAudio
+                  ? "Uploading to S3, please wait..."
+                  : tracks.length > 0 
                   ? "Remove existing track to upload a new one" 
                   : "WAV, AIFF, FLAC, MP3, or M4A supported. Max 1 track for singles."}
               </p>
             </div>
 
+            {/* Progress Bar for Upload */}
+            {isUploadingAudio && (
+              <div className="w-64 mt-4 bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${audioUploadProgress}%` }}
+                ></div>
+              </div>
+            )}
+
             {/* Decorative pulse effect when no track is selected */}
-            {!tracks.length && !isUploading && (
+            {!tracks.length && !isUploadingAudio && (
               <div className="absolute inset-0 border-2 border-blue-500/20 rounded-2xl animate-pulse -z-10 group-hover:hidden"></div>
             )}
           </label>
@@ -729,7 +939,7 @@ const UploadForm = ({
                 <button 
                   onClick={() => removeTrack(track.id)} 
                   className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1.5 px-3 py-1 bg-red-400/10 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isUploadingAudio}
                 >
                   <FiTrash2 size={14} /> remove
                 </button>
@@ -748,14 +958,14 @@ const UploadForm = ({
                         onChange={(e) => setEditTrackName(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" ? saveTrackName(track.id) : e.key === "Escape" && cancelEditing()}
                         className="flex-1 bg-gray-900/50 text-white px-4 py-2 rounded-lg border border-blue-500/50 outline-none text-sm" 
-                        disabled={isSubmitting || isUploading}
+                        disabled={isUploadingAudio}
                       />
                       <button onClick={() => saveTrackName(track.id)} className="text-emerald-400 p-2"><FiCheck size={18}/></button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 group/name cursor-pointer" onClick={() => startEditing(track.id, track.name)}>
                       <span className="text-white text-base font-medium group-hover:text-blue-400 transition-colors">{track.name}</span>
-                      {!isSubmitting && !isUploading && (
+                      {!isUploadingAudio && (
                         <FiEdit2 size={14} className="text-gray-500 opacity-0 group-hover/name:opacity-100 transition-opacity" />
                       )}
                     </div>
@@ -805,7 +1015,7 @@ const UploadForm = ({
                   type="button"
                   onClick={() => removeGenre(genre)}
                   className="text-gray-400 hover:text-red-400 transition-colors ml-1 p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isUploadingAudio || isUploadingCover}
                 >
                   <FiX size={14} />
                 </button>
@@ -818,7 +1028,7 @@ const UploadForm = ({
             type="button"
             onClick={openGenreModal}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 hover:bg-gray-800/30 transition-colors group font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={selectedGenres.length >= 3 || isSubmitting || isUploading}
+            disabled={selectedGenres.length >= 3 || isUploadingAudio || isUploadingCover}
           >
             <FiPlus size={18} className="group-hover:text-blue-400 transition-colors" />
             <span className="text-sm">
@@ -840,7 +1050,6 @@ const UploadForm = ({
         onToggleGenre={toggleGenre}
         onClearAll={clearAllGenres}
         maxSelections={3}
-        disabled={isSubmitting || isUploading}
       />
 
       {/* Submit Buttons */}
@@ -848,9 +1057,9 @@ const UploadForm = ({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting || isUploading}
+          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
           className={`text-gray-400 hover:text-white px-6 py-2.5 rounded-lg font-medium transition-all hover:bg-gray-800/50 ${
-            isSubmitting || isUploading ? "opacity-50 cursor-not-allowed" : ""
+            isSubmitting || isUploadingAudio || isUploadingCover ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
           Cancel
@@ -860,7 +1069,8 @@ const UploadForm = ({
           className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-2.5 rounded-full font-medium transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           disabled={
             isSubmitting ||
-            isUploading ||
+            isUploadingAudio ||
+            isUploadingCover ||
             !coverImageFile ||
             selectedGenres.length === 0 ||
             !title.trim() ||
@@ -868,11 +1078,11 @@ const UploadForm = ({
             (type === "song" && tracks.length === 0)
           }
         >
-          {isSubmitting || isUploading ? (
+          {isSubmitting || isUploadingAudio || isUploadingCover ? (
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
               <span>
-                {isUploading ? "Uploading..." : "Saving..."}
+                {isUploadingAudio || isUploadingCover ? "Uploading..." : "Saving..."}
               </span>
             </div>
           ) : (
