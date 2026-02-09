@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import {
   useUploadSong,
   useCompleteSongUpload,
-} from "../../../hooks/api/useUpload";
-import { useS3Upload } from "../../../hooks/api/useS3Upload";
-import { useCreateSong } from "../../../hooks/api/useSongs";
+} from "../../hooks/api/useUpload";
+import { useS3Upload } from "../../hooks/api/useS3Upload";
+import { useCreateSong } from "../../hooks/api/useSongs";
 
 const SingleUpload = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);

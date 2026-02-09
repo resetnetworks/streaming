@@ -16,10 +16,10 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
     socials: []
   });
 
-  const [newSocial, setNewSocial] = useState({
+  const [newSocial, setNewSocial] = useState([{
     platform: "instagram",
     url: ""
-  });
+}]);
 
   const socialPlatforms = [
     { value: "instagram", label: "Instagram", icon: <FaInstagram className="text-pink-500" /> },
