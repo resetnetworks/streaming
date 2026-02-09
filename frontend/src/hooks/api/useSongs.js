@@ -134,7 +134,6 @@ export const useCreateSong = () => {
       }
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to create song");
     },
   });
 };
@@ -149,11 +148,8 @@ export const useUpdateSong = () => {
       queryClient.invalidateQueries({
         queryKey: songKeys.artist(song.artist),
       });
-
-      toast.success("Song updated successfully");
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to update song");
     },
   });
 };
@@ -165,10 +161,8 @@ export const useDeleteSong = () => {
     mutationFn: songApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: songKeys.all });
-      toast.success("Song deleted");
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to delete song");
     },
   });
 };

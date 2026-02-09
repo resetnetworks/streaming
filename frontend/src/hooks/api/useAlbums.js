@@ -127,7 +127,6 @@ export const useCreateAlbum = () => {
         const artistAlbumsKey = albumKeys.artist(variables.artistId, {});
         queryClient.setQueryData(artistAlbumsKey, context.previousArtistAlbums);
       }
-      toast.error(err.response?.data?.message || err.message || "Failed to create album");
     },
     onSuccess: (newAlbum) => {
       // Invalidate queries
@@ -139,7 +138,6 @@ export const useCreateAlbum = () => {
         });
       }
       
-      toast.success("Album created successfully!");
     },
   });
 };
@@ -177,7 +175,6 @@ export const useUpdateAlbum = () => {
       if (context?.previousAlbum) {
         queryClient.setQueryData(albumKeys.detail(variables.albumId), context.previousAlbum);
       }
-      toast.error(err.response?.data?.message || err.message || "Failed to update album");
     },
     onSuccess: (updatedAlbum) => {
       // Invalidate affected queries
@@ -190,7 +187,6 @@ export const useUpdateAlbum = () => {
         });
       }
       
-      toast.success("Album updated successfully!");
     },
   });
 };
@@ -252,13 +248,10 @@ export const useDeleteAlbum = () => {
           queryClient.setQueryData(artistAlbumsKey, context.previousArtistAlbums);
         }
       }
-      
-      toast.error(err.response?.data?.message || err.message || "Failed to delete album");
     },
     onSuccess: (deletedAlbumId, variables, context) => {
       // Invalidate all album queries
       queryClient.invalidateQueries({ queryKey: albumKeys.all });
-      toast.success("Album deleted successfully!");
     },
   });
 };

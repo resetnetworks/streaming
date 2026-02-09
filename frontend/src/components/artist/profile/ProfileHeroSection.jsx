@@ -9,6 +9,8 @@ import { useArtistProfile } from "../../../hooks/api/useArtistDashboard";
 import { useS3Upload } from "../../../hooks/api/useS3Upload";
 import { getS3Url } from "../../../utills/s3Utils";
 import {  compressArtistCoverImage, compressProfileImage } from "../../../utills/imageCompression";
+import { logoutUser } from "../../../features/auth/authSlice";
+import { useDispatch } from "react-redux";
 
 const ProfileHeroSection = () => {
   const navigate = useNavigate();
@@ -27,9 +29,10 @@ const ProfileHeroSection = () => {
   const [isCompressing, setIsCompressing] = useState(false);
   const [isEditingImage, setIsEditingImage] = useState(false); // To track if user clicked "Edit Image" in preview modal
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const dispatch = useDispatch();
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
     toast.success('Logged out successfully');
     navigate('/login');
   };
