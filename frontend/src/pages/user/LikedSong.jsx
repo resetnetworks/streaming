@@ -37,7 +37,8 @@ const LikedSongs = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handlePlaySong = (song) => {
-    dispatch(setSelectedSong(song._id));
+
+    dispatch(setSelectedSong(song));
     if (playerStatus !== "playing" || selectedSong !== song._id) {
       dispatch(play());
     }
@@ -85,7 +86,6 @@ const LikedSongs = () => {
               </span>
             )}
           </div>
-
           {isLoading && allSongs.length === 0 ? (
             <div className="space-y-4">
               {[...Array(10)].map((_, idx) => (
@@ -123,7 +123,7 @@ const LikedSongs = () => {
                   <SongList
                     songId={song._id}
                     img={
-                      song.coverImage ||
+                      song?.coverImage ||
                       song.album?.coverImage ||
                       "/images/placeholder.png"
                     }

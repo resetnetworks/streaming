@@ -27,7 +27,7 @@ export const albumApi = {
   // Create new album
  create: async (data) => {
   const res = await axios.post("/albums", data);
-  return res.data.album;
+  return res.data.data;
 },
 
 

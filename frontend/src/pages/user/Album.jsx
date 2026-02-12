@@ -439,7 +439,6 @@ export default function Album() {
               onMouseLeave={() => setIsHoveringCover(false)}
               onClick={handlePlayAlbum}
             >
-              {console.log(album)}
               <img
                 src={album?.coverImage}
                 alt="Album Cover"
