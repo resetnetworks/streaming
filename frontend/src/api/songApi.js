@@ -33,18 +33,20 @@ export const songApi = {
     return res.data.songs || [];
   },
 
-  fetchAllSingles: async ({ page = 1, limit = 10 } = {}) => {
-    const res = await axios.get(`/songs/singles?page=${page}&limit=${limit}`);
-    return {
-      songs: res.data.songs || [],
-      pagination: res.data.pagination || {
-        page,
-        limit,
-        total: 0,
-        totalPages: 1,
-      },
-    };
-  },
+fetchAllSingles: async ({ page = 1, limit = 10 } = {}) => {
+  const res = await axios.get(`/songs/singles?page=${page}&limit=${limit}`);
+
+  return {
+    songs: res.data.songs || [],
+    pagination: {
+      page: res.data.currentPage,
+      limit,
+      total: res.data.totalSongs,
+      totalPages: res.data.totalPages,
+    },
+  };
+},
+
 
   fetchSinglesByArtist: async ({ artistId, page = 1, limit = 10 }) => {
     const res = await axios.get(
@@ -126,6 +128,12 @@ export const songApi = {
     await axios.delete(`/songs/${songId}`);
     return songId;
   },
+
+  likeSong: async (songId) => {
+  const res = await axios.put(`/users/likedsong/${songId}`);
+  return { songId, message: res.data.message };
+},
+
 
   unlikeSong: async (songId) => {
     await axios.delete(`/users/likedsong/${songId}`);

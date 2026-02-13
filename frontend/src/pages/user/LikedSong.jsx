@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useUnlikeSong, useLikedSongs } from "../../hooks/api/useSongs";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
-import { removeSongFromLiked } from "../../features/songs/songSlice";
 import SongList from "../../components/user/SongList";
 import { formatDuration } from "../../utills/helperFunctions";
 import UserHeader from "../../components/user/UserHeader";
@@ -46,8 +45,6 @@ const LikedSongs = () => {
 
   const handleUnlikeSong = async (songId) => {
     unlikeMutation.mutate(songId);
-    // Update Redux store
-    dispatch(removeSongFromLiked(songId));
   };
 
   if (isError) {

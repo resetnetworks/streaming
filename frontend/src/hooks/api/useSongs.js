@@ -82,12 +82,18 @@ export const useArtistSingles = (artistId, limit = 10) =>
     enabled: !!artistId,
   });
 
-export const useAllSingles = (filters = { page: 1, limit: 10 }) =>
-  useQuery({
-    queryKey: songKeys.singlesList(filters),
-    queryFn: () => songApi.fetchAllSingles(filters),
-    keepPreviousData: true,
+
+export const useAllSingles = (limit = 20) =>
+  useInfiniteQuery({
+    queryKey: songKeys.singles(),
+    queryFn: ({ pageParam = 1 }) =>
+      songApi.fetchAllSingles({ page: pageParam, limit }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination || {};
+      return page < totalPages ? page + 1 : undefined;
+    },
   });
+
 
 /* ------------------ Genre Queries ------------------ */
 
@@ -173,25 +179,25 @@ export const useUnlikeSong = () => {
   return useMutation({
     mutationFn: songApi.unlikeSong,
 
-    // 🔥 Optimistic Update
     onMutate: async (songId) => {
-      await queryClient.cancelQueries({ queryKey: songKeys.liked() });
+      await queryClient.cancelQueries({
+        queryKey: songKeys.likedList({ limit: 20 }),
+      });
 
       const previousData = queryClient.getQueryData(
         songKeys.likedList({ limit: 20 })
       );
 
-      // Remove song from cache instantly
       queryClient.setQueryData(
         songKeys.likedList({ limit: 20 }),
-        (old) => {
-          if (!old) return old;
+        (oldData) => {
+          if (!oldData) return oldData;
 
           return {
-            ...old,
-            pages: old.pages.map((page) => ({
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
               ...page,
-              songs: page.songs.filter((s) => s.id !== songId),
+              songs: page.songs.filter((s) => s._id !== songId),
             })),
           };
         }
@@ -200,7 +206,6 @@ export const useUnlikeSong = () => {
       return { previousData };
     },
 
-    // ❌ Rollback if error
     onError: (err, songId, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(
@@ -208,12 +213,47 @@ export const useUnlikeSong = () => {
           context.previousData
         );
       }
-      toast.error("Failed to unlike song");
     },
 
-    // ✅ Final sync
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: songKeys.liked() });
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: songKeys.likedList({ limit: 20 }),
+      });
     },
   });
 };
+
+export const useLikeSong = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: songApi.likeSong,
+
+    onMutate: async (songId) => {
+      await queryClient.cancelQueries({
+        queryKey: songKeys.likedList({ limit: 20 }),
+      });
+
+      const previousData = queryClient.getQueryData(
+        songKeys.likedList({ limit: 20 })
+      );
+      return { previousData };
+    },
+
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: songKeys.likedList({ limit: 20 }),
+      });
+    },
+
+    onError: (err, songId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          songKeys.likedList({ limit: 20 }),
+          context.previousData
+        );
+      }
+    },
+  })
+}
+
