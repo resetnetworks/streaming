@@ -201,6 +201,7 @@ const SongList = ({
           type="button"
           className="action-button"
           onClick={handleToggleLike}
+          disabled={likeMutation.isLoading}
         >
           {isLiked ? (
             <BsHeartFill className="text-red-600 text-md" />

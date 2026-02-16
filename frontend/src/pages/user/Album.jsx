@@ -116,6 +116,7 @@ export default function Album() {
       console.error("Album loading error:", albumError);
     }
   }, [albumError]);
+  
 
   // ✅ Play song handler
   const handlePlaySong = (song) => {

@@ -145,9 +145,10 @@ const UploadForm = ({
 // 🔥 Blob → File (MIME type preserve)
 const compressedFile = new File(
   [compressedBlob],
-  file.name,
-  { type: file.type }
+  file.name.replace(/\.[^/.]+$/, "") + ".webp",
+  { type: "image/webp" }
 );
+
 
 const previewUrl = URL.createObjectURL(compressedFile);
 
