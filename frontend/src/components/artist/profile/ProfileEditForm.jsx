@@ -1,5 +1,5 @@
 // ProfileEditForm.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiX, FiUser, FiMapPin, FiGlobe } from "react-icons/fi";
 import { FaYoutube, FaInstagram, FaFacebookSquare, FaSpotify, FaSoundcloud, FaGlobe } from "react-icons/fa";
 import { toast } from "sonner";
@@ -16,10 +16,12 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
     socials: []
   });
 
-  const [newSocial, setNewSocial] = useState([{
-    platform: "instagram",
+  const [newSocial, setNewSocial] = useState({
+    platform: "",
     url: ""
-}]);
+  });
+
+  const [socialError, setSocialError] = useState("");
 
   const socialPlatforms = [
     { value: "instagram", label: "Instagram", icon: <FaInstagram className="text-pink-500" /> },
@@ -63,33 +65,56 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
     }));
   };
 
+  const isDuplicateSocial = (platform) => {
+    return formData.socials.some(social => social.platform === platform);
+  };
+
   const handleSocialAdd = () => {
-    if (newSocial.url.trim()) {
-      const updatedSocials = [...formData.socials, { ...newSocial }];
-      setFormData(prev => ({
-        ...prev,
-        socials: updatedSocials
-      }));
-      setNewSocial({ platform: "instagram", url: "" });
+    setSocialError("");
+    
+    if (!newSocial.platform) {
+      setSocialError("Please select a platform");
+      return;
     }
+    
+    if (!newSocial.url.trim()) {
+      setSocialError("Please enter a URL");
+      return;
+    }
+
+    if (isDuplicateSocial(newSocial.platform)) {
+      setSocialError(`${newSocial.platform} link already exists`);
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      socials: [...prev.socials, { ...newSocial }]
+    }));
+    
+    setNewSocial({ platform: "", url: "" });
   };
 
   const handleSocialRemove = (index) => {
-    const updatedSocials = formData.socials.filter((_, i) => i !== index);
     setFormData(prev => ({
       ...prev,
-      socials: updatedSocials
+      socials: prev.socials.filter((_, i) => i !== index)
     }));
   };
 
-  const handleSocialChange = (index, field, value) => {
-    const updatedSocials = [...formData.socials];
-    updatedSocials[index][field] = value;
-    setFormData(prev => ({
-      ...prev,
-      socials: updatedSocials
-    }));
-  };
+  const handleSocialChange = useCallback((index, field, value) => {
+    setFormData(prev => {
+      const updatedSocials = [...prev.socials];
+      updatedSocials[index] = {
+        ...updatedSocials[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        socials: updatedSocials
+      };
+    });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -124,57 +149,76 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
         Social Media Links
       </label>
       
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <select
-            value={newSocial.platform}
-            onChange={(e) => setNewSocial(prev => ({ ...prev, platform: e.target.value }))}
-            className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-            disabled={isLoading}
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <select
+              value={newSocial.platform}
+              onChange={(e) => {
+                setNewSocial(prev => ({ ...prev, platform: e.target.value }));
+                setSocialError("");
+              }}
+              className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              disabled={isLoading}
+            >
+              <option value="">Select Platform</option>
+              {socialPlatforms.map(platform => (
+                <option 
+                  key={platform.value} 
+                  value={platform.value}
+                  disabled={isDuplicateSocial(platform.value)}
+                >
+                  {platform.label} {isDuplicateSocial(platform.value) ? '(Already added)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1">
+            <input
+              type="url"
+              value={newSocial.url}
+              onChange={(e) => {
+                setNewSocial(prev => ({ ...prev, url: e.target.value }));
+                setSocialError("");
+              }}
+              placeholder="Enter URL"
+              className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              disabled={isLoading}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSocialAdd}
+            className="px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 whitespace-nowrap"
+            disabled={isLoading || !newSocial.platform || !newSocial.url.trim()}
           >
-            {socialPlatforms.map(platform => (
-              <option key={platform.value} value={platform.value}>
-                {platform.label}
-              </option>
-            ))}
-          </select>
+            Add Link
+          </button>
         </div>
-        <div className="flex-1">
-          <input
-            type="url"
-            value={newSocial.url}
-            onChange={(e) => setNewSocial(prev => ({ ...prev, url: e.target.value }))}
-            placeholder="Enter URL"
-            className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-            disabled={isLoading}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleSocialAdd}
-          className="px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50"
-          disabled={isLoading}
-        >
-          Add
-        </button>
+
+        {socialError && (
+          <p className="text-sm text-red-400 mt-1">{socialError}</p>
+        )}
       </div>
 
       {formData.socials.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 mt-4">
+          <p className="text-xs text-gray-400">Added Links:</p>
           {formData.socials.map((social, index) => {
             const platformInfo = socialPlatforms.find(p => p.value === social.platform);
             return (
-              <div key={index} className="flex items-center gap-2 p-3 bg-gray-900/50 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-all duration-200">
+              <div 
+                key={index} 
+                className="flex items-center gap-2 p-3 bg-gray-900/50 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-all duration-200 group"
+              >
                 <div className="p-2 rounded-lg bg-gray-800">
                   <div className="text-lg text-gray-300">
                     {platformInfo?.icon || "🔗"}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-1">
-                  <span className="text-sm font-medium text-gray-300">
-                    {platformInfo?.label || social.platform}
-                  </span>
-                </div>
+                <span className="text-sm font-medium text-gray-300 min-w-[80px]">
+                  {platformInfo?.label || social.platform}
+                </span>
                 <input
                   type="url"
                   value={social.url}
@@ -186,10 +230,11 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
                 <button
                   type="button"
                   onClick={() => handleSocialRemove(index)}
-                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all duration-200 disabled:opacity-50"
+                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
                   disabled={isLoading}
+                  title="Remove link"
                 >
-                  Remove
+                  <FiX className="text-lg" />
                 </button>
               </div>
             );
@@ -254,6 +299,7 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
                 className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                 placeholder="Tell your story..."
                 disabled={isLoading}
+                maxLength="500"
               />
               <div className="text-right mt-1">
                 <span className={`text-xs ${formData.bio.length > 500 ? 'text-red-400' : 'text-gray-400'}`}>
