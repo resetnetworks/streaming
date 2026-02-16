@@ -4,6 +4,7 @@ import { FiX, FiUser, FiMapPin, FiGlobe } from "react-icons/fi";
 import { FaYoutube, FaInstagram, FaFacebookSquare, FaSpotify, FaSoundcloud, FaGlobe } from "react-icons/fa";
 import { toast } from "sonner";
 import { useUpdateArtistProfile } from "../../../hooks/api/useArtistDashboard";
+import SocialMediaInput from "./SocialMediaInput";
 
 const ProfileEditForm = ({ profile, onSave, onClose }) => {
   const { mutate: updateProfile, isLoading } = useUpdateArtistProfile();
@@ -31,6 +32,15 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
     { value: "soundcloud", label: "SoundCloud", icon: <FaSoundcloud className="text-orange-500" /> },
     { value: "website", label: "Website", icon: <FaGlobe className="text-blue-400" /> },
   ];
+
+  const isValidUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (err) {
+    return false;
+  }
+};
 
   useEffect(() => {
     if (profile) {
@@ -77,10 +87,27 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
       return;
     }
     
-    if (!newSocial.url.trim()) {
-      setSocialError("Please enter a URL");
-      return;
-    }
+    if (!isValidUrl(newSocial.url)) {
+  setSocialError("Please enter a valid URL (must start with http or https)");
+  return;
+}
+
+const platformDomainMap = {
+  instagram: "instagram.com",
+  youtube: "youtube.com",
+  facebook: "facebook.com",
+  spotify: "spotify.com",
+  soundcloud: "soundcloud.com",
+};
+
+if (
+  platformDomainMap[newSocial.platform] &&
+  !newSocial.url.includes(platformDomainMap[newSocial.platform])
+) {
+  setSocialError(`Please enter a valid ${newSocial.platform} link`);
+  return;
+}
+
 
     if (isDuplicateSocial(newSocial.platform)) {
       setSocialError(`${newSocial.platform} link already exists`);
@@ -142,107 +169,6 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
       }
     });
   };
-
-  const SocialMediaInput = () => (
-    <div className="space-y-4">
-      <label className="block text-sm font-medium text-gray-300">
-        Social Media Links
-      </label>
-      
-      <div className="space-y-3">
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <select
-              value={newSocial.platform}
-              onChange={(e) => {
-                setNewSocial(prev => ({ ...prev, platform: e.target.value }));
-                setSocialError("");
-              }}
-              className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              disabled={isLoading}
-            >
-              <option value="">Select Platform</option>
-              {socialPlatforms.map(platform => (
-                <option 
-                  key={platform.value} 
-                  value={platform.value}
-                  disabled={isDuplicateSocial(platform.value)}
-                >
-                  {platform.label} {isDuplicateSocial(platform.value) ? '(Already added)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex-1">
-            <input
-              type="url"
-              value={newSocial.url}
-              onChange={(e) => {
-                setNewSocial(prev => ({ ...prev, url: e.target.value }));
-                setSocialError("");
-              }}
-              placeholder="Enter URL"
-              className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              disabled={isLoading}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleSocialAdd}
-            className="px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 whitespace-nowrap"
-            disabled={isLoading || !newSocial.platform || !newSocial.url.trim()}
-          >
-            Add Link
-          </button>
-        </div>
-
-        {socialError && (
-          <p className="text-sm text-red-400 mt-1">{socialError}</p>
-        )}
-      </div>
-
-      {formData.socials.length > 0 && (
-        <div className="space-y-2 mt-4">
-          <p className="text-xs text-gray-400">Added Links:</p>
-          {formData.socials.map((social, index) => {
-            const platformInfo = socialPlatforms.find(p => p.value === social.platform);
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-3 bg-gray-900/50 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-all duration-200 group"
-              >
-                <div className="p-2 rounded-lg bg-gray-800">
-                  <div className="text-lg text-gray-300">
-                    {platformInfo?.icon || "🔗"}
-                  </div>
-                </div>
-                <span className="text-sm font-medium text-gray-300 min-w-[80px]">
-                  {platformInfo?.label || social.platform}
-                </span>
-                <input
-                  type="url"
-                  value={social.url}
-                  onChange={(e) => handleSocialChange(index, 'url', e.target.value)}
-                  className="flex-1 p-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="URL"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleSocialRemove(index)}
-                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                  disabled={isLoading}
-                  title="Remove link"
-                >
-                  <FiX className="text-lg" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -348,7 +274,20 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
           </div>
 
           <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-            <SocialMediaInput />
+            <SocialMediaInput
+  newSocial={newSocial}
+  setNewSocial={setNewSocial}
+  socialError={socialError}
+  setSocialError={setSocialError}
+  socialPlatforms={socialPlatforms}
+  isDuplicateSocial={isDuplicateSocial}
+  handleSocialAdd={handleSocialAdd}
+  formData={formData}
+  handleSocialChange={handleSocialChange}
+  handleSocialRemove={handleSocialRemove}
+  isLoading={isLoading}
+/>
+
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-800">
