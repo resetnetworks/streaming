@@ -51,11 +51,11 @@ const AlbumCard = ({ album, onClick }) => {
         
         {/* Album Cover Container */}
         <div className="relative mb-3 overflow-hidden rounded-lg bg-gray-700/50">
-          {hasImage && album.coverImage && !imageError ? (
+          {album?.songs[0]?.coverImage && !imageError ? (
             <>
               {/* Image */}
               <img
-                src={album.coverImage}
+                src={album?.songs[0]?.coverImage}
                 alt=""
                 className={`w-full h-36 object-cover ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'

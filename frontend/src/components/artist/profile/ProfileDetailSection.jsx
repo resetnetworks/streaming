@@ -2,9 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import { useArtistProfile, useUpdateArtistProfile } from "../../../hooks/api/useArtistDashboard";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../features/auth/authSelectors";
 import ProfileEditForm from "./ProfileEditForm";
 
 const ProfileDetailSection = () => {
+  const user = useSelector(selectCurrentUser);
   const { data: artistProfile, isLoading: profileLoading } = useArtistProfile();
   const { mutate: updateProfile, isLoading: isUpdating } = useUpdateArtistProfile();
   
@@ -23,7 +26,7 @@ const ProfileDetailSection = () => {
   useEffect(() => {
     if (artistProfile) {
       setFormData({
-        businessEmail: artistProfile.email || artistProfile.businessEmail || "",
+        businessEmail: artistProfile.email || artistProfile.businessEmail || user.email || "",
         country: artistProfile.country || "",
         website: artistProfile.website || "",
         socialMedia: artistProfile.socialMedia || "",

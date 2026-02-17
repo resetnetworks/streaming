@@ -66,8 +66,8 @@ const SingleUpload = ({ onCancel }) => {
             }
           });
           
-          audioKey = uploadResult.s3Key; // या uploadResult.key - आपके API response के according
-          toast.success("Audio file uploaded successfully!");
+          audioKey = uploadResult.s3Key;
+          toast.success("Track file uploaded successfully!");
         } catch (error) {
           console.error("Audio upload failed:", error);
           throw new Error(`Audio upload failed: ${error.message}`);
