@@ -1,19 +1,15 @@
 // AlbumModal.jsx - ✅ SEPARATE MODAL COMPONENT WITH REAL SONGS
 import React, { useEffect } from "react";
 import { FiX } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchAlbumById } from "../../../features/albums/albumsSlice";
-import { selectAlbumDetails } from "../../../features/albums/albumsSelector";
+import { useAlbum } from "../../../hooks/api/useAlbums";
+
 
 const AlbumModal = ({ isOpen, onClose, album }) => {
-  const dispatch = useDispatch();
-  const albumDetails = useSelector(selectAlbumDetails);
-  
-  useEffect(() => {
-    if (album?.id) {
-      dispatch(fetchAlbumById(album.id));
-    }
-  }, [album?.id, dispatch]);
+  const { data: albumDetails, isLoading } = useAlbum(album?.id, {
+  enabled: isOpen && !!album?.id,
+});
+
+
 
   if (!isOpen || !album) return null;
 
@@ -46,7 +42,10 @@ const AlbumModal = ({ isOpen, onClose, album }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-white lowercase">{album.title}</h2>
-              <p className="text-white/60 text-sm">{songs.length} songs</p>
+              <p className="text-white/60 text-sm">
+  {isLoading ? "Loading..." : `${songs.length} songs`}
+</p>
+
             </div>
           </div>
           <button
@@ -72,7 +71,7 @@ const AlbumModal = ({ isOpen, onClose, album }) => {
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center text-xs font-bold text-blue-300">
-                      {index + 1}
+                      <img src={album.image || ""} alt={song.title} className="w-full h-full object-cover rounded-lg" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium lowercase text-sm group-hover:text-blue-300 transition-colors truncate">
