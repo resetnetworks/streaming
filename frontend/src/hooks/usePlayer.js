@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Hls from "hls.js";
 import { fetchStreamUrl } from "../features/stream/streamSlice";
+import { toast } from "sonner";
 import {
   setSelectedSong,
   play,
@@ -13,7 +14,6 @@ import {
   clearPlaybackContext,
   setRandomDefaultFromSongs,
 } from "../features/playback/playerSlice";
-import { toggleLikeSong } from "../features/auth/authSlice";
 import {
   selectAllSongs,
   selectSelectedSong,
@@ -24,7 +24,7 @@ import {
   selectPlaybackContext,
   selectPlaybackContextSongs,
 } from "../features/songs/songSelectors";
-import { selectLikedSongIds } from "../features/auth/authSelectors";
+import { useLikeSong,useLikedSongs } from "./api/useSongs";
 
 export const usePlayer = () => {
   const dispatch = useDispatch();
@@ -45,7 +45,8 @@ export const usePlayer = () => {
   const streamUrls = useSelector((state) => state.stream.urls);
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
-  const likedSongIds = useSelector(selectLikedSongIds);
+  const likeMutation = useLikeSong();
+  const { data } = useLikedSongs(20);
 
   // Local state
   const [playbackError, setPlaybackError] = useState(null);
@@ -71,7 +72,10 @@ export const usePlayer = () => {
     ? contextSongs.slice(currentIndex + 1, currentIndex + 5)
     : contextSongs.slice(0, 4);
 
-  const isLiked = currentSong ? likedSongIds.includes(currentSong._id) : false;
+const likedSongs = data?.pages?.flatMap((page) => page.songs) || [];
+const isLiked = currentSong
+  ? likedSongs.some((song) => song._id === currentSong._id)
+  : false;
 
   // Effects
   useEffect(() => {
@@ -281,8 +285,21 @@ export const usePlayer = () => {
   };
 
   const handleLikeToggle = () => {
-    if (currentSong?._id) dispatch(toggleLikeSong(currentSong._id));
-  };
+  if (!currentSong?._id) return;
+
+  likeMutation.mutate(currentSong._id, {
+    onSuccess: () => {
+      toast.success(
+        isLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
+      );
+    },
+    onError: () => {
+      toast.error("Failed to update like");
+    },
+  });
+};
+
+
 
   const handleNextSongClick = (song) => {
     dispatch(setSelectedSong(song));
@@ -315,8 +332,8 @@ export const usePlayer = () => {
     handleNext,
     handlePrev,
     handleSeekChange,
-    handleVolumeChange,
     handleLikeToggle,
+    handleVolumeChange,
     handleNextSongClick,
   };
 };

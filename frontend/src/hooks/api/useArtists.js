@@ -1,9 +1,10 @@
-// src/hooks/useArtists.js
+// src/hooks/api/useArtists.js
 import {
   useQuery,
   useMutation,
   useInfiniteQuery,
   useQueryClient,
+  useQueries,
 } from "@tanstack/react-query";
 import { artistApi } from "../../api/artistApi";
 import { toast } from "sonner";
@@ -30,12 +31,13 @@ export const useArtists = (filters = { page: 1, limit: 10 }) => {
   return useQuery({
     queryKey: artistKeys.list(filters),
     queryFn: () => artistApi.fetchAll(filters),
-    keepPreviousData: true, // Smooth pagination
-    staleTime: 5 * 60 * 1000, // 5 minutes cache (matches your Redux cache)
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000,
+    // No select needed - API returns correct structure
   });
 };
 
-// Get all artists with infinite scroll support
+// Get all artists with infinite scroll support - FIXED
 export const useArtistsInfinite = (limit = 10) => {
   return useInfiniteQuery({
     queryKey: artistKeys.list({ infinite: true, limit }),
@@ -47,7 +49,7 @@ export const useArtistsInfinite = (limit = 10) => {
       return currentPage < totalPages ? currentPage + 1 : undefined;
     },
     keepPreviousData: true,
-    staleTime: 30 * 1000, // 30 seconds for better infinite scroll
+    staleTime: 30 * 1000,
   });
 };
 
@@ -56,7 +58,7 @@ export const useAllArtists = () => {
   return useQuery({
     queryKey: artistKeys.fullList(),
     queryFn: artistApi.fetchAllNoPagination,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -65,7 +67,7 @@ export const useArtist = (id) => {
   return useQuery({
     queryKey: artistKeys.detail(id),
     queryFn: () => artistApi.fetchById(id),
-    enabled: !!id, // Only run when id exists
+    enabled: !!id,
   });
 };
 
@@ -74,7 +76,7 @@ export const useArtistProfile = () => {
   return useQuery({
     queryKey: artistKeys.profile(),
     queryFn: artistApi.fetchProfile,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache for profile
+    staleTime: 2 * 60 * 1000,
   });
 };
 
@@ -86,12 +88,12 @@ export const useRandomArtistWithSongs = (filters = { page: 1, limit: 10 }) => {
   });
 };
 
-// Search artists
+// Search artists - FIXED
 export const useSearchArtists = ({ query, page = 1, limit = 10 }, enabled = true) => {
   return useQuery({
     queryKey: artistKeys.search({ query, page, limit }),
     queryFn: () => artistApi.search({ query, page, limit }),
-    enabled: !!query && enabled, // Only run when query exists and enabled is true
+    enabled: !!query && enabled,
     keepPreviousData: true,
   });
 };
@@ -102,7 +104,7 @@ export const useSubscriberCount = (artistId) => {
     queryKey: artistKeys.subscriberCount(artistId),
     queryFn: () => artistApi.fetchSubscriberCount(artistId),
     enabled: !!artistId,
-    staleTime: 2 * 60 * 1000, // 2 minutes cache (matches your Redux cache)
+    staleTime: 2 * 60 * 1000,
   });
 };
 
@@ -120,18 +122,17 @@ export const useSubscriberCounts = (artistIds) => {
 
 // 📤 MUTATIONS (POST/PUT/DELETE)
 
-// Create artist mutation
+// Create artist mutation - FIXED
 export const useCreateArtist = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: artistApi.create,
     onMutate: async (formData) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: artistKeys.lists() });
       await queryClient.cancelQueries({ queryKey: artistKeys.fullList() });
 
-      // Snapshot previous values
+      // Previous data ko snapshot mein save karein
       const previousArtists = queryClient.getQueryData(
         artistKeys.list({ page: 1, limit: 10 })
       );
@@ -161,7 +162,7 @@ export const useCreateArtist = () => {
   });
 };
 
-// Update artist profile mutation
+// Update artist profile mutation - FIXED
 export const useUpdateArtistProfile = () => {
   const queryClient = useQueryClient();
 
@@ -170,11 +171,9 @@ export const useUpdateArtistProfile = () => {
     onMutate: async (variables) => {
       const { id } = variables;
 
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries(artistKeys.profile());
       await queryClient.cancelQueries(artistKeys.detail(id));
 
-      // Snapshot previous values
       const previousProfile = queryClient.getQueryData(artistKeys.profile());
       const previousArtist = queryClient.getQueryData(artistKeys.detail(id));
 
@@ -206,38 +205,38 @@ export const useUpdateArtistProfile = () => {
       queryClient.invalidateQueries({ queryKey: artistKeys.lists() });
       queryClient.invalidateQueries({ queryKey: artistKeys.fullList() });
       queryClient.invalidateQueries({ queryKey: artistKeys.profile() });
-      queryClient.invalidateQueries({ queryKey: artistKeys.detail(updatedArtist._id || updatedArtist.id) });
+      queryClient.invalidateQueries({ 
+        queryKey: artistKeys.detail(updatedArtist._id || updatedArtist.id) 
+      });
       
       toast.success("Artist profile updated successfully!");
     },
   });
 };
 
-// Delete artist mutation
+// Delete artist mutation - FIXED
 export const useDeleteArtist = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: artistApi.delete,
     onMutate: async (artistId) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: artistKeys.lists() });
       await queryClient.cancelQueries({ queryKey: artistKeys.fullList() });
       await queryClient.cancelQueries(artistKeys.subscriberCount(artistId));
 
-      // Snapshot previous values
       const previousArtists = queryClient.getQueryData(
         artistKeys.list({ page: 1, limit: 10 })
       );
       const previousFullList = queryClient.getQueryData(artistKeys.fullList());
 
       // Optimistically remove artist from lists
-      if (previousArtists?.artists) {
+      if (previousArtists?.data) {
         queryClient.setQueryData(
           artistKeys.list({ page: 1, limit: 10 }),
           (old) => ({
             ...old,
-            artists: old.artists.filter((artist) => artist._id !== artistId),
+            data: old.data.filter((artist) => artist._id !== artistId || artist.id !== artistId),
           })
         );
       }
@@ -245,7 +244,9 @@ export const useDeleteArtist = () => {
       if (previousFullList) {
         queryClient.setQueryData(
           artistKeys.fullList(),
-          (old) => old.filter((artist) => artist._id !== artistId)
+          (old) => old.filter((artist) => 
+            artist._id !== artistId && artist.id !== artistId
+          )
         );
       }
 
@@ -268,7 +269,6 @@ export const useDeleteArtist = () => {
       toast.error(err.message || "Failed to delete artist");
     },
     onSuccess: (deletedArtistId) => {
-      // Invalidate all artist queries
       queryClient.invalidateQueries({ queryKey: artistKeys.all });
       queryClient.removeQueries(artistKeys.subscriberCount(deletedArtistId));
       toast.success("Artist deleted successfully!");
@@ -312,7 +312,7 @@ export const useCachedArtist = (artistId) => {
   return queryClient.getQueryData(artistKeys.detail(artistId));
 };
 
-// Hook to update artist cache manually
+// Hook to update artist cache manually - FIXED
 export const useUpdateArtistCache = () => {
   const queryClient = useQueryClient();
 
@@ -326,11 +326,13 @@ export const useUpdateArtistCache = () => {
     queryClient.setQueriesData(
       { queryKey: artistKeys.lists() },
       (old) => {
-        if (!old?.artists) return old;
+        if (!old?.data) return old;
         return {
           ...old,
-          artists: old.artists.map((artist) =>
-            artist._id === artistId ? { ...artist, ...updates } : artist
+          data: old.data.map((artist) =>
+            (artist._id === artistId || artist.id === artistId) 
+              ? { ...artist, ...updates } 
+              : artist
           ),
         };
       }
@@ -340,7 +342,9 @@ export const useUpdateArtistCache = () => {
     queryClient.setQueryData(artistKeys.fullList(), (old) => {
       if (!Array.isArray(old)) return old;
       return old.map((artist) =>
-        artist._id === artistId ? { ...artist, ...updates } : artist
+        (artist._id === artistId || artist.id === artistId)
+          ? { ...artist, ...updates }
+          : artist
       );
     });
   };

@@ -51,11 +51,11 @@ const AlbumCard = ({ album, onClick }) => {
         
         {/* Album Cover Container */}
         <div className="relative mb-3 overflow-hidden rounded-lg bg-gray-700/50">
-          {hasImage && album.coverImage && !imageError ? (
+          {album?.songs[0]?.coverImage && !imageError ? (
             <>
               {/* Image */}
               <img
-                src={album.coverImage}
+                src={album?.songs[0]?.coverImage}
                 alt=""
                 className={`w-full h-36 object-cover ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
@@ -138,7 +138,7 @@ const getSongPriceDisplay = (
       </button>
     );
   }
-  if (song?.accessType === "purchase-only" && song?.convertedPrices[0]?.amount === 0) {
+  if (song?.accessType === "purchase-only" && song?.price?.amount === 0) {
     return <span className="text-blue-300 text-xs font-semibold">album</span>;
   }
   return <span className="text-blue-300 text-xs font-semibold">Free</span>;
@@ -536,6 +536,7 @@ const MatchingGenreSection = ({
 
             {/* Show individual songs that don't belong to any album */}
             {merged.filter(song => !song.album || !song.album._id).map((song, index) => (
+              
               <MatchingGenreSong
                 key={`matching-song-${song._id}-${index}`}
                 title={song.title}
@@ -555,7 +556,7 @@ const MatchingGenreSection = ({
                 isPlaying={currentlyPlayingSong?._id === song._id}
                 isSelected={currentlyPlayingSong?._id === song._id}
               />
-            ))}
+            )) }
 
             {/* Loading spinner while appending more */}
             {loadingMore && (

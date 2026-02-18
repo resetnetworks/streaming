@@ -1,85 +1,83 @@
 import React, { useState, useEffect } from "react";
 import UploadForm from "../../components/artist/upload/UploadForm";
-import { useDispatch, useSelector } from "react-redux";
-import { 
-  createAlbum, 
-  resetCreateState,
-  prepareAlbumFormData 
-} from "../../features/artistAlbums/artistAlbumsSlice";
-import { 
-  createSong, 
-  resetUploadState,
-  prepareSongFormData,
-  setUploadProgress 
-} from "../../features/artistSong/artistSongSlice";
 import SongUploadStep from "../../components/artist/upload/SongUploadStep";
 import UploadProgress from "../../components/artist/upload/UploadProgress";
 import { toast } from "sonner";
 import { FiCheckCircle } from "react-icons/fi";
+import { useCreateAlbum } from "../../hooks/api/useAlbums";
+import { useCreateSong } from "../../hooks/api/useSongs";
+import { useS3Upload } from "../../hooks/api/useS3Upload";
+import { useUploadSong } from "../../hooks/api/useUpload";
 
 const AlbumUpload = ({ onCancel, onComplete }) => {
-  const dispatch = useDispatch();
+  // React Query hooks
+  const createAlbumMutation = useCreateAlbum();
+  const createSongMutation = useCreateSong();
+  const { uploadSongCover } = useS3Upload();
+const uploadSongMutation = useUploadSong();
+  
   
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
   const [createdAlbum, setCreatedAlbum] = useState(null);
-  
-  // Album upload state from Redux
-  const {
-    createLoading: albumLoading,
-    createError: albumError,
-    createdAlbum: albumFromRedux
-  } = useSelector(state => state.artistAlbums);
-  
-  // Song upload state from Redux
-  const {
-    uploadLoading: songLoading,
-    uploadProgress,
-    uploadError: songError,
-    uploadedSong: latestSong
-  } = useSelector(state => state.artistSongs);
   
   // Songs management
   const [songsToUpload, setSongsToUpload] = useState([]);
   const [uploadedSongs, setUploadedSongs] = useState([]);
   const [currentUploadIndex, setCurrentUploadIndex] = useState(0);
   const [isUploadingBatch, setIsUploadingBatch] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResults, setUploadResults] = useState([]);
   const [allSongsUploaded, setAllSongsUploaded] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // Step 1: Handle album creation
   const handleAlbumSubmit = async (formData) => {
-    
+  try {
+    toast.loading("Creating album...", { id: "album" });
+
+    let coverImageKey = "";
+
+    // ✅ SAME AS SingleUpload
+    if (formData.coverImageFile) {
+      coverImageKey = await uploadSongCover({
+        file: formData.coverImageFile,
+        onProgress: (progress) => {
+          // optional: album cover progress
+          // setCoverImageUploadProgress(progress)
+        },
+      });
+    }
+
     const albumData = {
       title: formData.title,
       releaseDate: formData.date,
       description: formData.description || "",
-      genre: formData.genres?.join(",") || "",
+      genre: formData.genres || [],
       accessType: formData.accessType || "subscription",
+      coverImageKey, // ✅ REAL S3 KEY
     };
-    
+
     if (formData.accessType === "purchase-only" && formData.basePrice) {
       albumData.basePrice = {
         amount: parseFloat(formData.basePrice.amount),
-        currency: formData.basePrice.currency || "USD"
+        currency: formData.basePrice.currency || "USD",
       };
     }
-    
-    const uploadFormData = prepareAlbumFormData(
-      albumData,
-      formData.coverImage
-    );
-    
-    try {
-      const result = await dispatch(createAlbum(uploadFormData)).unwrap();
-      setCreatedAlbum(result);
-      setCurrentStep(2);
-    } catch (error) {
-      console.error("Album creation failed:", error);
-      toast.error(`Album creation failed: ${error.message || "Unknown error"}`);
-    }
-  };
+
+    const result = await createAlbumMutation.mutateAsync(albumData);
+
+    setCreatedAlbum(result);
+    setCurrentStep(2);
+    toast.success("Album created successfully! Now add songs.");
+  } catch (error) {
+    console.error("Album creation failed:", error);
+    toast.error(error.message || "Album creation failed");
+  } finally {
+    toast.dismiss("album");
+  }
+};
+
   
   // Step 2: Handle song selection for album
   const handleSongsSelected = (songs) => {
@@ -95,7 +93,7 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
     setAllSongsUploaded(false);
   };
   
-  // Upload songs one by one
+  // Upload songs one by one using React Query
   const uploadSongsSequentially = async () => {
     if (!songsToUpload.length || !createdAlbum) {
       toast.error("No songs to upload or album not created!");
@@ -108,15 +106,15 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
     
     for (let i = 0; i < songsToUpload.length; i++) {
       setCurrentUploadIndex(i);
-      const song = songsToUpload[i];
+      setUploadProgress(0);
       
       try {
-        const result = await uploadSingleSong(song, i);
+        const result = await uploadSingleSong(songsToUpload[i], i);
         results.push({
           index: i,
           success: true,
           song: result,
-          name: song.name || song.title
+          name: songsToUpload[i].name || songsToUpload[i].title
         });
         
         setUploadedSongs(prev => [...prev, {
@@ -129,12 +127,11 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
           index: i,
           success: false,
           error: error.message || "Upload failed",
-          name: song.name || song.title
+          name: songsToUpload[i].name || songsToUpload[i].title
         });
         console.error(`Failed to upload song ${i + 1}:`, error);
+        toast.error(`Failed to upload "${songsToUpload[i].name}": ${error.message}`);
       }
-      
-      dispatch(setUploadProgress(0));
     }
     
     setUploadResults(results);
@@ -154,55 +151,47 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
   };
   
   const uploadSingleSong = async (songData, index) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const songFormData = {
-          title: songData.title || `Track ${index + 1}`,
-          duration: songData.duration || 180,
-          accessType: createdAlbum.accessType,
-          genre: createdAlbum.genre || songData.genres?.join(",") || "",
-          releaseDate: createdAlbum.releaseDate,
-          album: createdAlbum._id,
-          albumOnly: true,
-        };
-        
-        const uploadFormData = prepareSongFormData(
-          songFormData,
-          songData.audioFile,
-          null
-        );
-        
-        const result = await dispatch(createSong(uploadFormData)).unwrap();
-        resolve(result);
-      } catch (error) {
-        reject(error);
-      }
-    });
+  // 1️⃣ Upload audio (same logic as SingleUpload)
+  const uploadResult = await uploadSongMutation.mutateAsync({
+    file: songData.audioFile,
+    onProgress: (progress) => {
+      setUploadProgress(progress);
+    },
+  });
+
+  const audioKey = uploadResult.s3Key;
+
+  // 2️⃣ Prepare metadata
+  const songMetadata = {
+    title: songData.title || `Track ${index + 1}`,
+    duration: songData.duration || 180,
+    accessType: createdAlbum.accessType,
+    genres: createdAlbum.genre || [],
+    releaseDate: createdAlbum.releaseDate,
+    album: createdAlbum._id,
+    albumOnly: true,
+    audioKey,
+    coverImageKey: createdAlbum.coverImageKey,
+    fileName: songData.audioFile.name,
   };
+
+  // 3️⃣ Save to DB
+  return await createSongMutation.mutateAsync(songMetadata);
+};
+
   
-  // Handle complete/finish - Directly complete without confirmation
+  // Handle complete/finish
   const handleComplete = () => {
-    dispatch(resetCreateState());
-    dispatch(resetUploadState());
     toast.success("Album created successfully!");
     onComplete?.();
   };
   
-  // Cleanup on unmount
+  // Reset state when unmounting
   useEffect(() => {
     return () => {
-      dispatch(resetCreateState());
-      dispatch(resetUploadState());
+      // Cleanup if needed
     };
-  }, [dispatch]);
-  
-  // Auto move to step 2 when album is created
-  useEffect(() => {
-    if (albumFromRedux && currentStep === 1) {
-      setCreatedAlbum(albumFromRedux);
-      setCurrentStep(2);
-    }
-  }, [albumFromRedux, currentStep]);
+  }, []);
   
   // Check if all songs are uploaded
   useEffect(() => {
@@ -237,15 +226,9 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
       </div>
       
       {/* Error display */}
-      {albumError && (
+      {createAlbumMutation.isError && (
         <div className="mb-4 p-4 bg-red-900/30 border border-red-700 rounded-lg text-red-300">
-          Album Error: {albumError}
-        </div>
-      )}
-      
-      {songError && (
-        <div className="mb-4 p-4 bg-red-900/30 border border-red-700 rounded-lg text-red-300">
-          Song Error: {songError}
+          Album Error: {createAlbumMutation.error?.message}
         </div>
       )}
       
@@ -256,7 +239,7 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
             type="album"
             onCancel={onCancel}
             onSubmit={handleAlbumSubmit}
-            isSubmitting={albumLoading}
+            isSubmitting={createAlbumMutation.isLoading}
             initialData={{
               title: "",
               date: new Date().toISOString().split("T")[0],
@@ -271,7 +254,7 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
       {/* Step 2: Song Upload */}
       {currentStep === 2 && createdAlbum && (
         <div>
-          {/* Completion Modal - Matches website theme */}
+          {/* Completion Modal */}
           {showCompletionModal && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-md w-full overflow-hidden">
@@ -379,7 +362,7 @@ const AlbumUpload = ({ onCancel, onComplete }) => {
             onSongsSelected={handleSongsSelected}
             onStartUpload={uploadSongsSequentially}
             uploadedSongs={uploadedSongs}
-            isUploading={songLoading || isUploadingBatch}
+            isUploading={createSongMutation.isLoading || isUploadingBatch}
             hasStartedUpload={songsToUpload.length > 0}
             currentUploadIndex={currentUploadIndex}
             uploadProgress={uploadProgress}

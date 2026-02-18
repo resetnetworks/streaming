@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useUnlikeSong, useLikedSongs } from "../../hooks/api/useSongs";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
-import { removeSongFromLiked } from "../../features/songs/songSlice";
 import SongList from "../../components/user/SongList";
 import { formatDuration } from "../../utills/helperFunctions";
 import UserHeader from "../../components/user/UserHeader";
@@ -37,7 +36,8 @@ const LikedSongs = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handlePlaySong = (song) => {
-    dispatch(setSelectedSong(song._id));
+
+    dispatch(setSelectedSong(song));
     if (playerStatus !== "playing" || selectedSong !== song._id) {
       dispatch(play());
     }
@@ -45,8 +45,6 @@ const LikedSongs = () => {
 
   const handleUnlikeSong = async (songId) => {
     unlikeMutation.mutate(songId);
-    // Update Redux store
-    dispatch(removeSongFromLiked(songId));
   };
 
   if (isError) {
@@ -85,7 +83,6 @@ const LikedSongs = () => {
               </span>
             )}
           </div>
-
           {isLoading && allSongs.length === 0 ? (
             <div className="space-y-4">
               {[...Array(10)].map((_, idx) => (
@@ -123,7 +120,7 @@ const LikedSongs = () => {
                   <SongList
                     songId={song._id}
                     img={
-                      song.coverImage ||
+                      song?.coverImage ||
                       song.album?.coverImage ||
                       "/images/placeholder.png"
                     }
