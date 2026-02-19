@@ -119,10 +119,10 @@ const Purchases = () => {
         >
           {/* ✅ Fixed circular container with proper aspect ratio */}
           <div className="w-full h-full relative rounded-full overflow-hidden border-2 border-blue-500 shadow-md bg-gray-700">
-            {!imageError && artist?.image ? (
+            {!imageError && artist?.profileImage ? (
               <>
                 <img
-                  src={artist.image}
+                  src={artist?.profileImage}
                   alt={artist?.name || "Artist"}
                   className="w-full h-full object-cover absolute inset-0"
                   onLoad={handleImageLoad}
@@ -295,7 +295,7 @@ const Purchases = () => {
                 {subscriptions.map((sub) => (
                   <ArtistAvatar 
                     key={sub._id} 
-                    artist={sub.artist}
+                    artist={sub?.artist}
                   />
                 ))}
               </div>

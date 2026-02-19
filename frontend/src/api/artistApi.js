@@ -76,7 +76,7 @@ export const artistApi = {
     const res = await axios.get(`/admin/dashboard/subscriber-count/${artistId}`);
     return {
       artistId,
-      ...res.data.data,
+      ...res.data,
     };
   },
 };

@@ -1,17 +1,11 @@
 import React, { useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { FiMapPin } from "react-icons/fi";
 import { HiUsers } from "react-icons/hi";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import axiosInstance from "../../../utills/axiosInstance";
-import { fetchSubscriberCount } from "../../../features/artists/artistsSlice";
-import { fetchUserSubscriptions } from "../../../features/payments/userPaymentSlice";
-import { 
-  selectArtistSubscriberCount,
-  selectSubscriberCountLoading,
-} from "../../../features/artists/artistsSelectors";
 import { useLiveSubscriberCount } from "../../../hooks/useLiveSubscriberCount";
+import { useSelector } from "react-redux";
 
 const cycleLabel = (c) => {
   switch (c) {
@@ -46,27 +40,30 @@ const ArtistHeroSection = ({
   isInView, 
   openSubscriptionOptions,
   subscriptionLoading,
-  setSubscriptionLoading
+  setSubscriptionLoading,
+  subscriberCountData
 }) => {
-  const dispatch = useDispatch();
-
-  const subscriberData = useSelector(state => 
-    selectArtistSubscriberCount(artist?._id)(state)
-  );
-  const subscriberCountLoading = useSelector(selectSubscriberCountLoading);
   const userSubscriptions = useSelector(
     (state) => state.userDashboard.subscriptions || []
   );
 
-  const isSubscribed = userSubscriptions.some(
-    (sub) => sub.artist?.slug === artistId
-  );
+  const subscriberData = subscriberCountData;
 
-  const liveSubscriberCount = useLiveSubscriberCount(
-    subscriberData?.activeSubscribers, 
-    isInView,
-    artist?._id
-  );
+
+
+  const isSubscribed = userSubscriptions.some(
+  (sub) =>
+    sub.artist?._id === artist?._id ||
+    sub.artist?.slug === artist?.slug
+);
+
+
+ const liveSubscriberCount = useLiveSubscriberCount(
+  subscriberData?.activeSubscribers ?? 0,
+  isInView,
+  artist?._id
+);
+
 
   const availableCycles = useMemo(() => {
     const plans = artist?.subscriptionPlans || [];

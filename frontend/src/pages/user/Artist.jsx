@@ -14,13 +14,14 @@ import ArtistAboutSection from "../../components/user/Artist/ArtistAboutSection"
 import SubscriptionMethodModal from "../../components/user/SubscriptionMethodModal";
 import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import SubscribeModal from "../../components/user/SubscribeModal";
-
+import { useDispatch } from "react-redux";
 import { useArtist, useSubscriberCount } from "../../hooks/api/useArtists";
 import { useArtistAlbumsSimple } from "../../hooks/api/useAlbums";
 import { selectPaymentError } from "../../features/payments/paymentSelectors";
 import { useSubscriptionPayment } from "../../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
+import { fetchUserSubscriptions } from "../../features/payments/userPaymentSlice";
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -28,6 +29,7 @@ const Artist = () => {
   const heroSectionRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const dispatch = useDispatch();
   
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -36,6 +38,10 @@ const Artist = () => {
   
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  useEffect(() => {
+  dispatch(fetchUserSubscriptions());
+}, [dispatch]);
+
   
   // React Query hooks
   const { 
@@ -64,6 +70,7 @@ const Artist = () => {
     handleSubscriptionMethodSelect,
     closeSubscriptionOptions
   } = useSubscriptionPayment();
+
   
   const {
     showPaymentOptions,
