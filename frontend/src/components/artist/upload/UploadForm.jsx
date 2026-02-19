@@ -238,16 +238,11 @@ setCoverImageFile(compressedFile);
     const file = files[0];
 
     // Validate audio file
-    const validTypes = [".wav", ".aif", ".aiff", ".flac", ".mp3", ".m4a"];
+    const validTypes = [".wav", ".aif", ".aiff", ".flac"];
     const fileExtension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
     
     if (!validTypes.includes(fileExtension)) {
-      toast.error("Invalid audio format. Please upload WAV, AIFF, FLAC, MP3, or M4A.");
-      return;
-    }
-
-    if (file.size > 500 * 1024 * 1024) { // 500MB limit
-      toast.error("Audio file too large (max 500MB)");
+      toast.error("Invalid audio format. Please upload WAV, AIFF, FLAC");
       return;
     }
 
@@ -733,7 +728,7 @@ setCoverImageFile(compressedFile);
               type="file" 
               ref={fileInputRef} 
               onChange={handleTrackUpload} 
-              accept=".wav,.aif,.aiff,.flac,.mp3,.m4a" 
+              accept=".wav,.aif,.aiff,.flac" 
               className="hidden" 
               disabled={tracks.length > 0 || isUploadingAudio || isSubmitting}
             />
@@ -777,7 +772,7 @@ setCoverImageFile(compressedFile);
                   ? "Uploading to S3, please wait..."
                   : tracks.length > 0 
                   ? "Remove existing track to upload a new one" 
-                  : "WAV, AIFF, FLAC, MP3, or M4A supported. Max 1 track for singles."}
+                  : "WAV, AIFF, FLAC supported. Max 1 track for singles."}
               </p>
             </div>
 
