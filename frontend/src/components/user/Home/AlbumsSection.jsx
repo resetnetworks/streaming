@@ -18,8 +18,8 @@ const AlbumsSection = ({
   
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const purchases = useSelector((state) => state.userDashboard.purchases);
 
-  const currentUser = useSelector((state) => state?.auth?.user);
 
   // Use React Query for infinite scroll
   const {
@@ -108,42 +108,69 @@ const AlbumsSection = ({
     setSelectedAlbum(null);
   };
   
-  const getAlbumPriceDisplay = (album) => {
-    if (currentUser?.purchasedAlbums?.includes(album.id)) {
-      return "Purchased";
+const getAlbumPriceDisplay = (album) => {
+  // Normalize purchased albums array safely
+  const purchasedAlbumsArray = Array.isArray(purchases)
+    ? purchases
+    : purchases?.albums || [];
+
+  // Strict ID comparison (no undefined match possible)
+  const isPurchased = purchasedAlbumsArray.some((purchased) => {
+    const purchasedId = purchased?._id || purchased?.id;
+    const albumId = album?._id || album?.id;
+
+    return purchasedId && albumId && purchasedId === albumId;
+  });
+
+  if (isPurchased) {
+    return (
+      <span className="text-green-400 text-xs font-semibold">
+        Purchased
+      </span>
+    );
+  }
+
+  // Subscription albums
+  if (album?.accessType === "subscription") {
+    return (
+      <span className="text-blue-400 text-xs font-semibold">
+        subs..
+      </span>
+    );
+  }
+
+  // One-time purchase albums
+  if (album?.accessType === "purchase-only") {
+    if (album?.basePrice?.amount > 0) {
+      const basePrice = album.basePrice;
+      const symbol = getCurrencySymbol(basePrice.currency);
+
+      return (
+        <button
+          className={`text-white sm:text-xs text-[10px] px-3 py-1 rounded ${
+            processingPayment || paymentLoading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+          onClick={() => handleAlbumPurchaseClick(album)}
+          disabled={processingPayment || paymentLoading}
+        >
+          {processingPayment || paymentLoading
+            ? "..."
+            : `Buy ${symbol}${basePrice.amount}`}
+        </button>
+      );
     }
 
-    if (album?.accessType === "subscription") {
-      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    if (album?.basePrice?.amount === 0) {
+      return "Free";
     }
+  }
 
-    if (album?.accessType === "purchase-only") {
-      if (album?.basePrice && album?.basePrice?.amount > 0) {
-        const basePrice = album?.basePrice;
-        const symbol = getCurrencySymbol(basePrice.currency);
-        
-        return (
-          <button
-            className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors relative ${
-              processingPayment || paymentLoading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
-            onClick={() => handleAlbumPurchaseClick(album)}
-            disabled={processingPayment || paymentLoading}
-          >
-            {processingPayment || paymentLoading ? "..." : `Buy ${symbol}${basePrice.amount}`}
-          </button>
-        );
-      }
-      
-      if (album?.basePrice && album?.basePrice?.amount === 0) {
-        return "Free";
-      }
-    }
+  return null;
+};
 
-    return null;
-  };
+
 
   // Intersection Observer callback for infinite scroll
   const observerCallback = (entries) => {

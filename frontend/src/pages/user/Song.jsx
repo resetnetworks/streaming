@@ -18,6 +18,7 @@ import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import LoadingOverlay from "../../components/user/Home/LoadingOverlay";
 import { useLikeSong,useLikedSongs } from "../../hooks/api/useSongs";
 
+
 // React Query imports
 import { useSong, useArtistSingles } from "../../hooks/api/useSongs";
 import { useArtistAlbumsSimple } from "../../hooks/api/useAlbums";
@@ -267,43 +268,53 @@ const isLiked = likedSongs.some(
 
   // Get song price display
   const getSongPriceDisplay = (songItem) => {
-    if (currentUser?.purchasedSongs?.includes(songItem._id)) {
-      return "Purchased";
+  if (currentUser?.purchasedSongs?.includes(songItem?._id)) {
+    return "Purchased";
+  }
+
+  if (songItem?.accessType === "subscription") {
+    return (
+      <span className="text-blue-400 text-xs font-semibold">
+        subs..
+      </span>
+    );
+  }
+
+  if (songItem?.accessType === "purchase-only") {
+    const priceData = songItem?.price;
+
+    if (priceData?.amount > 0) {
+      const symbol =
+        priceData.currency === "USD" ? "$" : priceData.currency;
+
+      const alreadySubscribed =
+        hasArtistSubscriptionInPurchaseHistory(currentUser, songItem?.artist);
+
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (alreadySubscribed) {
+              handlePurchaseClick(songItem, "song");
+            } else {
+              handleSubscribeDecision(songItem?.artist, "purchase", songItem);
+            }
+          }}
+          className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded"
+        >
+          Buy {symbol}{priceData.amount}
+        </button>
+      );
     }
 
-    if (songItem.accessType === "subscription") {
-      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    if (priceData?.amount === 0) {
+      return "Free";
     }
+  }
 
-    // Sirf purchase-only wale items ke liye buy button
-    if (songItem.accessType === "purchase-only") {
-      if (songItem.basePrice && songItem.basePrice.amount > 0) {
-        const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, songItem.artist);
-        
-        return (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (alreadySubscribed) {
-                handlePurchaseClick(songItem, "song");
-              } else {
-                handleSubscribeDecision(songItem.artist, "purchase", songItem);
-              }
-            }}
-            className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded transition-colors relative"
-          >
-            {`Buy $${songItem.basePrice.amount}`}
-          </button>
-        );
-      }
-      
-      if (songItem.basePrice && songItem.basePrice.amount === 0) {
-        return "Free";
-      }
-    }
+  return null;
+};
 
-    return "Free";
-  };
 
   // Get album price display
   const getAlbumPriceDisplay = (album) => {

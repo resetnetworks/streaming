@@ -46,8 +46,7 @@ const ArtistSinglesSection = ({
     hasNextPage
   } = useArtistSingles(artistId, 20);
 
-  const artistSingles = singlesData?.pages?.flatMap(page => page.songs) || [];
-  
+  const artistSingles = singlesData?.pages?.flatMap(page => page.songs) || [];  
   const singlesPagination = singlesData?.pages?.[0]?.pagination || {
     page: 1,
     limit: 10,
@@ -137,8 +136,8 @@ const ArtistSinglesSection = ({
     }
 
     if (song.accessType === "purchase-only") {
-      if (song.basePrice && song.basePrice.amount > 0) {
-        const basePrice = song.basePrice;
+      if (song?.price && song?.price?.amount > 0) {
+        const basePrice = song?.price;
         const symbol = getCurrencySymbol(basePrice.currency);
         
         return (
