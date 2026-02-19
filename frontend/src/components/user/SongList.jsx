@@ -1,19 +1,13 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, use } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { FaCopy } from "react-icons/fa";
 import { FaXTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa6";
+import { useLikeSong,useLikedSongs } from "../../hooks/api/useSongs";
 import { BsShare } from "react-icons/bs";
-import { useDispatch, useSelector } from "react-redux";
-import { toggleLikeSong } from "../../features/auth/authSlice";
-import { selectLikedSongIds } from "../../features/auth/authSelectors";
 import { toast } from "sonner";
-import debounce from "lodash.debounce";
 
-const handleFeatureSoon = () => {
-  toast.success("This feature will be available soon");
-};
 
 const SongList = ({
   img,
@@ -31,11 +25,12 @@ const SongList = ({
   onShareDropdownToggle,
   onShareMenuClose,
 }) => {
-  const dispatch = useDispatch();
   const shareMenuRef = React.useRef(null);
   
   // Local state for backward compatibility
   const [localShowShareMenu, setLocalShowShareMenu] = useState(false);
+  const likeMutation = useLikeSong();
+  const { data } = useLikedSongs(20); // Get liked songs to determine if this song is liked
   
   // Use parent-controlled state if provided, otherwise use local state
   const showShareMenu = isShareDropdownOpen !== undefined 
@@ -43,8 +38,8 @@ const SongList = ({
     : localShowShareMenu;
 
   // ✅ Get the liked song IDs just once
-  const likedSongIds = useSelector(selectLikedSongIds);
-  const isLiked = likedSongIds.includes(songId);
+  const likedSongs = data?.pages.flatMap((page) => page.songs) || [];
+  const isLiked = likedSongs.some((song) => song._id === songId);
 
   // ✅ Close dropdown when clicking outside
   useEffect(() => {
@@ -85,6 +80,23 @@ const SongList = ({
       setLocalShowShareMenu(!localShowShareMenu);
     }
   };
+
+  const handleToggleLike = (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+
+  likeMutation.mutate(songId, {
+    onSuccess: () => {
+      toast.success(
+        isLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
+      );
+    },
+    onError: () => {
+      toast.error("Failed to update like");
+    },
+  });
+};
+
 
   const handleCloseShareMenu = () => {
     if (onShareMenuClose) {
@@ -143,30 +155,6 @@ const SongList = ({
     handleCloseShareMenu();
   };
 
-  // ✅ LIKE HANDLER
-  const debouncedLikeToggle = useCallback(
-    debounce(async (songId, wasLiked) => {
-      try {
-        const resultAction = await dispatch(toggleLikeSong(songId));
-        if (toggleLikeSong.fulfilled.match(resultAction)) {
-          toast.success(
-            wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
-          );
-        } else if (toggleLikeSong.rejected.match(resultAction)) {
-          toast.error(resultAction.payload || "Failed to update like");
-        }
-      } catch (err) {
-        toast.error("Something went wrong");
-      }
-    }, 500),
-    [dispatch]
-  );
-
-  const handleToggleLike = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    debouncedLikeToggle(songId, isLiked);
-  };
 
   return (
     <div
@@ -213,6 +201,7 @@ const SongList = ({
           type="button"
           className="action-button"
           onClick={handleToggleLike}
+          disabled={likeMutation.isLoading}
         >
           {isLiked ? (
             <BsHeartFill className="text-red-600 text-md" />

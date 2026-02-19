@@ -124,8 +124,8 @@ const AccessChip = ({
     );
   }
 
-  if (song.accessType === "purchase-only" && song?.basePrice?.amount > 0 && !purchased) {
-    const priceNumber = Number(song?.basePrice?.amount);
+  if (song.accessType === "purchase-only" && song?.price?.amount > 0 && !purchased) {
+    const priceNumber = Number(song?.price?.amount);
     const canPay = Number.isFinite(priceNumber) && priceNumber > 0;
     const symbol = getCurrencySymbol(song?.basePrice?.currency);
 
@@ -152,9 +152,9 @@ const AccessChip = ({
               onSubscribeRequired?.(song.artist, "purchase", song);
             }
           }}
-          aria-label={`Buy for ${symbol}${song?.basePrice?.amount}`}
+          aria-label={`Buy for ${symbol}${song?.price?.amount}`}
         >
-          Buy {symbol}{song?.basePrice?.amount}
+          Buy {symbol}{song?.price?.amount}
         </button>
         <CurrencySelectionModal
           open={showCurrencyModal}
@@ -168,7 +168,7 @@ const AccessChip = ({
   }
 
 
-  if (song?.accessType === "purchase-only" && song?.convertedPrices[0]?.amount === 0) {
+  if (song?.accessType === "purchase-only" && song?.price?.amount === 0) {
     return (
       <>
         <span className={`${btnBase} bg-slate-600/80 text-white`}>Album</span>

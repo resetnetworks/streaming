@@ -130,7 +130,8 @@ export const selectSongsForDisplay = createSelector(
     basePrice: song.basePrice,        // ✅ Price for purchase-only
     album: song.album,                // ✅ Debug field
     createdAt: song.createdAt,
-    isPublished: song.isPublished
+    isPublished: song.isPublished,
+    releaseDate: song.releaseDate,
   }))
 );
 

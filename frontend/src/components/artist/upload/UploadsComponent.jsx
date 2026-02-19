@@ -130,7 +130,7 @@ const UploadsComponent = () => {
               </span>
               <div className="flex items-center gap-1 text-sm text-white/60">
                 <LuCalendarDays className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate">{formatDate(item.createdAt)}</span>
+                <span className="truncate">{formatDate(item.createdAt) || formatDate(item.releaseDate)}</span>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ const UploadsComponent = () => {
           </span>
         </div>
         <span className="text-right text-white/40 text-sm">
-          {formatDate(item.createdAt)}
+          {formatDate(item.createdAt || item.releaseDate)}
         </span>
       </div>
     </div>

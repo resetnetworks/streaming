@@ -16,6 +16,7 @@ import { formatDuration } from "../../utills/helperFunctions";
 import SubscribeModal from "../../components/user/SubscribeModal";
 import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import LoadingOverlay from "../../components/user/Home/LoadingOverlay";
+import { useLikeSong,useLikedSongs } from "../../hooks/api/useSongs";
 
 // React Query imports
 import { useSong, useArtistSingles } from "../../hooks/api/useSongs";
@@ -27,8 +28,6 @@ import {
   play,
   pause,
 } from "../../features/playback/playerSlice";
-import { toggleLikeSong } from "../../features/auth/authSlice";
-import { selectLikedSongIds } from "../../features/auth/authSelectors";
 
 // Subscription utilities
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
@@ -62,6 +61,9 @@ export default function Song() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { songId } = useParams();
+  const likeMutation = useLikeSong();
+const { data: likedData } = useLikedSongs(20);
+
   
   // State for modals
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
@@ -92,6 +94,14 @@ export default function Song() {
 
   // React Query for fetching song data
   const { data: song, isLoading, isError, error } = useSong(songId);
+  const likedSongs =
+  likedData?.pages?.flatMap((page) => page.songs) || [];
+
+const isLiked = likedSongs.some(
+  (likedSong) => likedSong._id === song?._id
+);
+
+
 
   // Get artist ID from song
   const artistId = song?.artist?._id || song?.artist;
@@ -111,9 +121,6 @@ export default function Song() {
   // Current user from Redux
   const currentUser = useSelector((state) => state.auth?.user);
   
-  // Get liked songs
-  const likedSongIds = useSelector(selectLikedSongIds);
-  const isLiked = likedSongIds.includes(songId);
 
   // Get player state directly from Redux store
   const isPlaying = useSelector((state) => state.player?.isPlaying || false);
@@ -155,24 +162,26 @@ export default function Song() {
     handlePlaySong();
   };
 
-  // Toggle favorite
-  const handleToggleLike = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleToggleLike = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    try {
-      const resultAction = await dispatch(toggleLikeSong(songId));
-      if (toggleLikeSong.fulfilled.match(resultAction)) {
-        toast.success(
-          !isLiked ? "Added to Liked Songs" : "Removed from Liked Songs"
-        );
-      } else if (toggleLikeSong.rejected.match(resultAction)) {
-        toast.error(resultAction.payload || "Failed to update like");
-      }
-    } catch (err) {
-      toast.error("Something went wrong");
-    }
-  };
+  likeMutation.mutate(song?._id, {
+    onSuccess: () => {
+      toast.success(
+        isLiked
+          ? "Removed from Liked Songs"
+          : "Added to Liked Songs"
+      );
+    },
+    onError: () => {
+      toast.error("Failed to update like");
+    },
+  });
+};
+
+
+
 
   // Check if song is purchased
   const isSongPurchased = currentUser?.purchasedSongs?.includes(song?._id);
@@ -495,6 +504,7 @@ export default function Song() {
                     {/* Like Button */}
                     <button
                       onClick={handleToggleLike}
+                      disabled={likeMutation.isLoading}
                       className="p-2.5 sm:p-3.5 rounded-full text-gray-300 border border-gray-700 hover:bg-gray-800/50 hover:text-red-600 transition-colors group"
                     >
                       {isLiked ? (

@@ -12,10 +12,17 @@ export const songApi = {
   },
 
   fetchByArtist: async ({ artistId, page = 1, limit = 10 }) => {
-    const res = await axios.get(`/songs/artist/${artistId}?page=${page}&limit=${limit}`);
+    const res = await axios.get(
+      `/songs/artist/${artistId}?page=${page}&limit=${limit}`
+    );
     return {
       songs: res.data.songs || [],
-      pagination: res.data.pagination || { page, limit, total: 0, totalPages: 1 },
+      pagination: res.data.pagination || {
+        page,
+        limit,
+        total: 0,
+        totalPages: 1,
+      },
       artistInfo: res.data.artist || null,
       page,
     };
@@ -26,39 +33,53 @@ export const songApi = {
     return res.data.songs || [];
   },
 
-  fetchAllSingles: async ({ page = 1, limit = 10 } = {}) => {
-    const res = await axios.get(`/songs/singles?page=${page}&limit=${limit}`);
-    return {
-      songs: res.data.songs || [],
-      pagination: res.data.pagination || { page, limit, total: 0, totalPages: 1 }
-    };
-  },
+fetchAllSingles: async ({ page = 1, limit = 10 } = {}) => {
+  const res = await axios.get(`/songs/singles?page=${page}&limit=${limit}`);
+
+  return {
+    songs: res.data.songs || [],
+    pagination: {
+      page: res.data.currentPage,
+      limit,
+      total: res.data.totalSongs,
+      totalPages: res.data.totalPages,
+    },
+  };
+},
+
 
   fetchSinglesByArtist: async ({ artistId, page = 1, limit = 10 }) => {
-    const res = await axios.get(`/songs/singles/artist/${artistId}?page=${page}&limit=${limit}`);
+    const res = await axios.get(
+      `/songs/singles/artist/${artistId}?page=${page}&limit=${limit}`
+    );
     return {
       songs: res.data.songs || [],
-      pagination: res.data.pagination || { page, limit, total: 0, totalPages: 1 },
+      pagination: res.data.pagination || {
+        page,
+        limit,
+        total: 0,
+        totalPages: 1,
+      },
       artistInfo: res.data.artist || null,
       page,
     };
   },
 
   fetchLikedSongs: async ({ page = 1, limit = 20 } = {}) => {
-    const res = await axios.get('/songs/liked', {
-      params: { page, limit }
+    const res = await axios.get("/songs/liked", {
+      params: { page, limit },
     });
     return {
       songs: res.data.songs || [],
       total: res.data.total || 0,
       page: res.data.page || page,
-      pages: res.data.pages || 1
+      pages: res.data.pages || 1,
     };
   },
 
   fetchMatchingGenreSongs: async ({ page = 1, limit = 20 } = {}) => {
-    const res = await axios.get('/songs/matching-genre', {
-      params: { page, limit }
+    const res = await axios.get("/songs/matching-genre", {
+      params: { page, limit },
     });
     return {
       songs: res.data.songs || [],
@@ -67,36 +88,39 @@ export const songApi = {
         page: res.data.page || page,
         limit,
         total: res.data.total || 0,
-        totalPages: res.data.pages || 1
-      }
+        totalPages: res.data.pages || 1,
+      },
     };
   },
 
-  fetchByGenre: async ({ genre, page = 1, limit = 20 } = {}) => {
-    const res = await axios.get(`/songs/genre/${encodeURIComponent(genre)}?page=${page}&limit=${limit}`);
+  fetchByGenre: async ({ genre, page = 1, limit = 20 }) => {
+    const res = await axios.get(
+      `/songs/genre/${encodeURIComponent(genre)}?page=${page}&limit=${limit}`
+    );
     return {
       songs: res.data.songs || [],
       pagination: {
         page: res.data.page || page,
         limit,
         total: res.data.total || 0,
-        totalPages: res.data.pages || 1
+        totalPages: res.data.pages || 1,
       },
       genre,
     };
   },
 
-  create: async (formData) => {
-    const res = await axios.post("/songs", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  /**
+   * IMPORTANT:
+   * audioKey / coverImageKey yahan pe already generated honge
+   * (presigned upload flow ke baad)
+   */
+  create: async (data) => {
+    const res = await axios.post("/songs", data);
     return res.data.song;
   },
 
-  update: async ({ songId, formData }) => {
-    const res = await axios.put(`/songs/${songId}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  update: async ({ songId, data }) => {
+    const res = await axios.put(`/songs/${songId}`, data);
     return res.data.song;
   },
 
@@ -105,7 +129,12 @@ export const songApi = {
     return songId;
   },
 
-  // Unlike song
+  likeSong: async (songId) => {
+  const res = await axios.put(`/users/likedsong/${songId}`);
+  return { songId, message: res.data.message };
+},
+
+
   unlikeSong: async (songId) => {
     await axios.delete(`/users/likedsong/${songId}`);
     return songId;

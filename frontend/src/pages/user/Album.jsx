@@ -116,6 +116,7 @@ export default function Album() {
       console.error("Album loading error:", albumError);
     }
   }, [albumError]);
+  
 
   // ✅ Play song handler
   const handlePlaySong = (song) => {
@@ -439,7 +440,6 @@ export default function Album() {
               onMouseLeave={() => setIsHoveringCover(false)}
               onClick={handlePlayAlbum}
             >
-              {console.log(album)}
               <img
                 src={album?.coverImage}
                 alt="Album Cover"

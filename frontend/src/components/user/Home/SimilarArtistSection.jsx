@@ -173,7 +173,7 @@ const SimilarArtistSection = () => {
       <div className="flex md:gap-2 gap-4 items-center mb-4">
         <img
           src={randomArtist?.profileImage}
-          alt={randomArtist.name}
+          alt={randomArtist?.name}
           className="md:w-12 md:h-12 w-8 h-8 object-cover rounded-full border-blue-800 border shadow-[0_0_5px_1px_#3b82f6]"
         />
         <div>
@@ -229,6 +229,7 @@ const SimilarArtistSection = () => {
             isSelected={selectedSong?._id === song._id}
           />
         ))}
+
         
         {/* Show Albums first */}
         {albums.map((album) => (

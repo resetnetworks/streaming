@@ -95,6 +95,8 @@ useEffect(() => {
 
   // 🔐 Disable Right Click & Inspect Shortcut
   useEffect(() => {
+    if (import.meta.env.MODE === "development") return;
+    
     const handleKeyDown = (e) => {
       if (
         e.key === "F12" ||

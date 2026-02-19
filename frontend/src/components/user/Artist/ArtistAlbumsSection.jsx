@@ -145,7 +145,7 @@ const ArtistAlbumsSection = ({
       }
       
       // Agar purchase-only hai lekin price 0 hai, to "Free" dikhayein
-      if (album.basePrice && album.basePrice.amount === 0) {
+      if (album?.basePrice && album?.basePrice?.amount === 0) {
         return "Free";
       }
     }
