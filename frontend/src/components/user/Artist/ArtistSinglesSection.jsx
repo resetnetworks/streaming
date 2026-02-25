@@ -27,12 +27,12 @@ const ArtistSinglesSection = ({
   onPurchaseClick, 
   onSubscribeRequired,
   processingPayment, 
-  paymentLoading 
+  paymentLoading ,
+  purchases = [],
 }) => {
   const dispatch = useDispatch();
   const singlesScrollRef = useRef(null);
   const navigate = useNavigate()
-
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedSong, setSelectedSongForPurchase] = useState(null);
 
@@ -59,6 +59,12 @@ const ArtistSinglesSection = ({
     loading: isFetchingNextPage,
     onLoadMore: fetchNextPage
   });
+
+  const isSongPurchased = (songId) => {
+  return purchases?.some(
+    (item) => item.itemType === "song" && item.itemId === songId
+  );
+};
 
   const handlePlaySong = (song) => {
     dispatch(setSelectedSong(song));
@@ -127,9 +133,13 @@ const ArtistSinglesSection = ({
   };
 
   const getSongPriceDisplay = (song) => {
-    if (currentUser?.purchasedSongs?.includes(song._id)) {
-      return "Purchased";
-    }
+    if (isSongPurchased(song._id)) {
+  return (
+    <span className="text-green-400 text-xs font-semibold">
+      Purchased
+    </span>
+  );
+}
 
     if (song.accessType === "subscription") {
       return <span className="text-blue-400 text-xs font-semibold">subs..</span>;

@@ -17,6 +17,7 @@ import SubscribeModal from "../../components/user/SubscribeModal";
 import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import LoadingOverlay from "../../components/user/Home/LoadingOverlay";
 import { useLikeSong,useLikedSongs } from "../../hooks/api/useSongs";
+import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 
 
 // React Query imports
@@ -64,6 +65,11 @@ export default function Song() {
   const { songId } = useParams();
   const likeMutation = useLikeSong();
 const { data: likedData } = useLikedSongs(20);
+const { data: purchaseData } = useUserPurchases();
+
+const purchases = Array.isArray(purchaseData?.history)
+  ? purchaseData.history
+  : [];
 
   
   // State for modals
@@ -75,6 +81,22 @@ const { data: likedData } = useLikedSongs(20);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [isHoveringCover, setIsHoveringCover] = useState(false);
+
+  const purchasedSongIds = React.useMemo(() => {
+  return new Set(
+    purchases
+      ?.filter(item => item.itemType === "song")
+      .map(item => item.itemId)
+  );
+}, [purchases]);
+
+const purchasedAlbumIds = React.useMemo(() => {
+  return new Set(
+    purchases
+      ?.filter(item => item.itemType === "album")
+      .map(item => item.itemId)
+  );
+}, [purchases]);
   
   // ✅ Payment Gateway hook
   const { 
@@ -185,7 +207,6 @@ const isLiked = likedSongs.some(
 
 
   // Check if song is purchased
-  const isSongPurchased = currentUser?.purchasedSongs?.includes(song?._id);
   const isSubscriptionSong = song?.accessType === "subscription";
 
   // ✅ Purchase handler
@@ -265,12 +286,16 @@ const isLiked = likedSongs.some(
       albumsScrollRef?.current?.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
   };
-
+const isSongPurchased = purchasedSongIds.has(song?._id);
   // Get song price display
   const getSongPriceDisplay = (songItem) => {
-  if (currentUser?.purchasedSongs?.includes(songItem?._id)) {
-    return "Purchased";
-  }
+  if (purchasedSongIds.has(songItem?._id)) {
+  return (
+    <span className="text-green-400 text-xs font-semibold">
+      Purchased
+    </span>
+  );
+}
 
   if (songItem?.accessType === "subscription") {
     return (
@@ -318,9 +343,13 @@ const isLiked = likedSongs.some(
 
   // Get album price display
   const getAlbumPriceDisplay = (album) => {
-    if (currentUser?.purchasedAlbums?.includes(album._id)) {
-      return "Purchased";
-    }
+    if (purchasedAlbumIds.has(album?._id)) {
+  return (
+    <span className="text-green-400 text-xs font-semibold">
+      Purchased
+    </span>
+  );
+}
 
     if (album.accessType === "subscription") {
       return <span className="text-blue-400 text-xs font-semibold">subs..</span>;

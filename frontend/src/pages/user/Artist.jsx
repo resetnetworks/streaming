@@ -300,6 +300,7 @@ const Artist = () => {
           artistId={artistId}
           currentUser={currentUser}
           artist={artist}
+          purchases={userPurchases}
           onPurchaseClick={handlePurchaseClick}
           onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
