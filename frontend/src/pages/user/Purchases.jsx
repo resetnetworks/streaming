@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../../features/songs/songSlice";
 import PageSEO from "../../components/PageSeo/PageSEO";
-import {
-  fetchUserSubscriptions,
-  fetchUserPurchases,
-} from "../../features/payments/userPaymentSlice";
 import { useNavigate } from "react-router-dom";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
@@ -14,15 +9,28 @@ import SongList from "../../components/user/SongList";
 import { formatDuration, getAvatarColor } from "../../utills/helperFunctions";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { useUserDashboard } from "../../hooks/api/useUserDashboard";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 const Purchases = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [page, setPage] = useState(1);
   const [librarySongs, setLibrarySongs] = useState([]);
   const recentScrollRef = useRef(null);
   const observerRef = useRef();
+  const {
+  purchases,
+  subscriptions,
+  isLoading: dashboardLoading,
+} = useUserDashboard();
+
+const purchasedAlbums = purchases?.albums || [];
+const purchasedSongs = purchases?.songs || [];
+const activeSubscriptions = subscriptions || [];
+
   
   // ✅ Added scroll refs for artists and albums
   const artistsScrollRef = useRef(null);
@@ -31,27 +39,6 @@ const Purchases = () => {
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const allSongsStatus = useSelector((state) => state.songs.status);
   const totalPages = useSelector((state) => state.songs.totalPages);
-
-  const subscriptions = useSelector((state) => state.userDashboard.subscriptions);
-  const purchases = useSelector((state) => state.userDashboard.purchases);
-  const dashboardLoading = useSelector((state) => state.userDashboard.loading);
-
-  useEffect(() => {
-    dispatch(fetchUserSubscriptions());
-    dispatch(fetchUserPurchases());
-  }, [dispatch]);
-
-  useEffect(() => {
-    dispatch(fetchAllSongs({ type: "library", page, limit: 20 })).then((res) => {
-      if (res.payload?.songs) {
-        setLibrarySongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
-      }
-    });
-  }, [dispatch, page]);
 
   const handlePlaySong = (songId) => {
     dispatch(setSelectedSong(songId));
@@ -174,10 +161,10 @@ const Purchases = () => {
       >
         {/* ✅ Album Cover */}
         <div className="w-36 h-36 sm:w-40 sm:h-40 relative rounded-xl overflow-hidden border-2 border-blue-500 shadow-md bg-gray-700">
-          {!imageError && album.coverUrl ? (
+          {!imageError && album?.coverImage ? (
             <img
-              src={album.coverUrl}
-              alt={album.title}
+              src={album?.coverImage}
+              alt={album?.title}
               className="w-full h-full object-cover"
               onError={() => setImageError(true)}
             />
@@ -254,7 +241,7 @@ const Purchases = () => {
               </h2>
               
               {/* ✅ Scroll buttons for artists (desktop only) */}
-              {subscriptions.length > 0 && (
+              {activeSubscriptions.length > 0 && (
                 <div className="hidden md:flex items-center gap-2">
                   <button
                     type="button"
@@ -287,12 +274,12 @@ const Purchases = () => {
                   </div>
                 ))}
               </div>
-            ) : subscriptions.length > 0 ? (
+            ) : activeSubscriptions.length > 0 ? (
               <div 
                 ref={artistsScrollRef}
                 className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-2"
               >
-                {subscriptions.map((sub) => (
+                {activeSubscriptions.map((sub) => (
                   <ArtistAvatar 
                     key={sub._id} 
                     artist={sub?.artist}
@@ -314,7 +301,7 @@ const Purchases = () => {
               </h2>
               
               {/* ✅ Scroll buttons for albums (desktop only) */}
-              {purchases.albums?.length > 0 && (
+              {purchasedAlbums.length > 0 && (
                 <div className="hidden md:flex items-center gap-2">
                   <button
                     type="button"
@@ -348,12 +335,12 @@ const Purchases = () => {
                   </div>
                 ))}
               </div>
-            ) : purchases.albums?.length > 0 ? (
+            ) : purchasedAlbums.length > 0 ? (
               <div 
                 ref={albumsScrollRef}
                 className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-2"
               >
-                {purchases.albums.map((album) => (
+                {purchasedAlbums.map((album) => (
                   <AlbumCard key={album._id} album={album} />
                 ))}
               </div>
@@ -379,13 +366,13 @@ const Purchases = () => {
                   </div>
                 ))}
               </div>
-            ) : purchases.songs?.length > 0 ? (
+            ) : purchasedSongs.length > 0 ? (
               <div className="flex flex-col gap-4">
-                {purchases.songs.map((song) => (
+                {purchasedSongs.map((song) => (
                   <SongList
                     key={song._id}
                     songId={song._id}
-                    img={song.coverUrl || "/images/placeholder.png"}
+                    img={song?.coverImage || "/images/placeholder.png"}
                     songName={song.title}
                     singerName={song.artist?.name || "Unknown Artist"}
                     seekTime={formatDuration(song.duration || 0)}

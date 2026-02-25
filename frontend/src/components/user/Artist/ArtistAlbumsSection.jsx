@@ -10,10 +10,10 @@ import { useArtistAlbums } from "../../../hooks/api/useAlbums";
 
 const ArtistAlbumsSection = ({ 
   artistId, 
-  currentUser, 
   onPurchaseClick, 
   processingPayment, 
-  paymentLoading 
+  paymentLoading,
+  purchases = [],
 }) => {
   const navigate = useNavigate();
   const recentScrollRef = useRef(null);
@@ -111,48 +111,58 @@ const ArtistAlbumsSection = ({
   };
 
   // Album price display logic
-  const getAlbumPriceDisplay = (album) => {
-    // Priority 1: Agar user ne album pehle se khareed liya hai
-    if (currentUser?.purchasedAlbums?.includes(album._id)) {
-      return "Purchased";
+const getAlbumPriceDisplay = (album) => {
+  const isPurchased = purchases.some((purchase) => {
+    return (
+      purchase?.itemType === "album" &&
+      String(purchase.itemId) === String(album._id)
+    );
+  });
+
+  if (isPurchased) {
+    return (
+      <span className="text-green-400 text-xs font-semibold">
+        Purchased
+      </span>
+    );
+  }
+
+  if (album.accessType === "subscription") {
+    return (
+      <span className="text-blue-400 text-xs font-semibold">
+        subs..
+      </span>
+    );
+  }
+
+  if (album.accessType === "purchase-only") {
+    if (album.basePrice?.amount > 0) {
+      const symbol = getCurrencySymbol(album.basePrice.currency);
+
+      return (
+        <button
+          className={`text-white sm:text-xs text-[10px] px-3 py-1 rounded ${
+            processingPayment || paymentLoading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
+          onClick={() => handleAlbumPurchaseClick(album)}
+          disabled={processingPayment || paymentLoading}
+        >
+          {processingPayment || paymentLoading
+            ? "..."
+            : `Buy ${symbol}${album.basePrice.amount}`}
+        </button>
+      );
     }
 
-    // Priority 2: Agar access type 'subscription' hai
-    if (album.accessType === "subscription") {
-      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+    if (album.basePrice?.amount === 0) {
+      return "Free";
     }
+  }
 
-    // Priority 3: Agar access type 'purchase-only' hai
-    if (album.accessType === "purchase-only") {
-      // Check karein ki price valid hai aur 0 se zyada hai
-      if (album.basePrice && album.basePrice.amount > 0) {
-        const basePrice = album.basePrice;
-        const symbol = getCurrencySymbol(basePrice.currency);
-        
-        return (
-          <button
-            className={`text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors relative ${
-              processingPayment || paymentLoading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
-            onClick={() => handleAlbumPurchaseClick(album)}
-            disabled={processingPayment || paymentLoading}
-          >
-            {processingPayment || paymentLoading ? "..." : `Buy ${symbol}${basePrice.amount}`}
-          </button>
-        );
-      }
-      
-      // Agar purchase-only hai lekin price 0 hai, to "Free" dikhayein
-      if (album?.basePrice && album?.basePrice?.amount === 0) {
-        return "Free";
-      }
-    }
-
-    // Agar koi bhi condition match nahi hoti, to kuch na dikhayein
-    return null;
-  };
+  return null;
+};
 
   return (
     <>

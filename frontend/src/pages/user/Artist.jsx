@@ -22,6 +22,7 @@ import { useSubscriptionPayment } from "../../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 import { fetchUserSubscriptions } from "../../features/payments/userPaymentSlice";
+import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -30,6 +31,8 @@ const Artist = () => {
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const dispatch = useDispatch();
+  const { data } = useUserPurchases();
+  const userPurchases = Array.isArray(data?.history) ? data.history : [];
   
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -202,7 +205,7 @@ const Artist = () => {
             
             <ArtistAlbumsSection
               artistId={artistId}
-              currentUser={currentUser}
+              purchases={userPurchases}
               onPurchaseClick={handlePurchaseClick}
               onSubscribeRequired={handleSubscribeDecision}
               processingPayment={processingPayment}
@@ -286,13 +289,11 @@ const Artist = () => {
         
         <ArtistAlbumsSection
           artistId={artistId}
-          currentUser={currentUser}
           onPurchaseClick={handlePurchaseClick}
           onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
-          albums={albumsData} // Direct albums array pass करें
-          albumsLoading={albumsLoading}
+          purchases={userPurchases}
         />
         
         <ArtistSinglesSection

@@ -83,7 +83,7 @@ const SingleUpload = ({ onCancel }) => {
         title: formData.title,
         duration: formData.tracks[0].durationInSeconds || 180,
         accessType: formData.accessType,
-        genres: formData.genres,
+        genre: formData.genre,
         releaseDate: formData.date,
         albumOnly: false,
         description: formData.description || "",

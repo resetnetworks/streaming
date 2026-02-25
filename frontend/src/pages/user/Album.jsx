@@ -7,6 +7,7 @@ import { RiPlayFill } from "react-icons/ri";
 
 // ✅ REACT QUERY for album data
 import { useAlbum } from "../../hooks/api/useAlbums";
+import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 
 // ✅ REDUX for player
 import {
@@ -72,6 +73,9 @@ export default function Album() {
   const { albumId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { data } = useUserPurchases();
+const userPurchases = Array.isArray(data?.history) ? data.history : [];
 
   // ✅ REACT QUERY: Album data
   const {
@@ -331,7 +335,11 @@ export default function Album() {
 
   // ✅ Check purchase status
   const songs = album?.songs ? [...album.songs] : [];
-  const isAlbumPurchased = currentUser?.purchasedAlbums?.includes(album?._id);
+  const isAlbumPurchased = userPurchases.some(
+  (purchase) =>
+    purchase?.itemType === "album" &&
+    String(purchase.itemId) === String(album?._id)
+);
   const isSubscriptionAlbum =
     album?.accessType === "subscription" || album?.price === 0;
   const totalDuration = songs.reduce(

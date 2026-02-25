@@ -136,8 +136,8 @@ const ArtistSinglesSection = ({
     }
 
     if (song.accessType === "purchase-only") {
-      if (song?.price && song?.price?.amount > 0) {
-        const basePrice = song?.price;
+      if (song?.basePrice && song?.basePrice?.amount > 0) {
+  const basePrice = song?.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
         
         return (
@@ -158,7 +158,6 @@ const ArtistSinglesSection = ({
           </button>
         );
       }
-      
       if (song.basePrice && song.basePrice.amount === 0) {
         return "album";
       }

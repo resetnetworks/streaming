@@ -19,6 +19,7 @@ import {
 } from "../../features/payments/paymentSelectors";
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
+import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 import { toast } from "sonner";
 
 // ✅ Import Currency Utilities
@@ -49,6 +50,8 @@ const useDebounce = (value, delay) => {
 const Search = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { data } = useUserPurchases();
+const userPurchases = Array.isArray(data?.history) ? data.history : [];
   
   // ✅ URL Search Params Hook
   const [searchParams, setSearchParams] = useSearchParams();
@@ -203,9 +206,20 @@ const Search = () => {
   // ✅ Updated Song Price Display Logic using utilities
   const getSongPriceComponent = (song) => {
     // Priority 1: Already purchased
-    if (currentUser?.purchasedSongs?.includes(song._id)) {
-      return "Purchased";
-    }
+    const isPurchased = userPurchases.some((purchase) => {
+  return (
+    purchase?.itemType === "song" &&
+    String(purchase.itemId) === String(song._id)
+  );
+});
+
+if (isPurchased) {
+  return (
+    <span className="text-green-400 text-xs font-semibold">
+      Purchased
+    </span>
+  );
+}
 
     // Priority 2: Subscription songs
     if (song.accessType === "subscription") {
@@ -249,9 +263,20 @@ const Search = () => {
   // ✅ Updated Album Price Display Logic using utilities
   const getAlbumPriceComponent = (album) => {
     // Priority 1: Already purchased
-    if (currentUser?.purchasedAlbums?.includes(album._id)) {
-      return "Purchased";
-    }
+   const isPurchased = userPurchases.some((purchase) => {
+  return (
+    purchase?.itemType === "album" &&
+    String(purchase.itemId) === String(album._id)
+  );
+});
+
+if (isPurchased) {
+  return (
+    <span className="text-green-400 text-xs font-semibold">
+      Purchased
+    </span>
+  );
+}
 
     // Priority 2: Subscription albums
     if (album.accessType === "subscription") {
@@ -394,7 +419,6 @@ const Search = () => {
                         key={artist._id}
                         title={artist.name}
                         price="Artist"
-                        singer="Artist"
                         image={artist.profileImage || "/images/placeholder.png"}
                         onPlay={() => navigate(`/artist/${artist.slug}`)}
                       />
@@ -411,7 +435,7 @@ const Search = () => {
                     {results.albums.map((album) => (
                       <div key={album._id}>
                         <AlbumCard
-                          tag={`#${album.title || "music"}`}
+                          tag={`${album.title || "music"}`}
                           artists={album.artist?.name || "Various Artists"}
                           image={album.coverImage || "/images/placeholder.png"}
                           price={getAlbumPriceComponent(album)}

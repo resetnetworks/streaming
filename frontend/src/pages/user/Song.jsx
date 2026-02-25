@@ -281,7 +281,7 @@ const isLiked = likedSongs.some(
   }
 
   if (songItem?.accessType === "purchase-only") {
-    const priceData = songItem?.price;
+    const priceData = songItem?.basePrice;
 
     if (priceData?.amount > 0) {
       const symbol =

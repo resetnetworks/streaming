@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
@@ -11,14 +10,14 @@ import CurrencySelectionModal from "../CurrencySelectionModal";
 const AlbumsSection = ({ 
   onPurchaseClick, 
   processingPayment, 
-  paymentLoading 
+  paymentLoading,
+  purchases = []
 }) => {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
-  const purchases = useSelector((state) => state.userDashboard.purchases);
 
 
   // Use React Query for infinite scroll

@@ -356,7 +356,7 @@ setCoverImageFile(compressedFile);
       date,
       description,
       isrc: isrc.trim(),
-      genres: selectedGenres,
+      genre: selectedGenres,
       coverImageFile,
       accessType,
       price: accessType === "purchase-only" ? parseFloat(price) : null,

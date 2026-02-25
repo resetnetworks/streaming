@@ -73,7 +73,7 @@ const AlbumsPage = () => {
   } = useAlbumsInfinite(12);
 
   // Flatten all albums from pages
-  const allAlbums = data?.pages?.flatMap(page => page.albums) || [];
+  const allAlbums = data?.pages?.flatMap(page => page?.data ?? []) ?? [];
 
   // Get unique genres for filter dropdown
   const uniqueGenres = React.useMemo(() => {
@@ -536,7 +536,7 @@ const AlbumsPage = () => {
                           artists={album.artist?.name || "Various Artists"}
                           image={album.coverImage || "/images/album-placeholder.jpg"}
                           onClick={() => handleAlbumClick(album)}
-                          price={album.accessType === "purchase-only" ? "Premium" : "Free"}
+                          price={album.accessType === "purchase-only" ? "Premium" : "sub.."}
                         />
                       </div>
                     ))}
@@ -584,7 +584,7 @@ const AlbumsPage = () => {
                               ? "bg-yellow-900/30 text-yellow-300 border border-yellow-900/50" 
                               : "bg-green-900/30 text-green-300 border border-green-900/50"
                           }`}>
-                            {album.accessType === "purchase-only" ? "Premium" : "Free"}
+                            {album.accessType === "purchase-only" ? "Premium" : "sub.."}
                           </span>
                         </div>
                       </div>

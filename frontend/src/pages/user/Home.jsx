@@ -23,11 +23,17 @@ import { resetPaymentState } from "../../features/payments/paymentSlice";
 import GenreSection from "../../components/user/Home/GenreSection";
 import ArtistSection from "../../components/user/Home/ArtistSection";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
-import { fetchUserPurchases } from "../../features/payments/userPaymentSlice";
+import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const {
+  data: userPurchases,
+  isLoading: purchasesLoading,
+  refetch: refetchPurchases,
+} = useUserPurchases();
   
 
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
@@ -50,10 +56,6 @@ const Home = () => {
   } = usePaymentGateway();
 
   const currentUser = useSelector((state) => state.auth.user);
-
-  useEffect(() => {
-  dispatch(fetchUserPurchases());
-}, [dispatch]);
 
 
   useEffect(() => {
@@ -196,10 +198,11 @@ const Home = () => {
 
           {/* ✅ Updated AlbumsSection with proper loading states */}
           <AlbumsSection
-            onPurchaseClick={handlePurchaseClick} // Now supports currency data
-            processingPayment={processingPayment}
-            paymentLoading={paymentLoading}
-          />
+  onPurchaseClick={handlePurchaseClick}
+  processingPayment={processingPayment}
+  paymentLoading={paymentLoading}
+  purchases={userPurchases || []}
+/>
 
           <GenreSection />
 

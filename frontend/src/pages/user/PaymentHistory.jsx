@@ -1,11 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  selectPurchaseHistory,
-  selectDashboardLoading,
-  selectDashboardError,
-} from '../../features/payments/paymentSelectors';
-import { fetchUserPurchases } from '../../features/payments/userPaymentSlice';
+import { useState, useMemo, useCallback } from 'react';
 import {
   FiChevronDown,
   FiChevronUp,
@@ -15,22 +8,17 @@ import {
   FiCheckCircle,
 } from 'react-icons/fi';
 import UserHeader from '../../components/user/UserHeader';
+import { useUserPurchases } from '../../hooks/api/useUserDashboard';
 
 const PaymentHistory = () => {
-  const dispatch = useDispatch();
   const [expanded, setExpanded] = useState(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const { data, isLoading, isError, error } = useUserPurchases();
+  const songs = data?.songs || [];
+  const albums = data?.albums || [];
+  const history = data?.history || [];
 
-  const songs = useSelector(state => state.songs.allSongs);
-  const albums = useSelector(state => state.albums.allAlbums);
-  const history = useSelector(selectPurchaseHistory);
-  const loading = useSelector(selectDashboardLoading);
-  const error = useSelector(selectDashboardError);
-
-  useEffect(() => {
-    dispatch(fetchUserPurchases());
-  }, [dispatch]);
 
   const toggle = (id) => setExpanded(expanded === id ? null : id);
 
@@ -59,16 +47,19 @@ const PaymentHistory = () => {
     return `${symbol}${price}`;
   }, [getCurrencySymbol]);
 
-  const resolveName = useCallback(
-    (p) => {
-      if (p.itemType === 'song')
-        return songs?.find((s) => s._id === p.itemId)?.title || 'Song';
-      if (p.itemType === 'album')
-        return albums?.find((a) => a._id === p.itemId)?.title || 'Album';
-      return p.artistName || 'Artist';
-    },
-    [songs, albums]
-  );
+ const resolveName = useCallback(
+  (p) => {
+    if (p.itemType === 'song')
+      return songs.find((s) => s._id === p.itemId)?.title || 'Song';
+
+    if (p.itemType === 'album')
+      return albums.find((a) => a._id === p.itemId)?.title || 'Album';
+
+    return 'Artist';
+  },
+  [songs, albums]
+);
+
 
   const filtered = useMemo(() => {
     const sorted = [...history].sort(
@@ -80,7 +71,8 @@ const PaymentHistory = () => {
       const q = search.toLowerCase();
 
       const matchSearch =
-        name.includes(q) || p.paymentId.toLowerCase().includes(q);
+  name.includes(q) || p.paymentId.toLowerCase().includes(q);
+
 
       const matchType =
         typeFilter === 'all'
@@ -130,29 +122,29 @@ const PaymentHistory = () => {
           </div>
 
           {/* States */}
-          {loading && (
+          {isLoading && (
             <p className="text-center py-12 text-slate-400">Loading…</p>
           )}
           {error && (
             <p className="text-center py-12 text-red-400">{error}</p>
           )}
-          {!loading && !error && filtered.length === 0 && (
+          {!isLoading && !error && filtered.length === 0 && (
             <p className="text-center py-12 text-slate-400">
               No payments found
             </p>
           )}
 
           {/* List */}
-          {!loading && !error && filtered.length > 0 && (
+          {!isLoading && !error && filtered.length > 0 && (
             <div className="space-y-3">
               {filtered.map((p) => (
                 <div
-                  key={p._id}
+                  key={`${p.itemId}-${p.purchasedAt}`}
                   className="border border-slate-700 rounded-lg bg-slate-800/70 hover:bg-slate-700/70 transition"
                 >
                   <button
                     className="w-full flex items-center justify-between p-4 text-left"
-                    onClick={() => toggle(p._id)}
+                    onClick={() => toggle(`${p.itemId}-${p.purchasedAt}`)}
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-9 h-9 rounded-full bg-blue-900/40 flex items-center justify-center">
@@ -171,9 +163,9 @@ const PaymentHistory = () => {
 
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-sm">
-                        {formatPrice(p.price, p.currency)}
+                        {formatPrice(p.amount, p.currency)}
                       </span>
-                      {expanded === p._id ? (
+                      {expanded === `${p.itemId}-${p.purchasedAt}` ? (
                         <FiChevronUp className="text-slate-400" />
                       ) : (
                         <FiChevronDown className="text-slate-400" />
@@ -181,12 +173,8 @@ const PaymentHistory = () => {
                     </div>
                   </button>
 
-                  {expanded === p._id && (
+                  {expanded === `${p.itemId}-${p.purchasedAt}` && (
                     <div className="border-t border-slate-700 px-4 pb-4 pt-3 text-xs grid grid-cols-2 gap-x-6 gap-y-3">
-                      <div>
-                        <span className="text-slate-400">Payment ID</span>
-                        <p className="text-slate-200">{p.paymentId}</p>
-                      </div>
                       <div>
                         <span className="text-slate-400">Type</span>
                         <p className="capitalize text-slate-200">
@@ -199,7 +187,7 @@ const PaymentHistory = () => {
                       </div>
                       <div>
                         <span className="text-slate-400">Amount</span>
-                        <p className="text-slate-200">{formatPrice(p.price, p.currency)}</p>
+                        <p className="text-slate-200">{formatPrice(p.amount, p.currency)}</p>
                       </div>
                       <div>
                         <span className="text-slate-400">Currency</span>
