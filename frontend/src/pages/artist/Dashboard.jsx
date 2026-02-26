@@ -188,10 +188,6 @@ export default function Dashboard() {
 
   // Handle upload completion
   const handleUploadComplete = () => {
-    // Show success message
-    if (currentUploadPage === "single") {
-      toast.success("Song uploaded successfully!");
-    }
 
     // Reset and go back to uploads tab
     dispatch(resetAllAlbumState());

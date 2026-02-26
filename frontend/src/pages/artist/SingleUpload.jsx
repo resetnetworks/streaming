@@ -44,7 +44,6 @@ const SingleUpload = ({ onCancel }) => {
               setCoverImageUploadProgress(progress);
             }
           });
-          toast.success("Cover image uploaded successfully!");
         } catch (error) {
           console.error("Cover image upload failed:", error);
           throw new Error(`Cover image upload failed: ${error.message}`);
@@ -67,7 +66,6 @@ const SingleUpload = ({ onCancel }) => {
           });
           
           audioKey = uploadResult.s3Key;
-          toast.success("Track file uploaded successfully!");
         } catch (error) {
           console.error("Audio upload failed:", error);
           throw new Error(`Audio upload failed: ${error.message}`);
@@ -107,7 +105,7 @@ const SingleUpload = ({ onCancel }) => {
       const createdSong = await createSongMutation.mutateAsync(songData);
       
       toast.dismiss("save-metadata");
-      toast.success("Song uploaded successfully!");
+      toast.success("Track uploaded successfully!");
       
       // Optional: Call parent callback
       if (onCancel) {
