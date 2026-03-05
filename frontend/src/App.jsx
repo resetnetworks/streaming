@@ -47,16 +47,30 @@ function App() {
 
 useEffect(() => {
   if (!isAuthenticated) {
-    dispatch(getMyProfile())
-      .unwrap()
-      .catch((error) => {
-        Sentry.captureException(error);
-      })
-      .finally(() => setInitialLoad(false));
+    const token = localStorage.getItem("token") || getTokenFromCookie();
+    
+    if (token) {
+      // Token hai tabhi profile fetch karo
+      dispatch(getMyProfile())
+        .unwrap()
+        .catch((error) => {
+          Sentry.captureException(error);
+        })
+        .finally(() => setInitialLoad(false));
+    } else {
+      // Token nahi = public user, seedha load complete
+      setInitialLoad(false);
+    }
   } else {
     setInitialLoad(false);
   }
 }, [dispatch, isAuthenticated]);
+
+const getTokenFromCookie = () => {
+  const cookies = document.cookie.split('; ');
+  const tokenCookie = cookies.find(c => c.startsWith('token='));
+  return tokenCookie ? tokenCookie.split('=')[1] : null;
+};
 
 useEffect(() => {
   if (user?._id) {
@@ -197,23 +211,17 @@ useEffect(() => {
               <Route
                 path="/home"
                 element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
+                <RedirectedProtectedRoute 
                     user={user}
                   >
-                    <Pages.Home />
-                  </RedirectedProtectedRoute>
+                <Pages.Home />
+                </RedirectedProtectedRoute>
                 }
               />
               <Route
                 path="/genre/:genre"
                 element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
                     <Pages.Genre />
-                  </RedirectedProtectedRoute>
                 }
               />
               <Route
@@ -229,71 +237,37 @@ useEffect(() => {
               />
               <Route
                 path="/artists"
-                element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
-                    <Pages.Artists />
-                  </RedirectedProtectedRoute>
-                }
+                element={<Pages.Artists />}
               />
               <Route
                 path="/artist/:artistId"
-                element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
-                    <Pages.Artist />
-                  </RedirectedProtectedRoute>
-                }
+                element={<Pages.Artist />}
               />
               <Route
                 path="/purchases"
                 element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
                     <Pages.Purchases />
-                  </RedirectedProtectedRoute>
                 }
               />
               <Route
                 path="/liked-songs"
-                element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
-                    <Pages.LikedSong />
-                  </RedirectedProtectedRoute>
-                }
+                element={<Pages.LikedSong />}
               />
               <Route
                 path="/album/:albumId"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <Pages.Album />
-                  </ProtectedRoute>
                 }
               />
               <Route
                 path="/song/:songId"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
                     <Pages.Song />
-                  </ProtectedRoute>
                 }
               />
               <Route
                 path="/search"
-                element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated}>
-                    <Pages.Search />
-                  </ProtectedRoute>
-                }
+                element={<Pages.Search />}
               />
             </Route>
 

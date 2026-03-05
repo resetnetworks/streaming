@@ -2,10 +2,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { FaPlay, FaShoppingCart, FaCheck, FaPause } from "react-icons/fa";
+import { FaShoppingCart, FaCheck, FaPause } from "react-icons/fa";
 import { BsHeart, BsHeartFill, BsShare } from "react-icons/bs";
-import { FiMoreHorizontal } from "react-icons/fi";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
+import { RiPlayFill,RiPauseFill } from "react-icons/ri";
 import { toast } from "sonner";
 
 import UserHeader from "../../components/user/UserHeader";
@@ -17,6 +17,7 @@ import SubscribeModal from "../../components/user/SubscribeModal";
 import PaymentMethodModal from "../../components/user/PaymentMethodModal";
 import LoadingOverlay from "../../components/user/Home/LoadingOverlay";
 import { useLikeSong,useLikedSongs } from "../../hooks/api/useSongs";
+import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 
 
@@ -66,6 +67,8 @@ export default function Song() {
   const likeMutation = useLikeSong();
 const { data: likedData } = useLikedSongs(20);
 const { data: purchaseData } = useUserPurchases();
+
+const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } = usePlaybackControl();
 
 const purchases = Array.isArray(purchaseData?.history)
   ? purchaseData.history
@@ -145,10 +148,8 @@ const isLiked = likedSongs.some(
   const currentUser = useSelector((state) => state.auth?.user);
   
 
-  // Get player state directly from Redux store
-  const isPlaying = useSelector((state) => state.player?.isPlaying || false);
   const currentSong = useSelector((state) => state.player?.currentSong);
-  const isCurrentSongPlaying = currentSong?._id === songId && isPlaying;
+  const isCurrentSongPlaying = isSongPlaying(song?._id || songId);
 
   // Check if song belongs to an album
   const isFromAlbum = Boolean(
@@ -156,18 +157,20 @@ const isLiked = likedSongs.some(
   );
 
   // Handle play/pause song
-  const handlePlaySong = () => {
-    if (song) {
-      // Play the song
-      if (currentSong?._id === songId && isPlaying) {
-        dispatch(pause());
+const handlePlaySong = () => {
+  if (song) {
+    if (isSongSelected(song._id)) {
+      if (isSongPlaying(song._id)) {
+        pausePlayback();
       } else {
-        dispatch(setSelectedSong(song));
-        dispatch(play());
+        resumePlayback();
       }
+    } else {
+      dispatch(setSelectedSong(song));
+      dispatch(play());
     }
-  };
-
+  }
+};
   // Handle play other songs - FIXED
   const handlePlayOtherSong = (songData) => { 
     // Play the song
@@ -188,6 +191,10 @@ const isLiked = likedSongs.some(
   const handleToggleLike = (e) => {
   e.preventDefault();
   e.stopPropagation();
+  if(!currentUser) {
+    toast.error("You must be logged in to like songs");
+    return;
+  }
 
   likeMutation.mutate(song?._id, {
     onSuccess: () => {
@@ -438,20 +445,22 @@ const isSongPurchased = purchasedSongIds.has(song?._id);
                       onClick={handleCoverClick}
                     />
                     {/* Hover Overlay with Play Button */}
-                    <div
-                      className={`absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                        isHoveringCover ? "opacity-100" : "opacity-0"
-                      }`}
-                      onClick={handleCoverClick}
-                    >
-                      <button className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 hover:scale-110">
-                        {isCurrentSongPlaying ? (
-                          <FaPause className="w-6 h-6 text-white" />
-                        ) : (
-                          <FaPlay className="w-6 h-6 text-white ml-1" />
-                        )}
-                      </button>
-                    </div>
+            {/* Hover Overlay with Play Button */}
+<div
+  className={`absolute inset-0 bg-black/50 rounded-2xl transition-all duration-300 ${
+    isHoveringCover ? "opacity-100" : "opacity-0"
+  }`}
+  onClick={handleCoverClick}
+>
+  {/* ✅ Bottom-left small button - Album page jaisa */}
+  <button
+    onClick={(e) => { e.stopPropagation(); handlePlaySong(); }}
+    className="absolute bottom-3 left-3 bg-gray-200 text-black p-2 rounded-full hover:scale-110 transition-all duration-300"
+    type="button"
+  >
+    {isSongPlaying(song?._id) ? <RiPauseFill size={16. } /> : <RiPlayFill size={16} />}
+  </button>
+</div>
                   </div>
                 </div>
 
@@ -663,6 +672,7 @@ const isSongPurchased = purchasedSongIds.has(song?._id);
                       filteredSingles.map((single) => (
                         <div key={single._id} className="min-w-[140px] sm:min-w-[180px] flex-shrink-0">
                           <RecentPlays
+                          songId={single._id}
                             title={single.title}
                             image={
                               single.coverImage ? (
@@ -678,7 +688,6 @@ const isSongPurchased = purchasedSongIds.has(song?._id);
                             onPlay={() => handlePlayOtherSong(single)}
                             onTitleClick={() => handleSingleTitleClick(single)}
                             isSelected={currentSong?._id === single._id}
-                            price={getSongPriceDisplay(single)}
                           />
                         </div>
                       ))

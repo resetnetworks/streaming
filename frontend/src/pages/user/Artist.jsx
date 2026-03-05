@@ -4,10 +4,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import PageSEO from "../../components/PageSeo/PageSEO";
-
 import UserHeader from "../../components/user/UserHeader";
 import ArtistHeroSection from "../../components/user/Artist/ArtistHeroSection";
-import ArtistSongsSection from "../../components/user/Artist/ArtistSongsSection";
 import ArtistAlbumsSection from "../../components/user/Artist/ArtistAlbumsSection";
 import ArtistSinglesSection from "../../components/user/Artist/ArtistSinglesSection";
 import ArtistAboutSection from "../../components/user/Artist/ArtistAboutSection";
@@ -31,8 +29,14 @@ const Artist = () => {
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const dispatch = useDispatch();
-  const { data } = useUserPurchases();
-  const userPurchases = Array.isArray(data?.history) ? data.history : [];
+  const currentUser = useSelector((state) => state.auth.user);
+
+// only call hook if user exists
+const purchasesQuery = currentUser ? useUserPurchases() : { data: null };
+
+const userPurchases = Array.isArray(purchasesQuery?.data?.history)
+  ? purchasesQuery.data.history
+  : [];
   
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -41,9 +45,9 @@ const Artist = () => {
   
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  useEffect(() => {
-  dispatch(fetchUserSubscriptions());
-}, [dispatch]);
+//   useEffect(() => {
+//   dispatch(fetchUserSubscriptions());
+// }, [dispatch]);
 
   
   // React Query hooks
@@ -64,7 +68,6 @@ const Artist = () => {
   } = useArtistAlbumsSimple(artistId, 10);
   
   const paymentError = useSelector(selectPaymentError);
-  const currentUser = useSelector((state) => state.auth.user);
   
   const {
     showSubscriptionOptions,
@@ -196,13 +199,6 @@ const Artist = () => {
               />
             </div>
             
-            <ArtistSongsSection 
-              artistId={artistId} 
-              artist={null}
-              onSubscribeRequired={handleSubscribeDecision}
-              isLoading={true}
-            />
-            
             <ArtistAlbumsSection
               artistId={artistId}
               purchases={userPurchases}
@@ -280,12 +276,6 @@ const Artist = () => {
             subscriberCountData={subscriberCountData}
           />
         </div>
-        
-        <ArtistSongsSection 
-          artistId={artistId} 
-          artist={artist}
-          onSubscribeRequired={handleSubscribeDecision}
-        />
         
         <ArtistAlbumsSection
           artistId={artistId}

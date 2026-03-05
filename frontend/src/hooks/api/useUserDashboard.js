@@ -1,36 +1,37 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 import { userDashboardApi } from "../../api/userDashboardApi";
 
-// 🎯 Query Keys
 export const userDashboardKeys = {
   all: ["userDashboard"],
   purchases: () => [...userDashboardKeys.all, "purchases"],
   subscriptions: () => [...userDashboardKeys.all, "subscriptions"],
 };
 
-// 📥 QUERIES
-
-// Get user purchases
 export const useUserPurchases = (options = {}) => {
+  const currentUser = useSelector((state) => state.auth.user);
+  
   return useQuery({
     queryKey: userDashboardKeys.purchases(),
     queryFn: () => userDashboardApi.fetchPurchases(),
-    staleTime: 10 * 60 * 1000, // 5 minutes
+    staleTime: 10 * 60 * 1000,
+    enabled: !!currentUser, // ✅ Only fetch if logged in
     ...options,
   });
 };
 
-// Get user subscriptions
 export const useUserSubscriptions = (options = {}) => {
+  const currentUser = useSelector((state) => state.auth.user);
+  
   return useQuery({
     queryKey: userDashboardKeys.subscriptions(),
     queryFn: () => userDashboardApi.fetchSubscriptions(),
-    staleTime: 10 * 60 * 1000, // 5 minutes
+    staleTime: 10 * 60 * 1000,
+    enabled: !!currentUser, // ✅ Only fetch if logged in
     ...options,
   });
 };
 
-// Combined hook for dashboard (if you need both at once)
 export const useUserDashboard = () => {
   const purchasesQuery = useUserPurchases();
   const subscriptionsQuery = useUserSubscriptions();

@@ -10,81 +10,55 @@ import RecentPlays from "../RecentPlays";
 import { handlePlaySong } from "../../../utills/songHelpers";
 import { useRandomArtistWithSongs } from "../../../hooks/api/useArtists";
 
-// Album Card Component (same as MatchingGenreSection)
-const AlbumCard = ({ album, onClick, artistName }) => {
+const AlbumCard = ({ album, onClick, artistName, type }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [hasImage, setHasImage] = useState(!!album.coverImage);
   const [imageError, setImageError] = useState(false);
 
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-    setImageError(false);
-  };
-
-  const handleImageError = () => {
-    setImageError(true);
-    setHasImage(false);
-    setImageLoaded(false);
-  };
-
   return (
-    <div 
-      className="flex-shrink-0 cursor-pointer"
+    <div
+      className="min-w-[140px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group p-2"
       onClick={() => onClick(album)}
     >
-      <div className="relative w-44 bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-xl p-4 backdrop-blur-md border border-white/10 hover:border-blue-400/30 transition-all duration-300">
-        
-        {/* Album Cover Container */}
-        <div className="relative mb-3 overflow-hidden rounded-lg bg-gray-700/50">
-          {hasImage && album.coverImage && !imageError ? (
-            <>
-              {/* Image */}
-              <img
-                src={album.coverImage}
-                alt=""
-                className={`w-full h-36 object-cover ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                loading="lazy"
-              />
-              
-              {/* Loading placeholder */}
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-700/50 animate-pulse flex items-center justify-center">
-                  <BsSoundwave className="w-8 h-8 text-gray-400" />
-                </div>
-              )}
-            </>
-          ) : (
-            /* No Image Placeholder */
-            <div className="w-full h-36 bg-gradient-to-br from-gray-700/70 to-gray-800/70 flex items-center justify-center group-hover:from-gray-600/70 group-hover:to-gray-700/70 transition-all duration-300">
-              <div className="text-center">
-                <BsSoundwave className="w-12 h-12 text-gray-400 mx-auto mb-2 group-hover:text-gray-300 transition-colors" />
-                <p className="text-gray-400 text-xs group-hover:text-gray-300 transition-colors">No Cover</p>
+      <div className="relative md:w-48 md:h-48 h-32 w-32 rounded-lg overflow-hidden bg-gray-700/50">
+        {album.coverImage && !imageError ? (
+          <>
+            <img
+              src={album.coverImage}
+              alt=""
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+              loading="lazy"
+            />
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-gray-700/50 animate-pulse flex items-center justify-center">
+                <BsSoundwave className="w-8 h-8 text-gray-400" />
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
+            <BsSoundwave className="w-10 h-10 text-gray-400" />
+          </div>
+        )}
 
-        {/* Album Info */}
-        <div>
-          <h3 className="text-white font-semibold text-sm mb-1 truncate group-hover:text-blue-400 transition-colors">
-            {album.title || 'Untitled Album'}
-          </h3>
-          <p className="text-gray-400 text-xs truncate mb-1">
-            Album
+        {/* ✅ Badge - sirf type === "album" pe dikhega */}
+        {type === "album" && (
+          <div className="absolute top-0 right-2">
+            <span className="px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase bg-black backdrop-blur-sm text-blue-300 rounded-sm border-r-2 border-blue-400">
+              Album
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Info - same as RecentPlays */}
+      <div className="flex justify-between sm:items-center mt-2 sm:flex-row flex-col">
+        <div className="leading-none">
+          <p className="md:text-sm text-xs font-medium text-white truncate">
+            {album.title?.length > 10 ? album.title.slice(0, 10) + ".." : album.title || "Untitled"}
           </p>
-          {artistName && (
-            <p className="text-gray-500 text-xs truncate">
-              by {artistName}
-            </p>
-          )}
         </div>
-
-        {/* Bottom gradient accent */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-xl"></div>
       </div>
     </div>
   );
@@ -218,23 +192,27 @@ const SimilarArtistSection = () => {
       >
 
          {/* Show Singles as RecentPlays */}
-        {singles.map((song) => (
-          <RecentPlays
-            key={`song-${song._id}`}
-            onTitleClick={() => navigate(`/song/${song?.slug || song?._id}`)}
-            title={song.title}
-            price="Subs.." // Default subscription text
-            image={song.coverImage || song.album?.coverImage || "/images/placeholder.png"}
-            onPlay={() => handleSongPlay(song)}
-            isSelected={selectedSong?._id === song._id}
-          />
-        ))}
+       {singles.map((song) => (
+  <RecentPlays
+    key={`song-${song._id}`}
+    type="single"
+    songId={song._id}                                          // ✅ add
+    title={song.title}
+    singer={song.artist?.name || ""}                          // ✅ add
+    image={song.coverImage || "/images/placeholder.png"}
+    onTitleClick={() => navigate(`/song/${song?.slug || song?._id}`)}
+    onPlay={() => handleSongPlay(song)}
+    isSelected={selectedSong?._id === song._id}
+    // price prop removed ✅
+  />
+))}
 
         
         {/* Show Albums first */}
         {albums.map((album) => (
           <AlbumCard
             key={`album-${album._id}`}
+            type="album"
             album={{
               _id: album._id,
               title: album.title,

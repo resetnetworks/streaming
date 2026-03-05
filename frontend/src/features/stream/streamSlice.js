@@ -14,7 +14,7 @@ export const fetchStreamUrl = createAsyncThunk(
 
     try {
       const res = await axios.get(`/stream/song/${songId}`);
-      return { songId, url: res.data.url };
+      return { songId, url: res.data.url, isPreview: res.data.isPreview };
     } catch (err) {
       const status = err.response?.status;
       const defaultMessage = err.response?.data?.message || "Failed to fetch streaming URL";
@@ -109,11 +109,11 @@ const streamSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchStreamUrl.fulfilled, (state, action) => {
-        const { songId, url } = action.payload;
-        state.urls[songId] = url;
-        state.fetchedIds.push(songId);
-        state.loading = false;
-      })
+  const { songId, url, isPreview } = action.payload;
+  state.urls[songId] = { url, isPreview }; // ✅ isPreview bhi save karo
+  state.fetchedIds.push(songId);
+  state.loading = false;
+})
       .addCase(fetchStreamUrl.rejected, (state, action) => {
         const { songId, message } = action.payload || {};
         if (message !== "Already fetched") {

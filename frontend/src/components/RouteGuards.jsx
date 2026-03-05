@@ -1,10 +1,11 @@
+// /components/RouteGuards.jsx
+
 import { Navigate } from "react-router-dom";
 
 export const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>
   isAuthenticated ? children : <Navigate to={redirectTo} replace />;
 
-export const RedirectedProtectedRoute = ({ isAuthenticated, user, children }) => {
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+export const RedirectedProtectedRoute = ({ user, children }) => {
   if (user?.preferredGenres?.length === 0) return <Navigate to="/genres" replace />;
   return children;
 };

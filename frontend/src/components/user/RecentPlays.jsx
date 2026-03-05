@@ -1,20 +1,29 @@
 import React from "react";
-import { RiPlayFill } from "react-icons/ri";
+import { RiPlayFill, RiPauseFill } from "react-icons/ri";
+import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 
 const RecentPlays = React.forwardRef(
   ({ 
     title, 
     singer, 
     image, 
-    price = 0, 
+    price, 
     onPlay, 
-    onTitleClick,  // ✅ New prop for title click
-    isSelected 
+    onTitleClick,
+    isSelected,
+    songId,
+    type  // ✅ "single" | "album" | undefined
   }, ref) => {
+
+    const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } = usePlaybackControl();
     
     const handlePlayClick = (e) => {
       e.stopPropagation();
-      if (onPlay) onPlay();
+      if (isSongSelected(songId)) {
+        isSongPlaying(songId) ? pausePlayback() : resumePlayback();
+      } else {
+        if (onPlay) onPlay();
+      }
     };
 
     const handleTitleClick = (e) => {
@@ -23,11 +32,11 @@ const RecentPlays = React.forwardRef(
       if (onTitleClick) onTitleClick();
     };
 
-    const handleCardClick = (e) => {
-      // If click is on title button, don't trigger onPlay
-      const titleButton = e.target.closest('button[onclick*="handleTitleClick"]');
-      if (!titleButton && onPlay) {
-        onPlay();
+    const handleCardClick = () => {
+      if (isSongSelected(songId)) {
+        isSongPlaying(songId) ? pausePlayback() : resumePlayback();
+      } else {
+        if (onPlay) onPlay();
       }
     };
 
@@ -41,11 +50,7 @@ const RecentPlays = React.forwardRef(
       >
         <div
           className={`relative md:w-48 md:h-48 h-32 w-32 rounded-lg overflow-hidden 
-            ${
-              isSelected
-                ? "border-2 border-blue-500 shadow-[0_0_8px_1px_#3b82f6]"
-                : ""
-            }`}
+            ${isSelected ? "border-2 border-blue-500 shadow-[0_0_8px_1px_#3b82f6]" : ""}`}
         >
           <img
             src={image}
@@ -53,24 +58,29 @@ const RecentPlays = React.forwardRef(
             className="w-full h-full object-cover"
           />
 
+          {/* ✅ Badge - sirf type === "single" pe dikhega */}
+          {type === "single" && (
+            <div className="absolute top-0 right-2">
+              <span className="px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase bg-black backdrop-blur-sm text-gray-200 rounded-sm border-r-2 border-gray-300">
+                Single
+              </span>
+            </div>
+          )}
+
           <div className="absolute inset-0 group-hover:bg-black group-hover:bg-opacity-20 transition">
             <button 
               onClick={handlePlayClick}
               className="absolute bottom-2 left-2 bg-gray-200 text-black p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition hover:scale-110"
             >
-              <RiPlayFill size={14} />
+              {isSongPlaying(songId) ? <RiPauseFill size={14} /> : <RiPlayFill size={14} />}
             </button>
           </div>
         </div>
 
         <div className="flex justify-between sm:items-center mt-2 sm:flex-row flex-col">
           <div className="leading-none">
-            {/* ✅ Title with click handler */}
-            <button 
-              onClick={handleTitleClick}
-              className="text-left"
-            >
-              <p className="md:text-sm text-xs font-medium text-white truncate hover:text-blue-400 transition-colors">
+            <button onClick={handleTitleClick} className="text-left">
+              <p className="md:text-sm text-xs font-medium text-white truncate hover:underline transition-colors">
                 {truncatedTitle}
               </p>
             </button>
@@ -88,5 +98,4 @@ const RecentPlays = React.forwardRef(
 );
 
 RecentPlays.displayName = "RecentPlays";
-
 export default RecentPlays;

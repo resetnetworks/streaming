@@ -82,35 +82,6 @@ const ArtistCircle = forwardRef(function ArtistCircle(
   { artist, onClick },
   ref
 ) {
-  const priceDisplay = useMemo(() => {
-    const plans = artist?.subscriptionPlans;
-    if (!plans || plans.length === 0) {
-      return "Free";
-    }
-
-    // Filter valid plans that have a basePrice
-    const sortedPlans = plans
-      .filter(
-        (p) =>
-          p?.basePrice &&
-          typeof p.basePrice.amount === "number" &&
-          p.basePrice.amount > 0
-      )
-      .sort((a, b) => a.basePrice.amount - b.basePrice.amount);
-
-    if (sortedPlans.length === 0) {
-      return "Free";
-    }
-
-    const cheapestPlan = sortedPlans[0];
-    const label = cycleLabel(cheapestPlan.cycle);
-
-    // Format with currency (default fallback to ₹ if not provided)
-    const currencySymbol =
-      cheapestPlan.basePrice.currency === "USD" ? "$" : "₹";
-
-    return `${currencySymbol}${cheapestPlan.basePrice.amount}/${label}`;
-  }, [artist?.subscriptionPlans]);
 
   return (
     <button
@@ -132,9 +103,6 @@ const ArtistCircle = forwardRef(function ArtistCircle(
         <h3 className="w-full text-sm font-semibold text-white truncate text-shadow">
           {artist?.name || "Unknown Artist"}
         </h3>
-        <p className="text-xs font-medium text-sky-300 group-hover:text-sky-200 transition-colors duration-300">
-          {priceDisplay}
-        </p>
       </div>
       <div className="absolute inset-0 transition-all duration-300 border-2 rounded-full pointer-events-none border-blue-500/80"></div>
     </button>

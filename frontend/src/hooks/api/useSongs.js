@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { songApi } from "../../api/songApi";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
 
 export const songKeys = {
   all: ["songs"],
@@ -59,14 +60,18 @@ export const useAlbumSongs = (albumId) =>
     enabled: !!albumId,
   });
 
-export const useLikedSongs = (limit = 20) =>
-  useInfiniteQuery({
+export const useLikedSongs = (limit = 20) => {
+  const currentUser = useSelector((state) => state.auth.user);
+  
+  return useInfiniteQuery({
     queryKey: songKeys.likedList({ limit }),
     queryFn: ({ pageParam = 1 }) =>
       songApi.fetchLikedSongs({ page: pageParam, limit }),
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
+    enabled: !!currentUser, // ✅ Only fetch if logged in
   });
+};
 
 /* ------------------ Singles Queries ------------------ */
 
@@ -97,8 +102,10 @@ export const useAllSingles = (limit = 20) =>
 
 /* ------------------ Genre Queries ------------------ */
 
-export const useMatchingGenreSongs = (limit = 20) =>
-  useInfiniteQuery({
+export const useMatchingGenreSongs = (limit = 20) => {
+  const currentUser = useSelector((state) => state.auth.user);
+  
+  return useInfiniteQuery({
     queryKey: songKeys.matchingGenres(),
     queryFn: ({ pageParam = 1 }) =>
       songApi.fetchMatchingGenreSongs({ page: pageParam, limit }),
@@ -106,7 +113,9 @@ export const useMatchingGenreSongs = (limit = 20) =>
       const { page, totalPages } = lastPage.pagination || {};
       return page < totalPages ? page + 1 : undefined;
     },
+    enabled: !!currentUser, // ✅ Only fetch if logged in
   });
+};
 
 export const useGenreSongs = (genre, limit = 20) =>
   useInfiniteQuery({

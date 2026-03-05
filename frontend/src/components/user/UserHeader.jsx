@@ -24,8 +24,6 @@ const UserHeader = () => {
     (state) => state.artistApplication
   );
 
- 
-  
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -34,42 +32,26 @@ const UserHeader = () => {
   const location = useLocation();
 
   const isHomePage = location.pathname === "/home";
-
-  // Check if user has artist-pending role for red dot
   const hasArtistPendingRole = user?.role === "artist-pending";
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    // Close user menu when clicking outside
     const handleClickOutside = (event) => {
       if (open && !event.target.closest('.user-menu-container')) {
         setOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  // Close notification modal when clicking outside
   useEffect(() => {
     const handleNotificationClickOutside = (event) => {
       if (notificationsOpen && !event.target.closest('.notification-modal-container')) {
         setNotificationsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleNotificationClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleNotificationClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleNotificationClickOutside);
   }, [notificationsOpen]);
 
   const getTimeBasedGreeting = () => {
@@ -86,10 +68,7 @@ const UserHeader = () => {
   };
 
   const handleNotificationClick = async () => {
-    // Open notification modal
     setNotificationsOpen(true);
-    
-    // Fetch artist application data if not already loaded
     if (isAuthenticated && !myApplication) {
       try {
         await dispatch(getMyArtistApplication()).unwrap();
@@ -101,8 +80,21 @@ const UserHeader = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  // Render different UI based on user role
   const renderUserMenu = () => {
+    // ✅ Guest user - Login button
+    if (!isAuthenticated) {
+  return (
+    <div
+      className="button-wrapper shadow-md shadow-gray-800 user-menu-container"
+      onClick={() => navigate("/login")}
+    >
+      <button className="player-button flex justify-center items-center gap-2">
+        Sign in
+      </button>
+    </div>
+  );
+}
+
     if (user?.role === "admin") {
       return (
         <div
@@ -119,7 +111,7 @@ const UserHeader = () => {
           onClick={() => navigate("/artist/dashboard")}
         >
           <button className="player-button font-bold bg-purple-600 hover:bg-purple-700">
-          Dashboard
+            Dashboard
           </button>
         </div>
       );
@@ -131,14 +123,12 @@ const UserHeader = () => {
             onClick={() => setOpen((prev) => !prev)}
           >
             <div
-              className={`md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs uppercase ${getAvatarColor(
-                user?.name
-              )}`}
+              className={`md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs uppercase ${getAvatarColor(user?.name)}`}
             >
               {user?.name?.charAt(0) || "G"}
             </div>
             <p className="md:ml-3 ml-2 md:text-sm sm:inline-block hidden text-sm">
-              {user ? user.name : "Guest"}
+              {user?.name}
             </p>
             {open ? (
               <FiChevronUp className="md:text-sm text-xs md:ml-3 ml-2 text-gray-500" />
@@ -151,26 +141,15 @@ const UserHeader = () => {
             <div className="absolute right-0 mt-3 w-52 bg-gradient-to-b from-black to-blue-900 rounded-xl border border-blue-500 shadow-[0_0_8px_1px_#3b82f6] z-40">
               <ul className="py-2 text-sm text-gray-400">
                 <li
-                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                    isActive("/payment-history") ? "text-blue-500" : ""
-                  }`}
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/payment-history");
-                  }}
+                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${isActive("/payment-history") ? "text-blue-500" : ""}`}
+                  onClick={() => { setOpen(false); navigate("/payment-history"); }}
                 >
                   <FiClock />
                   Payment History
                 </li>
-                
                 <li
-                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${
-                    isActive("/contact-us") ? "text-blue-500" : ""
-                  }`}
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/contact-us");
-                  }}
+                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${isActive("/contact-us") ? "text-blue-500" : ""}`}
+                  onClick={() => { setOpen(false); navigate("/contact-us"); }}
                 >
                   <FiHelpCircle />
                   Help & Support
@@ -195,7 +174,9 @@ const UserHeader = () => {
       {isHomePage ? (
         <h1 className="md:text-3xl text-xl">
           {getTimeBasedGreeting()},{" "}
-          <span className="text-blue-700">{user ? user.name : "Guest"}</span>
+          <span className="text-blue-700">
+            {user ? user.name : "Guest"}
+          </span>
         </h1>
       ) : (
         <div
@@ -206,43 +187,40 @@ const UserHeader = () => {
         </div>
       )}
 
-      {/* Right Side - Notifications and User Menu */}
       <div className="flex items-center gap-4">
-        {/* Notification Bell - Show red dot only for artist-pending role */}
-        <div className="relative">
-          <button
-            className="relative p-2 text-gray-400 hover:text-white transition-colors"
-            onClick={handleNotificationClick}
-            disabled={fetchLoading}
-          >
-            <FiBell className="text-xl" />
-            
-            {/* Red dot for artist-pending role */}
-            {hasArtistPendingRole && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-2 h-2 animate-pulse"></span>
-            )}
-            
-            {/* Loading indicator */}
-            {fetchLoading && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-2 h-2 animate-pulse"></span>
-            )}
-          </button>
-        </div>
+        {/* Notification Bell - sirf authenticated users ke liye */}
+        {isAuthenticated && (
+          <div className="relative">
+            <button
+              className="relative p-2 text-gray-400 hover:text-white transition-colors"
+              onClick={handleNotificationClick}
+              disabled={fetchLoading}
+            >
+              <FiBell className="text-xl" />
+              {hasArtistPendingRole && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-2 h-2 animate-pulse"></span>
+              )}
+              {fetchLoading && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-2 h-2 animate-pulse"></span>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Notification Modal */}
-        {notificationsOpen && (
+        {notificationsOpen && isAuthenticated && (
           <div className="notification-modal-container absolute top-16 right-4 w-80 bg-gradient-to-b from-black to-gray-900 rounded-lg border border-blue-500 shadow-xl z-50">
             <div className="p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-white">Application Status</h3>
-                <button 
+                <button
                   onClick={() => setNotificationsOpen(false)}
                   className="text-gray-400 hover:text-white"
                 >
                   ✕
                 </button>
               </div>
-              
+
               {fetchLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
@@ -254,8 +232,8 @@ const UserHeader = () => {
                   <p className="text-gray-300 text-sm">{myApplication.adminNotes}</p>
                   {myApplication.status && (
                     <div className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      myApplication.status === 'approved' 
-                        ? 'bg-green-900 text-green-300' 
+                      myApplication.status === 'approved'
+                        ? 'bg-green-900 text-green-300'
                         : myApplication.status === 'rejected'
                         ? 'bg-red-900 text-red-300'
                         : 'bg-yellow-900 text-yellow-300'
@@ -268,8 +246,6 @@ const UserHeader = () => {
                 <div className="text-center py-8">
                   <FiBell className="text-4xl text-gray-600 mx-auto mb-3" />
                   <p className="text-gray-400">No application notes available</p>
-                  
-                  {/* Special message for artist-pending users */}
                   {hasArtistPendingRole && (
                     <p className="text-yellow-400 text-sm mt-2">
                       Your application is under review. You'll get updates here.
@@ -281,7 +257,6 @@ const UserHeader = () => {
           </div>
         )}
 
-        {/* User Menu - Different based on role */}
         {renderUserMenu()}
       </div>
     </div>

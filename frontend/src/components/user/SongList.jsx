@@ -20,7 +20,7 @@ const SongList = ({
   songId,
   songSlug,
   shareUrl,
-  // ✅ NEW PROPS for parent-controlled share dropdown
+  currentUser,
   isShareDropdownOpen,
   onShareDropdownToggle,
   onShareMenuClose,
@@ -84,7 +84,11 @@ const SongList = ({
   const handleToggleLike = (e) => {
   e.stopPropagation();
   e.preventDefault();
-
+  
+  if(!currentUser) {
+    toast.error("You must be logged in to like songs");
+    return;
+  }
   likeMutation.mutate(songId, {
     onSuccess: () => {
       toast.success(

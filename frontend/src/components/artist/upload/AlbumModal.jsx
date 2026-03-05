@@ -77,7 +77,6 @@ const AlbumModal = ({ isOpen, onClose, album }) => {
                       <p className="text-white font-medium lowercase text-sm group-hover:text-blue-300 transition-colors truncate">
                         {song.title}
                       </p>
-                      <span className="text-xs text-white/50">{formatDuration(song.duration)}</span>
                     </div>
                   </div>
                   

@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import MatchingGenreSong from '../MatchingGenreSong';
 import { 
   fetchSongsMatchingUserGenres,
-  loadMatchingGenreFromCache,
   setMatchingGenreCachedData 
 } from '../../../features/songs/songSlice';
 import { 
@@ -23,132 +22,66 @@ import {
 } from '../../../features/songs/songSelectors';
 
 import { handlePlaySong } from "../../../utills/songHelpers";
-import CurrencySelectionModal from '../CurrencySelectionModal';
 
 // Album Card Component
 const AlbumCard = ({ album, onClick }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [hasImage, setHasImage] = useState(!!album.coverImage);
   const [imageError, setImageError] = useState(false);
 
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-    setImageError(false);
-  };
-
-  const handleImageError = () => {
-    setImageError(true);
-    setHasImage(false);
-    setImageLoaded(false);
-  };
-
   return (
-    <div 
-      className="flex-shrink-0 cursor-pointer"
+    <div
+      className="min-w-[140px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group"
       onClick={() => onClick(album)}
     >
-      <div className="relative w-44 bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-xl p-4 backdrop-blur-md border border-white/10 hover:border-blue-400/30 transition-all duration-300">
-        
-        {/* Album Cover Container */}
-        <div className="relative mb-3 overflow-hidden rounded-lg bg-gray-700/50">
-          {album?.songs[0]?.coverImage && !imageError ? (
-            <>
-              {/* Image */}
-              <img
-                src={album?.songs[0]?.coverImage}
-                alt=""
-                className={`w-full h-36 object-cover ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                loading="lazy"
-              />
-              
-              {/* Loading placeholder */}
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-700/50 animate-pulse flex items-center justify-center">
-                  <BsSoundwave className="w-8 h-8 text-gray-400" />
-                </div>
-              )}
-            </>
-          ) : (
-            /* No Image Placeholder */
-            <div className="w-full h-36 bg-gradient-to-br from-gray-700/70 to-gray-800/70 flex items-center justify-center group-hover:from-gray-600/70 group-hover:to-gray-700/70 transition-all duration-300">
-              <div className="text-center">
-                <BsSoundwave className="w-12 h-12 text-gray-400 mx-auto mb-2 group-hover:text-gray-300 transition-colors" />
-                <p className="text-gray-400 text-xs group-hover:text-gray-300 transition-colors">No Cover</p>
+      {/* Cover - same size as MatchingGenreSong */}
+      <div className="relative h-32 w-32 md:h-44 md:w-44 rounded-lg overflow-hidden bg-gray-700/50">
+        {album?.songs[0]?.coverImage && !imageError ? (
+          <>
+            <img
+              src={album.songs[0].coverImage}
+              alt=""
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+              loading="lazy"
+            />
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-gray-700/50 animate-pulse flex items-center justify-center">
+                <BsSoundwave className="w-8 h-8 text-gray-400" />
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
+            <BsSoundwave className="w-10 h-10 text-gray-400" />
+          </div>
+        )}
 
-        {/* Album Info */}
-        <div>
-          <h3 className="text-white font-semibold text-sm mb-1 truncate group-hover:text-blue-400 transition-colors">
-            {album.title || 'Untitled Album'}
-          </h3>
-          <p className="text-gray-400 text-xs truncate mb-1">
-            Album • {album.songCount || 0} song{album.songCount !== 1 ? 's' : ''}
-          </p>
-          {album.songs && album.songs[0]?.artist && (
-            <p className="text-gray-500 text-xs truncate">
-              by {album.songs[0].artist.name}
-            </p>
-          )}
+        {/* Album tag */}
+        <div className="absolute top-0 right-2">
+          <span className="px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase bg-black backdrop-blur-sm text-blue-300 rounded-sm border-r-2 border-blue-400">
+            Album
+          </span>
         </div>
+      </div>
 
-        {/* Bottom gradient accent */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-xl"></div>
+      {/* Info */}
+      <div className="mt-2 flex justify-between items-start gap-2">
+        <p className="text-white font-medium text-sm truncate">
+          {album.title?.length > 12 ? album.title.slice(0, 12) + "…" : album.title || "Untitled"}
+        </p>
+        <span className="text-gray-200 text-[10px] flex-shrink-0 text-right mt-0.5 max-w-[55px] truncate">
+          {album.songs[0]?.artist?.name?.length > 7
+            ? album.songs[0].artist.name.slice(0, 7) + "…"
+            : album.songs[0]?.artist?.name}
+        </span>
       </div>
     </div>
   );
 };
 
-const getSongPriceDisplay = (
-  song, 
-  currentUser, 
-  onSongPurchaseClick, 
-  onSubscribeRequired, 
-  processingPayment, 
-  paymentLoading
-) => {
-  if (currentUser?.purchasedSongs?.includes(song._id)) {
-    return <span className="text-green-400 text-xs font-semibold">Purchased</span>;
-  }
-  if (song.accessType === "subscription") {
-    return <span className="text-blue-300 text-xs font-semibold">Subs..</span>;
-  }
-  if (song.accessType === "purchase-only" && song?.basePrice?.amount > 0) {
-    return (
-      <button
-        className={`text-white text-xs mt-2 px-3 py-1 rounded-full transition-colors ${
-          processingPayment || paymentLoading
-            ? "bg-gray-600 cursor-not-allowed"
-            : "bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800"
-        }`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSongPurchaseClick(song);
-        }}
-        disabled={processingPayment || paymentLoading}
-        type="button"
-      >
-        {processingPayment || paymentLoading ? "..." : `Buy $${song?.basePrice?.amount}`}
-      </button>
-    );
-  }
-  if (song?.accessType === "purchase-only" && song?.price?.amount === 0) {
-    return <span className="text-blue-300 text-xs font-semibold">album</span>;
-  }
-  return <span className="text-blue-300 text-xs font-semibold">Free</span>;
-};
-
 const MatchingGenreSection = ({ 
   onSubscribeRequired,
-  onPurchaseClick, 
-  processingPayment, 
-  paymentLoading 
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -160,19 +93,12 @@ const MatchingGenreSection = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // Currency selection modal states
-  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const [selectedSongForPurchase, setSelectedSongForPurchase] = useState(null);
-
   // Preserve scroll position across renders/appends
   const pendingScrollLeftRef = useRef(null);
 
   // Current page and pagination
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
-
-  // Redux selectors
-  const reduxSongs = useSelector(selectMatchingGenreSongs);
   const matchingGenres = useSelector(selectMatchingGenres);
   const status = useSelector(selectSongsStatus);
   const pagination = useSelector(selectMatchingGenrePagination);
@@ -218,63 +144,6 @@ const MatchingGenreSection = ({
     });
   };
 
-  // Currency helper functions
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
-      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
-      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
-      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
-    };
-    return symbols[currency] || currency;
-  };
-
-  const getAvailableCurrencies = (song) => {
-    if (!song.basePrice || !song.convertedPrices) return [];
-    
-    const currencies = [
-      { currency: song.basePrice.currency, amount: song.basePrice.amount, isBaseCurrency: true },
-      ...song.convertedPrices.map(price => ({
-        currency: price.currency, amount: price.amount, isBaseCurrency: false
-      }))
-    ];
-    
-    return currencies;
-  };
-
-  // Handle song purchase with currency selection
-  const handleSongPurchaseClick = (song) => {
-    const availableCurrencies = getAvailableCurrencies(song);
-    
-    if (availableCurrencies.length > 1) {
-      setSelectedSongForPurchase(song);
-      setShowCurrencyModal(true);
-    } else if (availableCurrencies.length === 1) {
-      const currency = availableCurrencies[0];
-      onPurchaseClick(song, "song", {
-        currency: currency.currency, 
-        amount: currency.amount, 
-        symbol: getCurrencySymbol(currency.currency)
-      });
-    }
-  };
-
-  const handleCurrencySelect = (selectedCurrency) => {
-    setShowCurrencyModal(false);
-    if (selectedSongForPurchase && selectedCurrency) {
-      onPurchaseClick(selectedSongForPurchase, "song", {
-        currency: selectedCurrency.currency, 
-        amount: selectedCurrency.amount, 
-        symbol: getCurrencySymbol(selectedCurrency.currency)
-      });
-    }
-    setSelectedSongForPurchase(null);
-  };
-
-  const handleCloseCurrencyModal = () => {
-    setShowCurrencyModal(false);
-    setSelectedSongForPurchase(null);
-  };
 
   // Unique by _id helper
   const mergeUnique = useCallback((prev, next) => {
@@ -540,18 +409,11 @@ const MatchingGenreSection = ({
               <MatchingGenreSong
                 key={`matching-song-${song._id}-${index}`}
                 title={song.title}
+                songId={song._id}
                 artist={song.artist}
                 album={song.album}
                 image={song.coverImage || song.album?.coverImage}
                 duration={song.duration}
-                price={getSongPriceDisplay(
-                  song, 
-                  currentUser, 
-                  handleSongPurchaseClick, 
-                  onSubscribeRequired, 
-                  processingPayment, 
-                  paymentLoading
-                )}
                 onPlay={() => onPlaySong(song)}
                 isPlaying={currentlyPlayingSong?._id === song._id}
                 isSelected={currentlyPlayingSong?._id === song._id}
@@ -570,15 +432,6 @@ const MatchingGenreSection = ({
           </div>
         </div>
       </section>
-
-      {/* Currency Selection Modal */}
-      <CurrencySelectionModal
-        open={showCurrencyModal}
-        onClose={handleCloseCurrencyModal}
-        onSelectCurrency={handleCurrencySelect}
-        item={selectedSongForPurchase}
-        itemType="song"
-      />
     </>
   );
 };

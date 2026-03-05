@@ -9,6 +9,7 @@ import { useInfiniteScroll } from "../../../hooks/useInfiniteScroll";
 import CurrencySelectionModal from "../CurrencySelectionModal";
 import { useArtistSingles } from "../../../hooks/api/useSongs";
 import { useNavigate } from "react-router-dom";
+import { hasArtistSubscriptionInPurchaseHistory } from "../../../utills/subscriptions";
 
 const getArtistColor = (name) => {
   if (!name) return "bg-blue-600";
@@ -99,21 +100,33 @@ const ArtistSinglesSection = ({
     return currencies;
   };
 
-  const handleSongPurchaseClick = (song) => {
-    const availableCurrencies = getAvailableCurrencies(song);
-    
-    if (availableCurrencies.length > 1) {
-      setSelectedSongForPurchase(song);
-      setShowCurrencyModal(true);
-    } else if (availableCurrencies.length === 1) {
-      const currency = availableCurrencies[0];
-      onPurchaseClick(song, "song", {
-        currency: currency.currency, 
-        amount: currency.amount, 
-        symbol: getCurrencySymbol(currency.currency)
-      });
-    }
-  };
+ const handleSongPurchaseClick = (song) => {
+  const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
+    currentUser,
+    artist
+  );
+
+  // ❌ Not subscribed → show subscribe modal via parent
+  if (!alreadySubscribed) {
+    onSubscribeRequired(artist, "purchase", song);
+    return;
+  }
+
+  // ✅ Subscribed → proceed with currency/payment
+  const availableCurrencies = getAvailableCurrencies(song);
+
+  if (availableCurrencies.length > 1) {
+    setSelectedSongForPurchase(song);
+    setShowCurrencyModal(true);
+  } else if (availableCurrencies.length === 1) {
+    const currency = availableCurrencies[0];
+    onPurchaseClick(song, "song", {
+      currency: currency.currency,
+      amount: currency.amount,
+      symbol: getCurrencySymbol(currency.currency),
+    });
+  }
+};
 
   const handleCurrencySelect = (selectedCurrency) => {
     setShowCurrencyModal(false);

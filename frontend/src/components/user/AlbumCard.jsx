@@ -1,4 +1,5 @@
 import React from "react";
+import { MdMusicNote } from "react-icons/md";
 
 const AlbumCard = ({
   tag,
@@ -27,14 +28,12 @@ const AlbumCard = ({
         </div>
       </div>
 
-      {/* Single responsive container with flex direction change */}
-      <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-800/40 md:p-4 p-3 gap-2 sm:gap-0">
-        <p className="text-xs text-white text-wrap text-left">{artists}</p>
-        {price && (
-          <div className="text-xs font-bold">
-            {typeof price === "string" ? price : price}
-          </div>
-        )}
+      <div className="w-full flex justify-between items-center bg-gray-800/40 md:p-4 p-3">
+        {/* Left - Label */}
+        <p className="text-xs text-gray-100 tracking-wide">by artist</p>
+
+        {/* Right - Artist Name */}
+        <p className="text-xs text-white font-semibold truncate max-w-[60%] text-right">{artists}</p>
       </div>
     </div>
   );

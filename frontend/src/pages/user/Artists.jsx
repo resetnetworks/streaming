@@ -246,30 +246,6 @@ const Artists = () => {
                             {artist.name || "Unknown Artist"}
                           </h3>
 
-                          {/* Subscription badges */}
-                          <div className="flex flex-wrap gap-2 justify-center">
-                            {plans.length > 0 ? (
-                              plans.map((p, idx) => {
-                                const c = p?.cycle;
-                                const readable = cycleLabel(c);
-                                const amount = p?.basePrice?.amount;
-                                const currency = p?.basePrice?.currency;
-                                if (!c || amount == null) return null;
-                                return (
-                                  <span
-                                    key={`${artist._id}-plan-${idx}-${c}`}
-                                    className="px-2 py-1 bg-gradient-to-r from-blue-500/20 to-blue-900 border border-blue-500/30 rounded-full text-xs text-blue-300 font-medium"
-                                  >
-                                    {formatPrice(amount, currency)}/{readable}
-                                  </span>
-                                );
-                              })
-                            ) : (
-                              <span className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs text-green-300 font-medium">
-                                FREE
-                              </span>
-                            )}
-                          </div>
                         </div>
                       </div>
                     </div>

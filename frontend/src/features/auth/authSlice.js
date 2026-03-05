@@ -416,8 +416,10 @@ const authSlice = createSlice({
         storeAuthToLocal(user);
       })
       .addCase(getMyProfile.rejected, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
+        if (state.isAuthenticated) {
+    state.user = null;
+    state.isAuthenticated = false;
+  }
         state.status = "failed";
       })
       .addCase(logoutUser.fulfilled, (state) => {

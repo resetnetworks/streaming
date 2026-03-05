@@ -178,6 +178,7 @@ const AllTracksSection = ({
                 <SongList
                   onTitleClick={() => navigate(`/song/${single?.slug}`)}
                   key={single._id}
+                  currentUser={currentUser}
                   songSlug={single?.slug}
                   songId={single._id}
                   img={single.coverImage || "/images/placeholder.png"}

@@ -106,68 +106,6 @@ const AlbumsSection = ({
     setShowCurrencyModal(false);
     setSelectedAlbum(null);
   };
-  
-const getAlbumPriceDisplay = (album) => {
-  // Normalize purchased albums array safely
-  const purchasedAlbumsArray = Array.isArray(purchases)
-    ? purchases
-    : purchases?.albums || [];
-
-  // Strict ID comparison (no undefined match possible)
-  const isPurchased = purchasedAlbumsArray.some((purchased) => {
-    const purchasedId = purchased?._id || purchased?.id;
-    const albumId = album?._id || album?.id;
-
-    return purchasedId && albumId && purchasedId === albumId;
-  });
-
-  if (isPurchased) {
-    return (
-      <span className="text-green-400 text-xs font-semibold">
-        Purchased
-      </span>
-    );
-  }
-
-  // Subscription albums
-  if (album?.accessType === "subscription") {
-    return (
-      <span className="text-blue-400 text-xs font-semibold">
-        subs..
-      </span>
-    );
-  }
-
-  // One-time purchase albums
-  if (album?.accessType === "purchase-only") {
-    if (album?.basePrice?.amount > 0) {
-      const basePrice = album.basePrice;
-      const symbol = getCurrencySymbol(basePrice.currency);
-
-      return (
-        <button
-          className={`text-white sm:text-xs text-[10px] px-3 py-1 rounded ${
-            processingPayment || paymentLoading
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          }`}
-          onClick={() => handleAlbumPurchaseClick(album)}
-          disabled={processingPayment || paymentLoading}
-        >
-          {processingPayment || paymentLoading
-            ? "..."
-            : `Buy ${symbol}${basePrice.amount}`}
-        </button>
-      );
-    }
-
-    if (album?.basePrice?.amount === 0) {
-      return "Free";
-    }
-  }
-
-  return null;
-};
 
 
 
@@ -247,7 +185,6 @@ const getAlbumPriceDisplay = (album) => {
                   tag={truncateTitle(album.title || "Album")}
                   artists={album?.artist?.name || "Various Artists"}
                   image={album?.coverImage || "/images/placeholder.png"}
-                  price={getAlbumPriceDisplay(album)}
                   onClick={() => navigate(`/album/${album?.slug}`)}
                 />
               </div>

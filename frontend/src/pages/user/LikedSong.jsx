@@ -11,6 +11,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 
 const LikedSongs = () => {
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const {
     data,
     fetchNextPage,
@@ -52,6 +53,28 @@ const LikedSongs = () => {
       <div className="min-h-screen w-[96%] py-8 px-4">
         <p className="text-red-400">Failed to load liked songs</p>
       </div>
+    );
+  }
+
+   if (!isAuthenticated) {
+    return (
+      <>
+        <UserHeader />
+        <div className="text-white flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold mb-2">Your liked songs</h2>
+            <p className="text-gray-400 text-sm max-w-xs mx-auto">
+              Sign in to access tracks that you liked or saved.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/login")}
+            className="mt-2 px-6 py-2 border border-gray-600 hover:border-white text-white text-sm font-medium rounded-full transition-colors cursor-pointer bg-transparent"
+          >
+            Sign in
+          </button>
+        </div>
+      </>
     );
   }
 

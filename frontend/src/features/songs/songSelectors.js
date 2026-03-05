@@ -74,7 +74,7 @@ export const selectPlayerDisplaySong = createSelector(
   [selectSelectedSong, selectDefaultSong, selectRandomDefaultSong],
   (selectedSong, defaultSong, randomSong) => {
     // Priority: selected song > persistent default > random fallback
-    return selectedSong || defaultSong || randomSong || null;
+    return selectedSong || defaultSong || null;
   }
 );
 

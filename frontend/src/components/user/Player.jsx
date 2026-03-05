@@ -37,7 +37,9 @@ const Player = () => {
         playsInline
         crossOrigin="anonymous"
       />
-      <PlayerUI {...player} />
+      <PlayerUI {...player} 
+      // isPreview={streamData?.isPreview}
+      />
     </>
   );
 };

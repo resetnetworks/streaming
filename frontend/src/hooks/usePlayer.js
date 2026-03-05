@@ -1,5 +1,5 @@
 // hooks/usePlayer.js
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect,useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Hls from "hls.js";
 import { fetchStreamUrl } from "../features/stream/streamSlice";
@@ -47,6 +47,7 @@ export const usePlayer = () => {
   const streamError = useSelector((state) => state.stream.error);
   const likeMutation = useLikeSong();
   const { data } = useLikedSongs(20);
+  const currentUser = useSelector((state) => state.auth.user);
 
   // Local state
   const [playbackError, setPlaybackError] = useState(null);
@@ -116,8 +117,9 @@ const isLiked = currentSong
           hlsRef.current = null;
         }
 
-        const streamUrl = streamUrls[selectedSong._id];
+        const streamUrl = streamUrls[selectedSong._id]?.url;
         const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
+  
 
         if (Hls.isSupported()) {
           hls = new Hls({
@@ -179,17 +181,16 @@ const isLiked = currentSong
         video.ontimeupdate = () => {
           if (!isNaN(video.currentTime)) {
             dispatch(setCurrentTime(video.currentTime));
-            const remainingTime = (video.duration || 0) - video.currentTime;
-            if (remainingTime <= 0.5 && video.duration > 1) {
-              video.ontimeupdate = null;
-              handleNext();
-            }
           }
         };
 
-        video.onended = () => {
-          handleNext();
-        };
+       video.onended = () => {
+  if (currentIndex < contextSongs.length - 1) {
+    handleNext();
+  } else {
+    dispatch(pause());
+  }
+};
       } catch (err) {
         setPlaybackError(err.message);
       } finally {
@@ -218,29 +219,53 @@ const isLiked = currentSong
   }, [volume, isMuted]);
 
   // Event handlers
-  const handleTogglePlay = async () => {
+const handleTogglePlay = useCallback(async () => {
+  const video = videoRef.current;
+  
+  if (isDisplayOnly && defaultSong) {
+    dispatch(setSelectedSong(defaultSong));
+    dispatch(play());
+    return;
+  }
+  
+  if (!video || !selectedSong) return;
+
+  try {
+    if (isPlaying) {
+      await video.pause();
+      dispatch(pause());
+    } else {
+      await video.play();
+      dispatch(play());
+    }
+  } catch (err) {
+    setPlaybackError(err.message);
+  }
+}, [isPlaying, isDisplayOnly, defaultSong, selectedSong, dispatch]);
+
+// ✅ Global event listener
+useEffect(() => {
+  const handler = (e) => {
+    const action = e.detail?.action;
     const video = videoRef.current;
     
-    if (isDisplayOnly && defaultSong) {
-      dispatch(setSelectedSong(defaultSong));
-      dispatch(play());
-      return;
-    }
-    
-    if (!video || !selectedSong) return;
-
-    try {
-      if (isPlaying) {
-        await video.pause();
+    if (action === "pause") {
+      if (video) {
+        video.pause();
         dispatch(pause());
-      } else {
-        await video.play();
+      }
+    } else if (action === "play") {
+      if (video) {
+        video.play().catch(() => {});
         dispatch(play());
       }
-    } catch (err) {
-      setPlaybackError(err.message);
+    } else {
+      handleTogglePlay();
     }
   };
+  window.addEventListener("toggle-playback", handler);
+  return () => window.removeEventListener("toggle-playback", handler);
+}, [handleTogglePlay, dispatch]);
 
   const handleToggleMute = () => {
     if (isMuted) {
@@ -253,11 +278,19 @@ const isLiked = currentSong
   };
 
   const handleNext = () => {
-    if (!currentSong || contextSongs.length === 0) return;
-    const nextIndex = (currentIndex + 1) % contextSongs.length;
-    dispatch(setSelectedSong(contextSongs[nextIndex]));
-    dispatch(play());
-  };
+  if (!currentSong || contextSongs.length === 0) return;
+
+  // If last song in context
+  if (currentIndex === contextSongs.length - 1) {
+    dispatch(pause());
+    dispatch(setCurrentTime(duration));
+    return;
+  }
+
+  const nextIndex = currentIndex + 1;
+  dispatch(setSelectedSong(contextSongs[nextIndex]));
+  dispatch(play());
+};
 
   const handlePrev = () => {
     if (!currentSong || contextSongs.length === 0) return;
@@ -287,6 +320,11 @@ const isLiked = currentSong
   const handleLikeToggle = () => {
   if (!currentSong?._id) return;
 
+  if(!currentUser) {
+    toast.error("You must be logged in to like songs");
+    return;
+  }
+
   likeMutation.mutate(currentSong._id, {
     onSuccess: () => {
       toast.success(
@@ -306,6 +344,10 @@ const isLiked = currentSong
     dispatch(play());
   };
 
+        const isPreview = selectedSong 
+  ? streamUrls[selectedSong._id]?.isPreview ?? false 
+  : false;
+
   // Return everything needed by UI
   return {
     // Refs
@@ -315,6 +357,7 @@ const isLiked = currentSong
     currentSong,
     isPlaying,
     currentTime,
+    isPreview,
     duration,
     volume,
     isMuted,

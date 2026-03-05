@@ -168,8 +168,6 @@ axiosInstance.interceptors.response.use(
     const errorStatus = error.response?.status;
     const errorMessage = error.response?.data?.message || error.message;
     
-    
-    // Skip logout if already in progress
     if (isLoggingOut) {
       return Promise.reject(error);
     }
@@ -178,12 +176,17 @@ axiosInstance.interceptors.response.use(
     if (originalRequest?.url?.includes('/paypal/')) {
       return Promise.reject(error);
     }
+
+    // ✅ Agar token hi nahi hai to kisi bhi 401 pe logout mat karo
+    const token = localStorage.getItem("token") || getTokenFromCookie();
+    if (!token && errorStatus === 401) {
+      return Promise.reject(error); // silently fail
+    }
     
-    // ✅ ENHANCED: Comprehensive token expiry detection
     const isTokenExpired = (
-      errorStatus === 401 ||          // Unauthorized
-      error.code === 'ECONNREFUSED' ||  // Database connection refused
-      error.code === 'ENOTFOUND' ||     // Database not found
+      errorStatus === 401 ||
+      error.code === 'ECONNREFUSED' ||
+      error.code === 'ENOTFOUND' ||
       error.message?.includes('Network Error') ||
       errorMessage?.toLowerCase().includes('token') ||
       errorMessage?.toLowerCase().includes('authentication') ||

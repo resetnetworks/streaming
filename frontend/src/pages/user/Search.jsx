@@ -397,9 +397,8 @@ if (isPurchased) {
                     {results.songs.map((song) => (
                       <RecentPlays
                         key={song._id}
+                        onTitleClick={() => navigate(`/song/${song.slug}`)}
                         title={song.title}
-                        price={getSongPriceComponent(song)}
-                       
                         image={song.coverImage || "/images/placeholder.png"}
                         onPlay={() => handlePlaySong(song)}
                         isSelected={selectedSong?._id === song._id}
@@ -417,6 +416,7 @@ if (isPurchased) {
                     {results.artists.map((artist) => (
                       <RecentPlays
                         key={artist._id}
+                        onTitleClick={() => navigate(`/artist/${artist.slug}`)}
                         title={artist.name}
                         price="Artist"
                         image={artist.profileImage || "/images/placeholder.png"}
