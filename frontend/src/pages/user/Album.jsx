@@ -604,6 +604,7 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
                   <div className="flex-1">
                     <SongList
                       songId={song._id}
+                      currentUser={currentUser}
                       img={song?.coverImage || album?.coverImage}
                       songName={song?.title}
                       songSlug={song?.slug || song?._id}
