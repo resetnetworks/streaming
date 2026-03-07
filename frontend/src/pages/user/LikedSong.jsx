@@ -8,10 +8,12 @@ import { formatDuration } from "../../utills/helperFunctions";
 import UserHeader from "../../components/user/UserHeader";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { current } from "@reduxjs/toolkit";
 
 const LikedSongs = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const currentUser = useSelector((state) => state.auth.user);
   const {
     data,
     fetchNextPage,
@@ -149,6 +151,7 @@ const LikedSongs = () => {
                     }
                     songName={song?.title}
                     singerName={song?.artist?.name || song?.singer}
+                    currentUser={currentUser}
                     seekTime={formatDuration(song?.duration)}
                     onPlay={() => handlePlaySong(song)}
                     isSelected={selectedSong?._id === song._id}
