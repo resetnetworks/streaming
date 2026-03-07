@@ -108,7 +108,7 @@ const MobilePlayer = () => {
         {/* Progress line — hidden when preview */}
         <div
           className="h-1 from-black to-blue-600 bg-gradient-to-br transition-all duration-300 ease-in-out"
-          style={{ width: `${showPreviewBadge ? 0 : progressPercentage}%` }}
+          style={{ width: `${progressPercentage}%` }}
         />
 
         <div className="p-3">
@@ -159,7 +159,7 @@ const MobilePlayer = () => {
                   <FaLock className="text-sm text-white" />
                 ) : isLoading ? (
                   <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : isPlaying && !showPreviewBadge ? (
+                ) : isPlaying ? (
                   <FaPause className="text-sm" />
                 ) : (
                   <FaPlay className="text-sm" />
@@ -251,29 +251,26 @@ const MobilePlayer = () => {
             <div className="absolute inset-0 bg-gray-800 rounded-full overflow-hidden" />
             <div
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${showPreviewBadge ? 0 : progressPercentage}%` }}
+              style={{ width: `${progressPercentage}%` }}
             />
             <div
               className="absolute top-0 left-0 h-full rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               style={{
                 boxShadow: "0 0 10px rgba(59,130,246,0.7)",
-                width: `${showPreviewBadge ? 0 : progressPercentage}%`,
+                width: `${progressPercentage}%`,
               }}
             />
             <input
               type="range"
               min="0"
               max={duration || 0}
-              value={showPreviewBadge ? 0 : currentTime}
+              value={currentTime}
               onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
-              className={`absolute w-full h-full opacity-0 z-10 ${
-                showPreviewBadge ? "cursor-not-allowed" : "cursor-pointer"
-              }`}
-              disabled={showPreviewBadge}
+              className={`absolute w-full h-full opacity-0 z-10 cursor-pointer`}
             />
           </div>
           <div className="flex justify-between text-xs text-gray-400">
-            <span>{showPreviewBadge ? "0:00" : formatTime(currentTime)}</span>
+            <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration || currentSong?.duration)}</span>
           </div>
         </div>
@@ -309,7 +306,7 @@ const MobilePlayer = () => {
                 <FaLock className="text-xl text-white" />
               ) : isLoading ? (
                 <div className="spinner h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : isPlaying && !showPreviewBadge ? (
+              ) : isPlaying ? (
                 <FaPause className="text-xl" />
               ) : (
                 <FaPlay className="text-xl" />
