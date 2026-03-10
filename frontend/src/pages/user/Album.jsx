@@ -3,11 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { BsShare } from "react-icons/bs";
-import { RiPlayFill } from "react-icons/ri";
+import { FaPlay, FaPause } from "react-icons/fa";
 
 // ✅ REACT QUERY for album data
 import { useAlbum } from "../../hooks/api/useAlbums";
 import { useUserPurchases } from "../../hooks/api/useUserDashboard";
+import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 
 // ✅ REDUX for player
 import {
@@ -15,6 +16,8 @@ import {
   play,
   pause,
   setPlaybackContext,
+  addToQueue,
+  clearQueue,
 } from "../../features/playback/playerSlice";
 
 // ✅ REDUX for payment
@@ -40,7 +43,6 @@ import "react-loading-skeleton/dist/skeleton.css";
 
 // Helper functions
 import { formatDuration } from "../../utills/helperFunctions";
-
 // Subscription utilities
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 
@@ -75,7 +77,7 @@ export default function Album() {
   const navigate = useNavigate();
 
   const { data } = useUserPurchases();
-const userPurchases = Array.isArray(data?.history) ? data.history : [];
+  const userPurchases = Array.isArray(data?.history) ? data.history : [];
 
   // ✅ REACT QUERY: Album data
   const {
@@ -84,6 +86,8 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
     error: albumError,
     refetch: refetchAlbum,
   } = useAlbum(albumId);
+  const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } =
+    usePlaybackControl();
 
   // ✅ REDUX
   const selectedSong = useSelector((state) => state.player.selectedSong);
@@ -94,7 +98,6 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
   // Local states
   const [processingPayment, setProcessingPayment] = useState(false);
   const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
-  const [isHoveringCover, setIsHoveringCover] = useState(false);
 
   // ✅ Subscription modal state
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
@@ -107,6 +110,10 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
 
   // ✅ NEW: Track active song share dropdown
   const [activeSongShareDropdown, setActiveSongShareDropdown] = useState(null);
+  const isAlbumSongPlaying =
+    selectedSong &&
+    album?.songs?.some((s) => s._id === selectedSong._id) &&
+    isSongPlaying(selectedSong._id);
 
   // ✅ Clear payment state on mount
   useEffect(() => {
@@ -120,21 +127,29 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
       console.error("Album loading error:", albumError);
     }
   }, [albumError]);
-  
 
   // ✅ Play song handler
   const handlePlaySong = (song) => {
     if (!album) return;
+
+    const index = album.songs.findIndex((s) => s._id === song._id);
+
+    const nextSongs = album.songs.slice(index + 1);
 
     dispatch(
       setPlaybackContext({
         type: "album",
         id: album._id,
         songs: album.songs,
-      })
+      }),
     );
 
     dispatch(setSelectedSong(song));
+
+    nextSongs.forEach((s) => {
+      dispatch(addToQueue(s));
+    });
+
     dispatch(play());
   };
 
@@ -145,16 +160,37 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
       return;
     }
 
+    const nextSongs = album.songs.slice(1);
+    dispatch(clearQueue());
     dispatch(
       setPlaybackContext({
         type: "album",
         id: album._id,
         songs: album.songs,
-      })
+      }),
     );
 
     dispatch(setSelectedSong(album.songs[0]));
+
+    nextSongs.forEach((s) => {
+      dispatch(addToQueue(s));
+    });
+
     dispatch(play());
+  };
+
+  const handleAlbumPlayPause = () => {
+    if (!album?.songs?.length) return;
+
+    if (selectedSong && album.songs.some((s) => s._id === selectedSong._id)) {
+      if (isSongPlaying(selectedSong._id)) {
+        pausePlayback();
+      } else {
+        resumePlayback();
+      }
+    } else {
+      handlePlayAlbum();
+    }
   };
 
   // ✅ Purchase handler with subscription check
@@ -174,7 +210,7 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
     const artist = album?.artist;
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
       currentUser,
-      artist
+      artist,
     );
 
     if (type === "song") {
@@ -218,7 +254,7 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
           itemType: type,
           itemId: item._id,
           amount: item.price || item.basePrice?.amount,
-        })
+        }),
       ).unwrap();
 
       if (result.order) {
@@ -315,7 +351,7 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
 
   // ✅ Handle song share dropdown toggle
   const handleSongShareDropdownToggle = (songId) => {
-    setActiveSongShareDropdown(prev => prev === songId ? null : songId);
+    setActiveSongShareDropdown((prev) => (prev === songId ? null : songId));
   };
 
   // ✅ Get artist name
@@ -336,15 +372,15 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
   // ✅ Check purchase status
   const songs = album?.songs ? [...album.songs] : [];
   const isAlbumPurchased = userPurchases.some(
-  (purchase) =>
-    purchase?.itemType === "album" &&
-    String(purchase.itemId) === String(album?._id)
-);
+    (purchase) =>
+      purchase?.itemType === "album" &&
+      String(purchase.itemId) === String(album?._id),
+  );
   const isSubscriptionAlbum =
     album?.accessType === "subscription" || album?.price === 0;
   const totalDuration = songs.reduce(
     (total, song) => total + (song.duration || 0),
-    0
+    0,
   );
 
   // ✅ Loading state
@@ -442,30 +478,12 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
           {/* Album Header */}
           <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-8 pb-6">
             {/* Album Cover with Click to Play - RESPONSIVE */}
-            <div
-              className="relative cursor-pointer flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0 group"
-              onMouseEnter={() => setIsHoveringCover(true)}
-              onMouseLeave={() => setIsHoveringCover(false)}
-              onClick={handlePlayAlbum}
-            >
+            <div className="relative flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0">
               <img
                 src={album?.coverImage}
                 alt="Album Cover"
-                className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 group-hover:brightness-75"
+                className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300"
               />
-              
-              {/* Hover Overlay with Play Icon - RecentPlays की तरह */}
-              <div className="absolute inset-0 group-hover:bg-black group-hover:bg-opacity-20 transition-opacity duration-300">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePlayAlbum();
-                  }}
-                  className="absolute bottom-2 left-2 bg-gray-200 text-black p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                >
-                  <RiPlayFill size={16} />
-                </button>
-              </div>
             </div>
 
             <div className="flex-1 w-full">
@@ -495,6 +513,17 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
 
               {/* Purchase/Subscription Buttons */}
               <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
+                <button
+                  onClick={handleAlbumPlayPause}
+                  className="p-3 sm:p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center shadow-lg"
+                >
+                  {isAlbumSongPlaying ? (
+                    <FaPause className="w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <FaPlay className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
+                </button>
+
                 {album?.basePrice?.amount > 0 && !isSubscriptionAlbum && (
                   <>
                     <div className="px-2 py-0.5 sm:px-3 sm:py-1 md:px-5 md:py-3 bg-gray-800 rounded-full border border-gray-700">
@@ -597,7 +626,10 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
                 Tracklist
               </h2>
               {songs.map((song, index) => (
-                <div key={song._id} className="mb-3 sm:mb-4 flex items-center gap-3 sm:gap-4">
+                <div
+                  key={song._id}
+                  className="mb-3 sm:mb-4 flex items-center gap-3 sm:gap-4"
+                >
                   <div className="w-6 sm:w-8 text-center text-gray-400 font-medium text-sm sm:text-base">
                     {index + 1}
                   </div>
@@ -608,7 +640,7 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
                       img={song?.coverImage || album?.coverImage}
                       songName={song?.title}
                       songSlug={song?.slug || song?._id}
-                      seekTime={formatDuration(song.duration)}
+                      seekTime={song.duration}
                       onPlay={() => handlePlaySong(song)}
                       onTitleClick={() =>
                         navigate(`/song/${song?.slug || song?._id}`)
@@ -643,7 +675,9 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
                       // ✅ NEW PROPS for share dropdown control
                       shareUrl={`${window.location.origin}/song/${song?.slug || song?._id}`}
                       isShareDropdownOpen={activeSongShareDropdown === song._id}
-                      onShareDropdownToggle={() => handleSongShareDropdownToggle(song._id)}
+                      onShareDropdownToggle={() =>
+                        handleSongShareDropdownToggle(song._id)
+                      }
                       onShareMenuClose={() => setActiveSongShareDropdown(null)}
                     />
                   </div>

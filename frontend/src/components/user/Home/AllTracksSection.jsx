@@ -184,7 +184,7 @@ const AllTracksSection = ({
                   img={single.coverImage || "/images/placeholder.png"}
                   songName={single.title}
                   singerName={single.singer}
-                  seekTime={formatDuration(single.duration)}
+                  seekTime={single.duration}
                   onPlay={() => onPlaySong(single)}
                   isSelected={selectedSong?._id === single._id}
                   shareUrl={`${window.location.origin}/song/${single?.slug || single._id}`}

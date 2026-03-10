@@ -1,5 +1,5 @@
 // hooks/usePlayer.js
-import { useState, useRef, useEffect,useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Hls from "hls.js";
 import { fetchStreamUrl } from "../features/stream/streamSlice";
@@ -13,6 +13,9 @@ import {
   setVolume,
   clearPlaybackContext,
   setRandomDefaultFromSongs,
+  removeFirstQueueItem,
+  removeLastHistoryItem,
+  addToQueue,
 } from "../features/playback/playerSlice";
 import {
   selectAllSongs,
@@ -24,11 +27,11 @@ import {
   selectPlaybackContext,
   selectPlaybackContextSongs,
 } from "../features/songs/songSelectors";
-import { useLikeSong,useLikedSongs } from "./api/useSongs";
+import { useLikeSong, useLikedSongs } from "./api/useSongs";
 
 export const usePlayer = () => {
   const dispatch = useDispatch();
-  
+
   // Selectors
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector(selectSelectedSong);
@@ -39,6 +42,7 @@ export const usePlayer = () => {
   const playbackContext = useSelector(selectPlaybackContext);
   const playbackContextSongs = useSelector(selectPlaybackContextSongs);
   const isPlaying = useSelector((state) => state.player.isPlaying);
+  const queue = useSelector((state) => state.player.queue);
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
@@ -58,25 +62,27 @@ export const usePlayer = () => {
   // Refs
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const queueRef = useRef(queue);
+
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
 
   // Computed values
   const currentSong = displaySong;
-  const contextSongs = playbackContextSongs.length > 0 
-    ? playbackContextSongs 
-    : songs;
-  
+  const contextSongs =
+    playbackContextSongs.length > 0 ? playbackContextSongs : songs;
+
   const currentIndex = currentSong
     ? contextSongs.findIndex((s) => s._id === currentSong._id)
     : -1;
 
-  const nextSongs = currentIndex !== -1
-    ? contextSongs.slice(currentIndex + 1, currentIndex + 5)
-    : contextSongs.slice(0, 4);
+  const nextSongs = queue.upcoming.slice(0, 4);
 
-const likedSongs = data?.pages?.flatMap((page) => page.songs) || [];
-const isLiked = currentSong
-  ? likedSongs.some((song) => song._id === currentSong._id)
-  : false;
+  const likedSongs = data?.pages?.flatMap((page) => page.songs) || [];
+  const isLiked = currentSong
+    ? likedSongs.some((song) => song._id === currentSong._id)
+    : false;
 
   // Effects
   useEffect(() => {
@@ -86,8 +92,14 @@ const isLiked = currentSong
   }, [hasPersistentDefault, songs.length, dispatch]);
 
   useEffect(() => {
-    if (playbackContext.type !== 'all' && currentSong && playbackContextSongs.length > 0) {
-      const songInContext = playbackContextSongs.some(song => song._id === currentSong._id);
+    if (
+      playbackContext.type !== "all" &&
+      currentSong &&
+      playbackContextSongs.length > 0
+    ) {
+      const songInContext = playbackContextSongs.some(
+        (song) => song._id === currentSong._id,
+      );
       if (!songInContext) {
         dispatch(clearPlaybackContext());
       }
@@ -119,7 +131,6 @@ const isLiked = currentSong
 
         const streamUrl = streamUrls[selectedSong._id]?.url;
         const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
-  
 
         if (Hls.isSupported()) {
           hls = new Hls({
@@ -172,10 +183,13 @@ const isLiked = currentSong
         }
 
         video.onloadedmetadata = () => {
-          const safeDuration = isNaN(video.duration)
-            ? selectedSong.duration || 0
-            : video.duration;
-          dispatch(setDuration(safeDuration));
+          const mediaDuration = video.duration;
+
+          if (!isNaN(mediaDuration) && mediaDuration > 0) {
+            dispatch(setDuration(mediaDuration));
+          } else {
+            dispatch(setDuration(selectedSong?.duration || 0));
+          }
         };
 
         video.ontimeupdate = () => {
@@ -184,13 +198,33 @@ const isLiked = currentSong
           }
         };
 
-       video.onended = () => {
-  if (currentIndex < contextSongs.length - 1) {
-    handleNext();
-  } else {
-    dispatch(pause());
-  }
-};
+        video.onended = () => {
+          if (queueRef.current.upcoming.length > 0) {
+            handleNext();
+            return;
+          }
+
+          // ✅ album finished
+          if (
+            playbackContext?.type === "album" &&
+            playbackContextSongs.length > 0
+          ) {
+            const firstSong = playbackContextSongs[0];
+            const nextSongs = playbackContextSongs.slice(1);
+
+            dispatch(setSelectedSong(firstSong));
+
+            // refill queue
+            nextSongs.forEach((song) => {
+              dispatch(addToQueue(song));
+            });
+
+            dispatch(pause());
+            return;
+          }
+
+          dispatch(pause());
+        };
       } catch (err) {
         setPlaybackError(err.message);
       } finally {
@@ -219,53 +253,53 @@ const isLiked = currentSong
   }, [volume, isMuted]);
 
   // Event handlers
-const handleTogglePlay = useCallback(async () => {
-  const video = videoRef.current;
-  
-  if (isDisplayOnly && defaultSong) {
-    dispatch(setSelectedSong(defaultSong));
-    dispatch(play());
-    return;
-  }
-  
-  if (!video || !selectedSong) return;
-
-  try {
-    if (isPlaying) {
-      await video.pause();
-      dispatch(pause());
-    } else {
-      await video.play();
-      dispatch(play());
-    }
-  } catch (err) {
-    setPlaybackError(err.message);
-  }
-}, [isPlaying, isDisplayOnly, defaultSong, selectedSong, dispatch]);
-
-// ✅ Global event listener
-useEffect(() => {
-  const handler = (e) => {
-    const action = e.detail?.action;
+  const handleTogglePlay = useCallback(async () => {
     const video = videoRef.current;
-    
-    if (action === "pause") {
-      if (video) {
-        video.pause();
+
+    if (isDisplayOnly && defaultSong) {
+      dispatch(setSelectedSong(defaultSong));
+      dispatch(play());
+      return;
+    }
+
+    if (!video || !selectedSong) return;
+
+    try {
+      if (isPlaying) {
+        await video.pause();
         dispatch(pause());
-      }
-    } else if (action === "play") {
-      if (video) {
-        video.play().catch(() => {});
+      } else {
+        await video.play();
         dispatch(play());
       }
-    } else {
-      handleTogglePlay();
+    } catch (err) {
+      setPlaybackError(err.message);
     }
-  };
-  window.addEventListener("toggle-playback", handler);
-  return () => window.removeEventListener("toggle-playback", handler);
-}, [handleTogglePlay, dispatch]);
+  }, [isPlaying, isDisplayOnly, defaultSong, selectedSong, dispatch]);
+
+  // ✅ Global event listener
+  useEffect(() => {
+    const handler = (e) => {
+      const action = e.detail?.action;
+      const video = videoRef.current;
+
+      if (action === "pause") {
+        if (video) {
+          video.pause();
+          dispatch(pause());
+        }
+      } else if (action === "play") {
+        if (video) {
+          video.play().catch(() => {});
+          dispatch(play());
+        }
+      } else {
+        handleTogglePlay();
+      }
+    };
+    window.addEventListener("toggle-playback", handler);
+    return () => window.removeEventListener("toggle-playback", handler);
+  }, [handleTogglePlay, dispatch]);
 
   const handleToggleMute = () => {
     if (isMuted) {
@@ -278,30 +312,69 @@ useEffect(() => {
   };
 
   const handleNext = () => {
-  if (!currentSong || contextSongs.length === 0) return;
+    const queueNext = queueRef.current?.upcoming?.[0];
 
-  // If last song in context
-  if (currentIndex === contextSongs.length - 1) {
+    // 1️⃣ Queue has songs
+    if (queueNext) {
+      dispatch(setSelectedSong(queueNext));
+      dispatch(removeFirstQueueItem());
+      dispatch(play());
+      return;
+    }
+
+    // 2️⃣ Album / playlist context
+    if (playbackContext?.type !== "all" && playbackContextSongs?.length > 0) {
+      const currentIndex = playbackContextSongs.findIndex(
+        (s) => s._id === selectedSong?._id,
+      );
+
+      const nextIndex = currentIndex + 1;
+
+      // Album finished → restart
+      if (nextIndex >= playbackContextSongs.length) {
+        const firstSong = playbackContextSongs[0];
+        dispatch(setSelectedSong(firstSong));
+        dispatch(play());
+        return;
+      }
+
+      const nextSong = playbackContextSongs[nextIndex];
+      dispatch(setSelectedSong(nextSong));
+      dispatch(play());
+      return;
+    }
+
+    // 3️⃣ No queue and no context
     dispatch(pause());
-    dispatch(setCurrentTime(duration));
+  };
+
+  const handlePrev = () => {
+  const video = videoRef.current;
+
+  // 1️⃣ restart current song if played more than 3 seconds
+  if (video && video.currentTime > 3) {
+    video.currentTime = 0;
+    dispatch(setCurrentTime(0));
     return;
   }
 
-  const nextIndex = currentIndex + 1;
-  dispatch(setSelectedSong(contextSongs[nextIndex]));
+  const prevSong =
+    queueRef.current?.history?.[queueRef.current.history.length - 1];
+
+  // 2️⃣ no history
+  if (!prevSong) {
+    if (video) {
+      video.currentTime = 0;
+      dispatch(setCurrentTime(0));
+    }
+    return;
+  }
+
+  // 3️⃣ play previous song
+  dispatch(removeLastHistoryItem());
+  dispatch(setSelectedSong(prevSong));
   dispatch(play());
 };
-
-  const handlePrev = () => {
-    if (!currentSong || contextSongs.length === 0) return;
-    if (currentTime > 3) {
-      handleSeekChange(0);
-    } else {
-      const prevIndex = (currentIndex - 1 + contextSongs.length) % contextSongs.length;
-      dispatch(setSelectedSong(contextSongs[prevIndex]));
-      dispatch(play());
-    }
-  };
 
   const handleSeekChange = (val) => {
     const video = videoRef.current;
@@ -318,41 +391,39 @@ useEffect(() => {
   };
 
   const handleLikeToggle = () => {
-  if (!currentSong?._id) return;
+    if (!currentSong?._id) return;
 
-  if(!currentUser) {
-    toast.error("You must be logged in to like songs");
-    return;
-  }
+    if (!currentUser) {
+      toast.error("You must be logged in to like songs");
+      return;
+    }
 
-  likeMutation.mutate(currentSong._id, {
-    onSuccess: () => {
-      toast.success(
-        isLiked ? "Removed from Liked Songs" : "Added to Liked Songs"
-      );
-    },
-    onError: () => {
-      toast.error("Failed to update like");
-    },
-  });
-};
-
-
+    likeMutation.mutate(currentSong._id, {
+      onSuccess: () => {
+        toast.success(
+          isLiked ? "Removed from Liked Songs" : "Added to Liked Songs",
+        );
+      },
+      onError: () => {
+        toast.error("Failed to update like");
+      },
+    });
+  };
 
   const handleNextSongClick = (song) => {
     dispatch(setSelectedSong(song));
     dispatch(play());
   };
 
-        const isPreview = selectedSong 
-  ? streamUrls[selectedSong._id]?.isPreview ?? false 
-  : false;
+  const isPreview = selectedSong
+    ? (streamUrls[selectedSong._id]?.isPreview ?? false)
+    : false;
 
   // Return everything needed by UI
   return {
     // Refs
     videoRef,
-    
+
     // State
     currentSong,
     isPlaying,
@@ -368,7 +439,7 @@ useEffect(() => {
     isLiked,
     nextSongs,
     selectedSong,
-    
+
     // Handlers
     handleTogglePlay,
     handleToggleMute,

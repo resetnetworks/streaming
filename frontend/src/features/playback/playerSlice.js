@@ -1,13 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const MAX_HISTORY = 30;
+
 const loadInitialState = () => {
   try {
     const savedVolume = localStorage.getItem("player-volume");
     const savedDefaultSong = localStorage.getItem("player-default-song");
-    const savedPlaybackContext = localStorage.getItem("player-playback-context");
+    const savedPlaybackContext = localStorage.getItem(
+      "player-playback-context",
+    );
     const savedShuffleMode = localStorage.getItem("player-shuffle-mode");
     const savedRepeatMode = localStorage.getItem("player-repeat-mode");
-    
+    const savedQueue = localStorage.getItem("player-queue");
+
     return {
       selectedSong: null,
       defaultSong: savedDefaultSong ? JSON.parse(savedDefaultSong) : null,
@@ -17,15 +22,23 @@ const loadInitialState = () => {
       volume: savedVolume ? parseFloat(savedVolume) : 0.5,
       lastSelectedAt: null,
       forceRefreshToken: null,
-      playbackContext: savedPlaybackContext ? JSON.parse(savedPlaybackContext) : {
-        type: 'all',
-        id: null,
-        songs: []
-      },
+      playbackContext: savedPlaybackContext
+        ? JSON.parse(savedPlaybackContext)
+        : {
+            type: "all",
+            id: null,
+            songs: [],
+          },
       // ✅ NEW: Shuffle and repeat state
       shuffleMode: savedShuffleMode ? JSON.parse(savedShuffleMode) : false,
-      repeatMode: savedRepeatMode || 'off',
-      shuffleOrder: []
+      repeatMode: savedRepeatMode || "off",
+      queue: savedQueue
+        ? JSON.parse(savedQueue)
+        : {
+            upcoming: [],
+            history: [],
+          },
+      shuffleOrder: [],
     };
   } catch (e) {
     console.warn("Failed to load player state from storage", e);
@@ -39,14 +52,14 @@ const loadInitialState = () => {
       lastSelectedAt: null,
       forceRefreshToken: null,
       playbackContext: {
-        type: 'all',
+        type: "all",
         id: null,
-        songs: []
+        songs: [],
       },
       // ✅ NEW: Default shuffle and repeat state
       shuffleMode: false,
-      repeatMode: 'off',
-      shuffleOrder: []
+      repeatMode: "off",
+      shuffleOrder: [],
     };
   }
 };
@@ -72,23 +85,23 @@ const playerSlice = createSlice({
       state.lastSelectedAt = Date.now();
       state.forceRefreshToken = Date.now();
     },
-    
+
     play(state) {
       state.isPlaying = true;
     },
-    
+
     pause(state) {
       state.isPlaying = false;
     },
-    
+
     setCurrentTime(state, action) {
       state.currentTime = action.payload;
     },
-    
+
     setDuration(state, action) {
       state.duration = action.payload;
     },
-    
+
     setVolume(state, action) {
       state.volume = action.payload;
       try {
@@ -97,7 +110,7 @@ const playerSlice = createSlice({
         console.warn("Failed to persist volume", e);
       }
     },
-    
+
     // ✅ NEW: Set shuffle mode with persistence
     setShuffleMode(state, action) {
       state.shuffleMode = action.payload;
@@ -106,12 +119,79 @@ const playerSlice = createSlice({
         state.shuffleOrder = [];
       }
       try {
-        localStorage.setItem("player-shuffle-mode", JSON.stringify(action.payload));
+        localStorage.setItem(
+          "player-shuffle-mode",
+          JSON.stringify(action.payload),
+        );
       } catch (e) {
         console.warn("Failed to persist shuffle mode", e);
       }
     },
-    
+
+    addToQueue(state, action) {
+      const song = action.payload;
+
+      const exists = state.queue.upcoming.some((s) => s._id === song._id);
+
+      if (!exists) {
+        state.queue.upcoming.push(song); // FIX
+      }
+
+      try {
+        localStorage.setItem("player-queue", JSON.stringify(state.queue));
+      } catch (e) {
+        console.warn("Failed to persist queue", e);
+      }
+    },
+
+    clearQueue(state) {
+  state.queue.upcoming = [];
+
+  try {
+    localStorage.setItem("player-queue", JSON.stringify(state.queue));
+  } catch (e) {
+    console.warn("Failed to persist queue", e);
+  }
+},
+
+    removeFirstQueueItem(state) {
+      state.queue.upcoming.shift();
+
+      if (state.selectedSong) {
+        // prevent duplicate history entries
+        if (
+          state.queue.history[state.queue.history.length - 1]?._id !==
+          state.selectedSong._id
+        ) {
+          state.queue.history.push(state.selectedSong);
+        }
+
+        // limit history size
+        if (state.queue.history.length > MAX_HISTORY) {
+          state.queue.history.shift();
+        }
+      }
+
+      try {
+        localStorage.setItem("player-queue", JSON.stringify(state.queue));
+      } catch (e) {
+        console.warn("Failed to persist queue", e);
+      }
+    },
+    removeLastHistoryItem(state) {
+      const prev = state.queue.history.pop();
+
+      if (state.selectedSong && prev) {
+        state.queue.upcoming.unshift(state.selectedSong);
+      }
+
+      try {
+        localStorage.setItem("player-queue", JSON.stringify(state.queue));
+      } catch (e) {
+        console.warn("Failed to persist queue", e);
+      }
+    },
+
     // ✅ NEW: Set repeat mode with persistence
     setRepeatMode(state, action) {
       state.repeatMode = action.payload;
@@ -121,23 +201,26 @@ const playerSlice = createSlice({
         console.warn("Failed to persist repeat mode", e);
       }
     },
-    
+
     // ✅ NEW: Set shuffle order
     setShuffleOrder(state, action) {
       state.shuffleOrder = action.payload;
     },
-    
+
     setDefaultSong(state, action) {
       if (!state.defaultSong || action.payload.force) {
         state.defaultSong = action.payload.song;
         try {
-          localStorage.setItem("player-default-song", JSON.stringify(action.payload.song));
+          localStorage.setItem(
+            "player-default-song",
+            JSON.stringify(action.payload.song),
+          );
         } catch (e) {
           console.warn("Failed to save default song", e);
         }
       }
     },
-    
+
     setRandomDefaultFromSongs(state, action) {
       if (!state.defaultSong) {
         const availableSongs = action.payload || [];
@@ -146,7 +229,10 @@ const playerSlice = createSlice({
           if (randomSong) {
             state.defaultSong = randomSong;
             try {
-              localStorage.setItem("player-default-song", JSON.stringify(randomSong));
+              localStorage.setItem(
+                "player-default-song",
+                JSON.stringify(randomSong),
+              );
             } catch (e) {
               console.warn("Failed to save random default song", e);
             }
@@ -154,7 +240,7 @@ const playerSlice = createSlice({
         }
       }
     },
-    
+
     loadDefaultSongFromStorage(state) {
       try {
         const saved = localStorage.getItem("player-default-song");
@@ -166,7 +252,7 @@ const playerSlice = createSlice({
         state.defaultSong = null;
       }
     },
-    
+
     clearDefaultSong(state) {
       state.defaultSong = null;
       try {
@@ -175,21 +261,24 @@ const playerSlice = createSlice({
         console.warn("Failed to clear default song from storage", e);
       }
     },
-    
+
     setPlaybackContext(state, action) {
       state.playbackContext = action.payload;
       try {
-        localStorage.setItem("player-playback-context", JSON.stringify(action.payload));
+        localStorage.setItem(
+          "player-playback-context",
+          JSON.stringify(action.payload),
+        );
       } catch (e) {
         console.warn("Failed to save playback context", e);
       }
     },
-    
+
     clearPlaybackContext(state) {
       state.playbackContext = {
-        type: 'all',
+        type: "all",
         id: null,
-        songs: []
+        songs: [],
       };
       try {
         localStorage.removeItem("player-playback-context");
@@ -197,14 +286,14 @@ const playerSlice = createSlice({
         console.warn("Failed to clear playback context from storage", e);
       }
     },
-    
+
     resetPlayerState(state) {
       const preservedVolume = state.volume;
       const preservedDefaultSong = state.defaultSong;
       const preservedPlaybackContext = state.playbackContext;
       const preservedShuffleMode = state.shuffleMode;
       const preservedRepeatMode = state.repeatMode;
-      
+
       return {
         ...initialState,
         volume: preservedVolume,
@@ -215,7 +304,7 @@ const playerSlice = createSlice({
         forceRefreshToken: Date.now(),
       };
     },
-    
+
     forceRefresh(state) {
       state.forceRefreshToken = Date.now();
     },
@@ -226,16 +315,17 @@ const playerSlice = createSlice({
         localStorage.removeItem("player-playback-context");
         localStorage.removeItem("player-shuffle-mode");
         localStorage.removeItem("player-repeat-mode");
+        localStorage.removeItem("player-queue");
       } catch (e) {
         console.warn("Failed to clear player storage", e);
       }
-      
+
       return {
         ...initialState,
         volume: state.volume,
         forceRefreshToken: Date.now(),
       };
-    }
+    },
   },
 });
 
@@ -247,6 +337,10 @@ export const {
   setDuration,
   setVolume,
   setShuffleMode,
+  addToQueue,
+  clearQueue,
+  removeFirstQueueItem,
+  removeLastHistoryItem,
   setRepeatMode,
   setShuffleOrder,
   setDefaultSong,
