@@ -78,13 +78,22 @@ const playerSlice = createSlice({
   initialState,
   reducers: {
     setSelectedSong(state, action) {
-      state.selectedSong = action.payload;
-      state.currentTime = 0;
-      state.duration = 0;
-      state.isPlaying = true;
-      state.lastSelectedAt = Date.now();
-      state.forceRefreshToken = Date.now();
-    },
+  const newSong = action.payload;
+
+  // ✅ check same song
+  const isSameSong = state.selectedSong?._id === newSong._id;
+
+  state.selectedSong = newSong;
+  state.isPlaying = true;
+  state.lastSelectedAt = Date.now();
+  state.forceRefreshToken = Date.now();
+
+  // 🔥 only reset if different song
+  if (!isSameSong) {
+    state.currentTime = 0;
+    state.duration = 0;
+  }
+},
 
     play(state) {
       state.isPlaying = true;
@@ -143,6 +152,23 @@ const playerSlice = createSlice({
         console.warn("Failed to persist queue", e);
       }
     },
+
+    playNext(state, action) {
+  const song = action.payload;
+
+  // duplicate avoid karo
+  const exists = state.queue.upcoming.some((s) => s._id === song._id);
+
+  if (!exists) {
+    state.queue.upcoming.unshift(song); // start me add
+  }
+
+  try {
+    localStorage.setItem("player-queue", JSON.stringify(state.queue));
+  } catch (e) {
+    console.warn("Failed to persist queue", e);
+  }
+},
 
     clearQueue(state) {
   state.queue.upcoming = [];
@@ -338,6 +364,7 @@ export const {
   setVolume,
   setShuffleMode,
   addToQueue,
+  playNext,
   clearQueue,
   removeFirstQueueItem,
   removeLastHistoryItem,

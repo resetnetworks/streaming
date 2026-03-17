@@ -11,7 +11,6 @@ import {
   fetchUnifiedSearchResults,
   clearSearchResults,
 } from "../../features/search/searchSlice";
-import { setSelectedSong, play } from "../../features/playback/playerSlice";
 import { resetPaymentState } from "../../features/payments/paymentSlice";
 import {
   selectPaymentLoading,
@@ -20,6 +19,7 @@ import {
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 import { useUserPurchases } from "../../hooks/api/useUserDashboard";
+import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 import { toast } from "sonner";
 
 // ✅ Import Currency Utilities
@@ -68,12 +68,12 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
   const [selectedItemType, setSelectedItemType] = useState(null);
 
   const { results, loading, error } = useSelector((state) => state.search);
-  const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
   
   // Payment state from Redux
   const paymentLoading = useSelector(selectPaymentLoading);
   const paymentError = useSelector(selectPaymentError);
+
 
   // ✅ Use Payment Gateway Hook (same as Home page)
   const {
@@ -129,9 +129,9 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
     setQuery(newQuery);
   };
 
-  const handlePlaySong = (songId) => {
-    dispatch(setSelectedSong(songId));
-    dispatch(play());
+  const handlePlaySong = (song) => {
+    dispatch(setSelectedSong(song));
+
   };
 
   // ✅ REMOVED: Local currency functions - now using utilities
@@ -396,12 +396,13 @@ if (isPurchased) {
                   <div className="flex flex-wrap gap-6">
                     {results.songs.map((song) => (
                       <RecentPlays
+                       type="single"
                         key={song._id}
+                        songId={song._id}
                         onTitleClick={() => navigate(`/song/${song.slug}`)}
                         title={song.title}
                         image={song.coverImage || "/images/placeholder.png"}
                         onPlay={() => handlePlaySong(song)}
-                        isSelected={selectedSong?._id === song._id}
                       />
                     ))}
                   </div>

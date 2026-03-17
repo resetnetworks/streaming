@@ -1,15 +1,14 @@
-import React, { useCallback, useState, useEffect, use } from "react";
+import React, { useState, useRef } from "react";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { FiMoreHorizontal } from "react-icons/fi";
-import { FaCopy } from "react-icons/fa";
-import { FaXTwitter, FaFacebook, FaWhatsapp } from "react-icons/fa6";
+import { useNavigate } from "react-router-dom";
 import { useLikeSong, useLikedSongs } from "../../hooks/api/useSongs";
-import { BsShare } from "react-icons/bs";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-import { addToQueue } from "../../features/playback/playerSlice";
+import { addToQueue, playNext } from "../../features/playback/playerSlice";
 import { formatDuration } from "../../utills/helperFunctions";
+import ShareDropdown from "./ShareDropdown";
 
 const SongList = ({
   img,
@@ -21,170 +20,90 @@ const SongList = ({
   onPlay,
   songId,
   songSlug,
+  artistSlug,
+  albumSlug,
   shareUrl,
   currentUser,
   isShareDropdownOpen,
   onShareDropdownToggle,
   onShareMenuClose,
 }) => {
-  const shareMenuRef = React.useRef(null);
-
-  // Local state for backward compatibility
-  const [localShowShareMenu, setLocalShowShareMenu] = useState(false);
-  const likeMutation = useLikeSong();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { data } = useLikedSongs(20); // Get liked songs to determine if this song is liked
 
-  // Use parent-controlled state if provided, otherwise use local state
-  const showShareMenu =
-    isShareDropdownOpen !== undefined
-      ? isShareDropdownOpen
-      : localShowShareMenu;
+  // ── triggerRef: points at the ⋯ button so PortalDropdown can anchor to it ──
+  const triggerRef = useRef(null);
 
-  // ✅ Get the liked song IDs just once
-  const likedSongs = data?.pages.flatMap((page) => page.songs) || [];
-  const isLiked = likedSongs.some((song) => song._id === songId);
+  const [localOpen, setLocalOpen] = useState(false);
+  const controlled = isShareDropdownOpen !== undefined;
+  const isOpen = controlled ? isShareDropdownOpen : localOpen;
 
-  // ✅ Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        shareMenuRef.current &&
-        !shareMenuRef.current.contains(event.target)
-      ) {
-        handleCloseShareMenu();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onShareMenuClose]);
+  const likeMutation = useLikeSong();
+  const { data } = useLikedSongs(20);
+  const likedSongs = data?.pages.flatMap((p) => p.songs) || [];
+  const isLiked = likedSongs.some((s) => s._id === songId);
 
-  const handleClick = (e) => {
-    if (
-      !e.target.closest(".action-button") &&
-      !e.target.closest(".share-menu")
-    ) {
-      onPlay();
-    }
+  const handleClose = () => {
+    if (controlled) onShareMenuClose?.();
+    else setLocalOpen(false);
   };
 
-  // ✅ ADD TITLE CLICK HANDLER
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (controlled) onShareDropdownToggle?.();
+    else setLocalOpen((prev) => !prev);
+  };
+
+  const handleClick = (e) => {
+    if (!e.target.closest(".action-btn")) onPlay();
+  };
+
   const handleTitleClick = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (onTitleClick) {
-      onTitleClick();
-    }
-  };
-
-  // ✅ SHARE MENU HANDLERS
-  const handleShareMenuToggle = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (onShareDropdownToggle) {
-      // Parent component को notify करें
-      onShareDropdownToggle();
-    } else {
-      setLocalShowShareMenu(!localShowShareMenu);
-    }
+    onTitleClick?.();
   };
 
   const handleToggleLike = (e) => {
     e.stopPropagation();
     e.preventDefault();
-
-    if (!currentUser) {
-      toast.error("You must be logged in to like songs");
-      return;
-    }
+    if (!currentUser) return toast.error("Login required to like songs");
     likeMutation.mutate(songId, {
-      onSuccess: () => {
-        toast.success(
-          isLiked ? "Removed from Liked Songs" : "Added to Liked Songs",
-        );
-      },
-      onError: () => {
-        toast.error("Failed to update like");
-      },
+      onSuccess: () =>
+        toast.success(isLiked ? "Removed from Liked Songs" : "Added to Liked Songs"),
+      onError: () => toast.error("Failed to update like"),
     });
   };
 
-  const handleCloseShareMenu = () => {
-    if (onShareMenuClose) {
-      onShareMenuClose();
-    } else {
-      setLocalShowShareMenu(false);
-    }
-  };
-
-  // ✅ SHARE ACTIONS
-  const handleCopyUrl = async () => {
-    const url =
-      shareUrl || `${window.location.origin}/song/${songSlug || songId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
-      handleCloseShareMenu();
-    } catch (error) {
-      toast.error("Failed to copy link");
-    }
-  };
-
-  const handleShare = (platform) => {
-    const url =
-      shareUrl || `${window.location.origin}/song/${songSlug || songId}`;
-    const shareText = `Listen to "${songName}" by ${singerName} on Reset Music`;
-
-    switch (platform) {
-      case "twitter":
-        window.open(
-          `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`,
-          "_blank",
-        );
-        break;
-      case "facebook":
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-          "_blank",
-        );
-        break;
-      case "whatsapp":
-        window.open(
-          `https://wa.me/?text=${encodeURIComponent(shareText + " " + url)}`,
-          "_blank",
-        );
-        break;
-      default:
-        if (navigator.share) {
-          navigator.share({
-            title: songName,
-            text: shareText,
-            url: url,
-          });
-        } else {
-          handleCopyUrl();
-        }
-    }
-    handleCloseShareMenu();
-  };
-
-  const handleAddToQueue = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    const song = {
-      _id: songId,
-      title: songName,
-      artist: singerName,
-      coverImage: img,
-      duration: seekTime,
-    };
-
-    dispatch(addToQueue(song));
-
+  const handleAddToQueue = () => {
+    dispatch(
+      addToQueue({
+        _id: songId,
+        title: songName,
+        artist: singerName,
+        coverImage: img,
+        duration: seekTime,
+        artistSlug,
+        albumSlug,
+      })
+    );
     toast.success("Added to queue");
-    handleCloseShareMenu();
+  };
+
+  const handlePlayNext = () => {
+    dispatch(
+      playNext({
+        _id: songId,
+        title: songName,
+        artist: singerName,
+        coverImage: img,
+        duration: seekTime,
+        artistSlug,
+        albumSlug,
+      })
+    );
+    toast.success("Will play next");
   };
 
   return (
@@ -194,6 +113,7 @@ const SongList = ({
       }`}
       onClick={handleClick}
     >
+      {/* Left: thumbnail + title */}
       <div className="flex items-center">
         <img
           src={img}
@@ -202,34 +122,30 @@ const SongList = ({
             isSelected ? "shadow-[0_0_5px_1px_#3b82f6]" : ""
           }`}
         />
-        <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px] xl:max-w-[500px]">
-          {/* ✅ MAKE SONG TITLE CLICKABLE */}
-          <button onClick={handleTitleClick} className="text-left w-full">
+        <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px]">
+          <button onClick={handleTitleClick} className="text-left w-full action-btn">
             <h3 className="text-white text-lg leading-none sm:truncate">
               <span className="block sm:hidden hover:underline">
                 {songName.length > 12 ? songName.slice(0, 7) + "..." : songName}
               </span>
-              <span className="hidden sm:block hover:underline">
-                {songName}
-              </span>
+              <span className="hidden sm:block hover:underline">{songName}</span>
             </h3>
           </button>
         </div>
       </div>
 
+      {/* Right: duration + like + options */}
       <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
           <MdAccessTimeFilled
-            className={`text-base ${
-              isSelected ? "text-blue-700" : "text-gray-500"
-            }`}
+            className={`text-base ${isSelected ? "text-blue-700" : "text-gray-500"}`}
           />
           <span className="ml-2">{formatDuration(seekTime)}</span>
         </div>
 
         <button
           type="button"
-          className="action-button"
+          className="action-btn"
           onClick={handleToggleLike}
           disabled={likeMutation.isLoading}
         >
@@ -240,91 +156,30 @@ const SongList = ({
           )}
         </button>
 
-        {/* ✅ SHARE DROPDOWN */}
-        <div className="relative share-menu" ref={shareMenuRef}>
-          <button className="action-button" onClick={handleShareMenuToggle}>
+        {/* Options trigger — ref passed to ShareDropdown for portal anchoring */}
+        <div className="relative action-btn">
+          <button ref={triggerRef} className="action-btn" onClick={handleToggle}>
             <FiMoreHorizontal
-              className={`text-lg hover:cursor-pointer ${
-                showShareMenu ? "text-blue-400" : "text-white"
-              }`}
+              className={`text-lg ${isOpen ? "text-blue-400" : "text-white"}`}
             />
           </button>
 
-          {showShareMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-gradient-to-tr from-blue-950 to-black rounded-xl border border-gray-700 py-2 min-w-[160px] z-50 shadow-2xl">
-              <div className="px-3 py-1.5 border-b border-gray-700">
-                <p className="text-xs font-semibold text-gray-300">Share</p>
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCopyUrl();
-                }}
-                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
-              >
-                <FaCopy className="w-3 h-3 text-blue-400" />
-                <span>Copy Link</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShare("twitter");
-                }}
-                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
-              >
-                <FaXTwitter className="w-3 h-3 text-gray-300" />
-                <span>Twitter</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShare("facebook");
-                }}
-                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
-              >
-                <FaFacebook className="w-3 h-3 text-blue-600" />
-                <span>Facebook</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShare("whatsapp");
-                }}
-                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
-              >
-                <FaWhatsapp className="w-3 h-3 text-green-500" />
-                <span>WhatsApp</span>
-              </button>
-
-              {/* <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToQueue(e);
-                }}
-                className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm"
-              >
-                <span>➕</span>
-                <span>Add to Queue</span>
-              </button> */}
-
-              {navigator.share && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShare("native");
-                  }}
-                  className="w-full px-3 py-2 flex items-center gap-2 hover:bg-blue-800/50 transition-colors text-sm border-t border-gray-700 mt-1"
-                >
-                  <BsShare className="w-3 h-3 text-purple-400" />
-                  <span>Share via...</span>
-                </button>
-              )}
-            </div>
-          )}
+          <ShareDropdown
+            isOpen={isOpen}
+            onClose={handleClose}
+            triggerRef={triggerRef}          // ← pass the ref here
+            songName={songName}
+            singerName={singerName}
+            songSlug={songSlug}
+            artistSlug={artistSlug}
+            albumSlug={albumSlug}
+            shareUrl={shareUrl || `${window.location.origin}/song/${songSlug || songId}`}
+            onAddToQueue={handleAddToQueue}
+            onPlayNext={handlePlayNext}
+            isPlayerContext={false}
+            navigate={navigate}
+            placement="bottom-right"
+          />
         </div>
       </div>
     </div>

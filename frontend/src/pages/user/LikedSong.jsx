@@ -9,6 +9,7 @@ import UserHeader from "../../components/user/UserHeader";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { current } from "@reduxjs/toolkit";
+import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 
 const LikedSongs = () => {
   const dispatch = useDispatch();
@@ -27,6 +28,7 @@ const LikedSongs = () => {
   
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const playerStatus = useSelector((state) => state.player.status);
+  const {resumePlayback} = usePlaybackControl();
 
   // Flatten all songs from pages
   const allSongs = data?.pages.flatMap(page => page.songs) || [];
@@ -42,7 +44,7 @@ const LikedSongs = () => {
 
     dispatch(setSelectedSong(song));
     if (playerStatus !== "playing" || selectedSong !== song._id) {
-      dispatch(play());
+     resumePlayback();
     }
   };
 

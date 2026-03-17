@@ -52,20 +52,22 @@ const UploadForm = ({
   const [coverImage, setCoverImage] = useState(initialData.coverImage || null);
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [title, setTitle] = useState(initialData.title || "");
-  const [date, setDate] = useState(initialData.date || "");
+  const [date, setDate] = useState(
+    initialData.date || new Date().toISOString().split("T")[0],
+  );
   const [description, setDescription] = useState(initialData.description || "");
   const [isrc, setIsrc] = useState(initialData.isrc || "");
 
   // --- Access Type and Price State ---
   const [accessType, setAccessType] = useState(
-    initialData.accessType || "subscription"
+    initialData.accessType || "subscription",
   );
   const [price, setPrice] = useState(initialData.price || "");
   const [showAccessDropdown, setShowAccessDropdown] = useState(false);
 
   // --- Genre State ---
   const [selectedGenres, setSelectedGenres] = useState(
-    initialData.genres || []
+    initialData.genres || [],
   );
   const [showGenreModal, setShowGenreModal] = useState(false);
 
@@ -107,14 +109,6 @@ const UploadForm = ({
   const selectedAccessType = getSelectedAccessType();
   const IconComponent = selectedAccessType.icon;
 
-  // --- Date Logic ---
-  useEffect(() => {
-    if (!date) {
-      const today = new Date().toISOString().split("T")[0];
-      setDate(today);
-    }
-  }, [date]);
-
   // --- Price Validation ---
   const validatePrice = (priceValue) => {
     if (!priceValue) return false;
@@ -142,20 +136,17 @@ const UploadForm = ({
       // Compress image
       const compressedBlob = await compressCoverImage(file);
 
-// 🔥 Blob → File (MIME type preserve)
-const compressedFile = new File(
-  [compressedBlob],
-  file.name.replace(/\.[^/.]+$/, "") + ".webp",
-  { type: "image/webp" }
-);
+      // 🔥 Blob → File (MIME type preserve)
+      const compressedFile = new File(
+        [compressedBlob],
+        file.name.replace(/\.[^/.]+$/, "") + ".webp",
+        { type: "image/webp" },
+      );
 
+      const previewUrl = URL.createObjectURL(compressedFile);
 
-const previewUrl = URL.createObjectURL(compressedFile);
-
-setCoverImage(previewUrl);
-setCoverImageFile(compressedFile);
-
-      
+      setCoverImage(previewUrl);
+      setCoverImageFile(compressedFile);
     } catch (err) {
       console.error(err);
       toast.error("Image optimization failed", { id: "image" });
@@ -239,8 +230,10 @@ setCoverImageFile(compressedFile);
 
     // Validate audio file
     const validTypes = [".wav", ".aif", ".aiff", ".flac"];
-    const fileExtension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
-    
+    const fileExtension = file.name
+      .substring(file.name.lastIndexOf("."))
+      .toLowerCase();
+
     if (!validTypes.includes(fileExtension)) {
       toast.error("Invalid audio format. Please upload WAV, AIFF, FLAC");
       return;
@@ -282,8 +275,8 @@ setCoverImageFile(compressedFile);
 
     setTracks((prev) =>
       prev.map((track) =>
-        track.id === trackId ? { ...track, name: editTrackName.trim() } : track
-      )
+        track.id === trackId ? { ...track, name: editTrackName.trim() } : track,
+      ),
     );
     setEditingTrackId(null);
   };
@@ -360,15 +353,21 @@ setCoverImageFile(compressedFile);
       coverImageFile,
       accessType,
       price: accessType === "purchase-only" ? parseFloat(price) : null,
-      tracks: tracks.map(track => ({
+      tracks: tracks.map((track) => ({
         ...track,
         // Convert duration to seconds for backend
-        durationInSeconds: track.duration === "Loading..." ? 180 : convertDurationToSeconds(track.duration)
+        durationInSeconds:
+          track.duration === "Loading..."
+            ? 180
+            : convertDurationToSeconds(track.duration),
       })),
-      basePrice: accessType === "purchase-only" ? {
-        amount: parseFloat(price),
-        currency: "USD"
-      } : null
+      basePrice:
+        accessType === "purchase-only"
+          ? {
+              amount: parseFloat(price),
+              currency: "USD",
+            }
+          : null,
     };
 
     // Call parent onSubmit with form data
@@ -382,13 +381,13 @@ setCoverImageFile(compressedFile);
     if (durationString === "Loading..." || !durationString) {
       return 180; // Default 3 minutes
     }
-    
+
     try {
       const parts = durationString.split(":");
       if (parts.length === 2) {
         const minutes = parseInt(parts[0], 10);
         const seconds = parseInt(parts[1], 10);
-        return (minutes * 60) + seconds;
+        return minutes * 60 + seconds;
       }
       return 180;
     } catch (error) {
@@ -401,25 +400,36 @@ setCoverImageFile(compressedFile);
   const getTypeText = () => {
     return {
       titleLabel: type === "album" ? "Album" : "Song",
-      titlePlaceholder: type === "album" ? "Enter album title" : "Enter song title",
-      descriptionPlaceholder: type === "album" ? "Tell us about this album..." : "Tell us about this song...",
+      titlePlaceholder:
+        type === "album" ? "Enter album title" : "Enter song title",
+      descriptionPlaceholder:
+        type === "album"
+          ? "Tell us about this album..."
+          : "Tell us about this song...",
       accessDescription: `How users can access this ${type === "album" ? "album" : "song"}`,
       isrcLabel: type === "album" ? "UPC" : "ISRC",
-      isrcPlaceholder: type === "album" ? "e.g., 123456789012" : "e.g., US-ABC-12-34567",
-      isrcDescription: type === "album" ? "Universal Product Code" : "International Standard Recording Code",
+      isrcPlaceholder:
+        type === "album" ? "e.g., 123456789012" : "e.g., US-ABC-12-34567",
+      isrcDescription:
+        type === "album"
+          ? "Universal Product Code"
+          : "International Standard Recording Code",
       descriptionLabel: `Share the story or inspiration behind this ${type === "album" ? "album" : "song"}`,
-      submitButton: type === "album" ? "create album" : "upload song"
+      submitButton: type === "album" ? "create album" : "upload song",
     };
   };
 
   const typeText = getTypeText();
 
   return (
-    <form onSubmit={handleSubmit} className="w-full p-4 md:p-6 flex flex-col gap-8">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full p-4 md:p-6 flex flex-col gap-8"
+    >
       {/* FORM CONTENT - Same as before */}
       {/* ... rest of your JSX remains exactly the same ... */}
       {/* The JSX structure doesn't change, only the handleSubmit function changes */}
-      
+
       {/* SECTION 1: Basic Info (Cover, Title, Date) */}
       <div
         className={`flex flex-col lg:flex-row gap-6 items-start pb-8 ${
@@ -451,17 +461,17 @@ setCoverImageFile(compressedFile);
                     alt="Cover Preview"
                     className="w-full h-full object-cover"
                   />
-                  
+
                   {/* Upload Progress Overlay */}
                   {isUploadingCover && (
                     <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
                       <div className="w-16 h-16 mb-2">
                         <div className="relative w-full h-full">
                           <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
-                          <div 
+                          <div
                             className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
                             style={{
-                              transform: `rotate(${coverImageUploadProgress * 3.6}deg)`
+                              transform: `rotate(${coverImageUploadProgress * 3.6}deg)`,
                             }}
                           ></div>
                         </div>
@@ -531,24 +541,27 @@ setCoverImageFile(compressedFile);
                   placeholder="YYYY-MM-DD"
                   value={date}
                   onChange={handleDateChange}
-                  className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 pr-10"
-                  disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+                  className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 pr-12"
                 />
+
                 <input
                   type="date"
                   ref={hiddenDateInputRef}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="absolute top-0 right-0 w-full h-full opacity-0 cursor-pointer"
+                  className="absolute top-0 left-0 w-full h-full opacity-0 pointer-events-none"
                 />
                 <div
                   onClick={openCalendar}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-white transition-colors"
+                  className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer 
+  bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-md transition-all"
                 >
-                  <FiCalendar size={18} />
+                  <FiCalendar size={16} />
                 </div>
               </div>
-              <div className="text-gray-400 text-xs">Format: YYYY-MM-DD</div>
+              <div className="text-gray-400 text-xs">
+                Format: YYYY-MM-DD • You can type or select from calendar
+              </div>
             </div>
           </div>
 
@@ -573,8 +586,8 @@ setCoverImageFile(compressedFile);
                       selectedAccessType.color === "green"
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                         : selectedAccessType.color === "blue"
-                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                     }`}
                   >
                     <IconComponent size={16} />
@@ -615,8 +628,8 @@ setCoverImageFile(compressedFile);
                             option.color === "green"
                               ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                               : option.color === "blue"
-                              ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                              : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                           }`}
                         >
                           <OptionIcon size={16} />
@@ -673,7 +686,9 @@ setCoverImageFile(compressedFile);
                     min="0"
                     step="0.01"
                     required={accessType === "purchase-only"}
-                    disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+                    disabled={
+                      isSubmitting || isUploadingAudio || isUploadingCover
+                    }
                   />
                 </div>
                 <div className="w-32 bg-gray-800 text-gray-400 px-4 py-3 rounded-lg border border-gray-700 flex items-center justify-center text-sm">
@@ -690,18 +705,31 @@ setCoverImageFile(compressedFile);
           <div className="flex flex-col gap-2">
             <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
               Description
-              <span className="text-blue-400 text-xs font-normal ml-1">(Optional)</span>
+              <span className="text-blue-400 text-xs font-normal ml-1">
+                (Optional)
+              </span>
             </label>
             <textarea
               placeholder={typeText.descriptionPlaceholder}
               value={description}
+              maxLength={300}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 resize-none"
               disabled={isSubmitting || isUploadingAudio || isUploadingCover}
             />
-            <div className="text-gray-400 text-xs">
-              {typeText.descriptionLabel}
-            </div>
+            <div className="flex justify-between text-xs mt-1">
+  <span className="text-gray-400">
+    {typeText.descriptionLabel}
+  </span>
+
+  <span
+    className={`font-medium ${
+      description.length > 280 ? "text-amber-400" : "text-gray-100"
+    }`}
+  >
+    {description.length}/300
+  </span>
+</div>
           </div>
         </div>
       </div>
@@ -710,7 +738,9 @@ setCoverImageFile(compressedFile);
       {type !== "album" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-gray-200 text-lg font-medium lowercase tracking-wide">upload track</h3>
+            <h3 className="text-gray-200 text-lg font-medium lowercase tracking-wide">
+              upload track
+            </h3>
             {tracks.length > 0 && (
               <div className="text-blue-400 text-sm font-medium">
                 {tracks.length} file selected
@@ -719,20 +749,23 @@ setCoverImageFile(compressedFile);
           </div>
 
           {/* Big Clickable Upload Area */}
-          <label className={`relative overflow-hidden group border-2 border-dashed transition-all cursor-pointer rounded-2xl min-h-[180px] flex flex-col items-center justify-center p-8 text-center
-            ${(tracks.length > 0 || isUploadingAudio) 
-              ? "opacity-50 pointer-events-none border-gray-700 bg-gray-800/20" 
-              : "bg-gray-800/40 border-blue-500 hover:bg-gray-800/60 shadow-xl"}`}>
-            
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleTrackUpload} 
-              accept=".wav,.aif,.aiff,.flac" 
-              className="hidden" 
+          <label
+            className={`relative overflow-hidden group border-2 border-dashed transition-all cursor-pointer rounded-2xl min-h-[180px] flex flex-col items-center justify-center p-8 text-center
+            ${
+              tracks.length > 0 || isUploadingAudio
+                ? "opacity-50 pointer-events-none border-gray-700 bg-gray-800/20"
+                : "bg-gray-800/40 border-blue-500 hover:bg-gray-800/60 shadow-xl"
+            }`}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleTrackUpload}
+              accept=".wav,.aif,.aiff,.flac"
+              className="hidden"
               disabled={tracks.length > 0 || isUploadingAudio || isSubmitting}
             />
-            
+
             {/* Top Accent Line */}
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
 
@@ -741,10 +774,10 @@ setCoverImageFile(compressedFile);
               {isUploadingAudio ? (
                 <div className="relative w-12 h-12">
                   <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
-                  <div 
+                  <div
                     className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
                     style={{
-                      transform: `rotate(${audioUploadProgress * 3.6}deg)`
+                      transform: `rotate(${audioUploadProgress * 3.6}deg)`,
                     }}
                   ></div>
                 </div>
@@ -761,25 +794,25 @@ setCoverImageFile(compressedFile);
             {/* Text Content */}
             <div className="space-y-2">
               <h4 className="text-white text-xl font-semibold tracking-tight">
-                {isUploadingAudio 
+                {isUploadingAudio
                   ? `Uploading... ${audioUploadProgress}%`
-                  : tracks.length > 0 
-                  ? "Track Successfully Selected" 
-                  : "Click anywhere to upload track"}
+                  : tracks.length > 0
+                    ? "Track Successfully Selected"
+                    : "Click anywhere to upload track"}
               </h4>
               <p className="text-gray-400 text-sm max-w-[280px] mx-auto leading-relaxed">
                 {isUploadingAudio
                   ? "Uploading to S3, please wait..."
-                  : tracks.length > 0 
-                  ? "Remove existing track to upload a new one" 
-                  : "WAV, AIFF, FLAC supported. Max 1 track for singles."}
+                  : tracks.length > 0
+                    ? "Remove existing track to upload a new one"
+                    : "WAV, AIFF, FLAC supported. Max 1 track for singles."}
               </p>
             </div>
 
             {/* Progress Bar for Upload */}
             {isUploadingAudio && (
               <div className="w-64 mt-4 bg-gray-700 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${audioUploadProgress}%` }}
                 ></div>
@@ -794,14 +827,19 @@ setCoverImageFile(compressedFile);
 
           {/* Track Details List */}
           {tracks.map((track) => (
-            <div key={track.id} className="bg-gray-800/30 rounded-xl border border-gray-700 p-5 mt-2">
+            <div
+              key={track.id}
+              className="bg-gray-800/30 rounded-xl border border-gray-700 p-5 mt-2"
+            >
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <h4 className="text-white text-xs font-bold uppercase tracking-[0.2em] opacity-60">Track Details</h4>
+                  <h4 className="text-white text-xs font-bold uppercase tracking-[0.2em] opacity-60">
+                    Track Details
+                  </h4>
                 </div>
-                <button 
-                  onClick={() => removeTrack(track.id)} 
+                <button
+                  onClick={() => removeTrack(track.id)}
                   className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1.5 px-3 py-1 bg-red-400/10 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isSubmitting || isUploadingAudio}
                 >
@@ -812,25 +850,44 @@ setCoverImageFile(compressedFile);
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Name Field */}
                 <div className="space-y-2">
-                  <label className="text-gray-500 text-xs font-bold uppercase">Track Name</label>
+                  <label className="text-gray-500 text-xs font-bold uppercase">
+                    Track Name
+                  </label>
                   {editingTrackId === track.id ? (
                     <div className="flex items-center gap-2">
-                      <input 
-                        autoFocus 
-                        type="text" 
-                        value={editTrackName} 
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editTrackName}
                         onChange={(e) => setEditTrackName(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" ? saveTrackName(track.id) : e.key === "Escape" && cancelEditing()}
-                        className="flex-1 bg-gray-900/50 text-white px-4 py-2 rounded-lg border border-blue-500/50 outline-none text-sm" 
+                        onKeyDown={(e) =>
+                          e.key === "Enter"
+                            ? saveTrackName(track.id)
+                            : e.key === "Escape" && cancelEditing()
+                        }
+                        className="flex-1 bg-gray-900/50 text-white px-4 py-2 rounded-lg border border-blue-500/50 outline-none text-sm"
                         disabled={isSubmitting || isUploadingAudio}
                       />
-                      <button onClick={() => saveTrackName(track.id)} className="text-emerald-400 p-2"><FiCheck size={18}/></button>
+                      <button
+                        onClick={() => saveTrackName(track.id)}
+                        className="text-emerald-400 p-2"
+                      >
+                        <FiCheck size={18} />
+                      </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 group/name cursor-pointer" onClick={() => startEditing(track.id, track.name)}>
-                      <span className="text-white text-base font-medium group-hover:text-blue-400 transition-colors">{track.name}</span>
+                    <div
+                      className="flex items-center gap-2 group/name cursor-pointer"
+                      onClick={() => startEditing(track.id, track.name)}
+                    >
+                      <span className="text-white text-base font-medium group-hover:text-blue-400 transition-colors">
+                        {track.name}
+                      </span>
                       {!(isSubmitting || isUploadingAudio) && (
-                        <FiEdit2 size={14} className="text-gray-500 opacity-0 group-hover/name:opacity-100 transition-opacity" />
+                        <FiEdit2
+                          size={14}
+                          className="text-gray-500 opacity-0 group-hover/name:opacity-100 transition-opacity"
+                        />
                       )}
                     </div>
                   )}
@@ -838,10 +895,18 @@ setCoverImageFile(compressedFile);
 
                 {/* Duration Field */}
                 <div className="space-y-2">
-                  <label className="text-gray-500 text-xs font-bold uppercase">Duration</label>
+                  <label className="text-gray-500 text-xs font-bold uppercase">
+                    Duration
+                  </label>
                   <div className="flex items-center gap-2.5 text-white text-base">
                     <FiClock className="text-blue-500" size={18} />
-                    <span className={track.duration === "Loading..." ? "animate-pulse text-amber-400" : "font-mono"}>
+                    <span
+                      className={
+                        track.duration === "Loading..."
+                          ? "animate-pulse text-amber-400"
+                          : "font-mono"
+                      }
+                    >
                       {track.duration}
                     </span>
                   </div>
@@ -879,7 +944,9 @@ setCoverImageFile(compressedFile);
                   type="button"
                   onClick={() => removeGenre(genre)}
                   className="text-gray-400 hover:text-red-400 transition-colors ml-1 p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+                  disabled={
+                    isSubmitting || isUploadingAudio || isUploadingCover
+                  }
                 >
                   <FiX size={14} />
                 </button>
@@ -892,11 +959,21 @@ setCoverImageFile(compressedFile);
             type="button"
             onClick={openGenreModal}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 hover:bg-gray-800/30 transition-colors group font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={selectedGenres.length >= 3 || isSubmitting || isUploadingAudio || isUploadingCover}
+            disabled={
+              selectedGenres.length >= 3 ||
+              isSubmitting ||
+              isUploadingAudio ||
+              isUploadingCover
+            }
           >
-            <FiPlus size={18} className="group-hover:text-blue-400 transition-colors" />
+            <FiPlus
+              size={18}
+              className="group-hover:text-blue-400 transition-colors"
+            />
             <span className="text-sm">
-              {selectedGenres.length >= 3 ? "Maximum genres selected" : "Add Genres"}
+              {selectedGenres.length >= 3
+                ? "Maximum genres selected"
+                : "Add Genres"}
             </span>
           </button>
 
@@ -923,7 +1000,9 @@ setCoverImageFile(compressedFile);
           onClick={onCancel}
           disabled={isSubmitting || isUploadingAudio || isUploadingCover}
           className={`text-gray-400 hover:text-white px-6 py-2.5 rounded-lg font-medium transition-all hover:bg-gray-800/50 ${
-            isSubmitting || isUploadingAudio || isUploadingCover ? "opacity-50 cursor-not-allowed" : ""
+            isSubmitting || isUploadingAudio || isUploadingCover
+              ? "opacity-50 cursor-not-allowed"
+              : ""
           }`}
         >
           Cancel
@@ -946,7 +1025,9 @@ setCoverImageFile(compressedFile);
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
               <span>
-                {isUploadingAudio || isUploadingCover ? "Uploading..." : "Saving..."}
+                {isUploadingAudio || isUploadingCover
+                  ? "Uploading..."
+                  : "Saving..."}
               </span>
             </div>
           ) : (

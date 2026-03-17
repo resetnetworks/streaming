@@ -16,6 +16,8 @@ import {
   removeFirstQueueItem,
   removeLastHistoryItem,
   addToQueue,
+  setRepeatMode,
+  setShuffleMode,
 } from "../features/playback/playerSlice";
 import {
   selectAllSongs,
@@ -49,15 +51,19 @@ export const usePlayer = () => {
   const streamUrls = useSelector((state) => state.stream.urls);
   const streamLoading = useSelector((state) => state.stream.loading);
   const streamError = useSelector((state) => state.stream.error);
+  const currentUser = useSelector((state) => state.auth.user);
+  const repeatMode = useSelector((state) => state.player.repeatMode);
+  const shuffleMode = useSelector((state) => state.player.shuffleMode);
   const likeMutation = useLikeSong();
   const { data } = useLikedSongs(20);
-  const currentUser = useSelector((state) => state.auth.user);
 
   // Local state
   const [playbackError, setPlaybackError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const repeatModeRef = useRef(repeatMode);
 
   // Refs
   const videoRef = useRef(null);
@@ -67,6 +73,10 @@ export const usePlayer = () => {
   useEffect(() => {
     queueRef.current = queue;
   }, [queue]);
+
+  useEffect(() => {
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
 
   // Computed values
   const currentSong = displaySong;
@@ -100,11 +110,20 @@ export const usePlayer = () => {
       const songInContext = playbackContextSongs.some(
         (song) => song._id === currentSong._id,
       );
-      if (!songInContext) {
+
+      // ✅ Sirf tab clear karo jab queue bhi empty ho
+      // Queue mein songs hain matlab intentionally bahar gaye hain
+      if (!songInContext && queue.upcoming.length === 0) {
         dispatch(clearPlaybackContext());
       }
     }
-  }, [currentSong?._id, playbackContext.type, playbackContextSongs, dispatch]);
+  }, [
+    currentSong?._id,
+    playbackContext.type,
+    playbackContextSongs,
+    queue.upcoming.length,
+    dispatch,
+  ]);
 
   useEffect(() => {
     if (selectedSong && !streamUrls[selectedSong._id]) {
@@ -132,10 +151,27 @@ export const usePlayer = () => {
         const streamUrl = streamUrls[selectedSong._id]?.url;
         const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
 
+        const getAdaptiveBuffer = () => {
+          const connection =
+            navigator.connection ||
+            navigator.mozConnection ||
+            navigator.webkitConnection;
+
+          if (!connection) return 25; // default buffer length
+
+          const speed = connection.downlink;
+          if (speed >= 5) return 40; // fast connection
+          if (speed >= 2) return 25; // average connection
+          return 12; // slow connection
+        };
+        const bufferLength = getAdaptiveBuffer();
+        // console.log("Adaptive Buffer Length:", bufferLength);
+        // console.log("Network Downlink:", navigator.connection?.downlink);
+
         if (Hls.isSupported()) {
           hls = new Hls({
-            maxBufferLength: 30,
-            maxMaxBufferLength: 600,
+            maxBufferLength: bufferLength,
+            maxMaxBufferLength: bufferLength * 2,
             maxBufferSize: 60 * 1000 * 1000,
             maxBufferHole: 0.5,
             enableWorker: true,
@@ -198,31 +234,78 @@ export const usePlayer = () => {
           }
         };
 
+        video.onwaiting = () => {
+          setIsBuffering(true);
+        };
+
+        video.onplaying = () => {
+          setIsBuffering(false);
+          setIsLoading(false);
+          dispatch(play());
+        };
+
+        video.oncanplaythrough = () => {
+          setIsBuffering(false);
+        };
+
         video.onended = () => {
-          if (queueRef.current.upcoming.length > 0) {
-            handleNext();
+          const repeat = repeatModeRef.current;
+          // 🔁 repeat one
+          if (repeatModeRef.current === "one") {
+            video.currentTime = 0;
+            video.play().catch(() => {});
             return;
           }
 
-          // ✅ album finished
+          // ▶ queue priority
+          if (!shuffleMode && queueRef.current.upcoming.length > 0) {
+  handleNext();
+  return;
+}
+
+          if (shuffleMode) {
+  const randomSong = getRandomSongFromContext();
+
+  if (randomSong) {
+    dispatch(setSelectedSong(randomSong));
+    dispatch(play());
+    return;
+  }
+}
+
+          // 📀 playlist / album logic
+
           if (
-            playbackContext?.type === "album" &&
+            playbackContext?.type !== "all" &&
             playbackContextSongs.length > 0
           ) {
+            const currentIndex = playbackContextSongs.findIndex(
+              (s) => s._id === selectedSong?._id,
+            );
+
+            const nextIndex = currentIndex + 1;
+
+            if (nextIndex < playbackContextSongs.length) {
+              dispatch(setSelectedSong(playbackContextSongs[nextIndex]));
+              dispatch(play());
+              return;
+            }
+
+            // album finished
             const firstSong = playbackContextSongs[0];
-            const nextSongs = playbackContextSongs.slice(1);
 
             dispatch(setSelectedSong(firstSong));
 
-            // refill queue
-            nextSongs.forEach((song) => {
-              dispatch(addToQueue(song));
-            });
+            if (repeat === "all") {
+              dispatch(play());
+            } else {
+              dispatch(pause());
+            }
 
-            dispatch(pause());
             return;
           }
 
+          // ⏹ default stop
           dispatch(pause());
         };
       } catch (err) {
@@ -241,6 +324,9 @@ export const usePlayer = () => {
         video.ontimeupdate = null;
         video.onended = null;
         video.onloadedmetadata = null;
+        video.onwaiting = null;
+        video.onplaying = null;
+        video.oncanplaythrough = null;
       }
     };
   }, [selectedSong, streamUrls]);
@@ -251,6 +337,19 @@ export const usePlayer = () => {
       video.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  const getRandomSongFromContext = () => {
+  if (!contextSongs || contextSongs.length === 0) return null;
+
+  const filtered = contextSongs.filter(
+    (song) => song._id !== selectedSong?._id
+  );
+
+  if (filtered.length === 0) return contextSongs[0];
+
+  const randomIndex = Math.floor(Math.random() * filtered.length);
+  return filtered[randomIndex];
+};
 
   // Event handlers
   const handleTogglePlay = useCallback(async () => {
@@ -269,13 +368,24 @@ export const usePlayer = () => {
         await video.pause();
         dispatch(pause());
       } else {
+        setIsBuffering(true);
+
         await video.play();
-        dispatch(play());
       }
     } catch (err) {
       setPlaybackError(err.message);
     }
   }, [isPlaying, isDisplayOnly, defaultSong, selectedSong, dispatch]);
+
+  const handleRepeatToggle = () => {
+    if (repeatMode === "off") {
+      dispatch(setRepeatMode("all"));
+    } else if (repeatMode === "all") {
+      dispatch(setRepeatMode("one"));
+    } else {
+      dispatch(setRepeatMode("off"));
+    }
+  };
 
   // ✅ Global event listener
   useEffect(() => {
@@ -314,66 +424,94 @@ export const usePlayer = () => {
   const handleNext = () => {
     const queueNext = queueRef.current?.upcoming?.[0];
 
-    // 1️⃣ Queue has songs
-    if (queueNext) {
-      dispatch(setSelectedSong(queueNext));
-      dispatch(removeFirstQueueItem());
+    if (!shuffleMode && queueNext) {
+  dispatch(setSelectedSong(queueNext));
+  dispatch(removeFirstQueueItem());
+  dispatch(play());
+  return;
+}
+
+    if (shuffleMode) {
+    const randomSong = getRandomSongFromContext();
+
+    if (randomSong) {
+      dispatch(setSelectedSong(randomSong));
       dispatch(play());
       return;
     }
+  }
 
-    // 2️⃣ Album / playlist context
     if (playbackContext?.type !== "all" && playbackContextSongs?.length > 0) {
+      // ✅ selectedSong album mein nahi mila (queue se aaya tha)
+      // toh album ke first track pe wapas jao
       const currentIndex = playbackContextSongs.findIndex(
         (s) => s._id === selectedSong?._id,
       );
 
-      const nextIndex = currentIndex + 1;
-
-      // Album finished → restart
-      if (nextIndex >= playbackContextSongs.length) {
+      if (currentIndex === -1) {
+        // Queue wala song tha, album restart karo
         const firstSong = playbackContextSongs[0];
+        const remainingSongs = playbackContextSongs.slice(1);
         dispatch(setSelectedSong(firstSong));
+        remainingSongs.forEach((song) => dispatch(addToQueue(song)));
         dispatch(play());
         return;
       }
 
-      const nextSong = playbackContextSongs[nextIndex];
-      dispatch(setSelectedSong(nextSong));
+      const nextIndex = currentIndex + 1;
+
+      if (nextIndex >= playbackContextSongs.length) {
+        const firstSong = playbackContextSongs[0];
+
+        dispatch(setSelectedSong(firstSong));
+
+        if (repeatMode === "all") {
+          dispatch(play());
+        } else {
+          dispatch(pause());
+        }
+
+        return;
+      }
+
+      dispatch(setSelectedSong(playbackContextSongs[nextIndex]));
       dispatch(play());
       return;
     }
 
-    // 3️⃣ No queue and no context
     dispatch(pause());
   };
 
   const handlePrev = () => {
-  const video = videoRef.current;
+    const video = videoRef.current;
 
-  // 1️⃣ restart current song if played more than 3 seconds
-  if (video && video.currentTime > 3) {
-    video.currentTime = 0;
-    dispatch(setCurrentTime(0));
-    return;
-  }
-
-  const prevSong =
-    queueRef.current?.history?.[queueRef.current.history.length - 1];
-
-  // 2️⃣ no history
-  if (!prevSong) {
-    if (video) {
+    // 1️⃣ restart current song if played more than 3 seconds
+    if (video && video.currentTime > 3) {
       video.currentTime = 0;
       dispatch(setCurrentTime(0));
+      return;
     }
-    return;
-  }
 
-  // 3️⃣ play previous song
-  dispatch(removeLastHistoryItem());
-  dispatch(setSelectedSong(prevSong));
-  dispatch(play());
+    const prevSong =
+      queueRef.current?.history?.[queueRef.current.history.length - 1];
+
+    // 2️⃣ no history
+    if (!prevSong) {
+      if (video) {
+        video.currentTime = 0;
+        dispatch(setCurrentTime(0));
+      }
+      return;
+    }
+
+    // 3️⃣ play previous song
+    dispatch(removeLastHistoryItem());
+    dispatch(setSelectedSong(prevSong));
+    dispatch(play());
+  };
+
+  const handleShuffleToggle = () => {
+  dispatch(setShuffleMode(!shuffleMode));
 };
 
   const handleSeekChange = (val) => {
@@ -419,6 +557,8 @@ export const usePlayer = () => {
     ? (streamUrls[selectedSong._id]?.isPreview ?? false)
     : false;
 
+  const isPlayerLoading = streamLoading || isLoading;
+
   // Return everything needed by UI
   return {
     // Refs
@@ -438,7 +578,10 @@ export const usePlayer = () => {
     isDisplayOnly,
     isLiked,
     nextSongs,
+    isPlayerLoading,
     selectedSong,
+    repeatMode,
+    shuffleMode,
 
     // Handlers
     handleTogglePlay,
@@ -449,5 +592,7 @@ export const usePlayer = () => {
     handleLikeToggle,
     handleVolumeChange,
     handleNextSongClick,
+    handleRepeatToggle,
+    handleShuffleToggle,
   };
 };

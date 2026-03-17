@@ -159,7 +159,6 @@ export default function Album() {
       toast.error("No songs in this album");
       return;
     }
-
     const nextSongs = album.songs.slice(1);
     dispatch(clearQueue());
     dispatch(
@@ -170,11 +169,23 @@ export default function Album() {
       }),
     );
 
-    dispatch(setSelectedSong(album.songs[0]));
+    dispatch(
+      setSelectedSong({
+        ...album.songs[0],
+        artistSlug: getArtistSlug(),
+        albumSlug: album?.slug,
+      }),
+    );
 
     nextSongs.forEach((s) => {
-      dispatch(addToQueue(s));
-    });
+  dispatch(
+    addToQueue({
+      ...s,
+      artistSlug: getArtistSlug(),
+      albumSlug: album?.slug,
+    })
+  );
+});
 
     dispatch(play());
   };
@@ -640,8 +651,16 @@ export default function Album() {
                       img={song?.coverImage || album?.coverImage}
                       songName={song?.title}
                       songSlug={song?.slug || song?._id}
+                      artistSlug={getArtistSlug()}
+                      albumSlug={album?.slug}
                       seekTime={song.duration}
-                      onPlay={() => handlePlaySong(song)}
+                      onPlay={() =>
+                        handlePlaySong({
+                          ...song,
+                          artistSlug: getArtistSlug(),
+                          albumSlug: album?.slug,
+                        })
+                      }
                       onTitleClick={() =>
                         navigate(`/song/${song?.slug || song?._id}`)
                       }

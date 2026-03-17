@@ -6,9 +6,10 @@ import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import SongList from "../SongList";
-import { handlePlaySong } from "../../../utills/songHelpers";
 import { formatDuration } from "../../../utills/helperFunctions";
 import { useAllSingles } from "../../../hooks/api/useSongs";
+import { play,setSelectedSong } from "../../../features/playback/playerSlice";
+import { usePlaybackControl } from "../../../hooks/usePlaybackControl";
 
 const AllTracksSection = ({ 
   onSubscribeRequired,
@@ -21,6 +22,7 @@ const AllTracksSection = ({
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { resumePlayback } = usePlaybackControl();
 
   // ✅ React Query hook for singles
   const {
@@ -87,13 +89,20 @@ const AllTracksSection = ({
   }, []);
 
   // Handle play song
-  const onPlaySong = useCallback((song) => {
-    const result = handlePlaySong(song, currentUser, dispatch);
-    if (result.requiresSubscription) {
-      onSubscribeRequired(song.artist, "play", song);
-      toast.error("Subscribe to play this song!");
-    }
-  }, [currentUser, dispatch, onSubscribeRequired]);
+const onPlaySong = useCallback((song) => {
+
+  if (!currentUser && song.accessType === "subscription") {
+    onSubscribeRequired(song.artist, "play", song);
+    toast.error("Subscribe to play this song!");
+    return;
+  }
+
+  dispatch(setSelectedSong(song));
+
+  // 🔥 IMPORTANT
+  resumePlayback();
+
+}, [dispatch, currentUser, onSubscribeRequired, resumePlayback]);
 
   // ✅ Show error toast if fetch fails
   useEffect(() => {

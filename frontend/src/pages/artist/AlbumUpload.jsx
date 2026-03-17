@@ -143,7 +143,6 @@ const uploadSongMutation = useUploadSong();
     if (successCount === totalCount) {
       setAllSongsUploaded(true);
       setShowCompletionModal(true);
-      toast.success(`All ${totalCount} songs uploaded successfully!`);
     } else {
       setShowCompletionModal(true);
       toast.info(`Uploaded ${successCount} out of ${totalCount} songs.`);

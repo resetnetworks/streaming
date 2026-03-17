@@ -5,12 +5,11 @@ import { useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
-import { formatDuration } from "../../utills/helperFunctions";
 import { useGenreSongs } from "../../hooks/api/useSongs";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import UserHeader from "../../components/user/UserHeader";
 import SongList from "../../components/user/SongList";
-
+import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 // Genre display mapping
 const genreAssets = {
   electronic: { label: "Electronic" },
@@ -51,6 +50,7 @@ const GenrePage = () => {
   const currentUser = useSelector((s) => s.auth.user);
   const selectedSong = useSelector((s) => s.player.selectedSong);
   const isPlaying = useSelector((s) => s.player.isPlaying);
+  const { resumePlayback } = usePlaybackControl();
 
   // Share dropdown state
   const [activeShareDropdown, setActiveShareDropdown] = useState(null);
@@ -120,9 +120,9 @@ const GenrePage = () => {
 
       // Allowed to play
       dispatch(setSelectedSong(song));
-      dispatch(play());
+      resumePlayback();
     },
-    [currentUser, dispatch]
+    [currentUser, dispatch,resumePlayback]
   );
 
   // Share dropdown handlers
@@ -189,7 +189,7 @@ const GenrePage = () => {
                       img={song.coverImage || "/images/placeholder.png"}
                       songName={song.title}
                       singerName={song.singer || song.artist?.name}
-                      seekTime={formatDuration(song.duration)}
+                      seekTime={song.duration}
                       onPlay={() => handlePlay(song)}
                      isSelected={selectedSong?._id === song._id}
                      isPlaying={selectedSong?._id === song._id && isPlaying}
