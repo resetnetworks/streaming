@@ -123,14 +123,12 @@ const SongList = ({
           }`}
         />
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px]">
-          <button onClick={handleTitleClick} className="text-left w-full action-btn">
             <h3 className="text-white text-lg leading-none sm:truncate">
-              <span className="block sm:hidden hover:underline">
+              <span className="block sm:hidden">
                 {songName.length > 12 ? songName.slice(0, 7) + "..." : songName}
               </span>
-              <span className="hidden sm:block hover:underline">{songName}</span>
+              <span className="hidden sm:block">{songName}</span>
             </h3>
-          </button>
         </div>
       </div>
 
