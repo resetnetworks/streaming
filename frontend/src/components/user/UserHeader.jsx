@@ -16,6 +16,7 @@ import { selectCurrentUser } from "../../features/auth/authSelectors";
 import { logoutUser } from "../../features/auth/authSlice";
 import { getAvatarColor } from "../../utills/helperFunctions";
 import { getMyArtistApplication } from "../../features/artistApplications/artistApplicationSlice";
+import { useCurrentWorkspace } from "../../hooks/api/useCurrentWorkspace";
 
 const UserHeader = () => {
   const user = useSelector(selectCurrentUser);
@@ -26,6 +27,9 @@ const UserHeader = () => {
 
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { workspaceId, currentWorkspace } = useCurrentWorkspace();
+
+  console.log(workspaceId,currentWorkspace)
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -104,7 +108,7 @@ const UserHeader = () => {
           <button className="player-button">Admin</button>
         </div>
       );
-    } else if (user?.role === "artist") {
+    } else if (workspaceId) {
       return (
         <div
           className="button-wrapper shadow-md shadow-gray-800 user-menu-container"

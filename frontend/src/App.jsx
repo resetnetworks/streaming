@@ -22,14 +22,14 @@ import {
 } from "./components/RouteGuards";
 
 // ✅ NEW: Import player actions and selectors
-import { 
-  setRandomDefaultFromSongs, 
-  loadDefaultSongFromStorage 
+import {
+  setRandomDefaultFromSongs,
+  loadDefaultSongFromStorage,
 } from "./features/playback/playerSlice";
-import { 
-  selectAllSongs, 
+import {
+  selectAllSongs,
   selectShouldInitializeDefault,
-  selectAvailableSongsForDefault 
+  selectAvailableSongsForDefault,
 } from "./features/songs/songSelectors";
 
 import * as Pages from "./routes/LazyRoutes";
@@ -45,72 +45,75 @@ function App() {
   const shouldInitializeDefault = useSelector(selectShouldInitializeDefault);
   const availableSongsCollections = useSelector(selectAvailableSongsForDefault);
 
-useEffect(() => {
-  if (!isAuthenticated) {
-    const token = localStorage.getItem("token") || getTokenFromCookie();
-    
-    if (token) {
-      // Token hai tabhi profile fetch karo
-      dispatch(getMyProfile())
-        .unwrap()
-        .catch((error) => {
-          Sentry.captureException(error);
-        })
-        .finally(() => setInitialLoad(false));
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const token = localStorage.getItem("token") || getTokenFromCookie();
+
+      if (token) {
+        // Token hai tabhi profile fetch karo
+        dispatch(getMyProfile())
+          .unwrap()
+          .catch((error) => {
+            Sentry.captureException(error);
+          })
+          .finally(() => setInitialLoad(false));
+      } else {
+        // Token nahi = public user, seedha load complete
+        setInitialLoad(false);
+      }
     } else {
-      // Token nahi = public user, seedha load complete
       setInitialLoad(false);
     }
-  } else {
-    setInitialLoad(false);
-  }
-}, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated]);
 
-const getTokenFromCookie = () => {
-  const cookies = document.cookie.split('; ');
-  const tokenCookie = cookies.find(c => c.startsWith('token='));
-  return tokenCookie ? tokenCookie.split('=')[1] : null;
-};
+  const getTokenFromCookie = () => {
+    const cookies = document.cookie.split("; ");
+    const tokenCookie = cookies.find((c) => c.startsWith("token="));
+    return tokenCookie ? tokenCookie.split("=")[1] : null;
+  };
 
-useEffect(() => {
-  if (user?._id) {
-    Sentry.setUser({
-      id: user._id,
-      email: user.email,
-      role: user.role,
-    });
-  } else {
-    Sentry.setUser(null); // logout case
-  }
-}, [user]);
-
-
+  useEffect(() => {
+    if (user?._id) {
+      Sentry.setUser({
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      });
+    } else {
+      Sentry.setUser(null); // logout case
+    }
+  }, [user]);
 
   // ✅ NEW: Initialize default song on app start
-useEffect(() => {
-  if (isAuthenticated && !initialLoad) {
-    try {
-      dispatch(loadDefaultSongFromStorage());
+  useEffect(() => {
+    if (isAuthenticated && !initialLoad) {
+      try {
+        dispatch(loadDefaultSongFromStorage());
 
-      if (shouldInitializeDefault && availableSongsCollections.length > 0) {
-        const allAvailableSongs =
-          availableSongsCollections.flatMap(c => c.songs);
+        if (shouldInitializeDefault && availableSongsCollections.length > 0) {
+          const allAvailableSongs = availableSongsCollections.flatMap(
+            (c) => c.songs,
+          );
 
-        if (allAvailableSongs.length > 0) {
-          dispatch(setRandomDefaultFromSongs(allAvailableSongs));
+          if (allAvailableSongs.length > 0) {
+            dispatch(setRandomDefaultFromSongs(allAvailableSongs));
+          }
         }
+      } catch (error) {
+        Sentry.captureException(error);
       }
-    } catch (error) {
-      Sentry.captureException(error);
     }
-  }
-}, [isAuthenticated, initialLoad, shouldInitializeDefault, availableSongsCollections]);
-
+  }, [
+    isAuthenticated,
+    initialLoad,
+    shouldInitializeDefault,
+    availableSongsCollections,
+  ]);
 
   // 🔐 Disable Right Click & Inspect Shortcut
   useEffect(() => {
     if (import.meta.env.MODE === "development") return;
-    
+
     const handleKeyDown = (e) => {
       if (
         e.key === "F12" ||
@@ -135,213 +138,189 @@ useEffect(() => {
       document.removeEventListener("contextmenu", handleRightClick);
     };
   }, []);
-  
 
   if (initialLoad) return <Loader />;
 
   return (
-      <BrowserRouter>
+    <BrowserRouter>
       <ScrollToTop />
       {/* paypal success handler */}
       {isAuthenticated && <PayPalSuccessHandler />}
-        <Suspense fallback={<Loader />}>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
-            <Route path="/terms-and-conditions" element={<Pages.TermsAndConditions />} />
-            <Route path="/cancellation-refund-policy" element={<Pages.CancellationRefundPolicy />} />
-            <Route path="/about-us" element={<Pages.About />} />
-            <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
-            <Route path="/" element={<Pages.LandingPage />} />
-            <Route path="/contact-us" element={<Pages.Help />} />
-            <Route path="/data-deletion" element={<Pages.DataDeletion />} />
-            <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
-            <Route path="/careers" element={<Pages.Career />} />
-            <Route path="/artist-details" element={<Pages.ArtistDetails />} />
+      <Suspense fallback={<Loader />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/payment-success" element={<Pages.PaymentSuccess />} />
+          <Route
+            path="/terms-and-conditions"
+            element={<Pages.TermsAndConditions />}
+          />
+          <Route
+            path="/cancellation-refund-policy"
+            element={<Pages.CancellationRefundPolicy />}
+          />
+          <Route path="/about-us" element={<Pages.About />} />
+          <Route path="/payment-fail" element={<Pages.PaymentFailure />} />
+          <Route path="/" element={<Pages.LandingPage />} />
+          <Route path="/contact-us" element={<Pages.Help />} />
+          <Route path="/data-deletion" element={<Pages.DataDeletion />} />
+          <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
+          <Route path="/careers" element={<Pages.Career />} />
+          <Route path="/artist-details" element={<Pages.ArtistDetails />} />
 
-            {/* 🔥 NEW: Social Login Callback Route */}
-            <Route path="/auth/callback" element={<Pages.SocialLoginCallback />} />
+          {/* 🔥 NEW: Social Login Callback Route */}
+          <Route
+            path="/auth/callback"
+            element={<Pages.SocialLoginCallback />}
+          />
 
-            {/* User Authentication Routes */}
-            <Route
-              path="/register"
-              element={
-                <PublicRoute isAuthenticated={isAuthenticated}>
-                  <Pages.Register />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <PublicRoute isAuthenticated={isAuthenticated}>
-                  <Pages.Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <PublicRoute isAuthenticated={isAuthenticated}>
-                  <Pages.ForgotPassword />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/reset-password/:token"
-              element={
-                <PublicRoute isAuthenticated={isAuthenticated}>
-                  <Pages.ResetPassword />
-                </PublicRoute>
-              }
-            />
+          {/* User Authentication Routes */}
+          <Route
+            path="/register"
+            element={
+              <PublicRoute isAuthenticated={isAuthenticated}>
+                <Pages.Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute isAuthenticated={isAuthenticated}>
+                <Pages.Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute isAuthenticated={isAuthenticated}>
+                <Pages.ForgotPassword />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password/:token"
+            element={
+              <PublicRoute isAuthenticated={isAuthenticated}>
+                <Pages.ResetPassword />
+              </PublicRoute>
+            }
+          />
 
-            {/* Genre Selection - Protected but Special Case */}
-            <Route
-              path="/genres"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <Pages.FavouriteGen />
-                </ProtectedRoute>
-              }
-            />
+          {/* Genre Selection - Protected but Special Case */}
+          <Route
+            path="/genres"
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <Pages.FavouriteGen />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* User Layout Protected Routes */}
-            <Route element={<UserLayout />}>
-              <Route
-                path="/home"
-                element={
-                <RedirectedProtectedRoute 
-                    user={user}
-                  >
-                <Pages.Home />
+          {/* User Layout Protected Routes */}
+          <Route element={<UserLayout />}>
+            <Route
+              path="/home"
+              element={
+                <RedirectedProtectedRoute user={user}>
+                  <Pages.Home />
                 </RedirectedProtectedRoute>
-                }
-              />
-              <Route
-                path="/genre/:genre"
-                element={
-                    <Pages.Genre />
-                }
-              />
-              <Route
-                path="/albums"
-                element={
-                  <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
-                    <Pages.AlbumsPage />
-                  </RedirectedProtectedRoute>
-                }
-              />
-              <Route
-                path="/artists"
-                element={<Pages.Artists />}
-              />
-              <Route
-                path="/artist/:artistId"
-                element={<Pages.Artist />}
-              />
-              <Route
-                path="/purchases"
-                element={
-                    <Pages.Purchases />
-                }
-              />
-              <Route
-                path="/liked-songs"
-                element={<Pages.LikedSong />}
-              />
-              <Route
-                path="/album/:albumId"
-                element={
-                    <Pages.Album />
-                }
-              />
-              <Route
-                path="/song/:songId"
-                element={
-                    <Pages.Song />
-                }
-              />
-              <Route
-                path="/search"
-                element={<Pages.Search />}
-              />
-            </Route>
-
-            {/* Payment History - Outside UserLayout */}
+              }
+            />
             <Route
-              path="/payment-history"
+              path="/accept-invite"
+              element={
+                <RedirectedProtectedRoute user={user}>
+                  <Pages.AcceptInvitePage />
+                </RedirectedProtectedRoute>
+              }
+            />
+            <Route path="/genre/:genre" element={<Pages.Genre />} />
+            <Route
+              path="/albums"
               element={
                 <RedirectedProtectedRoute
                   isAuthenticated={isAuthenticated}
                   user={user}
                 >
-                  <Pages.PaymentHistory />
+                  <Pages.AlbumsPage />
                 </RedirectedProtectedRoute>
               }
             />
+            <Route path="/artists" element={<Pages.Artists />} />
+            <Route path="/artist/:artistId" element={<Pages.Artist />} />
+            <Route path="/purchases" element={<Pages.Purchases />} />
+            <Route path="/liked-songs" element={<Pages.LikedSong />} />
+            <Route path="/album/:albumId" element={<Pages.Album />} />
+            <Route path="/song/:songId" element={<Pages.Song />} />
+            <Route path="/search" element={<Pages.Search />} />
+          </Route>
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
-                  <Pages.Admin />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/payments/:artistId"
-              element={
-                <AdminRoute isAuthenticated={isAuthenticated} user={user}>
-                  <Pages.ArtistPayments />
-                </AdminRoute>
-              }
-            />
+          {/* Payment History - Outside UserLayout */}
+          <Route
+            path="/payment-history"
+            element={
+              <RedirectedProtectedRoute
+                isAuthenticated={isAuthenticated}
+                user={user}
+              >
+                <Pages.PaymentHistory />
+              </RedirectedProtectedRoute>
+            }
+          />
 
-            {/* Fallback Route */}
-           <Route
-              path="*"
-              element={
-                <Navigate to={isAuthenticated ? "/" : "/login"} replace />
-              }
-            />
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute isAuthenticated={isAuthenticated} user={user}>
+                <Pages.Admin />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/payments/:artistId"
+            element={
+              <AdminRoute isAuthenticated={isAuthenticated} user={user}>
+                <Pages.ArtistPayments />
+              </AdminRoute>
+            }
+          />
 
-           {/* Artist Routes */}
+          {/* Fallback Route */}
+          <Route
+            path="*"
+            element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />}
+          />
 
-            <Route 
+          {/* Artist Routes */}
+
+          <Route
             path="/artist/register"
             element={
-            // <ArtistRegisterRoute
-            // isAuthenticated={isAuthenticated} 
-            // user={user}>
-            <Pages.ArtistRegister />
-            // </ArtistRegisterRoute>
+              // <ArtistRegisterRoute
+              // isAuthenticated={isAuthenticated}
+              // user={user}>
+              <Pages.ArtistRegister />
+              // </ArtistRegisterRoute>
             }
-            />
-            <Route 
+          />
+          <Route
             path="/artist/dashboard"
             element={
-            <RedirectedProtectedRoute
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                  >
-            <Pages.ArtistDashboard />
-          </RedirectedProtectedRoute>}
-            />
-          </Routes>      
-        </Suspense>
-        <Toaster richColors position="top-center" />
-      </BrowserRouter>
-
-      
-  
+              <RedirectedProtectedRoute
+                isAuthenticated={isAuthenticated}
+                user={user}
+              >
+                <Pages.ArtistDashboard />
+              </RedirectedProtectedRoute>
+            }
+          />
+        </Routes>
+      </Suspense>
+      <Toaster richColors position="top-center" />
+    </BrowserRouter>
   );
 }
 
 export default App;
-
-

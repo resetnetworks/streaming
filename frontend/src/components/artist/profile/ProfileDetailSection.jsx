@@ -26,7 +26,7 @@ const ProfileDetailSection = () => {
   useEffect(() => {
     if (artistProfile) {
       setFormData({
-        businessEmail: artistProfile.email || artistProfile.businessEmail || user.email || "",
+        businessEmail: artistProfile?.email || artistProfile?.businessEmail || user?.email || "",
         country: artistProfile.country || "",
         website: artistProfile.website || "",
         socialMedia: artistProfile.socialMedia || "",
