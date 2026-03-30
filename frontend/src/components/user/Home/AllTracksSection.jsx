@@ -12,7 +12,6 @@ import { play,setSelectedSong } from "../../../features/playback/playerSlice";
 import { usePlaybackControl } from "../../../hooks/usePlaybackControl";
 
 const AllTracksSection = ({ 
-  onSubscribeRequired,
   onPurchaseClick,
   processingPayment,
   paymentLoading
@@ -91,18 +90,12 @@ const AllTracksSection = ({
   // Handle play song
 const onPlaySong = useCallback((song) => {
 
-  if (!currentUser && song.accessType === "subscription") {
-    onSubscribeRequired(song.artist, "play", song);
-    toast.error("Subscribe to play this song!");
-    return;
-  }
-
   dispatch(setSelectedSong(song));
 
   // 🔥 IMPORTANT
   resumePlayback();
 
-}, [dispatch, currentUser, onSubscribeRequired, resumePlayback]);
+}, [dispatch, currentUser, resumePlayback]);
 
   // ✅ Show error toast if fetch fails
   useEffect(() => {
