@@ -159,21 +159,20 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
             {/* Main Heading */}
             <motion.div variants={itemVariants} className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-                Instantly stream your favorite 
+                Stream Pure Sound
                 <span className="block text-transparent bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text leading-tight">
-                  <span className="block sm:inline">Music On Demand,</span>
-                  <span className="block sm:inline sm:ml-2">Anytime, Anywhere</span>
+                  <span className="block sm:inline">Experiences Anytime, Anywhere</span>
                 </span>
               </h2>
               <p className="text-xl text-slate-300 leading-relaxed">
-                By creating a niche streaming platform within the realm of ambient and instrumental music, we'll be leveraging the situation by enabling a more dedicated fanbase, community; thereby exponentially increasing artist to fan reach as well as significantly increase royalties.
+                A niche streaming platform built for instrumental, ambient, and electronic soundscapes — enabling deeper artist connections, stronger communities, and higher royalties.
               </p>
             </motion.div>
 
             {/* Description */}
             <motion.div variants={itemVariants} className="space-y-6">
               <p className="text-lg text-slate-400 leading-relaxed">
-                We are open to all kinds of music that falls into the instrumental, classical music, orchestral music, film scores, field recordings, soundscapes, electroacoustic, music concrète, avant-garde experimental, ambient, drone, electronic, industrial, IDM, drum'n'bass, techno or other DIY instruments, and/or any genre under the sun, You Name it.
+                From ambient, drone, IDM, techno, DJ sets, electroacoustic, experimental, and cinematic instrumentals — if it moves you, it belongs here.
               </p>
 
               {/* Features List */}
@@ -182,13 +181,13 @@ const HowItWorksSection = ({ scrollContainerRef }) => {
                   <motion.div
                     key={index}
                     variants={itemVariants}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/30 transition-colors duration-300"
+                    className="flex items-center gap-4 p-2 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/30 transition-colors duration-300"
                   >
-                    <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                       <feature.icon className="text-blue-400 text-lg" />
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold mb-1">{feature.title}</h3>
+                      <h3 className="text-white font-semibold">{feature.title}</h3>
                       <p className="text-slate-400 text-sm">{feature.description}</p>
                     </div>
                   </motion.div>

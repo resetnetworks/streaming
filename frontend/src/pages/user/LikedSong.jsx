@@ -10,6 +10,7 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { current } from "@reduxjs/toolkit";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
+import { useNavigate } from "react-router-dom";
 
 const LikedSongs = () => {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ const LikedSongs = () => {
   } = useLikedSongs();
   
   const unlikeMutation = useUnlikeSong();
+  const navigate = useNavigate()
   
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const playerStatus = useSelector((state) => state.player.status);

@@ -201,39 +201,44 @@ const ShareModal = ({ isOpen, onClose, url, songName, singerName }) => {
 ───────────────────────────────────────────── */
 const DROPDOWN_WIDTH = 192; // w-48 = 12rem = 192px
 
-const PortalDropdown = ({ isOpen, anchorRef, onClose, children, placement = "bottom-right" }) => {
+const PortalDropdown = ({ isOpen, anchorRef, onClose, children, placement = "bottom-right",gap = 6,estimatedHeight = 280 }) => {
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef(null);
 
   // Recalculate position whenever dropdown opens
-  useEffect(() => {
-    if (!isOpen || !anchorRef?.current) return;
+useEffect(() => {
+  if (!isOpen || !anchorRef?.current) return;
 
-    const rect = anchorRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const DROPDOWN_HEIGHT = 280; // approximate max height
-    const GAP = 6;
+  const rect = anchorRef.current.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
 
-    let top = rect.bottom + GAP;
-    let left =
-      placement === "bottom-left"
-        ? rect.left
-        : rect.right - DROPDOWN_WIDTH;
+  const dropdownEl = dropdownRef.current;
 
-    // Flip up if not enough space below
-    if (top + DROPDOWN_HEIGHT > viewportHeight) {
-      top = rect.top - DROPDOWN_HEIGHT - GAP;
-    }
+  // ✅ dynamic height
+  const actualHeight = dropdownEl?.offsetHeight || estimatedHeight;
 
-    // Clamp horizontally so it never goes off-screen
-    if (left + DROPDOWN_WIDTH > viewportWidth) {
-      left = viewportWidth - DROPDOWN_WIDTH - 8;
-    }
-    if (left < 8) left = 8;
+  // ✅ use prop gap (NOT GAP)
+  let top = rect.bottom + gap;
 
-    setCoords({ top, left });
-  }, [isOpen, anchorRef, placement]);
+  let left =
+    placement === "bottom-left"
+      ? rect.left
+      : rect.right - DROPDOWN_WIDTH;
+
+  // ✅ flip up
+  if (top + actualHeight > viewportHeight) {
+    top = rect.top - actualHeight - gap;
+  }
+
+  // clamp horizontal
+  if (left + DROPDOWN_WIDTH > viewportWidth) {
+    left = viewportWidth - DROPDOWN_WIDTH - 8;
+  }
+  if (left < 8) left = 8;
+
+  setCoords({ top, left });
+}, [isOpen, anchorRef, placement, gap, estimatedHeight]);
 
   // Close on outside click
   useEffect(() => {
@@ -318,6 +323,8 @@ const ShareDropdown = ({
   isPlayerContext = false,
   placement = "bottom-right",
   navigate,
+  gap = 6,
+  estimatedHeight = 280,
 }) => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
@@ -385,6 +392,8 @@ const ShareDropdown = ({
         anchorRef={triggerRef}
         onClose={onClose}
         placement={placement}
+        gap={gap}
+        estimatedHeight={estimatedHeight}
       >
         {menuItems
           .filter((item) => item.show)

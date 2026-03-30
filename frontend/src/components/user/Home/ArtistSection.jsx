@@ -10,6 +10,7 @@ import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useArtists } from "../../../hooks/api/useArtists"; // Updated import
+import Avatar from "../Avatar";
 
 // --- Helper: format plan cycle ---
 const cycleLabel = (c) => {
@@ -92,11 +93,19 @@ const ArtistCircle = forwardRef(function ArtistCircle(
       aria-label={`Open artist ${artist?.name || ""}`}
     >
       <div className="absolute inset-0 rounded-full overflow-hidden">
-        <LazyImg
-          src={artist?.profileImage || artist?.avatar || "/images/placeholder.png"}
-          alt={artist?.name || "artist"}
-          className="transition-transform duration-300 ease-in-out group-hover:scale-110"
-        />
+        {artist?.profileImage || artist?.avatar ? (
+  <LazyImg
+    src={artist?.profileImage || artist?.avatar}
+    alt={artist?.name}
+    className="transition-transform duration-300 group-hover:scale-110"
+  />
+) : (
+  <Avatar
+    name={artist?.name}
+    size={160}
+    className="w-full h-full"
+  />
+)}
       </div>
       <div className="absolute inset-0 rounded-full"></div>
       <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center rounded-full bg-gradient-to-t from-black/80 to-transparent from-0% to-60%">

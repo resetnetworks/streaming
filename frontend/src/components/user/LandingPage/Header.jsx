@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../../../assets/assets";
-import { FaHome, FaShieldAlt, FaFileContract, FaInfoCircle, FaUndo } from "react-icons/fa";
+import { FaHome, FaShieldAlt, FaFileContract, FaInfoCircle,FaUser, FaUndo } from "react-icons/fa";
+import { LuDiscAlbum } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 
 // --- Data for Navigation Links (DRY Principle) ---
 const navLinks = [
+  { href: "/home", text: "Home", icon: <FaHome />, type: "route" },
+  { href: "/artists", text: "Artists", icon: <FaUser />, type: "route" },
+  { href: "/albums", text: "Albums", icon: <LuDiscAlbum />, type: "route" },
   { href: "/about-us", text: "About", icon: <FaInfoCircle />, type: "route" },
-  { href: "/privacy-policy", text: "Privacy Policy", icon: <FaShieldAlt />, type: "route" },
-  { href: "/terms-and-conditions", text: "Terms", icon: <FaFileContract />, type: "route" },
-  { href: "/cancellation-refund-policy", text: "Refund Policy", icon: <FaUndo />, type: "route" },
 ];
 
 const Header = () => {

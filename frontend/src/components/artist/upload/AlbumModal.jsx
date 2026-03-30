@@ -5,8 +5,8 @@ import { useAlbum } from "../../../hooks/api/useAlbums";
 
 
 const AlbumModal = ({ isOpen, onClose, album }) => {
-  const { data: albumDetails, isLoading } = useAlbum(album?.id, {
-  enabled: isOpen && !!album?.id,
+  const { data: albumDetails, isLoading } = useAlbum(album?._id, {
+  enabled: isOpen && !!album?._id,
 });
 
 
@@ -28,9 +28,9 @@ const AlbumModal = ({ isOpen, onClose, album }) => {
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/30 to-blue-500/30">
-              {album.image ? (
+              {album?.coverImage ? (
                 <img 
-                  src={album.image} 
+                  src={album?.coverImage} 
                   alt={album.title}
                   className="w-full h-full object-cover"
                 />
@@ -71,7 +71,7 @@ const AlbumModal = ({ isOpen, onClose, album }) => {
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center text-xs font-bold text-blue-300">
-                      <img src={album.image || ""} alt={song.title} className="w-full h-full object-cover rounded-lg" />
+                      <img src={album?.coverImage || ""} alt={song.title} className="w-full h-full object-cover rounded-lg" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium lowercase text-sm group-hover:text-blue-300 transition-colors truncate">

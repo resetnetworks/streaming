@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -75,6 +75,8 @@ export default function Album() {
   const { albumId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const shareBtnRef = useRef(null);
+  const [showFullDesc, setShowFullDesc] = useState(false);
 
   const { data } = useUserPurchases();
   const userPurchases = Array.isArray(data?.history) ? data.history : [];
@@ -129,29 +131,41 @@ export default function Album() {
   }, [albumError]);
 
   // ✅ Play song handler
-  const handlePlaySong = (song) => {
-    if (!album) return;
+ const handlePlaySong = (song) => {
+  if (!album) return;
 
-    const index = album.songs.findIndex((s) => s._id === song._id);
+  const index = album.songs.findIndex((s) => s._id === song._id);
 
-    const nextSongs = album.songs.slice(index + 1);
+  const nextSongs = album.songs.slice(index + 1);
 
+  // ✅ IMPORTANT: clear previous queue (missing in your code)
+  dispatch(clearQueue());
+
+  // ✅ set full album context
+  dispatch(
+    setPlaybackContext({
+      type: "album",
+      id: album._id,
+      songs: album.songs,
+    })
+  );
+
+  // ✅ select clicked song
+  dispatch(setSelectedSong(song));
+
+  // ✅ add next songs to queue (same as album logic)
+  nextSongs.forEach((s) => {
     dispatch(
-      setPlaybackContext({
-        type: "album",
-        id: album._id,
-        songs: album.songs,
-      }),
+      addToQueue({
+        ...s,
+        artistSlug: getArtistSlug(),
+        albumSlug: album?.slug,
+      })
     );
+  });
 
-    dispatch(setSelectedSong(song));
-
-    nextSongs.forEach((s) => {
-      dispatch(addToQueue(s));
-    });
-
-    dispatch(play());
-  };
+  dispatch(play());
+};
 
   // ✅ Play album (first song) when cover is clicked
   const handlePlayAlbum = () => {
@@ -372,6 +386,11 @@ export default function Album() {
     return "Unknown Artist";
   }, [album]);
 
+  const DESCRIPTION_LIMIT = 300;
+  const isLongDescription = album?.description?.length > DESCRIPTION_LIMIT;
+  const displayedDescription = showFullDesc ? album?.description : album?.description?.slice(0, DESCRIPTION_LIMIT);
+
+
   // ✅ Get artist slug
   const getArtistSlug = () => {
     if (typeof album?.artist === "object" && album?.artist?.slug) {
@@ -504,8 +523,18 @@ export default function Album() {
               <h1 className="text-2xl sm:text-3xl md:text-6xl font-extrabold my-1 sm:my-2">
                 {album.title}
               </h1>
-              <p className="text-sm sm:text-base md:text-lg text-gray-400">
-                {album.description}
+              <p className="text-base md:text-lg text-gray-400">
+                {displayedDescription}
+  {isLongDescription && !showFullDesc && "..."}
+  
+  {isLongDescription && (
+    <span
+      onClick={() => setShowFullDesc(!showFullDesc)}
+      className="ml-2 text-blue-400 cursor-pointer hover:underline text-sm"
+    >
+      {showFullDesc ? "View less" : "View more"}
+    </span>
+  )}
               </p>
               <div className="flex items-center gap-1 sm:gap-2 mt-3 sm:mt-4 flex-wrap text-xs sm:text-sm md:text-base text-gray-300">
                 <button
@@ -594,13 +623,10 @@ export default function Album() {
                 {/* Share Button with Dropdown Component */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowShareMenu(!showShareMenu)}
-                    className={`p-2 sm:p-2.5 md:p-3.5 rounded-full border transition-colors group ${
-                      showShareMenu
-                        ? "bg-gray-800/50 text-blue-400 border-blue-400" // Active state
-                        : "text-gray-300 border-gray-700 hover:bg-gray-800/50 hover:text-blue-400" // Normal state
-                    }`}
-                  >
+  ref={shareBtnRef}
+  onClick={() => setShowShareMenu(!showShareMenu)}
+  className="p-2 sm:p-2.5 md:p-3.5 rounded-full border ..."
+>
                     <BsShare
                       className={`w-4 h-4 sm:w-5 sm:h-5 ${
                         showShareMenu
@@ -609,8 +635,8 @@ export default function Album() {
                       }`}
                     />
                   </button>
-
                   <ShareDropdown
+                  triggerRef={shareBtnRef}
                     isOpen={showShareMenu}
                     onClose={() => setShowShareMenu(false)}
                     url={`${window.location}`}
@@ -619,7 +645,9 @@ export default function Album() {
                       album.artist?.name || artistName
                     } on Reset Music`}
                     isActive={showShareMenu}
-                    className="lg:right-0 right-[-80px] sm:right-[-40px]" // Responsive positioning
+                    isPlayerContext={true}
+                    artistSlug={getArtistSlug()}
+                    navigate={navigate}
                   />
                 </div>
               </div>

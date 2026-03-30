@@ -17,7 +17,7 @@ const GenreCard = ({ cards = [] }) => {
       {first && (
         <div
           onClick={() => handleClick(first.title, first.image)}
-          className="sm:h-72 h-60 w-52 sm:w-56 cursor-pointer rounded-xl overflow-hidden shadow-lg relative"
+          className="sm:h-72 h-52 w-44 sm:w-56 cursor-pointer rounded-xl overflow-hidden shadow-lg relative"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === "Enter" && handleClick(first.title, first.image)}
@@ -44,7 +44,7 @@ const GenreCard = ({ cards = [] }) => {
           <div
             key={`${card.title}-${index}`}
             onClick={() => handleClick(card.title, card.image)}
-            className="sm:h-[136px] h-28 w-64 sm:w-72 cursor-pointer rounded-xl overflow-hidden shadow-lg relative"
+            className="sm:h-[136px] h-24 w-52 sm:w-72 cursor-pointer rounded-xl overflow-hidden shadow-lg relative"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && handleClick(card.title, card.image)}

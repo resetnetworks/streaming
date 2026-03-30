@@ -164,7 +164,7 @@ const AlbumsSection = ({
       
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[220px]"
+        className="flex gap-4 overflow-x-auto pb-2 no-scrollbar whitespace-nowrap min-h-[180px]"
       >
         {status === "loading" && allAlbums.length === 0
           ? [...Array(7)].map((_, idx) => (

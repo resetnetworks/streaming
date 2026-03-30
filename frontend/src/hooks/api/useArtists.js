@@ -22,6 +22,8 @@ export const artistKeys = {
   search: (query) => [...artistKeys.all, "search", query],
   subscriberCounts: () => [...artistKeys.all, "subscriber-count"],
   subscriberCount: (artistId) => [...artistKeys.subscriberCounts(), artistId],
+  dashboardSingles: () => [...artistKeys.all, "dashboard-singles"],
+dashboardAlbums: () => [...artistKeys.all, "dashboard-albums"],
 };
 
 // 📥 QUERIES (GET REQUESTS)
@@ -77,6 +79,30 @@ export const useArtistProfile = () => {
     queryKey: artistKeys.profile(),
     queryFn: artistApi.fetchProfile,
     staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useDashboardSingles = (limit = 10) => {
+  return useInfiniteQuery({
+    queryKey: artistKeys.dashboardSingles(),
+    queryFn: ({ pageParam = 1 }) =>
+      artistApi.fetchDashboardSingles({ page: pageParam, limit }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination || {};
+      return page < totalPages ? page + 1 : undefined;
+    },
+  });
+};
+
+export const useDashboardAlbums = (limit = 10) => {
+  return useInfiniteQuery({
+    queryKey: artistKeys.dashboardAlbums(),
+    queryFn: ({ pageParam = 1 }) =>
+      artistApi.fetchDashboardAlbums({ page: pageParam, limit }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination || {};
+      return page < totalPages ? page + 1 : undefined;
+    },
   });
 };
 

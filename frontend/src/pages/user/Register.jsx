@@ -235,7 +235,7 @@ const Register = () => {
                 <div className="flex-grow border-t border-gray-400"></div>
               </div>
 
-              <div className="flex justify-around items-center w-52">
+              <div className="flex justify-around items-center w-[15.3rem]">
                 <button
                   onClick={googleRegister}
                   type="button"

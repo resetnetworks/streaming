@@ -178,7 +178,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
             </div>
 
             {/* Social Icons */}
-            <div className="flex justify-around items-center w-52">
+            <div className="flex justify-around items-center w-[15.3rem]">
               <button
                 onClick={googleLogin}
                 type="button"

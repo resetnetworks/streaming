@@ -9,6 +9,38 @@ export const artistApi = {
     return res.data; // ✅ Direct response return karein
   },
 
+    fetchDashboardSingles: async ({ page = 1, limit = 10, type = "single" } = {}) => {
+  const res = await axios.get(
+    `/artist/dashboard/singles?page=${page}&limit=${limit}&type=${type}`
+  );
+
+  return {
+    songs: res.data.data || [],
+    pagination: {
+      page: res.data.page || page,
+      limit,
+      total: res.data.total || 0,
+      totalPages: res.data.totalPages || 1,
+    },
+  };
+},
+
+  fetchDashboardAlbums: async ({ page = 1, limit = 10 } = {}) => {
+  const res = await axios.get(
+    `/artist/dashboard/albums?page=${page}&limit=${limit}`
+  );
+
+  return {
+    albums: res.data.data || [],
+    pagination: {
+      page: res.data.page || page,
+      limit,
+      total: res.data.total || 0,
+      totalPages: res.data.totalPages || 1,
+    },
+  };
+},
+
   // Get all artists without pagination
   fetchAllNoPagination: async () => {
     const res = await axios.get(`/artists/all`);

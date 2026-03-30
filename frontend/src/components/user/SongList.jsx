@@ -177,6 +177,8 @@ const SongList = ({
             isPlayerContext={false}
             navigate={navigate}
             placement="bottom-right"
+            gap={4}
+            estimatedHeight={194}
           />
         </div>
       </div>
