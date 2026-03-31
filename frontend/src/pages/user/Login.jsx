@@ -40,8 +40,6 @@ const Login = () => {
       .catch((err) => {
         if (err?.response?.status === 429) {
           toast.error("Too many requests. Please wait a few minuts.");
-        } else {
-          toast.error(err);
         }
       });
   };

@@ -5,7 +5,6 @@ import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
 import AdminSongCard from '../../components/admin/AdminSongCard';
-import SongFormModal from '../../components/admin/SongFormModal';
 import UploadProgressToast from '../../components/admin/UploadProgressToast';
 import {
   fetchAllSongs,
@@ -601,16 +600,6 @@ const Songs = () => {
           )}
         </>
       )}
-
-      <SongFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSubmit={handleAddOrUpdateSong}
-        artists={artists}
-        initialAlbums={albums}
-        songToEdit={editingSong}
-        isSubmitting={isSubmitting}
-      />
     </div>
   );
 };

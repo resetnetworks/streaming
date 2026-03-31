@@ -108,16 +108,6 @@ const GenrePage = () => {
         song.artist
       );
 
-      // Check access
-      if (song.accessType === "subscription" && !subscribed) {
-        toast.error("Subscribe to this artist to play this song");
-        return;
-      }
-      if (song.accessType === "purchase-only" && song.price > 0 && !purchased) {
-        toast.error("Purchase this song to play it");
-        return;
-      }
-
       // Allowed to play
       dispatch(setSelectedSong(song));
       resumePlayback();

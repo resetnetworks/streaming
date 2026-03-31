@@ -75,6 +75,7 @@ export default function Song() {
   const likeMutation = useLikeSong();
   const { data: likedData } = useLikedSongs(20);
   const { data: purchaseData } = useUserPurchases();
+  const shareBtnRef = useRef(null);
 
   const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } =
     usePlaybackControl();
@@ -571,6 +572,7 @@ export default function Song() {
                     {/* Share Button with Dropdown Component */}
                     <div className="relative">
                       <button
+                      ref={shareBtnRef}
                         onClick={() => setShowShareMenu(!showShareMenu)}
                         className={`p-2.5 sm:p-3.5 rounded-full border transition-colors group ${
                           showShareMenu
@@ -590,6 +592,7 @@ export default function Song() {
                       <ShareDropdown
                         isOpen={showShareMenu}
                         onClose={() => setShowShareMenu(false)}
+                        triggerRef={shareBtnRef}
                         url={`${window.location}`}
                         title={song.title}
                         text={`Listen to "${song.title}" by ${

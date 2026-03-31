@@ -14,7 +14,7 @@ const AlbumCard = ({
         <img
           src={image}
           alt={`Album cover for ${tag} by ${artists}`}
-          className="w-full md:h-48 h-36 object-cover"
+          className="w-full md:h-48 h-36 object-cover object-top"
         />
         <div
           className="absolute inset-0"

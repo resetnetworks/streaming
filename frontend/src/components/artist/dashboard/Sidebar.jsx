@@ -176,7 +176,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
         </div>
       </div>
       {/* Clickable Profile Section for Desktop */}
-      <div 
+      {/* <div 
         className="sticky bottom-64 flex flex-col items-center px-2 cursor-pointer group"
         onClick={() => setSelectedTab("profile")}
       >
@@ -190,7 +190,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
         <span className="text-white text-sm tracking-wide text-center max-w-full group-hover:text-blue-400 transition-colors">
           {artistName}
         </span>
-      </div>
+      </div> */}
     </aside>
   );
 };

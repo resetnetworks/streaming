@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { formatDuration } from "../../../utills/helperFunctions";
 import ShareDropdown from "../ShareDropdown";
 import {
@@ -19,6 +19,12 @@ const formatTime = (seconds) => {
   const secs = Math.floor(seconds % 60) || 0;
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
+
+const waveHeights = [
+  4, 7, 10, 6, 12, 18, 14, 9, 16, 20, 13, 8, 18, 15, 10,
+  7, 14, 19, 11, 6, 9, 17, 13, 8, 16, 20, 12, 7, 10, 15,
+  18, 6, 11, 14, 9, 17, 13, 8, 16, 10, 7, 12, 20, 15, 9, 13,
+];
 
 // ─── Ghost / Empty State Player ───────────────────────────────────────────────
 const GhostPlayer = () => {
@@ -46,8 +52,18 @@ const GhostPlayer = () => {
         <div className="w-3/4 h-4 mt-3 rounded bg-gray-700/60" />
         <div className="w-1/2 h-3 mt-2 rounded bg-gray-700/40" />
 
-        <div className="w-full mt-4">
-          <div className="w-full h-1 rounded bg-gray-700/60" />
+        {/* Ghost Progress */}
+        <div className="w-full mt-4 flex flex-col gap-[6px]">
+          <div className="flex items-end gap-[2px] h-5 w-full opacity-30">
+            {waveHeights.map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-t-sm bg-gray-600"
+                style={{ height: `${h}px` }}
+              />
+            ))}
+          </div>
+          <div className="w-full h-1 rounded-full bg-gray-700/60" />
           <div className="flex justify-between text-xs text-gray-600 mt-1 px-[2px]">
             <span>0:00</span>
             <span>0:00</span>
@@ -146,9 +162,16 @@ const PlayerUI = ({
 }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [open, setOpen] = useState(true);
+  const [transitionReady, setTransitionReady] = useState(false);
   const navigate = useNavigate();
 
-  // ── triggerRef: points at the ⋯ (IoIosMore) button ──
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setTransitionReady(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   const shareMenuTriggerRef = useRef(null);
 
   if (!currentSong) {
@@ -158,6 +181,10 @@ const PlayerUI = ({
   const trackStyle = {
     background: `linear-gradient(to right, #007aff ${volume * 100}%, #ffffff22 ${volume * 100}%)`,
   };
+
+  // ✅ Fix: Only compute progressPercent if duration is valid and > 0
+  const progressPercent = duration > 0 ? ((currentTime / duration) * 100).toFixed(2) : 0;
+  const remainingTime = Math.max(0, (duration || 0) - currentTime);
 
   return (
     <div className="player-wrapper">
@@ -182,22 +209,63 @@ const PlayerUI = ({
         <p className="text-lg mt-2">{currentSong?.title}</p>
         <span className="text-sm text-gray-500">{currentSong?.singer}</span>
 
-        {/* Progress Bar */}
-        <div className="w-full mt-4">
-          <input
-            type="range"
-            min="0"
-            max={duration || 100}
-            value={isDisplayOnly ? 0 : currentTime}
-            onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
-            className={`track-progress w-full h-1 appearance-none rounded ${
-              isDisplayOnly ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            disabled={isDisplayOnly}
-          />
-          <div className="flex justify-between text-xs text-gray-300 mt-1 px-[2px]">
-            <span>{isDisplayOnly ? "0:00" : formatTime(currentTime)}</span>
-            <span>{formatDuration(duration || currentSong?.duration)}</span>
+        {/* ── Progress Section ── */}
+        <div className="w-full mt-4 flex flex-col gap-[6px]">
+
+          {/* Waveform bars */}
+          <div className="flex items-end gap-[2px] h-5 w-full">
+            {waveHeights.map((h, i) => {
+              const filled =
+                !isDisplayOnly &&
+                duration > 0 && // ✅ Only fill if duration is known
+                (i / waveHeights.length) * 100 < parseFloat(progressPercent);
+              return (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t-sm"
+                  style={{
+                    height: `${h}px`,
+                    background: filled ? "#3b82f6" : "rgba(255,255,255,0.08)",
+                    opacity: filled ? 0.4 + (h / 20) * 0.6 : 1,
+                    transition: transitionReady ? "background 0.1s" : "none",
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Scrub track */}
+          <div className="relative w-full h-1 bg-white/10 rounded-full cursor-pointer group">
+            <div
+              className="h-full bg-blue-500 rounded-full relative"
+              style={{
+                width: `${isDisplayOnly ? 0 : progressPercent}%`,
+                transition: transitionReady ? "width 0.1s linear" : "none",
+              }}
+            >
+              {!isDisplayOnly && (
+                <div className="absolute -right-[6px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.2)] group-hover:scale-125 transition-transform duration-150" />
+              )}
+            </div>
+            <input
+              type="range"
+              min="0"
+              max={duration || 100}
+              value={isDisplayOnly ? 0 : currentTime}
+              onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
+              className="absolute inset-0 opacity-0 w-full cursor-pointer"
+              disabled={isDisplayOnly}
+            />
+          </div>
+
+          {/* Timestamps */}
+          <div className="flex justify-between items-center text-[11px] px-[2px]">
+            <span className="text-blue-200 font-medium tracking-wide">
+              {isDisplayOnly ? "0:00" : formatDuration(currentTime)}
+            </span>
+            <span className="text-gray-200">
+              {formatDuration(duration || currentSong?.duration)}
+            </span>
           </div>
         </div>
 
@@ -272,7 +340,7 @@ const PlayerUI = ({
             )}
           </button>
 
-          {/* Share / More — triggerRef attached here */}
+          {/* Share / More */}
           <button
             ref={shareMenuTriggerRef}
             onClick={() => setShowShareMenu((prev) => !prev)}
@@ -283,7 +351,6 @@ const PlayerUI = ({
             />
           </button>
 
-          {/* ShareDropdown receives triggerRef for portal anchoring */}
           <ShareDropdown
             isOpen={showShareMenu}
             navigate={navigate}

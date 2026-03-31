@@ -1,10 +1,19 @@
 
 export const formatDuration = (seconds) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? "0" + secs : secs}`;
-};
+  if (!seconds && seconds !== 0) return "0:00";
 
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
 
 export const getAvatarColor = (name) => {
   if (!name) return "bg-gradient-to-br from-gray-700 to-gray-900";

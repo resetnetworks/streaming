@@ -506,7 +506,7 @@ export default function Album() {
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen text-white px-4 sm:px-8 pt-6 sm:pt-10 pb-8">
           {/* Album Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-8 pb-6">
+          <div className="flex flex-col md:flex-row items-start gap-4 sm:gap-8 pb-6">
             {/* Album Cover with Click to Play - RESPONSIVE */}
             <div className="relative flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0">
               <img

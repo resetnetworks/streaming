@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FiMapPin } from "react-icons/fi";
 import { toast } from "sonner";
@@ -8,21 +8,35 @@ import { fetchUserSubscriptions } from "../../../features/payments/userPaymentSl
 
 const cycleLabel = (c) => {
   switch (c) {
-    case "1m": return "Monthly";
-    case "3m": return "3 Months";
-    case "6m": return "6 Months";
-    case "12m": return "12 Months";
-    default: return c;
+    case "1m":
+      return "Monthly";
+    case "3m":
+      return "3 Months";
+    case "6m":
+      return "6 Months";
+    case "12m":
+      return "12 Months";
+    default:
+      return c;
   }
 };
 
 const getArtistColor = (name) => {
   if (!name) return "bg-blue-600";
   const colors = [
-    "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-red-600",
-    "bg-orange-600", "bg-yellow-600", "bg-green-600", "bg-teal-600", "bg-indigo-600",
+    "bg-blue-600",
+    "bg-purple-600",
+    "bg-pink-600",
+    "bg-red-600",
+    "bg-orange-600",
+    "bg-yellow-600",
+    "bg-green-600",
+    "bg-teal-600",
+    "bg-indigo-600",
   ];
-  const hash = name.split("").reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+  const hash = name
+    .split("")
+    .reduce((acc, char) => char.charCodeAt(0) + acc, 0);
   return colors[hash % colors.length];
 };
 
@@ -31,17 +45,18 @@ const ArtistAboutSection = ({
   artistId,
   openSubscriptionOptions,
   subscriptionLoading,
-  setSubscriptionLoading
+  setSubscriptionLoading,
 }) => {
   const dispatch = useDispatch();
   const artistColor = getArtistColor(artist?.name);
-  
+  const [showFullBio, setShowFullBio] = useState(false);
+
   const userSubscriptions = useSelector(
-    (state) => state.userDashboard.subscriptions || []
+    (state) => state.userDashboard.subscriptions || [],
   );
 
   const isSubscribed = userSubscriptions.some(
-    (sub) => sub.artist?.slug === artistId
+    (sub) => sub.artist?.slug === artistId,
   );
 
   const availableCycles = useMemo(() => {
@@ -57,7 +72,15 @@ const ArtistAboutSection = ({
     return availableCycles.includes("1m") ? "1m" : availableCycles[0];
   }, [availableCycles]);
 
-  const subscriptionPrice = artist?.subscriptionPlans?.[0]?.basePrice?.amount ?? 4.99;
+  const subscriptionPrice =
+    artist?.subscriptionPlans?.[0]?.basePrice?.amount ?? 4.99;
+
+  const BIO_LIMIT = 250;
+  const isLongBio = artist?.bio?.length > BIO_LIMIT;
+
+  const displayedBio = showFullBio
+    ? artist?.bio
+    : artist?.bio?.slice(0, BIO_LIMIT);
 
   const handleSubscribe = async () => {
     if (!artist?._id) {
@@ -67,7 +90,7 @@ const ArtistAboutSection = ({
 
     if (isSubscribed) {
       const confirmUnsub = window.confirm(
-        `Are you sure you want to unsubscribe from ${artist.name}?`
+        `Are you sure you want to unsubscribe from ${artist.name}?`,
       );
       if (!confirmUnsub) return;
 
@@ -82,7 +105,7 @@ const ArtistAboutSection = ({
         toast.error(
           `Failed to unsubscribe: ${
             error.response?.data?.message || error.message
-          }`
+          }`,
         );
       } finally {
         setSubscriptionLoading(false);
@@ -105,8 +128,10 @@ const ArtistAboutSection = ({
                 className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
               />
             ) : (
-              <div className={`w-full h-full ${artistColor} flex items-center justify-center text-white text-8xl font-bold border-t-4 border-b-4 border-blue-600`}>
-                {artist.name ? artist.name.charAt(0).toUpperCase() : 'A'}
+              <div
+                className={`w-full h-full ${artistColor} flex items-center justify-center text-white text-8xl font-bold border-t-4 border-b-4 border-blue-600`}
+              >
+                {artist.name ? artist.name.charAt(0).toUpperCase() : "A"}
               </div>
             )}
           </div>
@@ -117,17 +142,21 @@ const ArtistAboutSection = ({
                 {artist?.name || "Unknown"}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-gray-300 mb-4">
+            <div className="flex items-center gap-3 text-sm text-gray-300 mb-2">
               <FiMapPin className="text-blue-500" />
-              <span>
-                {artist?.location || "Unknown Location"} •{" "}
-              </span>
+              <span>{artist?.location || "Unknown Location"} • </span>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              {artist?.bio || "This artist has not provided a biography yet."}{" "}
-              {/* <span className="text-blue-400 cursor-pointer hover:underline">
-                View more
-              </span> */}
+              {displayedBio || "This artist has not provided a biography yet."}
+              {isLongBio && !showFullBio && "..."}
+              {isLongBio && (
+                <span
+                  onClick={() => setShowFullBio(!showFullBio)}
+                  className="ml-2 text-blue-400 cursor-pointer hover:underline"
+                >
+                  {showFullBio ? "View less" : "View more"}
+                </span>
+              )}
             </p>
             <div className="mt-6 pt-4 border-t border-white/10">
               <h3 className="text-lg font-semibold text-blue-400 mb-2">
@@ -137,13 +166,16 @@ const ArtistAboutSection = ({
                 <div>
                   <p className="text-sm text-gray-300">
                     {isSubscribed ? (
-                      <span className="text-green-400">✓ You are subscribed</span>
+                      <span className="text-green-400">
+                        ✓ You are subscribed
+                      </span>
                     ) : (
                       "Subscribe for exclusive content"
                     )}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    ${subscriptionPrice.toFixed(2)} per {cycleLabel(currentCycle)} • Cancel anytime
+                    ${subscriptionPrice.toFixed(2)} per{" "}
+                    {cycleLabel(currentCycle)} • Cancel anytime
                   </p>
                 </div>
                 <button
@@ -151,16 +183,17 @@ const ArtistAboutSection = ({
                   disabled={subscriptionLoading}
                   className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
                     ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
-                    ${isSubscribed
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                    ${
+                      isSubscribed
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
                     }`}
                 >
                   {subscriptionLoading
                     ? "Processing..."
                     : isSubscribed
-                    ? "Cancel Subscription"
-                    : "Subscribe Now"}
+                      ? "Cancel Subscription"
+                      : "Subscribe Now"}
                 </button>
               </div>
             </div>

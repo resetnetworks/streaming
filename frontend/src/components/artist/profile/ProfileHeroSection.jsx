@@ -34,6 +34,7 @@ const ProfileHeroSection = () => {
   const [isEditingImage, setIsEditingImage] = useState(false); // To track if user clicked "Edit Image" in preview modal
 
   const dispatch = useDispatch();
+  const hasImage = selectedImageType === "profile" ? !!artistProfile?.profileImage : !!artistProfile?.coverImage;
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -147,7 +148,6 @@ const ProfileHeroSection = () => {
       });
       
       toast.dismiss('uploading');
-      toast.success('Image updated successfully!');
       
       // Refetch profile data to get updated image
       await refetch();

@@ -127,7 +127,7 @@ const Album = () => {
     setCurrentPage(1); // Reset to first page when changing items per page
   };
 
-  const filteredAlbums = albums.filter(album =>
+  const filteredAlbums = (albums || []).filter(album =>
     album.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     album.artist?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
