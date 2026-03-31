@@ -12,7 +12,8 @@ const RecentPlays = React.forwardRef(
     onTitleClick,
     isSelected,
     songId,
-    type  // ✅ "single" | "album" | undefined
+    type,
+    showControls=true
   }, ref) => {
 
     const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } = usePlaybackControl();
@@ -68,12 +69,17 @@ const RecentPlays = React.forwardRef(
           )}
 
           <div className="absolute inset-0 group-hover:bg-black group-hover:bg-opacity-20 transition">
-            <button 
-              onClick={handlePlayClick}
-              className="absolute bottom-2 left-2 bg-gray-200 text-black p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition hover:scale-110"
-            >
-              {isSongPlaying(songId) ? <RiPauseFill size={14} /> : <RiPlayFill size={14} />}
-            </button>
+            {showControls ? (
+  <button 
+    onClick={handlePlayClick}
+    className="absolute bottom-2 left-2 bg-gray-200 text-black p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition hover:scale-110"
+  >
+    {isSongPlaying(songId) ? <RiPauseFill size={14} /> : <RiPlayFill size={14} />}
+  </button>
+) : (
+  <div>
+  </div>
+)}
           </div>
         </div>
 

@@ -17,6 +17,7 @@ import {
   ProtectedRoute,
   RedirectedProtectedRoute,
   ArtistRegisterRoute,
+  ArtistRoute,
   AdminRoute,
   PublicRoute,
 } from "./components/RouteGuards";
@@ -325,12 +326,12 @@ useEffect(() => {
             <Route 
             path="/artist/dashboard"
             element={
-            <RedirectedProtectedRoute
+            <ArtistRoute
                     isAuthenticated={isAuthenticated}
                     user={user}
                   >
             <Pages.ArtistDashboard />
-          </RedirectedProtectedRoute>}
+          </ArtistRoute>}
             />
           </Routes>      
         </Suspense>

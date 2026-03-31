@@ -82,15 +82,15 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
   };
 
   const handleAddSample = () => {
-    if (!sampleUrl.trim()) {
-      toast.error('Please enter a valid URL');
-      return;
-    }
+   if (samples.length >= 1) {
+  toast.error("Only one sample track is allowed");
+  return;
+}
 
-    if (!sampleTitle.trim()) {
-      toast.error('Please enter a title for the sample');
-      return;
-    }
+if (!sampleUrl.trim()) {
+  toast.error('Please enter a valid URL');
+  return;
+}
 
     try {
       const url = new URL(sampleUrl);

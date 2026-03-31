@@ -97,6 +97,10 @@ const ArtistHeroSection = ({
     );
 
   const handleSubscribe = async () => {
+     if (!currentUser) {
+    toast.error("Please sign in to subscribe");
+    return;
+  }
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
       return;
@@ -125,7 +129,6 @@ const ArtistHeroSection = ({
         setSubscriptionLoading(false);
       }
     } else {
-      setSubscriptionLoading(true);
       openSubscriptionOptions(artist, currentCycle, subscriptionPrice);
     }
   };

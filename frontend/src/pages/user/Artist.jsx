@@ -77,6 +77,12 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
     closeSubscriptionOptions
   } = useSubscriptionPayment();
 
+  useEffect(() => {
+  if (!showSubscriptionOptions) {
+    setSubscriptionLoading(false);
+  }
+}, [showSubscriptionOptions]);
+
   
   const {
     showPaymentOptions,

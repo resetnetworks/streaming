@@ -80,20 +80,64 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
     }
   }, [dispatch, errors]);
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.stageName?.trim()) {
-      newErrors.stageName = 'Stage Name is required';
+ const isValidURL = (url) => {
+  try {
+    const parsed = new URL(url);
+    return ["http:", "https:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
+const isValidSocialURL = (url) => {
+  const allowedDomains = [
+    "instagram.com",
+    "facebook.com",
+    "twitter.com",
+    "x.com",
+    "youtube.com",
+    "tiktok.com",
+    "linkedin.com"
+  ];
+
+  try {
+    const parsed = new URL(url);
+    return allowedDomains.some(domain => parsed.hostname.includes(domain));
+  } catch {
+    return false;
+  }
+};
+
+const validateForm = () => {
+  const newErrors = {};
+
+  if (!formData.stageName?.trim()) {
+    newErrors.stageName = 'Stage Name is required';
+  }
+
+  if (!formData.country) {
+    newErrors.country = 'Country is required';
+  }
+
+  // ✅ Website validation
+  if (formData.website) {
+    if (!isValidURL(formData.website)) {
+      newErrors.website = 'Enter a valid website URL (https://...)';
     }
-    
-    if (!formData.country) {
-      newErrors.country = 'Country is required';
+  }
+
+  // ✅ Social media validation
+  if (formData.socialMedia) {
+    if (!isValidURL(formData.socialMedia)) {
+      newErrors.socialMedia = 'Enter a valid URL';
+    } else if (!isValidSocialURL(formData.socialMedia)) {
+      newErrors.socialMedia = 'Only social media links allowed (Instagram, YouTube, etc.)';
     }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -207,6 +251,9 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
                     />
                     <MdLanguage className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                   </div>
+                  {errors.website && (
+  <p className="text-red-500 text-sm mt-1">{errors.website}</p>
+)}
                 </div>
 
                 {/* Social Media Field */}
@@ -225,6 +272,9 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
                     />
                     <MdShare className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                   </div>
+                  {errors.socialMedia && (
+  <p className="text-red-500 text-sm mt-1">{errors.socialMedia}</p>
+)}
                 </div>
 
                 {/* Biography Field */}

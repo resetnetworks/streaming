@@ -46,6 +46,7 @@ const ArtistAboutSection = ({
   openSubscriptionOptions,
   subscriptionLoading,
   setSubscriptionLoading,
+  currentUser, 
 }) => {
   const dispatch = useDispatch();
   const artistColor = getArtistColor(artist?.name);
@@ -83,6 +84,10 @@ const ArtistAboutSection = ({
     : artist?.bio?.slice(0, BIO_LIMIT);
 
   const handleSubscribe = async () => {
+     if (!currentUser) {
+    toast.error("Please sign in to subscribe");
+    return;
+  }
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
       return;
@@ -111,7 +116,6 @@ const ArtistAboutSection = ({
         setSubscriptionLoading(false);
       }
     } else {
-      setSubscriptionLoading(true);
       openSubscriptionOptions(artist, currentCycle, subscriptionPrice);
     }
   };

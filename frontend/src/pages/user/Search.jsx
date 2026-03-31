@@ -20,6 +20,7 @@ import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
+import { play, pause, setSelectedSong } from "../../features/playback/playerSlice";
 import { toast } from "sonner";
 
 // ✅ Import Currency Utilities
@@ -69,10 +70,18 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
 
   const { results, loading, error } = useSelector((state) => state.search);
   const currentUser = useSelector((state) => state.auth.user);
+  const currentSong = useSelector((state) => state.player?.currentSong);
   
   // Payment state from Redux
   const paymentLoading = useSelector(selectPaymentLoading);
   const paymentError = useSelector(selectPaymentError);
+
+  const { 
+  isSongPlaying, 
+  isSongSelected, 
+  pausePlayback, 
+  resumePlayback 
+} = usePlaybackControl();
 
 
   // ✅ Use Payment Gateway Hook (same as Home page)
@@ -129,10 +138,20 @@ const userPurchases = Array.isArray(data?.history) ? data.history : [];
     setQuery(newQuery);
   };
 
-  const handlePlaySong = (song) => {
-    dispatch(setSelectedSong(song));
+const handlePlaySong = (song) => {
+  if (!song) return;
 
-  };
+  if (isSongSelected(song._id)) {
+    if (isSongPlaying(song._id)) {
+      pausePlayback();
+    } else {
+      resumePlayback();
+    }
+  } else {
+    dispatch(setSelectedSong(song));
+    dispatch(play());
+  }
+};
 
   // ✅ REMOVED: Local currency functions - now using utilities
 
@@ -396,9 +415,9 @@ if (isPurchased) {
                   <div className="flex flex-wrap gap-6">
                     {results.songs.map((song) => (
                       <RecentPlays
-                       type="single"
                         key={song._id}
                         songId={song._id}
+                        isSelected={currentSong?._id === song._id}
                         onTitleClick={() => navigate(`/song/${song.slug}`)}
                         title={song.title}
                         image={song.coverImage || "/images/placeholder.png"}
@@ -422,6 +441,7 @@ if (isPurchased) {
                         price="Artist"
                         image={artist.profileImage || "/images/placeholder.png"}
                         onPlay={() => navigate(`/artist/${artist.slug}`)}
+                        showControls={false}
                       />
                     ))}
                   </div>

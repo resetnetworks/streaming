@@ -32,6 +32,21 @@ export const ArtistRegisterRoute = ({ isAuthenticated, user, children }) => {
   return children;
 };
 
+export const ArtistRoute = ({ isAuthenticated, user, children }) => {
+  // ❌ Not logged in
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // ❌ Not artist
+  if (user?.role !== "artist") {
+    return <Navigate to="/home" replace />;
+  }
+
+  // ✅ Allowed
+  return children;
+};
+
 
 export const PublicRoute = ({ isAuthenticated, children, redirectTo = "/home" }) =>
   !isAuthenticated ? children : <Navigate to={redirectTo} replace />;
