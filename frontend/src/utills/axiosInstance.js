@@ -90,7 +90,7 @@ const clearAllAuthData = async () => {
 let isLoggingOut = false;
 
 // ✅ ENHANCED: Force logout with complete data clearing and loop prevention
-const forceLogout = async () => {
+export const forceLogout = async () => {
   // ✅ Prevent multiple logout calls
   if (isLoggingOut) {
     return;

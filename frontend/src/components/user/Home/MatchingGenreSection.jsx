@@ -1,25 +1,31 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { LuSquareChevronRight, LuSquareChevronLeft } from 'react-icons/lu';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import { BsSoundwave } from "react-icons/bs";
-import Skeleton from 'react-loading-skeleton';
+import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 
-import MatchingGenreSong from '../MatchingGenreSong';
-import { 
+import MatchingGenreSong from "../MatchingGenreSong";
+import {
   fetchSongsMatchingUserGenres,
-  setMatchingGenreCachedData 
-} from '../../../features/songs/songSlice';
-import { 
+  setMatchingGenreCachedData,
+} from "../../../features/songs/songSlice";
+import {
   selectMatchingGenreSongs,
   selectMatchingGenres,
   selectSongsStatus,
   selectIsMatchingGenreCacheValid,
   selectIsMatchingGenrePageCached,
   selectMatchingGenreCachedPageData,
-  selectMatchingGenrePagination
-} from '../../../features/songs/songSelectors';
+  selectMatchingGenrePagination,
+} from "../../../features/songs/songSelectors";
 
 import { handlePlaySong } from "../../../utills/songHelpers";
 
@@ -40,7 +46,7 @@ const AlbumCard = ({ album, onClick }) => {
             <img
               src={album.songs[0].coverImage}
               alt=""
-              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageError(true)}
               loading="lazy"
@@ -68,7 +74,9 @@ const AlbumCard = ({ album, onClick }) => {
       {/* Info */}
       <div className="mt-2 flex justify-between items-start gap-2">
         <p className="text-white font-medium text-sm truncate">
-          {album.title?.length > 12 ? album.title.slice(0, 12) + "…" : album.title || "Untitled"}
+          {album.title?.length > 12
+            ? album.title.slice(0, 12) + "…"
+            : album.title || "Untitled"}
         </p>
         <span className="text-gray-200 text-[10px] flex-shrink-0 text-right mt-0.5 max-w-[55px] truncate">
           {album.songs[0]?.artist?.name?.length > 7
@@ -80,9 +88,7 @@ const AlbumCard = ({ album, onClick }) => {
   );
 };
 
-const MatchingGenreSection = ({ 
-  onSubscribeRequired,
-}) => {
+const MatchingGenreSection = ({ onSubscribeRequired, onRoleUpdateError }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -104,24 +110,30 @@ const MatchingGenreSection = ({
   const pagination = useSelector(selectMatchingGenrePagination);
 
   const currentUser = useSelector((state) => state.auth.user);
-  const currentlyPlayingSong = useSelector((state) => state.player.selectedSong);
+  const currentlyPlayingSong = useSelector(
+    (state) => state.player.selectedSong,
+  );
 
   const isCacheValid = useSelector(selectIsMatchingGenreCacheValid);
-  const isPageCached = useSelector(selectIsMatchingGenrePageCached(currentPage));
-  const cachedPageData = useSelector(selectMatchingGenreCachedPageData(currentPage));
+  const isPageCached = useSelector(
+    selectIsMatchingGenrePageCached(currentPage),
+  );
+  const cachedPageData = useSelector(
+    selectMatchingGenreCachedPageData(currentPage),
+  );
 
   // Process data to extract unique albums
   const uniqueAlbums = useMemo(() => {
     const albumMap = new Map();
-    
-    merged.forEach(song => {
+
+    merged.forEach((song) => {
       if (song.album && song.album._id) {
         const albumId = song.album._id;
         if (!albumMap.has(albumId)) {
           albumMap.set(albumId, {
             ...song.album,
             songCount: 1,
-            songs: [song]
+            songs: [song],
           });
         } else {
           const existingAlbum = albumMap.get(albumId);
@@ -130,24 +142,23 @@ const MatchingGenreSection = ({
         }
       }
     });
-    
+
     return Array.from(albumMap.values());
   }, [merged]);
 
   // Handle album click navigation
   const handleAlbumClick = (album) => {
-    navigate(`/album/${album._id}`, { 
-      state: { 
+    navigate(`/album/${album._id}`, {
+      state: {
         album: album,
-        songs: album.songs 
-      } 
+        songs: album.songs,
+      },
     });
   };
 
-
   // Unique by _id helper
   const mergeUnique = useCallback((prev, next) => {
-    const seen = new Set(prev.map(s => s._id));
+    const seen = new Set(prev.map((s) => s._id));
     const out = [...prev];
     for (const s of next) {
       if (!seen.has(s._id)) {
@@ -159,49 +170,70 @@ const MatchingGenreSection = ({
   }, []);
 
   // Load a page with cache awareness
-  const loadPage = useCallback(async (page) => {
-    if (!currentUser) return;
-    if (pageLoaded.has(page)) return;
-    setLoadingMore(true);
+  const loadPage = useCallback(
+    async (page) => {
+      if (!currentUser) return;
+      if (pageLoaded.has(page)) return;
+      setLoadingMore(true);
 
-    try {
-      if (isPageCached && isCacheValid && cachedPageData && page === currentPage && hasInitialLoad) {
-        const fromCache = cachedPageData.songs || [];
-        setMerged(prev => mergeUnique(prev, fromCache));
-        setPageLoaded(prev => new Set(prev).add(page));
+      try {
+        if (
+          isPageCached &&
+          isCacheValid &&
+          cachedPageData &&
+          page === currentPage &&
+          hasInitialLoad
+        ) {
+          const fromCache = cachedPageData.songs || [];
+          setMerged((prev) => mergeUnique(prev, fromCache));
+          setPageLoaded((prev) => new Set(prev).add(page));
+          setLoadingMore(false);
+          return;
+        }
+
+        const result = await dispatch(
+          fetchSongsMatchingUserGenres({ page, limit }),
+        ).unwrap();
+
+        dispatch(
+          setMatchingGenreCachedData({
+            page,
+            songs: result.songs,
+            pagination: result.pagination,
+            matchingGenres: result.matchingGenres,
+          }),
+        );
+
+        setMerged((prev) => mergeUnique(prev, result.songs));
+        setPageLoaded((prev) => new Set(prev).add(page));
+        setHasInitialLoad(true);
+      } catch (error) {
+        if (
+          error?.code === "ROLE_CHANGED" ||
+          error?.response?.data?.code === "ROLE_CHANGED"
+        ) {
+          onRoleUpdateError?.(); // 🔥 trigger modal
+          return;
+        }
+
+        toast.error(`Failed to load songs`);
+      } finally {
         setLoadingMore(false);
-        return;
       }
-
-      const result = await dispatch(fetchSongsMatchingUserGenres({ page, limit })).unwrap();
-
-      dispatch(setMatchingGenreCachedData({
-        page,
-        songs: result.songs,
-        pagination: result.pagination,
-        matchingGenres: result.matchingGenres
-      }));
-
-      setMerged(prev => mergeUnique(prev, result.songs));
-      setPageLoaded(prev => new Set(prev).add(page));
-      setHasInitialLoad(true);
-    } catch (error) {
-      toast.error(`Failed to load songs: ${error}`);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [
-    currentUser,
-    pageLoaded,
-    isPageCached,
-    isCacheValid,
-    cachedPageData,
-    currentPage,
-    hasInitialLoad,
-    dispatch,
-    limit,
-    mergeUnique
-  ]);
+    },
+    [
+      currentUser,
+      pageLoaded,
+      isPageCached,
+      isCacheValid,
+      cachedPageData,
+      currentPage,
+      hasInitialLoad,
+      dispatch,
+      limit,
+      mergeUnique,
+    ],
+  );
 
   // Initial load
   useEffect(() => {
@@ -227,20 +259,23 @@ const MatchingGenreSection = ({
     });
   }, [merged]);
 
-  const onPlaySong = useCallback((song) => {
-    const result = handlePlaySong(song, currentUser, dispatch);
-    if (result.requiresSubscription) {
-      onSubscribeRequired?.(song.artist, "play", song);
-      toast.error("Subscribe to play this song!");
-    }
-  }, [currentUser, dispatch, onSubscribeRequired]);
+  const onPlaySong = useCallback(
+    (song) => {
+      const result = handlePlaySong(song, currentUser, dispatch);
+      if (result.requiresSubscription) {
+        onSubscribeRequired?.(song.artist, "play", song);
+        toast.error("Subscribe to play this song!");
+      }
+    },
+    [currentUser, dispatch, onSubscribeRequired],
+  );
 
   const handleScrollArrows = (direction) => {
     if (!scrollRef.current) return;
     const scrollAmount = 200;
     scrollRef.current.scrollBy({
-      left: direction === 'right' ? scrollAmount : -scrollAmount,
-      behavior: 'smooth'
+      left: direction === "right" ? scrollAmount : -scrollAmount,
+      behavior: "smooth",
     });
   };
 
@@ -253,18 +288,23 @@ const MatchingGenreSection = ({
     const io = new IntersectionObserver(
       (entries) => {
         const last = entries[0];
-        if (last.isIntersecting && !loadingMore && pagination && currentPage < (pagination.totalPages || Infinity)) {
+        if (
+          last.isIntersecting &&
+          !loadingMore &&
+          pagination &&
+          currentPage < (pagination.totalPages || Infinity)
+        ) {
           if (scrollRef.current) {
             pendingScrollLeftRef.current = scrollRef.current.scrollLeft;
           }
-          setCurrentPage(p => p + 1);
+          setCurrentPage((p) => p + 1);
         }
       },
       {
         root,
-        rootMargin: '200px',
-        threshold: 0.1
-      }
+        rootMargin: "200px",
+        threshold: 0.1,
+      },
     );
 
     io.observe(sentinelRef.current);
@@ -275,9 +315,14 @@ const MatchingGenreSection = ({
   const onHorizontalScroll = (e) => {
     const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
     const nearEnd = scrollLeft + clientWidth >= scrollWidth - 10;
-    if (nearEnd && !loadingMore && pagination && currentPage < (pagination.totalPages || Infinity)) {
+    if (
+      nearEnd &&
+      !loadingMore &&
+      pagination &&
+      currentPage < (pagination.totalPages || Infinity)
+    ) {
       pendingScrollLeftRef.current = scrollLeft;
-      setCurrentPage(p => p + 1);
+      setCurrentPage((p) => p + 1);
     }
   };
 
@@ -286,21 +331,29 @@ const MatchingGenreSection = ({
     return (
       <div className="w-full py-0">
         <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-700/30 rounded-xl p-6 text-center backdrop-blur-sm">
-          <div className="text-white text-lg font-semibold mb-2">AI Personalized Music</div>
-          <p className="text-gray-400">Please log in to see personalized song recommendations</p>
+          <div className="text-white text-lg font-semibold mb-2">
+            AI Personalized Music
+          </div>
+          <p className="text-gray-400">
+            Please log in to see personalized song recommendations
+          </p>
         </div>
       </div>
     );
   }
 
-  if (status === 'failed' && !hasInitialLoad) {
+  if (status === "failed" && !hasInitialLoad) {
     return (
       <div className="w-full py-6">
         <div className="bg-red-900/20 border border-red-700/30 rounded-xl p-6 text-center backdrop-blur-sm">
-          <h3 className="text-red-400 text-lg font-semibold mb-2">Failed to Load</h3>
-          <p className="text-gray-400 mb-4">Unable to fetch personalized recommendations</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <h3 className="text-red-400 text-lg font-semibold mb-2">
+            Failed to Load
+          </h3>
+          <p className="text-gray-400 mb-4">
+            Unable to fetch personalized recommendations
+          </p>
+          <button
+            onClick={() => window.location.reload()}
             className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2 rounded-lg transition-colors"
           >
             Retry
@@ -310,25 +363,38 @@ const MatchingGenreSection = ({
     );
   }
 
-  if ((status === 'loading' && !hasInitialLoad) || (merged.length === 0 && status === 'loading')) {
+  if (
+    (status === "loading" && !hasInitialLoad) ||
+    (merged.length === 0 && status === "loading")
+  ) {
     return (
       <section className="w-full py-0">
         <div className="w-full flex justify-between items-center mb-2">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg" />
             <div>
-              <Skeleton width={200} height={24} baseColor="#1a2238" highlightColor="#243056" />
-              <Skeleton width={150} height={16} baseColor="#1a2238" highlightColor="#243056" />
+              <Skeleton
+                width={200}
+                height={24}
+                baseColor="#1a2238"
+                highlightColor="#243056"
+              />
+              <Skeleton
+                width={150}
+                height={16}
+                baseColor="#1a2238"
+                highlightColor="#243056"
+              />
             </div>
           </div>
         </div>
         <div className="flex gap-4 overflow-hidden">
           {[...Array(5)].map((_, idx) => (
             <div key={`matching-skeleton-${idx}`} className="flex-shrink-0">
-              <Skeleton 
-                height={240} 
-                width={180} 
-                className="rounded-xl" 
+              <Skeleton
+                height={240}
+                width={180}
+                className="rounded-xl"
                 baseColor="#1a2238"
                 highlightColor="#243056"
               />
@@ -357,21 +423,22 @@ const MatchingGenreSection = ({
                 Created For You
               </h2>
               <p className="text-gray-400 text-sm">
-                Based on your music taste • {matchingGenres?.slice(0, 3).join(', ') || 'Loading...'}
+                Based on your music taste •{" "}
+                {matchingGenres?.slice(0, 3).join(", ") || "Loading..."}
               </p>
             </div>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
             <button
-              onClick={() => handleScrollArrows('left')}
+              onClick={() => handleScrollArrows("left")}
               className="text-white cursor-pointer text-lg hover:text-blue-400 transition-all"
               type="button"
             >
               <LuSquareChevronLeft />
             </button>
             <button
-              onClick={() => handleScrollArrows('right')}
+              onClick={() => handleScrollArrows("right")}
               className="text-white cursor-pointer text-lg hover:text-blue-400 transition-all"
               type="button"
             >
@@ -404,21 +471,22 @@ const MatchingGenreSection = ({
             ))}
 
             {/* Show individual songs that don't belong to any album */}
-            {merged.filter(song => !song.album || !song.album._id).map((song, index) => (
-              
-              <MatchingGenreSong
-                key={`matching-song-${song._id}-${index}`}
-                title={song.title}
-                songId={song._id}
-                artist={song.artist}
-                album={song.album}
-                image={song.coverImage || song.album?.coverImage}
-                duration={song.duration}
-                onPlay={() => onPlaySong(song)}
-                isPlaying={currentlyPlayingSong?._id === song._id}
-                isSelected={currentlyPlayingSong?._id === song._id}
-              />
-            )) }
+            {merged
+              .filter((song) => !song.album || !song.album._id)
+              .map((song, index) => (
+                <MatchingGenreSong
+                  key={`matching-song-${song._id}-${index}`}
+                  title={song.title}
+                  songId={song._id}
+                  artist={song.artist}
+                  album={song.album}
+                  image={song.coverImage || song.album?.coverImage}
+                  duration={song.duration}
+                  onPlay={() => onPlaySong(song)}
+                  isPlaying={currentlyPlayingSong?._id === song._id}
+                  isSelected={currentlyPlayingSong?._id === song._id}
+                />
+              ))}
 
             {/* Loading spinner while appending more */}
             {loadingMore && (

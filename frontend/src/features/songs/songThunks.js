@@ -231,7 +231,7 @@ export const fetchSongsMatchingUserGenres = createAsyncThunk(
       };
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || 'Fetching songs matching user genres failed'
+        err.response?.data || 'Fetching songs matching user genres failed'
       );
     }
   }

@@ -271,7 +271,7 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) =>
     }
     clearAuthFromLocal();
     delete axios.defaults.headers.common["Authorization"];
-    
+    res.clearCookie("token");
     return res.data.message;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);

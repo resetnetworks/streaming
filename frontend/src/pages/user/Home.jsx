@@ -12,6 +12,7 @@ import SimilarArtistSection from "../../components/user/Home/SimilarArtistSectio
 import AllTracksSection from "../../components/user/Home/AllTracksSection";
 import SubscribeModal from "../../components/user/SubscribeModal";
 import MatchingGenreSection from "../../components/user/Home/MatchingGenreSection";
+import RoleUpdateModal from "../../components/user/RoleUpdateModal";
 import { fetchAllArtists, fetchRandomArtistWithSongs } from "../../features/artists/artistsSlice";
 import GenreSection from "../../components/user/Home/GenreSection";
 import ArtistSection from "../../components/user/Home/ArtistSection";
@@ -25,6 +26,9 @@ const Home = () => {
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null); // "play" | "purchase"
   const [modalData, setModalData] = useState(null); // song or item
+
+  // ✅ NEW: State for role update modal
+  const [roleUpdateModalOpen, setRoleUpdateModalOpen] = useState(false);
 
   const currentUser = useSelector((state) => state.auth.user);
 
@@ -52,7 +56,10 @@ const Home = () => {
     if (artist?.slug) navigate(`/artist/${artist.slug}`);
   };
 
-
+  // ✅ NEW: Callback for when role update error occurs
+  const handleRoleUpdateError = () => {
+    setRoleUpdateModalOpen(true);
+  };
 
 
   return (
@@ -111,10 +118,11 @@ const Home = () => {
           />
 
           {/* Matching Genre */}
-         {currentUser && (
-  <MatchingGenreSection
-  />
-)}
+          {currentUser && (
+            <MatchingGenreSection
+              onRoleUpdateError={handleRoleUpdateError} // ✅ NEW: Pass callback
+            />
+          )}
 
           <SimilarArtistSection
           />
@@ -132,6 +140,9 @@ const Home = () => {
         onClose={handleSubscribeModalClose}
         onNavigate={handleNavigateToArtist}
       />
+
+      {/* ✅ NEW: Role Update Modal */}
+      <RoleUpdateModal open={roleUpdateModalOpen} />
     </>
   );
 };
