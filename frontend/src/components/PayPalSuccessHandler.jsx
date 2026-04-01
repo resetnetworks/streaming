@@ -26,9 +26,7 @@ const PayPalSuccessHandler = () => {
           itemId: paymentData.itemId
         }));
         
-        toast.success('Payment successful!', {
-          description: `Paid ${paymentData.symbol}${paymentData.amount} for ${paymentData.itemTitle}`
-        });
+        toast.success('Payment successful!');
         
         // Clean up
         localStorage.removeItem('pendingPaypalPayment');

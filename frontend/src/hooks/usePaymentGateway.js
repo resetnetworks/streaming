@@ -161,7 +161,7 @@ export const usePaymentGateway = () => {
         }));
 
         toast.success(
-          `Payment successful! Payment ID: ${response.razorpay_payment_id}`,
+          `Payment successful!`,
           {
             description: `Paid ${paymentDetails.symbol}${paymentDetails.amount} for ${item.title}`
           }
