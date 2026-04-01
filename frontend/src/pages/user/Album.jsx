@@ -1,34 +1,26 @@
-import React, { useEffect, useState,useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { BsShare } from "react-icons/bs";
 import { FaPlay, FaPause } from "react-icons/fa";
+import { useQueryClient } from "@tanstack/react-query";
 
-// ✅ REACT QUERY for album data
+// React Query
 import { useAlbum } from "../../hooks/api/useAlbums";
-import { useUserPurchases } from "../../hooks/api/useUserDashboard";
+import { useUserPurchases, userDashboardKeys } from "../../hooks/api/useUserDashboard";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
+import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 
-// ✅ REDUX for player
+// Redux
 import {
   setSelectedSong,
   play,
-  pause,
   setPlaybackContext,
   addToQueue,
   clearQueue,
 } from "../../features/playback/playerSlice";
-
-// ✅ REDUX for payment
-import {
-  initiateRazorpayItemPayment,
-  resetPaymentState,
-} from "../../features/payments/paymentSlice";
-import {
-  addPurchasedSong,
-  addPurchasedAlbum,
-} from "../../features/auth/authSlice";
+import { resetPaymentState } from "../../features/payments/paymentSlice";
 
 // Components
 import UserHeader from "../../components/user/UserHeader";
@@ -36,32 +28,17 @@ import SongList from "../../components/user/SongList";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import SubscribeModal from "../../components/user/SubscribeModal";
 import ShareDropdown from "../../components/user/ShareDropdown";
+import PaymentMethodModal from "../../components/user/PaymentMethodModal";
+import CurrencySelectionModal from "../../components/user/CurrencySelectionModal";
 
 // Skeleton
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-// Helper functions
+// Helpers
 import { formatDuration } from "../../utills/helperFunctions";
-// Subscription utilities
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 
-// ✅ RAZORPAY Script Loader
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
-
-// Format date helper
 function formatDate(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString(undefined, {
@@ -71,187 +48,172 @@ function formatDate(dateStr) {
   });
 }
 
+// ✅ ArtistSinglesSection se same helper functions
+const getCurrencySymbol = (currency) => {
+  const symbols = {
+    USD: "$", EUR: "€", GBP: "£", JPY: "¥", INR: "₹",
+    CAD: "C$", AUD: "A$", CHF: "CHF", CNY: "¥", SEK: "kr",
+    NZD: "NZ$", MXN: "$", SGD: "S$", HKD: "HK$", NOK: "kr",
+    TRY: "₺", RUB: "₽", BRL: "R$", ZAR: "R",
+  };
+  return symbols[currency] || currency;
+};
+
+const getAvailableCurrencies = (item) => {
+  if (!item?.basePrice || !item?.convertedPrices) return [];
+  return [
+    { currency: item.basePrice.currency, amount: item.basePrice.amount, isBaseCurrency: true },
+    ...item.convertedPrices.map((price) => ({
+      currency: price.currency,
+      amount: price.amount,
+      isBaseCurrency: false,
+    })),
+  ];
+};
+
 export default function Album() {
   const { albumId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const shareBtnRef = useRef(null);
+  const queryClient = useQueryClient();
+
   const [showFullDesc, setShowFullDesc] = useState(false);
 
-  const { data } = useUserPurchases();
-  const userPurchases = Array.isArray(data?.history) ? data.history : [];
+  // React Query
+  const { data: purchasesData } = useUserPurchases();
+  const userPurchases = Array.isArray(purchasesData?.history)
+    ? purchasesData.history
+    : [];
 
-  // ✅ REACT QUERY: Album data
   const {
     data: album,
     isLoading: albumLoading,
     error: albumError,
     refetch: refetchAlbum,
   } = useAlbum(albumId);
-  const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } =
-    usePlaybackControl();
 
-  // ✅ REDUX
+  const { isSongPlaying, pausePlayback, resumePlayback } = usePlaybackControl();
+
+  // Redux
   const selectedSong = useSelector((state) => state.player.selectedSong);
-  const isPlaying = useSelector((state) => state.player?.isPlaying || false);
   const currentUser = useSelector((state) => state.auth.user);
-  const paymentLoading = useSelector((state) => state.payment.loading);
 
-  // Local states
+  // Payment states
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [currentRazorpayInstance, setCurrentRazorpayInstance] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
-  // ✅ Subscription modal state
+  // ✅ Currency modal state — song aur album dono ke liye
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [pendingPurchaseItem, setPendingPurchaseItem] = useState(null);
+  const [pendingPurchaseType, setPendingPurchaseType] = useState(null);
+
+  // Subscribe modal
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
 
-  // ✅ Share menu state - UPDATED: Album level share dropdown
+  // Share
   const [showShareMenu, setShowShareMenu] = useState(false);
-
-  // ✅ NEW: Track active song share dropdown
   const [activeSongShareDropdown, setActiveSongShareDropdown] = useState(null);
+
+  // Payment Gateway Hook
+  const {
+    showPaymentOptions,
+    pendingPayment,
+    openPaymentOptions,
+    handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
+    closePaymentOptions,
+    getPaymentDisplayInfo,
+  } = usePaymentGateway();
+
   const isAlbumSongPlaying =
     selectedSong &&
     album?.songs?.some((s) => s._id === selectedSong._id) &&
     isSongPlaying(selectedSong._id);
 
-  // ✅ Clear payment state on mount
   useEffect(() => {
     dispatch(resetPaymentState());
   }, [dispatch]);
 
-  // ✅ Handle album loading error
   useEffect(() => {
     if (albumError) {
       toast.error("Failed to load album");
-      console.error("Album loading error:", albumError);
     }
   }, [albumError]);
 
-  // ✅ Play song handler
- const handlePlaySong = (song) => {
-  if (!album) return;
-
-  const index = album.songs.findIndex((s) => s._id === song._id);
-
-  const nextSongs = album.songs.slice(index + 1);
-
-  // ✅ IMPORTANT: clear previous queue (missing in your code)
-  dispatch(clearQueue());
-
-  // ✅ set full album context
-  dispatch(
-    setPlaybackContext({
-      type: "album",
-      id: album._id,
-      songs: album.songs,
-    })
-  );
-
-  // ✅ select clicked song
-  dispatch(setSelectedSong(song));
-
-  // ✅ add next songs to queue (same as album logic)
-  nextSongs.forEach((s) => {
-    dispatch(
-      addToQueue({
-        ...s,
-        artistSlug: getArtistSlug(),
-        albumSlug: album?.slug,
-      })
-    );
-  });
-
-  dispatch(play());
-};
-
-  // ✅ Play album (first song) when cover is clicked
-  const handlePlayAlbum = () => {
-    if (!album || !album.songs || album.songs.length === 0) {
-      toast.error("No songs in this album");
-      return;
-    }
-    const nextSongs = album.songs.slice(1);
-    dispatch(clearQueue());
-    dispatch(
-      setPlaybackContext({
-        type: "album",
-        id: album._id,
-        songs: album.songs,
-      }),
-    );
-
-    dispatch(
-      setSelectedSong({
-        ...album.songs[0],
-        artistSlug: getArtistSlug(),
-        albumSlug: album?.slug,
-      }),
-    );
-
-    nextSongs.forEach((s) => {
-  dispatch(
-    addToQueue({
-      ...s,
-      artistSlug: getArtistSlug(),
-      albumSlug: album?.slug,
-    })
-  );
-});
-
-    dispatch(play());
-  };
-
-  const handleAlbumPlayPause = () => {
-    if (!album?.songs?.length) return;
-
-    if (selectedSong && album.songs.some((s) => s._id === selectedSong._id)) {
-      if (isSongPlaying(selectedSong._id)) {
-        pausePlayback();
-      } else {
-        resumePlayback();
-      }
-    } else {
-      handlePlayAlbum();
+  // ✅ Payment method select handler
+  const handlePaymentMethodSelect = async (gateway) => {
+    try {
+      setProcessingPayment(true);
+      setPaymentLoading(true);
+      await originalHandlePaymentMethodSelect(gateway);
+      await queryClient.invalidateQueries({
+        queryKey: userDashboardKeys.purchases(),
+      });
+      refetchAlbum();
+    } catch (error) {
+      console.error("Payment method selection error:", error);
+    } finally {
+      setTimeout(() => {
+        setProcessingPayment(false);
+        setPaymentLoading(false);
+      }, 1000);
     }
   };
 
-  // ✅ Purchase handler with subscription check
-  const handlePurchaseClick = async (item, type) => {
+  const handleClosePaymentOptions = () => {
+    setProcessingPayment(false);
+    setPaymentLoading(false);
+    closePaymentOptions();
+  };
+
+  // ✅ Currency select handler — ArtistSinglesSection jaisa
+  const handleCurrencySelect = (selectedCurrency) => {
+    setShowCurrencyModal(false);
+    if (pendingPurchaseItem && selectedCurrency) {
+      openPaymentOptions(pendingPurchaseItem, pendingPurchaseType, {
+        currency: selectedCurrency.currency,
+        amount: selectedCurrency.amount,
+        symbol: getCurrencySymbol(selectedCurrency.currency),
+      });
+    }
+    setPendingPurchaseItem(null);
+    setPendingPurchaseType(null);
+  };
+
+  const handleCloseCurrencyModal = () => {
+    setShowCurrencyModal(false);
+    setPendingPurchaseItem(null);
+    setPendingPurchaseType(null);
+  };
+
+  // ✅ Main purchase click — subscription check → currency select → payment gateway
+  const handlePurchaseClick = (item, type, currencyData = null) => {
     if (!currentUser) {
       toast.error("Please login to purchase");
       navigate("/login");
       return;
     }
 
-    if (paymentLoading || processingPayment) {
+    if (processingPayment || paymentLoading) {
       toast.info("Payment already in progress...");
       return;
     }
 
-    // ✅ Check if user has subscription for this artist
     const artist = album?.artist;
     const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
       currentUser,
-      artist,
+      artist
     );
 
-    if (type === "song") {
-      // For individual song purchase
-      if (!alreadySubscribed && item.accessType === "purchase-only") {
-        // Show subscription modal
-        setModalArtist(artist);
-        setModalType("purchase");
-        setModalData(item);
-        setSubscribeModalOpen(true);
-        return;
-      }
-    } else if (type === "album") {
-      // For album purchase
-      if (!alreadySubscribed && album.accessType === "purchase-only") {
-        // Show subscription modal
+    // Not subscribed + purchase-only → subscribe modal
+    if (!alreadySubscribed) {
+      if (
+        (type === "song" && item.accessType === "purchase-only") ||
+        (type === "album" && album?.accessType === "purchase-only")
+      ) {
         setModalArtist(artist);
         setModalType("purchase");
         setModalData(item);
@@ -260,113 +222,77 @@ export default function Album() {
       }
     }
 
-    // If already subscribed or not a purchase-only item, proceed with payment
-    await processPayment(item, type);
-  };
-
-  // ✅ Process payment
-  const processPayment = async (item, type) => {
-    try {
-      setProcessingPayment(true);
-
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error("Failed to load Razorpay script");
-      }
-
-      const result = await dispatch(
-        initiateRazorpayItemPayment({
-          itemType: type,
-          itemId: item._id,
-          amount: item.price || item.basePrice?.amount,
-        }),
-      ).unwrap();
-
-      if (result.order) {
-        await handleRazorpayCheckout(result.order, item, type);
-      } else {
-        throw new Error("Failed to create payment order");
-      }
-    } catch (error) {
-      toast.error(error.message || "Failed to initiate payment");
-      setProcessingPayment(false);
+    // ✅ If currencyData already provided (from outside), skip currency modal
+    if (currencyData) {
+      openPaymentOptions(item, type, currencyData);
+      return;
     }
-  };
 
-  // ✅ Razorpay checkout handler
-  const handleRazorpayCheckout = async (order, item, type) => {
-    try {
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.id,
-        name: "musicreset",
-        description: `Purchase ${type}: ${item.title || item.name}`,
-        image: `${window.location.origin}/icon.png`,
-        handler: function (response) {
-          if (currentRazorpayInstance) {
-            try {
-              currentRazorpayInstance.close();
-            } catch (e) {}
-          }
+    // ✅ Check available currencies — show modal if multiple
+    const availableCurrencies = getAvailableCurrencies(item);
 
-          // Update Redux state
-          if (type === "song") {
-            dispatch(addPurchasedSong(item._id));
-          } else if (type === "album") {
-            dispatch(addPurchasedAlbum(item._id));
-          }
-
-          toast.success(`Successfully purchased ${item.title || item.name}!`, {
-            duration: 5000,
-          });
-
-          setProcessingPayment(false);
-          setCurrentRazorpayInstance(null);
-          dispatch(resetPaymentState());
-          refetchAlbum(); // Refresh album data
-        },
-        prefill: {
-          name: currentUser?.name || "",
-          email: currentUser?.email || "",
-          contact: currentUser?.phone || "",
-        },
-        theme: {
-          color: "#3b82f6",
-        },
-        modal: {
-          ondismiss: function () {
-            toast.info("Payment cancelled");
-            setProcessingPayment(false);
-            setCurrentRazorpayInstance(null);
-          },
-        },
-        error: function (error) {
-          toast.error("Payment failed. Please try again.");
-          setProcessingPayment(false);
-          setCurrentRazorpayInstance(null);
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      setCurrentRazorpayInstance(rzp);
-
-      rzp.on("payment.error", function (error) {
-        toast.error("Payment failed. Please try again.");
-        setProcessingPayment(false);
-        setCurrentRazorpayInstance(null);
+    if (availableCurrencies.length > 1) {
+      setPendingPurchaseItem(item);
+      setPendingPurchaseType(type);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      openPaymentOptions(item, type, {
+        currency: currency.currency,
+        amount: currency.amount,
+        symbol: getCurrencySymbol(currency.currency),
       });
-
-      rzp.open();
-    } catch (error) {
-      toast.error("Failed to open payment gateway");
-      setProcessingPayment(false);
-      setCurrentRazorpayInstance(null);
+    } else {
+      // No converted prices — directly open payment
+      openPaymentOptions(item, type, null);
     }
   };
 
-  // ✅ Handle subscribe modal close
+  // Play handlers
+  const getArtistSlug = () => {
+    if (typeof album?.artist === "object" && album?.artist?.slug) {
+      return album?.artist?.slug;
+    }
+    return null;
+  };
+
+  const handlePlaySong = (song) => {
+    if (!album) return;
+    const index = album.songs.findIndex((s) => s._id === song._id);
+    const nextSongs = album.songs.slice(index + 1);
+    dispatch(clearQueue());
+    dispatch(setPlaybackContext({ type: "album", id: album._id, songs: album.songs }));
+    dispatch(setSelectedSong(song));
+    nextSongs.forEach((s) =>
+      dispatch(addToQueue({ ...s, artistSlug: getArtistSlug(), albumSlug: album?.slug }))
+    );
+    dispatch(play());
+  };
+
+  const handlePlayAlbum = () => {
+    if (!album?.songs?.length) {
+      toast.error("No songs in this album");
+      return;
+    }
+    const nextSongs = album.songs.slice(1);
+    dispatch(clearQueue());
+    dispatch(setPlaybackContext({ type: "album", id: album._id, songs: album.songs }));
+    dispatch(setSelectedSong({ ...album.songs[0], artistSlug: getArtistSlug(), albumSlug: album?.slug }));
+    nextSongs.forEach((s) =>
+      dispatch(addToQueue({ ...s, artistSlug: getArtistSlug(), albumSlug: album?.slug }))
+    );
+    dispatch(play());
+  };
+
+  const handleAlbumPlayPause = () => {
+    if (!album?.songs?.length) return;
+    if (selectedSong && album.songs.some((s) => s._id === selectedSong._id)) {
+      isSongPlaying(selectedSong._id) ? pausePlayback() : resumePlayback();
+    } else {
+      handlePlayAlbum();
+    }
+  };
+
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);
@@ -374,12 +300,10 @@ export default function Album() {
     setModalData(null);
   };
 
-  // ✅ Handle song share dropdown toggle
   const handleSongShareDropdownToggle = (songId) => {
     setActiveSongShareDropdown((prev) => (prev === songId ? null : songId));
   };
 
-  // ✅ Get artist name
   const artistName = React.useMemo(() => {
     if (!album) return "Unknown Artist";
     if (typeof album?.artist === "object") return album?.artist?.name;
@@ -388,32 +312,27 @@ export default function Album() {
 
   const DESCRIPTION_LIMIT = 300;
   const isLongDescription = album?.description?.length > DESCRIPTION_LIMIT;
-  const displayedDescription = showFullDesc ? album?.description : album?.description?.slice(0, DESCRIPTION_LIMIT);
+  const displayedDescription = showFullDesc
+    ? album?.description
+    : album?.description?.slice(0, DESCRIPTION_LIMIT);
 
-
-  // ✅ Get artist slug
-  const getArtistSlug = () => {
-    if (typeof album?.artist === "object" && album?.artist?.slug) {
-      return album?.artist?.slug;
-    }
-    return null;
-  };
-
-  // ✅ Check purchase status
   const songs = album?.songs ? [...album.songs] : [];
+
   const isAlbumPurchased = userPurchases.some(
     (purchase) =>
       purchase?.itemType === "album" &&
-      String(purchase.itemId) === String(album?._id),
-  );
-  const isSubscriptionAlbum =
-    album?.accessType === "subscription" || album?.price === 0;
-  const totalDuration = songs.reduce(
-    (total, song) => total + (song.duration || 0),
-    0,
+      String(purchase.itemId) === String(album?._id)
   );
 
-  // ✅ Loading state
+  const isSubscriptionAlbum =
+    album?.accessType === "subscription" || album?.price === 0;
+
+  const totalDuration = songs.reduce(
+    (total, song) => total + (song.duration || 0),
+    0
+  );
+
+  // Loading state
   if (albumLoading) {
     return (
       <>
@@ -430,12 +349,9 @@ export default function Album() {
                   <Skeleton width={100} height={14} />
                   <Skeleton width={12} height={14} />
                   <Skeleton width={120} height={14} />
-                  <Skeleton width={12} height={14} />
-                  <Skeleton width={80} height={14} />
                 </div>
               </div>
             </div>
-
             <div className="flex flex-col gap-4 mt-8">
               {[...Array(5)].map((_, idx) => (
                 <div key={idx} className="flex items-center gap-4">
@@ -453,16 +369,14 @@ export default function Album() {
     );
   }
 
-  // ✅ Error state
+  // Error state
   if (albumError || !album) {
     return (
       <>
         <UserHeader />
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="text-center p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Album not found
-            </h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Album not found</h2>
             <p className="text-gray-400 mb-6">
               The album you're looking for doesn't exist or has been removed.
             </p>
@@ -478,7 +392,6 @@ export default function Album() {
     );
   }
 
-  // ✅ Main render
   return (
     <>
       <PageSEO
@@ -492,10 +405,7 @@ export default function Album() {
           description: album.description,
           image: album.coverImage,
           url: `https://musicreset.com/album/${albumId}`,
-          byArtist: {
-            "@type": "MusicGroup",
-            name: artistName,
-          },
+          byArtist: { "@type": "MusicGroup", name: artistName },
           numTracks: songs.length,
           datePublished: album.releaseDate,
         }}
@@ -507,7 +417,6 @@ export default function Album() {
         <div className="min-h-screen text-white px-4 sm:px-8 pt-6 sm:pt-10 pb-8">
           {/* Album Header */}
           <div className="flex flex-col md:flex-row items-start gap-4 sm:gap-8 pb-6">
-            {/* Album Cover with Click to Play - RESPONSIVE */}
             <div className="relative flex-shrink-0 w-full max-w-[200px] sm:max-w-[240px] md:max-w-[280px] mx-0">
               <img
                 src={album?.coverImage}
@@ -525,16 +434,15 @@ export default function Album() {
               </h1>
               <p className="text-base md:text-lg text-gray-400">
                 {displayedDescription}
-  {isLongDescription && !showFullDesc && "..."}
-  
-  {isLongDescription && (
-    <span
-      onClick={() => setShowFullDesc(!showFullDesc)}
-      className="ml-2 text-blue-400 cursor-pointer hover:underline text-sm"
-    >
-      {showFullDesc ? "View less" : "View more"}
-    </span>
-  )}
+                {isLongDescription && !showFullDesc && "..."}
+                {isLongDescription && (
+                  <span
+                    onClick={() => setShowFullDesc(!showFullDesc)}
+                    className="ml-2 text-blue-400 cursor-pointer hover:underline text-sm"
+                  >
+                    {showFullDesc ? "View less" : "View more"}
+                  </span>
+                )}
               </p>
               <div className="flex items-center gap-1 sm:gap-2 mt-3 sm:mt-4 flex-wrap text-xs sm:text-sm md:text-base text-gray-300">
                 <button
@@ -551,7 +459,7 @@ export default function Album() {
                 <span>{formatDuration(totalDuration)}</span>
               </div>
 
-              {/* Purchase/Subscription Buttons */}
+              {/* Action Buttons */}
               <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
                 <button
                   onClick={handleAlbumPlayPause}
@@ -568,7 +476,8 @@ export default function Album() {
                   <>
                     <div className="px-2 py-0.5 sm:px-3 sm:py-1 md:px-5 md:py-3 bg-gray-800 rounded-full border border-gray-700">
                       <span className="text-base sm:text-lg md:text-xl font-bold text-white">
-                        ${album?.basePrice?.amount}
+                        {getCurrencySymbol(album?.basePrice?.currency)}
+                        {album?.basePrice?.amount}
                       </span>
                     </div>
                     {isAlbumPurchased ? (
@@ -620,23 +529,21 @@ export default function Album() {
                   </>
                 )}
 
-                {/* Share Button with Dropdown Component */}
+                {/* Share Button */}
                 <div className="relative">
                   <button
-  ref={shareBtnRef}
-  onClick={() => setShowShareMenu(!showShareMenu)}
-  className="p-2 sm:p-2.5 md:p-3.5 rounded-full border ..."
->
+                    ref={shareBtnRef}
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                    className="p-2 sm:p-2.5 md:p-3.5 rounded-full border border-gray-600 hover:border-white transition-colors"
+                  >
                     <BsShare
                       className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                        showShareMenu
-                          ? "text-blue-400"
-                          : "group-hover:text-blue-400"
+                        showShareMenu ? "text-blue-400" : ""
                       }`}
                     />
                   </button>
                   <ShareDropdown
-                  triggerRef={shareBtnRef}
+                    triggerRef={shareBtnRef}
                     isOpen={showShareMenu}
                     onClose={() => setShowShareMenu(false)}
                     url={`${window.location}`}
@@ -664,92 +571,109 @@ export default function Album() {
               <h2 className="text-lg sm:text-xl font-bold text-white mb-4">
                 Tracklist
               </h2>
-              {songs.map((song, index) => (
-                <div
-                  key={song._id}
-                  className="mb-3 sm:mb-4 flex items-center gap-3 sm:gap-4"
-                >
-                  <div className="w-6 sm:w-8 text-center text-gray-400 font-medium text-sm sm:text-base">
-                    {index + 1}
+              {songs.map((song, index) => {
+                const isSongPurchased = userPurchases.some(
+                  (p) =>
+                    p.itemType === "song" &&
+                    String(p.itemId) === String(song._id)
+                );
+
+                // ✅ Song ka price display — currency symbol sahi
+                const songPriceDisplay =
+                  song.accessType === "purchase-only" && !isAlbumPurchased ? (
+                    isSongPurchased ? (
+                      "Purchased"
+                    ) : (
+                      <button
+                        className={`text-white text-[10px] xs:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors ${
+                          processingPayment || paymentLoading
+                            ? "bg-gray-500 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-700"
+                        }`}
+                        onClick={() => handlePurchaseClick(song, "song")}
+                        disabled={processingPayment || paymentLoading}
+                      >
+                        {processingPayment || paymentLoading
+                          ? "..."
+                          : `Buy ${getCurrencySymbol(song?.basePrice?.currency)}${song?.basePrice?.amount || song.price}`}
+                      </button>
+                    )
+                  ) : isAlbumPurchased ? (
+                    "Included"
+                  ) : (
+                    "Subs.."
+                  );
+
+                return (
+                  <div
+                    key={song._id}
+                    className="mb-3 sm:mb-4 flex items-center gap-3 sm:gap-4"
+                  >
+                    <div className="w-6 sm:w-8 text-center text-gray-400 font-medium text-sm sm:text-base">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <SongList
+                        songId={song._id}
+                        currentUser={currentUser}
+                        img={song?.coverImage || album?.coverImage}
+                        songName={song?.title}
+                        songSlug={song?.slug || song?._id}
+                        artistSlug={getArtistSlug()}
+                        albumSlug={album?.slug}
+                        seekTime={song.duration}
+                        onPlay={() =>
+                          handlePlaySong({
+                            ...song,
+                            artistSlug: getArtistSlug(),
+                            albumSlug: album?.slug,
+                          })
+                        }
+                        onTitleClick={() =>
+                          navigate(`/song/${song?.slug || song?._id}`)
+                        }
+                        isSelected={selectedSong?._id === song._id}
+                        price={songPriceDisplay}
+                        shareUrl={`${window.location.origin}/song/${
+                          song?.slug || song?._id
+                        }`}
+                        isShareDropdownOpen={
+                          activeSongShareDropdown === song._id
+                        }
+                        onShareDropdownToggle={() =>
+                          handleSongShareDropdownToggle(song._id)
+                        }
+                        onShareMenuClose={() =>
+                          setActiveSongShareDropdown(null)
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <SongList
-                      songId={song._id}
-                      currentUser={currentUser}
-                      img={song?.coverImage || album?.coverImage}
-                      songName={song?.title}
-                      songSlug={song?.slug || song?._id}
-                      artistSlug={getArtistSlug()}
-                      albumSlug={album?.slug}
-                      seekTime={song.duration}
-                      onPlay={() =>
-                        handlePlaySong({
-                          ...song,
-                          artistSlug: getArtistSlug(),
-                          albumSlug: album?.slug,
-                        })
-                      }
-                      onTitleClick={() =>
-                        navigate(`/song/${song?.slug || song?._id}`)
-                      }
-                      isSelected={selectedSong?._id === song._id}
-                      price={
-                        song.accessType === "purchase-only" &&
-                        !isAlbumPurchased ? (
-                          currentUser?.purchasedSongs?.includes(song._id) ? (
-                            "Purchased"
-                          ) : (
-                            <button
-                              className={`text-white text-[10px] xs:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors ${
-                                processingPayment || paymentLoading
-                                  ? "bg-gray-500 cursor-not-allowed"
-                                  : "bg-indigo-600 hover:bg-indigo-700"
-                              }`}
-                              onClick={() => handlePurchaseClick(song, "song")}
-                              disabled={processingPayment || paymentLoading}
-                            >
-                              {processingPayment || paymentLoading
-                                ? "..."
-                                : `Buy ₹${song.price}`}
-                            </button>
-                          )
-                        ) : isAlbumPurchased ? (
-                          "Included"
-                        ) : (
-                          "Subs.."
-                        )
-                      }
-                      // ✅ NEW PROPS for share dropdown control
-                      shareUrl={`${window.location.origin}/song/${song?.slug || song?._id}`}
-                      isShareDropdownOpen={activeSongShareDropdown === song._id}
-                      onShareDropdownToggle={() =>
-                        handleSongShareDropdownToggle(song._id)
-                      }
-                      onShareMenuClose={() => setActiveSongShareDropdown(null)}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Payment Loading Overlay */}
-        {(processingPayment || paymentLoading) && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 sm:p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
-              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-500"></div>
-              <div className="text-center">
-                <p className="text-white text-base sm:text-lg font-semibold">
-                  Processing Payment
-                </p>
-                <p className="text-gray-300 text-xs sm:text-sm mt-1">
-                  Please wait, do not close this window
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ✅ Currency Selection Modal */}
+        <CurrencySelectionModal
+          open={showCurrencyModal}
+          onClose={handleCloseCurrencyModal}
+          onSelectCurrency={handleCurrencySelect}
+          item={pendingPurchaseItem}
+          itemType={pendingPurchaseType}
+        />
+
+        {/* ✅ Payment Method Modal */}
+        <PaymentMethodModal
+          open={showPaymentOptions}
+          onClose={handleClosePaymentOptions}
+          onSelectMethod={handlePaymentMethodSelect}
+          item={pendingPayment?.item}
+          itemType={pendingPayment?.itemType}
+          currencyData={pendingPayment?.currencyData}
+          getPaymentDisplayInfo={getPaymentDisplayInfo}
+        />
 
         {/* Subscribe Modal */}
         <SubscribeModal

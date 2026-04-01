@@ -19,7 +19,6 @@ import { selectPaymentError } from "../../features/payments/paymentSelectors";
 import { useSubscriptionPayment } from "../../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
-import { fetchUserSubscriptions } from "../../features/payments/userPaymentSlice";
 import { useUserPurchases } from "../../hooks/api/useUserDashboard";
 
 const Artist = () => {
@@ -29,74 +28,61 @@ const Artist = () => {
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const dispatch = useDispatch();
+
   const currentUser = useSelector((state) => state.auth.user);
 
-// only call hook if user exists
-const purchasesQuery = currentUser ? useUserPurchases() : { data: null };
+  // ✅ Unconditionally call — hook ke andar enabled: !!currentUser already hai
+  const { data: purchasesData } = useUserPurchases();
+  const userPurchases = Array.isArray(purchasesData?.history)
+    ? purchasesData.history
+    : [];
 
-const userPurchases = Array.isArray(purchasesQuery?.data?.history)
-  ? purchasesQuery.data.history
-  : [];
-  
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState(null);
-  
+
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-//   useEffect(() => {
-//   dispatch(fetchUserSubscriptions());
-// }, [dispatch]);
 
-  
-  // React Query hooks
-  const { 
-    data: artist, 
-    isLoading: isArtistLoading, 
-    error: artistError 
+  const {
+    data: artist,
+    isLoading: isArtistLoading,
+    error: artistError,
   } = useArtist(artistId);
-  
-  const { 
-    data: subscriberCountData 
-  } = useSubscriberCount(artist?._id);
-  
-  // Simple query use करें infinite query की जगह
-  const { 
+
+  const { data: subscriberCountData } = useSubscriberCount(artist?._id);
+
+  const {
     data: artistAlbumsData,
-    isLoading: albumsLoading
+    isLoading: albumsLoading,
   } = useArtistAlbumsSimple(artistId, 10);
-  
+
   const paymentError = useSelector(selectPaymentError);
-  
+
   const {
     showSubscriptionOptions,
     pendingSubscription,
     openSubscriptionOptions,
     handleSubscriptionMethodSelect,
-    closeSubscriptionOptions
+    closeSubscriptionOptions,
   } = useSubscriptionPayment();
 
-  
   const {
     showPaymentOptions,
     pendingPayment,
     openPaymentOptions,
     handlePaymentMethodSelect: originalHandlePaymentMethodSelect,
     closePaymentOptions,
-    getPaymentDisplayInfo
+    getPaymentDisplayInfo,
   } = usePaymentGateway();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
+      ([entry]) => setIsInView(entry.isIntersecting),
       { threshold: 0.3 }
     );
-    if (heroSectionRef.current) {
-      observer.observe(heroSectionRef.current);
-    }
+    if (heroSectionRef.current) observer.observe(heroSectionRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -107,9 +93,7 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
     setModalData(null);
   };
 
-  const handleNavigateToArtist = () => {
-    handleSubscribeModalClose();
-  };
+  const handleNavigateToArtist = () => handleSubscribeModalClose();
 
   const handleCloseSubscriptionOptions = () => {
     closeSubscriptionOptions();
@@ -126,11 +110,9 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
     try {
       setProcessingPayment(true);
       setPaymentLoading(true);
-      
       await originalHandlePaymentMethodSelect(gateway);
-      
     } catch (error) {
-      console.error('Payment method selection error:', error);
+      console.error("Payment method selection error:", error);
     } finally {
       setTimeout(() => {
         setProcessingPayment(false);
@@ -146,7 +128,10 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
   };
 
   const handleSubscribeDecision = (artist, type, data) => {
-    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
+      currentUser,
+      artist
+    );
 
     if (type === "purchase") {
       if (alreadySubscribed) {
@@ -166,11 +151,6 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
         setSubscribeModalOpen(false);
         return;
       }
-      setModalArtist(artist);
-      setModalType(type);
-      setModalData(data);
-      setSubscribeModalOpen(true);
-      return;
     }
 
     setModalArtist(artist);
@@ -179,7 +159,6 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
     setSubscribeModalOpen(true);
   };
 
-  // Show loading state while fetching data
   if (isArtistLoading) {
     return (
       <>
@@ -198,7 +177,6 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
                 isLoading={true}
               />
             </div>
-            
             <ArtistAlbumsSection
               artistId={artistId}
               purchases={userPurchases}
@@ -208,7 +186,6 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
               paymentLoading={paymentLoading}
               isLoading={true}
             />
-            
             <ArtistSinglesSection
               artistId={artistId}
               currentUser={currentUser}
@@ -218,7 +195,6 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
               paymentLoading={paymentLoading}
               isLoading={true}
             />
-            
             <ArtistAboutSection
               artist={null}
               artistId={artistId}
@@ -234,16 +210,10 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
     );
   }
 
-  // Return null if no artist found after loading
-  if (!isArtistLoading && !artist) {
-    return null;
-  }
+  if (!isArtistLoading && !artist) return null;
 
   const artistSlug = artist?.slug || artist?._id;
   const canonicalUrl = `https://musicreset.com/artist/${artistSlug}`;
-
-  // Data को सही format में पास करें
-  const albumsData = artistAlbumsData?.albums || [];
 
   return (
     <>
@@ -254,11 +224,13 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
         structuredData={{
           "@context": "https://schema.org",
           "@type": "MusicGroup",
-          "name": artist.name,
-          "description": artist.biography || `Music artist profile on Reset Music streaming platform.`,
-          "url": canonicalUrl,
-          "image": artist.image || null,
-          "sameAs": artist.socialLinks || [],
+          name: artist.name,
+          description:
+            artist.biography ||
+            "Music artist profile on Reset Music streaming platform.",
+          url: canonicalUrl,
+          image: artist.image || null,
+          sameAs: artist.socialLinks || [],
         }}
         noIndex={true}
       />
@@ -276,7 +248,7 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
             subscriberCountData={subscriberCountData}
           />
         </div>
-        
+
         <ArtistAlbumsSection
           artistId={artistId}
           onPurchaseClick={handlePurchaseClick}
@@ -285,7 +257,7 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
           paymentLoading={paymentLoading}
           purchases={userPurchases}
         />
-        
+
         <ArtistSinglesSection
           artistId={artistId}
           currentUser={currentUser}
@@ -296,7 +268,7 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
         />
-        
+
         <ArtistAboutSection
           artist={artist}
           artistId={artistId}
@@ -305,8 +277,7 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
           subscriptionLoading={subscriptionLoading}
           setSubscriptionLoading={setSubscriptionLoading}
         />
-        
-        
+
         <SubscriptionMethodModal
           open={showSubscriptionOptions}
           onClose={handleCloseSubscriptionOptions}
@@ -315,7 +286,7 @@ const userPurchases = Array.isArray(purchasesQuery?.data?.history)
           cycle={pendingSubscription?.cycle}
           subscriptionPrice={pendingSubscription?.subscriptionPrice}
         />
-        
+
         <PaymentMethodModal
           open={showPaymentOptions}
           onClose={handleClosePaymentOptions}
