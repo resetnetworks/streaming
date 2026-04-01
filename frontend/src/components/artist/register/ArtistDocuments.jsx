@@ -366,10 +366,10 @@ if (!sampleUrl.trim()) {
 
             <div className="mb-8">
               <h3 className="text-xl font-semibold text-slate-300 mb-4">
-                Music Samples (Optional)
+                Album/Track Sample (Optional)
               </h3>
               <p className="text-slate-400 text-sm mb-4">
-                Add links to your music on platforms like SoundCloud, YouTube, Spotify, etc.
+                Drop one album/track link (SoundCloud, YouTube, Spotify, etc.)
               </p>
               
               <div className="space-y-4">
@@ -450,8 +450,8 @@ if (!sampleUrl.trim()) {
                   />
                   <label htmlFor="terms" className="text-sm text-slate-300">
                     I confirm that all information provided is accurate and complete. 
-                    I agree to the <a href="/terms" className="text-blue-400 hover:text-blue-300 underline">Terms of Service</a> and 
-                    <a href="/privacy" className="text-blue-400 hover:text-blue-300 underline ml-1">Privacy Policy</a>. 
+                    I agree to the <a href="/terms-and-conditions" target="_blank" className="text-blue-400 hover:text-blue-300 underline">Terms of Service</a> and 
+                    <a href="/privacy-policy" target="_blank" className="text-blue-400 hover:text-blue-300 underline ml-1">Privacy Policy</a>. 
                     I understand that submitting false information may result in rejection or 
                     termination of my artist account.
                   </label>

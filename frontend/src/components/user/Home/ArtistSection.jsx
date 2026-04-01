@@ -12,6 +12,14 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { useArtists } from "../../../hooks/api/useArtists"; // Updated import
 import Avatar from "../Avatar";
 
+
+const truncateName = (name, maxLength = 10) => {
+  if (!name) return "Unknown Artist";
+  return name.length > maxLength
+    ? name.slice(0, maxLength) + ".."
+    : name;
+};
+
 // --- Helper: format plan cycle ---
 const cycleLabel = (c) => {
   switch (String(c)) {
@@ -109,8 +117,8 @@ const ArtistCircle = forwardRef(function ArtistCircle(
       </div>
       <div className="absolute inset-0 rounded-full"></div>
       <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-center rounded-full bg-gradient-to-t from-black/80 to-transparent from-0% to-60%">
-        <h3 className="w-full text-sm font-semibold text-white truncate text-shadow">
-          {artist?.name || "Unknown Artist"}
+        <h3 className="w-full text-sm font-semibold text-white text-shadow">
+          {truncateName(artist?.name)}
         </h3>
       </div>
       <div className="absolute inset-0 transition-all duration-300 border-2 rounded-full pointer-events-none border-blue-500/80"></div>

@@ -41,7 +41,7 @@ const RecentPlays = React.forwardRef(
       }
     };
 
-    const truncatedTitle = title.length > 10 ? title.slice(0, 10) + ".." : title;
+    const truncatedTitle = title.length > 10 ? title.slice(0, 25) + ".." : title;
 
     return (
       <div

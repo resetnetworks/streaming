@@ -116,6 +116,7 @@ const ArtistAboutSection = ({
         setSubscriptionLoading(false);
       }
     } else {
+      setSubscriptionLoading(true);
       openSubscriptionOptions(artist, currentCycle, subscriptionPrice);
     }
   };
