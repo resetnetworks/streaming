@@ -5,7 +5,8 @@ import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import axiosInstance from "../../../utills/axiosInstance";
 import { useLiveSubscriberCount } from "../../../hooks/useLiveSubscriberCount";
-import { useSelector } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUserSubscriptions, userDashboardKeys } from "../../../hooks/api/useUserDashboard";
 
 const cycleLabel = (c) => {
   switch (c) {
@@ -33,37 +34,39 @@ const getArtistColor = (name) => {
   return colors[hash % colors.length];
 };
 
-const ArtistHeroSection = ({ 
-  artist, 
-  artistId, 
-  currentUser, 
-  isInView, 
+const ArtistHeroSection = ({
+  artist,
+  artistId,
+  currentUser,
+  isInView,
   openSubscriptionOptions,
   subscriptionLoading,
   setSubscriptionLoading,
-  subscriberCountData
+  subscriberCountData,
 }) => {
-  const userSubscriptions = useSelector(
-    (state) => state.userDashboard.subscriptions || []
-  );
+  const queryClient = useQueryClient();
+
+  // ✅ React Query se subscriptions fetch
+  const { data: subscriptionsData } = useUserSubscriptions();
+  const userSubscriptions = subscriptionsData?.subscriptions || [];
 
   const subscriberData = subscriberCountData;
 
+  // ✅ Is artist ka subscription check
+  const isSubscribed = useMemo(() => {
+    if (!artist || !userSubscriptions.length) return false;
+    return userSubscriptions.some(
+      (sub) =>
+        sub.artist?._id === artist?._id ||
+        sub.artist?.slug === artist?.slug
+    );
+  }, [userSubscriptions, artist]);
 
-
-  const isSubscribed = userSubscriptions.some(
-  (sub) =>
-    sub.artist?._id === artist?._id ||
-    sub.artist?.slug === artist?.slug
-);
-
-
- const liveSubscriberCount = useLiveSubscriberCount(
-  subscriberData?.activeSubscribers ?? 0,
-  isInView,
-  artist?._id
-);
-
+  const liveSubscriberCount = useLiveSubscriberCount(
+    subscriberData?.activeSubscribers ?? 0,
+    isInView,
+    artist?._id
+  );
 
   const availableCycles = useMemo(() => {
     const plans = artist?.subscriptionPlans || [];
@@ -97,10 +100,10 @@ const ArtistHeroSection = ({
     );
 
   const handleSubscribe = async () => {
-     if (!currentUser) {
-    toast.error("Please sign in to subscribe");
-    return;
-  }
+    if (!currentUser) {
+      toast.error("Please sign in to subscribe");
+      return;
+    }
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
       return;
@@ -115,15 +118,17 @@ const ArtistHeroSection = ({
       setSubscriptionLoading(true);
       try {
         await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
-        dispatch(fetchUserSubscriptions());
-        dispatch(fetchSubscriberCount(artist._id));
+
+        // ✅ React Query cache invalidate — button turant update hoga
+        await queryClient.invalidateQueries({
+          queryKey: userDashboardKeys.subscriptions(),
+        });
+
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         console.error("Unsubscribe error:", error);
         toast.error(
-          `Failed to unsubscribe: ${
-            error.response?.data?.message || error.message
-          }`
+          `Failed to unsubscribe: ${error.response?.data?.message || error.message}`
         );
       } finally {
         setSubscriptionLoading(false);
@@ -140,7 +145,7 @@ const ArtistHeroSection = ({
         <>
           {artist?.coverImage ? (
             <img
-              src={artist?.coverImage}
+              src={artist.coverImage}
               className="w-full h-full object-cover opacity-80"
               alt="Artist Background"
             />
@@ -150,11 +155,13 @@ const ArtistHeroSection = ({
           <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
           <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/70 to-transparent z-20" />
-          
+
           <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
             {renderArtistImage(artist?.profileImage, artist?.name)}
             <div>
-              <p className="sm:text-sm text-xs lowercase tracking-widest text-gray-200">artist</p>
+              <p className="sm:text-sm text-xs lowercase tracking-widest text-gray-200">
+                artist
+              </p>
               <h1 className="text-2xl md:text-4xl font-bold mt-1">
                 {artist?.name || "Unknown Artist"}
               </h1>
@@ -183,11 +190,16 @@ const ArtistHeroSection = ({
                   disabled={subscriptionLoading}
                   className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
                     ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
-                    ${isSubscribed
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                    ${
+                      isSubscribed
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
                     }`}
-                  title={currentCycle ? `Cycle: ${cycleLabel(currentCycle)}` : "Cycle unavailable"}
+                  title={
+                    currentCycle
+                      ? `Cycle: ${cycleLabel(currentCycle)}`
+                      : "Cycle unavailable"
+                  }
                 >
                   {subscriptionLoading
                     ? "Processing..."

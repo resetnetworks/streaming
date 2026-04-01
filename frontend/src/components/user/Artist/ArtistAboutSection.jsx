@@ -183,23 +183,6 @@ const ArtistAboutSection = ({
                     {cycleLabel(currentCycle)} • Cancel anytime
                   </p>
                 </div>
-                <button
-                  onClick={handleSubscribe}
-                  disabled={subscriptionLoading}
-                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
-                    ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
-                    ${
-                      isSubscribed
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
-                >
-                  {subscriptionLoading
-                    ? "Processing..."
-                    : isSubscribed
-                      ? "Cancel Subscription"
-                      : "Subscribe Now"}
-                </button>
               </div>
             </div>
           </div>
