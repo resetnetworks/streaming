@@ -1,22 +1,28 @@
-// import { lazy } from "react";
+import { lazy } from "react";
 import { lazy as reactLazy } from "react";
 
-const lazy = (componentImport) =>
+const lazy = (importFn) =>
   reactLazy(async () => {
     try {
-      return await componentImport();
+      return await importFn();
     } catch (error) {
+      const isChunkError =
+        error?.message?.includes("Failed to fetch dynamically imported module") ||
+        error?.message?.includes("Loading chunk");
+
       const hasReloaded = sessionStorage.getItem("lazy-reloaded");
 
-      if (!hasReloaded) {
+      if (isChunkError && !hasReloaded) {
         sessionStorage.setItem("lazy-reloaded", "true");
-        window.location.reload();
+
+        // 🔥 FORCE HARD RELOAD (important)
+        window.location.href = window.location.href;
+        return;
       }
 
-      // ❗ After reload once → no loop
       throw error;
     }
-  });        // If error occurs remove this
+  });
 
 //User pages routes
 export const Register = lazy(() => import("../pages/user/Register"));

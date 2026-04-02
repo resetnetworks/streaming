@@ -292,6 +292,8 @@ const Artists = () => {
             </div>
           )}
 
+           <p className="text-white">Hello</p>
+
           {!loading && artists.length === 0 && !error && (
             <div className="text-center py-12">
               <FaMicrophone className="w-16 h-16 text-gray-600 mx-auto mb-4" />
