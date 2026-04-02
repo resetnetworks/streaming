@@ -1,4 +1,4 @@
-import { lazy } from "react";
+// import { lazy } from "react";
 import { lazy as reactLazy } from "react";
 
 const lazy = (importFn) =>
