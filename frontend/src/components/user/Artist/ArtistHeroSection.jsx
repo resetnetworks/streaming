@@ -1,6 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { FiMapPin } from "react-icons/fi";
 import { HiUsers } from "react-icons/hi";
+import { FaCheckCircle } from "react-icons/fa";
+import { FiAlertTriangle, FiX } from "react-icons/fi";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import axiosInstance from "../../../utills/axiosInstance";
@@ -34,6 +36,96 @@ const getArtistColor = (name) => {
   return colors[hash % colors.length];
 };
 
+// ─── Unsubscribe Confirmation Modal ───────────────────────────────────────────
+const UnsubscribeModal = ({ open, artist, subscriptionPrice, currentCycle, onConfirm, onClose, loading }) => {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-md">
+      <div className="relative w-full max-w-sm mx-4">
+        <div className="player-wrapper">
+          <div className="player-card rounded-2xl p-8 flex flex-col items-center gap-5">
+
+            {/* Close button — subtle, tucked in corner */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              <FiX className="text-lg" />
+            </button>
+
+            {/* Warning icon */}
+            <div className="relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#1a0f0f] to-[#0d0909] rounded-full flex items-center justify-center shadow-2xl border border-red-500/30">
+                <FiAlertTriangle className="text-3xl text-red-400" />
+              </div>
+              <div className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-ping opacity-20" />
+            </div>
+
+            {/* Badge */}
+            <div className="px-4 py-1 bg-gradient-to-r from-red-700 to-red-500 rounded-full text-xs font-medium text-white flex items-center gap-2">
+              <FiAlertTriangle className="text-sm" />
+              <span style={{ fontFamily: "Jura" }}>Cancel Subscription</span>
+            </div>
+
+            {/* Title */}
+            <div className="text-center space-y-1">
+              <h2 className="text-white font-bold text-xl" style={{ fontFamily: "Jura" }}>
+                Are you sure?
+              </h2>
+            </div>
+
+            {/* Artist info */}
+            <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-center">
+              <p className="text-white font-semibold text-sm" style={{ fontFamily: "Jura" }}>
+                {artist?.name}
+              </p>
+              <p className="text-gray-400 text-xs mt-0.5">
+                ${subscriptionPrice?.toFixed(2)} / {cycleLabel(currentCycle)}
+              </p>
+            </div>
+
+            {/* Description */}
+            <div className="text-center space-y-2">
+              <p className="text-gray-300 text-sm leading-relaxed" style={{ fontFamily: "Jura" }}>
+                You will lose access to all exclusive content from this artist.
+              </p>
+              <p className="text-gray-500 text-xs leading-relaxed" style={{ fontFamily: "Jura" }}>
+                This action cannot be undone. You can re-subscribe anytime.
+              </p>
+            </div>
+
+            {/* Buttons — Keep it is visually dominant */}
+            <div className="w-full flex flex-col gap-3 mt-1">
+              {/* Primary: Keep subscription — green, prominent */}
+              <button
+                onClick={onClose}
+                className="w-full py-3 px-4 bg-gradient-to-r from-green-700 to-emerald-600 hover:from-green-600 hover:to-emerald-500 rounded-lg text-white transition-all duration-300 text-sm font-semibold flex items-center justify-center gap-2 shadow-lg"
+                style={{ fontFamily: "Jura" }}
+              >
+                <FaCheckCircle className="text-sm" />
+                Keep My Subscription
+              </button>
+
+              {/* Secondary: Confirm cancel — muted, less visible */}
+              <button
+                onClick={onConfirm}
+                disabled={loading}
+                className="w-full py-2.5 px-4 bg-transparent border border-red-500/30 hover:border-red-500/60 rounded-lg text-red-400 hover:text-red-300 transition-all duration-300 text-xs font-medium flex items-center justify-center gap-2 opacity-70 hover:opacity-100"
+                style={{ fontFamily: "Jura" }}
+              >
+                {loading ? "Processing..." : "Yes, cancel my subscription"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const ArtistHeroSection = ({
   artist,
   artistId,
@@ -45,14 +137,12 @@ const ArtistHeroSection = ({
   subscriberCountData,
 }) => {
   const queryClient = useQueryClient();
+  const [unsubscribeModalOpen, setUnsubscribeModalOpen] = useState(false);
 
-  // ✅ React Query se subscriptions fetch
   const { data: subscriptionsData } = useUserSubscriptions();
   const userSubscriptions = subscriptionsData?.subscriptions || [];
-
   const subscriberData = subscriberCountData;
 
-  // ✅ Is artist ka subscription check
   const isSubscribed = useMemo(() => {
     if (!artist || !userSubscriptions.length) return false;
     return userSubscriptions.some(
@@ -99,7 +189,26 @@ const ArtistHeroSection = ({
       </div>
     );
 
-  const handleSubscribe = async () => {
+  const handleUnsubscribeConfirmed = async () => {
+    setSubscriptionLoading(true);
+    try {
+      await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
+      await queryClient.invalidateQueries({
+        queryKey: userDashboardKeys.subscriptions(),
+      });
+      toast.success(`Unsubscribed from ${artist.name}`);
+      setUnsubscribeModalOpen(false);
+    } catch (error) {
+      console.error("Unsubscribe error:", error);
+      toast.error(
+        `Failed to unsubscribe: ${error.response?.data?.message || error.message}`
+      );
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  const handleSubscribeClick = () => {
     if (!currentUser) {
       toast.error("Please sign in to subscribe");
       return;
@@ -108,121 +217,109 @@ const ArtistHeroSection = ({
       toast.error("Artist info not loaded.");
       return;
     }
-
-    if (isSubscribed) {
-      const confirmUnsub = window.confirm(
-        `Are you sure you want to unsubscribe from ${artist.name}?`
-      );
-      if (!confirmUnsub) return;
-
-      setSubscriptionLoading(true);
-      try {
-        await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
-
-        // ✅ React Query cache invalidate — button turant update hoga
-        await queryClient.invalidateQueries({
-          queryKey: userDashboardKeys.subscriptions(),
-        });
-
-        toast.success(`Unsubscribed from ${artist.name}`);
-      } catch (error) {
-        console.error("Unsubscribe error:", error);
-        toast.error(
-          `Failed to unsubscribe: ${error.response?.data?.message || error.message}`
-        );
-      } finally {
-        setSubscriptionLoading(false);
-      }
-    } else {
-      setSubscriptionLoading(true);
-      openSubscriptionOptions(artist, currentCycle, subscriptionPrice);
-    }
+    setSubscriptionLoading(true);
+    openSubscriptionOptions(artist, currentCycle, subscriptionPrice);
   };
 
   return (
-    <div className="relative h-80 w-full">
-      {artist ? (
-        <>
-          {artist?.coverImage ? (
-            <img
-              src={artist.coverImage}
-              className="w-full h-full object-cover opacity-80"
-              alt="Artist Background"
-            />
-          ) : (
-            <div className={`w-full h-full ${artistColor} opacity-80`} />
-          )}
-          <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
-          <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/70 to-transparent z-20" />
+    <>
+      <div className="relative h-80 w-full">
+        {artist ? (
+          <>
+            {artist?.coverImage ? (
+              <img
+                src={artist.coverImage}
+                className="w-full h-full object-cover opacity-80"
+                alt="Artist Background"
+              />
+            ) : (
+              <div className={`w-full h-full ${artistColor} opacity-80`} />
+            )}
+            <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/70 to-transparent z-20" />
 
-          <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
-            {renderArtistImage(artist?.profileImage, artist?.name)}
-            <div>
-              <p className="sm:text-sm text-xs lowercase tracking-widest text-gray-200">
-                artist
-              </p>
-              <h1 className="text-2xl md:text-4xl font-bold mt-1">
-                {artist?.name || "Unknown Artist"}
-              </h1>
-              <div className="flex items-center sm:gap-3 flex-wrap">
-                <div className="flex items-center mt-1 text-gray-300 sm:text-sm text-xs">
-                  <FiMapPin className="mr-2 text-sm text-blue-400" />
-                  <span>{artist?.location || "Unknown City"}</span>
-                </div>
-                <div className="flex items-center mt-1 text-gray-300 text-sm">
-                  <HiUsers className="mr-2 text-sm text-blue-400" />
-                  <span className="flex items-center gap-2">
-                    <span className="font-bold text-blue-400">
-                      {formatSubscriberCount(liveSubscriberCount)}
-                    </span>
-                    <span>subscribers</span>
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 mt-3 flex-wrap">
-                <span className="text-lg font-semibold text-blue-400">
-                  ${subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
-                </span>
-                <button
-                  id="artist-subscribe-btn"
-                  onClick={handleSubscribe}
-                  disabled={subscriptionLoading}
-                  className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md
-                    ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}
-                    ${
-                      isSubscribed
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
-                  title={
-                    currentCycle
-                      ? `Cycle: ${cycleLabel(currentCycle)}`
-                      : "Cycle unavailable"
-                  }
-                >
-                  {subscriptionLoading
-                    ? "Processing..."
-                    : isSubscribed
-                    ? "Cancel Subscription"
-                    : "Subscribe"}
-                </button>
-              </div>
-              {subscriberData?.totalRevenue > 0 &&
-                currentUser?._id === artist?._id && (
-                  <div className="mt-2 text-xs text-gray-400">
-                    Total Revenue: ${subscriberData.totalRevenue.toFixed(2)}
+            <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
+              {renderArtistImage(artist?.profileImage, artist?.name)}
+              <div>
+                <p className="sm:text-sm text-xs lowercase tracking-widest text-gray-200">
+                  artist
+                </p>
+                <h1 className="text-2xl md:text-4xl font-bold mt-1">
+                  {artist?.name || "Unknown Artist"}
+                </h1>
+                <div className="flex items-center sm:gap-3 flex-wrap">
+                  <div className="flex items-center mt-1 text-gray-300 sm:text-sm text-xs">
+                    <FiMapPin className="mr-2 text-sm text-blue-400" />
+                    <span>{artist?.location || "Unknown City"}</span>
                   </div>
-                )}
+                  <div className="flex items-center mt-1 text-gray-300 text-sm">
+                    <HiUsers className="mr-2 text-sm text-blue-400" />
+                    <span className="flex items-center gap-2">
+                      <span className="font-bold text-blue-400">
+                        {formatSubscriberCount(liveSubscriberCount)}
+                      </span>
+                      <span>subscribers</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* ✅ Button row — exact same position as original */}
+                <div className="flex items-center gap-4 mt-3 flex-wrap">
+                  <span className="text-lg font-semibold text-blue-400">
+                    ${subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
+                  </span>
+
+                  {isSubscribed ? (
+                    <button
+                      onClick={() => setUnsubscribeModalOpen(true)}
+                      disabled={subscriptionLoading}
+                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md bg-gray-600 text-gray-300 hover:bg-gray-700
+                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                    >
+                      {subscriptionLoading ? "Processing..." : "Unsubscribe"}
+                    </button>
+                  ) : (
+                    <button
+                      id="artist-subscribe-btn"
+                      onClick={handleSubscribeClick}
+                      disabled={subscriptionLoading}
+                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md bg-blue-600 text-white hover:bg-blue-700
+                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                      title={currentCycle ? `Cycle: ${cycleLabel(currentCycle)}` : "Cycle unavailable"}
+                    >
+                      {subscriptionLoading ? "Processing..." : "Subscribe"}
+                    </button>
+                  )}
+                </div>
+
+                {subscriberData?.totalRevenue > 0 &&
+                  currentUser?._id === artist?._id && (
+                    <div className="mt-2 text-xs text-gray-400">
+                      Total Revenue: ${subscriberData.totalRevenue.toFixed(2)}
+                    </div>
+                  )}
+              </div>
             </div>
+          </>
+        ) : (
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+            <Skeleton width={200} height={40} />
           </div>
-        </>
-      ) : (
-        <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-          <Skeleton width={200} height={40} />
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+
+      {/* ✅ Unsubscribe confirmation modal */}
+      <UnsubscribeModal
+        open={unsubscribeModalOpen}
+        artist={artist}
+        subscriptionPrice={subscriptionPrice}
+        currentCycle={currentCycle}
+        onConfirm={handleUnsubscribeConfirmed}
+        onClose={() => setUnsubscribeModalOpen(false)}
+        loading={subscriptionLoading}
+      />
+    </>
   );
 };
 
