@@ -1,10 +1,10 @@
 {
   "name": "Reset Music Streaming",
-  "short_name": "ResetMusic",
-  "start_url": "/",
+  "short_name": "musicreset",
+  "start_url": "/home",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#1DB954",
+  "background_color": "#020216",
+  "theme_color": "#0D1B3F",
   "description": "Reset Streaming Platform by Reset Music - Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles. Multi-currency support with monthly subscriptions.",
   "icons": [
     {
