@@ -46,6 +46,10 @@ function App() {
   const shouldInitializeDefault = useSelector(selectShouldInitializeDefault);
   const availableSongsCollections = useSelector(selectAvailableSongsForDefault);
 
+  useEffect(() => {
+  sessionStorage.removeItem("lazy-reloaded");
+}, []);
+
 useEffect(() => {
   if (!isAuthenticated) {
     const token = localStorage.getItem("token") || getTokenFromCookie();

@@ -1,14 +1,22 @@
-import { lazy } from "react";
+// import { lazy } from "react";
+import { lazy as reactLazy } from "react";
 
-// const lazy = (componentImport) =>
-//   lazy(async () => {
-//     try {
-//       return await componentImport();
-//     } catch (error) {
-//       window.location.reload();
-//       throw error;
-//     }
-//   });
+const lazy = (componentImport) =>
+  reactLazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      const hasReloaded = sessionStorage.getItem("lazy-reloaded");
+
+      if (!hasReloaded) {
+        sessionStorage.setItem("lazy-reloaded", "true");
+        window.location.reload();
+      }
+
+      // ❗ After reload once → no loop
+      throw error;
+    }
+  });        // If error occurs remove this
 
 //User pages routes
 export const Register = lazy(() => import("../pages/user/Register"));

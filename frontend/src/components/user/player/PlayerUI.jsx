@@ -110,7 +110,7 @@ const GhostPlayer = () => {
             )}
           </div>
           {open && (
-            <div className="space-y-3">
+           <div className="max-h-[180px] overflow-y-auto space-y-3 pr-1 custom-scrollbar">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between p-1">
                   <div className="flex items-center gap-3">
@@ -406,7 +406,7 @@ const PlayerUI = ({
             </div>
 
             {open && (
-              <div className="space-y-3">
+              <div className="max-h-[220px] overflow-y-auto space-y-1.5 pr-1 no-scrollbar">
                 {nextSongs.map((song) => (
                   <div
                     key={song._id}
@@ -422,7 +422,11 @@ const PlayerUI = ({
                         className="w-10 h-10 rounded-md object-cover"
                       />
                       <div className="flex flex-col text-left">
-                        <span className="font-medium text-[13px]">{song?.title}</span>
+                       <span className="font-medium text-[13px]">
+  {song?.title?.length > 10
+    ? song.title.slice(0, 10) + "..."
+    : song.title}
+</span>
                         <span className="text-[11px] text-gray-300">{song?.singer}</span>
                       </div>
                     </div>

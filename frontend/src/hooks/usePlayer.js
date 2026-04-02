@@ -87,7 +87,7 @@ export const usePlayer = () => {
     ? contextSongs.findIndex((s) => s._id === currentSong._id)
     : -1;
 
-  const nextSongs = queue.upcoming.slice(0, 4);
+  const nextSongs = queue.upcoming;
 
   const likedSongs = data?.pages?.flatMap((page) => page.songs) || [];
   const isLiked = currentSong
