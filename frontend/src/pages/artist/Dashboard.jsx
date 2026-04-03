@@ -14,6 +14,7 @@ import { resetUploadState } from "../../features/artistSong/artistSongSlice";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const tabComponents = {
   profile: <ProfileComponent />,
@@ -128,10 +129,14 @@ export default function Dashboard() {
     setSelectedTab(tab);
   };
 
+  const queryClient = useQueryClient();
   // Handle monetization completion
   const handleMonetizationComplete = () => {
     setIsMonetized(true);
     localStorage.setItem("artistMonetized", "true");
+    queryClient.invalidateQueries({
+    queryKey: ["artist-dashboard", "profile"],
+  });
     setShowMonetizationModal(false);
     // setSelectedTab("profile"); // Automatically switch to dashboard after monetization
   };

@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  setupMonetization,
-  resetMonetization,
-} from "../../../features/monetization/monetizationSlice";
-import { getMyMonetizationSetupStatus } from "../../../features/monetization/monetizationSlice";
+import { useMonetizationStatus,useSetupMonetization } from "../../../hooks/api/useMonetization";
 import {
   FaCreditCard,
   FaCheckCircle,
@@ -25,26 +20,30 @@ const MonetizationModal = ({
   onComplete,
   isMandatory = false,
 }) => {
-  const dispatch = useDispatch();
+
   const {
-    setupLoading,
-    setupError,
-    setupSuccess,
-    operationResult,
-    setupStatus,
-  } = useSelector((state) => state.monetization);
+  data: setupStatus,
+  isLoading: statusLoading,
+  error: statusError,
+} = useMonetizationStatus();
+
+const {
+  mutate: setupMonetization,
+  isPending: setupLoading,
+  isSuccess: setupSuccess,
+  error: setupError,
+  data: operationResult,
+} = useSetupMonetization();
 
   const [subscriptionPrice, setSubscriptionPrice] = useState("");
   const [cycle, setCycle] = useState("1m");
 
   useEffect(() => {
-    if (isOpen) {
-      dispatch(getMyMonetizationSetupStatus());
-      setSubscriptionPrice("");
-      setCycle("1m");
-      dispatch(resetMonetization());
-    }
-  }, [isOpen, dispatch]);
+  if (isOpen) {
+    setSubscriptionPrice("");
+    setCycle("1m");
+  }
+}, [isOpen]);
 
   useEffect(() => {
     if (setupStatus?.isMonetizationComplete && onComplete) {
@@ -75,13 +74,13 @@ const MonetizationModal = ({
       return;
     }
 
-    dispatch(
       setupMonetization({
         subscriptionPrice: price,
         cycle,
       })
-    );
   };
+
+  const { refetch } = useMonetizationStatus();
 
   const getCycleDisplayName = (cycle) => {
     const cycleNames = {
@@ -96,7 +95,6 @@ const MonetizationModal = ({
   // ✅ Loading state
   const renderLoading = () => (
     <div className="p-6 flex flex-col items-center justify-center">
-      <FaSync className="animate-spin text-3xl text-blue-400 mb-4" />
       <p className="text-gray-300">Checking monetization status...</p>
     </div>
   );
@@ -108,9 +106,9 @@ const MonetizationModal = ({
         <FaTimes className="mr-3" />
         <div>
           <span className="font-medium">Error Loading Status</span>
-          <p className="text-red-300 text-sm mt-1">{setupStatus?.error}</p>
+          <p className="text-red-300 text-sm mt-1">{statusError}</p>
           <button
-            onClick={() => dispatch(getMyMonetizationSetupStatus())}
+            onClick={() => refetch()}
             className="mt-2 px-4 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-300 rounded text-sm"
           >
             Retry
@@ -185,7 +183,7 @@ const MonetizationModal = ({
                 <button
                   onClick={handleClose}
                   className="text-gray-400 hover:text-white text-xl transition-colors"
-                  disabled={setupLoading || setupStatus?.loading}
+                  disabled={setupLoading || statusLoading}
                 >
                   <FaTimes />
                 </button>
@@ -216,19 +214,19 @@ const MonetizationModal = ({
               )}
 
               {/* ✅ Loading State */}
-              {setupStatus?.loading && renderLoading()}
+              {statusLoading && renderLoading()}
 
               {/* ✅ Error State */}
-              {!setupStatus?.loading && setupStatus?.error && renderError()}
+              {!statusLoading && statusError && renderError()}
 
               {/* ✅ Reason Message */}
-              {!setupStatus?.loading &&
+              {!statusLoading &&
                 setupStatus?.reason &&
                 !setupStatus?.isMonetizationComplete &&
                 renderReasonMessage()}
 
               {/* ✅ Setup Form - Only show if not already monetized and not loading */}
-              {!setupStatus?.loading && !setupStatus?.isMonetizationComplete && (
+              {!statusLoading && !setupStatus?.isMonetizationComplete && (
                 <>
                   {/* Price Input */}
                   <div className="space-y-2">
@@ -351,7 +349,7 @@ const MonetizationModal = ({
             </div>
 
             {/* Footer */}
-            {!setupStatus?.loading && !setupStatus?.isMonetizationComplete && (
+            {!statusLoading && !setupStatus?.isMonetizationComplete && (
               <div className="flex justify-center items-center p-2 border-t border-gray-700 bg-gray-900/50">
                 <div className="flex space-x-3">
                   {!isMandatory && (
@@ -367,13 +365,12 @@ const MonetizationModal = ({
                     <button
                       onClick={handleSubmit}
                       disabled={
-                        setupLoading || !subscriptionPrice || setupStatus?.loading
+                        setupLoading || !subscriptionPrice || statusLoading
                       }
                       className="custom-button w-full bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 hover:from-blue-700 hover:via-blue-600 hover:to-purple-700 disabled:opacity-50 transition-all duration-300"
                     >
                       {setupLoading ? (
                         <span className="flex items-center justify-center">
-                          <FaSync className="animate-spin mr-2" />
                           Processing...
                         </span>
                       ) : (

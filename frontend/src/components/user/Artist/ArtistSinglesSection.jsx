@@ -1,6 +1,6 @@
 // src/components/user/Artist/ArtistSinglesSection.jsx
 import React, { useState, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 import RecentPlays from "../RecentPlays";
@@ -10,6 +10,7 @@ import CurrencySelectionModal from "../CurrencySelectionModal";
 import { useArtistSingles } from "../../../hooks/api/useSongs";
 import { useNavigate } from "react-router-dom";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../../utills/subscriptions";
+import { usePlaybackControl } from "../../../hooks/usePlaybackControl";
 
 const getArtistColor = (name) => {
   if (!name) return "bg-blue-600";
@@ -28,17 +29,18 @@ const ArtistSinglesSection = ({
   onPurchaseClick, 
   onSubscribeRequired,
   processingPayment, 
-  paymentLoading ,
+  paymentLoading,
   purchases = [],
 }) => {
   const dispatch = useDispatch();
   const singlesScrollRef = useRef(null);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [selectedSong, setSelectedSongForPurchase] = useState(null);
 
-  const currentSelectedSong = useSelector((state) => state.player.selectedSong);
-  
+  // ✅ Search wala same hook
+  const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } = usePlaybackControl();
+
   const {
     data: singlesData,
     isLoading: singlesLoading,
@@ -47,7 +49,7 @@ const ArtistSinglesSection = ({
     hasNextPage
   } = useArtistSingles(artistId, 20);
 
-  const artistSingles = singlesData?.pages?.flatMap(page => page.songs) || [];  
+  const artistSingles = singlesData?.pages?.flatMap(page => page.songs) || [];
   const singlesPagination = singlesData?.pages?.[0]?.pagination || {
     page: 1,
     limit: 10,
@@ -62,14 +64,25 @@ const ArtistSinglesSection = ({
   });
 
   const isSongPurchased = (songId) => {
-  return purchases?.some(
-    (item) => item.itemType === "song" && item.itemId === songId
-  );
-};
+    return purchases?.some(
+      (item) => item.itemType === "song" && item.itemId === songId
+    );
+  };
 
+  // ✅ Search wala same handlePlaySong logic
   const handlePlaySong = (song) => {
-    dispatch(setSelectedSong(song));
-    dispatch(play());
+    if (!song) return;
+
+    if (isSongSelected(song._id)) {
+      if (isSongPlaying(song._id)) {
+        pausePlayback();
+      } else {
+        resumePlayback();
+      }
+    } else {
+      dispatch(setSelectedSong(song));
+      dispatch(play());
+    }
   };
 
   const handleScroll = (direction = "right") => {
@@ -89,51 +102,43 @@ const ArtistSinglesSection = ({
 
   const getAvailableCurrencies = (song) => {
     if (!song.basePrice || !song.convertedPrices) return [];
-    
-    const currencies = [
+    return [
       { currency: song.basePrice.currency, amount: song.basePrice.amount, isBaseCurrency: true },
       ...song.convertedPrices.map(price => ({
         currency: price.currency, amount: price.amount, isBaseCurrency: false
       }))
     ];
-    
-    return currencies;
   };
 
- const handleSongPurchaseClick = (song) => {
-  const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
-    currentUser,
-    artist
-  );
+  const handleSongPurchaseClick = (song) => {
+    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(currentUser, artist);
 
-  // ❌ Not subscribed → show subscribe modal via parent
-  if (!alreadySubscribed) {
-    onSubscribeRequired(artist, "purchase", song);
-    return;
-  }
+    if (!alreadySubscribed) {
+      onSubscribeRequired(artist, "purchase", song);
+      return;
+    }
 
-  // ✅ Subscribed → proceed with currency/payment
-  const availableCurrencies = getAvailableCurrencies(song);
+    const availableCurrencies = getAvailableCurrencies(song);
 
-  if (availableCurrencies.length > 1) {
-    setSelectedSongForPurchase(song);
-    setShowCurrencyModal(true);
-  } else if (availableCurrencies.length === 1) {
-    const currency = availableCurrencies[0];
-    onPurchaseClick(song, "song", {
-      currency: currency.currency,
-      amount: currency.amount,
-      symbol: getCurrencySymbol(currency.currency),
-    });
-  }
-};
+    if (availableCurrencies.length > 1) {
+      setSelectedSongForPurchase(song);
+      setShowCurrencyModal(true);
+    } else if (availableCurrencies.length === 1) {
+      const currency = availableCurrencies[0];
+      onPurchaseClick(song, "song", {
+        currency: currency.currency,
+        amount: currency.amount,
+        symbol: getCurrencySymbol(currency.currency),
+      });
+    }
+  };
 
   const handleCurrencySelect = (selectedCurrency) => {
     setShowCurrencyModal(false);
     if (selectedSong && selectedCurrency) {
       onPurchaseClick(selectedSong, "song", {
-        currency: selectedCurrency.currency, 
-        amount: selectedCurrency.amount, 
+        currency: selectedCurrency.currency,
+        amount: selectedCurrency.amount,
         symbol: getCurrencySymbol(selectedCurrency.currency)
       });
     }
@@ -147,12 +152,12 @@ const ArtistSinglesSection = ({
 
   const getSongPriceDisplay = (song) => {
     if (isSongPurchased(song._id)) {
-  return (
-    <span className="text-green-400 text-xs font-semibold">
-      Purchased
-    </span>
-  );
-}
+      return (
+        <span className="text-green-400 text-xs font-semibold">
+          Purchased
+        </span>
+      );
+    }
 
     if (song.accessType === "subscription") {
       return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
@@ -160,9 +165,9 @@ const ArtistSinglesSection = ({
 
     if (song.accessType === "purchase-only") {
       if (song?.basePrice && song?.basePrice?.amount > 0) {
-  const basePrice = song?.basePrice;
+        const basePrice = song?.basePrice;
         const symbol = getCurrencySymbol(basePrice.currency);
-        
+
         return (
           <button
             className={`text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded transition-colors relative ${
@@ -192,15 +197,9 @@ const ArtistSinglesSection = ({
   const renderCoverImage = (imageUrl, title, size = "w-full h-40", artistName) => {
     const artistColor = getArtistColor(artistName);
     return imageUrl ? (
-      <img
-        src={imageUrl}
-        alt={title || "Cover"}
-        className={`${size} object-cover`}
-      />
+      <img src={imageUrl} alt={title || "Cover"} className={`${size} object-cover`} />
     ) : (
-      <div
-        className={`${size} ${artistColor} flex items-center justify-center text-white font-bold text-2xl`}
-      >
+      <div className={`${size} ${artistColor} flex items-center justify-center text-white font-bold text-2xl`}>
         {title ? title.charAt(0).toUpperCase() : "C"}
       </div>
     );
@@ -228,7 +227,7 @@ const ArtistSinglesSection = ({
           />
         </div>
       </div>
-      
+
       <div
         ref={singlesScrollRef}
         className="flex gap-4 overflow-x-auto px-6 py-2 no-scrollbar min-h-[160px]"
@@ -242,9 +241,10 @@ const ArtistSinglesSection = ({
             ))
           : artistSingles.map((song, idx) => (
               <RecentPlays
-                onTitleClick={() => navigate(`/song/${song.slug}`)}
                 ref={idx === artistSingles.length - 1 ? singlesLastRef : null}
                 key={song._id}
+                // ✅ songId pass karo — RecentPlays ke andar usePlaybackControl isko use karta hai
+                songId={song._id}
                 title={song.title}
                 singer={song.singer}
                 image={
@@ -253,11 +253,13 @@ const ArtistSinglesSection = ({
                     : renderCoverImage(null, song.title, "w-full h-40", song.artist?.name)
                 }
                 onPlay={() => handlePlaySong(song)}
-                isSelected={currentSelectedSong?._id === song._id}
+                onTitleClick={() => navigate(`/song/${song.slug}`)}
+                // ✅ isSelected bhi sahi hook se
+                isSelected={isSongSelected(song._id)}
                 price={getSongPriceDisplay(song)}
               />
             ))}
-        
+
         {isFetchingNextPage && hasNextPage && artistSingles.length > 0 && (
           [...Array(2)].map((_, idx) => (
             <div key={`single-loading-${idx}`} className="min-w-[160px]">

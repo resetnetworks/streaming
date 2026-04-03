@@ -1,6 +1,6 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   setShuffleMode,
   setRepeatMode,
@@ -33,6 +33,7 @@ const formatTime = (seconds) => {
 const MobilePlayer = () => {
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const shuffleMode = useSelector((state) => state.player.shuffleMode);
   const repeatMode = useSelector((state) => state.player.repeatMode);
   const moreBtnRef = useRef(null);
@@ -103,12 +104,11 @@ const MobilePlayer = () => {
         crossOrigin="anonymous"
       />
 
-      {/* Mini Player (unchanged) */}
+      {/* Mini Player */}
       <div
         className="md:hidden fixed cursor-pointer bottom-16 left-0 right-0 z-40 bg-gradient-to-bl from-blue-900 to-black border-t border-b border-gray-800"
         onClick={() => setIsFullPlayerOpen(true)}
       >
-        {/* Progress line */}
         <div
           className="h-1 from-black to-blue-600 bg-gradient-to-br transition-all duration-300 ease-in-out"
           style={{ width: `${progressPercentage}%` }}
@@ -116,7 +116,6 @@ const MobilePlayer = () => {
 
         <div className="p-3">
           <div className="flex items-center justify-between">
-            {/* Album art + song info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="relative flex-shrink-0 w-12 h-12">
                 <img
@@ -145,9 +144,7 @@ const MobilePlayer = () => {
               </div>
             </div>
 
-            {/* Controls */}
             <div className="flex items-center gap-1">
-              {/* Like */}
               <button
                 onClick={(e) => { e.stopPropagation(); handleLikeToggle(); }}
                 className="p-2"
@@ -158,7 +155,6 @@ const MobilePlayer = () => {
                 }
               </button>
 
-              {/* Play/Pause */}
               <div className="play-pause-wrapper shadow-[0_0_5px_1px_#3b82f6] flex justify-center items-center">
                 <button
                   className="play-pause-button flex justify-center items-center gap-2"
@@ -177,7 +173,6 @@ const MobilePlayer = () => {
                 </button>
               </div>
 
-              {/* Next */}
               <button
                 onClick={(e) => { e.stopPropagation(); handleNext(); }}
                 className="p-2"
@@ -190,7 +185,7 @@ const MobilePlayer = () => {
         <div className="gradiant-line" />
       </div>
 
-      {/* ── Improved Full Player ───────────────────────────────────────── */}
+      {/* Full Player */}
       <div
         className={`fixed inset-0 z-50 bg-gradient-to-b from-black via-gray-900 to-black text-white flex flex-col transition-transform duration-500 ease-in-out transform md:hidden ${
           isFullPlayerOpen ? "translate-y-0" : "translate-y-full"
@@ -198,19 +193,17 @@ const MobilePlayer = () => {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Background blur overlay (optional, mimics Spotify's blurred art effect) */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl"
           style={{ backgroundImage: `url(${currentSong?.coverImage})` }}
         />
 
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 relative z-10">
           <div className="w-12 h-1 rounded-full bg-white/30" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 relative">
+        <div className="flex items-center justify-between px-5 py-3 relative z-10">
           <button
             onClick={() => setIsFullPlayerOpen(false)}
             className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-all"
@@ -224,28 +217,29 @@ const MobilePlayer = () => {
             </p>
           </div>
 
-          {/* More / Share */}
+          {/* ✅ Share/More button — desktop PlayerUI ke same props */}
           <div className="relative">
             <button
-  ref={moreBtnRef}
-  onClick={() => setShowShareMenu(!showShareMenu)}
-  className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-all"
->
-  <IoIosMore className={`text-2xl ${showShareMenu ? "text-blue-400" : "text-white"}`} />
-</button>
+              ref={moreBtnRef}
+              onClick={() => setShowShareMenu(!showShareMenu)}
+              className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-all"
+            >
+              <IoIosMore className={`text-2xl ${showShareMenu ? "text-blue-400" : "text-white"}`} />
+            </button>
             <ShareDropdown
               isOpen={showShareMenu}
+              navigate={navigate}
               onClose={() => setShowShareMenu(false)}
               triggerRef={moreBtnRef}
-              url={`${window.location.origin}/song/${currentSong?._id || currentSong?.slug}`}
-              title={currentSong?.title}
-              text={`Listen to "${currentSong?.title}" on Reset Music`}
+              // ✅ Desktop wale same props — yahi fix hai
+              shareUrl={`${window.location.origin}/song/${currentSong?.slug || currentSong?._id}`}
+              songName={currentSong?.title}
+              singerName={currentSong?.singer}
               songSlug={currentSong?.slug}
-            artistSlug={currentSong?.artist?.slug || currentSong?.artistSlug}
-            albumSlug={currentSong?.albumSlug}
-              isActive={showShareMenu}
+              artistSlug={currentSong?.artist?.slug || currentSong?.artistSlug}
+              albumSlug={currentSong?.albumSlug}
               isPlayerContext={true}
-              placement="bottom-right"
+              placement="bottom-left"
             />
           </div>
         </div>
@@ -257,10 +251,7 @@ const MobilePlayer = () => {
           <div className="flex justify-center mt-2 mb-8">
             <div
               className="relative rounded-2xl overflow-hidden shadow-2xl"
-              style={{
-                width: "min(70vw, 320px)",
-                aspectRatio: "1/1",
-              }}
+              style={{ width: "min(70vw, 320px)", aspectRatio: "1/1" }}
             >
               <img
                 src={currentSong?.coverImage}
@@ -328,7 +319,6 @@ const MobilePlayer = () => {
           {/* Controls */}
           <div className="w-full max-w-md mx-auto mb-8">
             <div className="flex justify-between items-center">
-              {/* Shuffle */}
               <button
                 onClick={handleToggleShuffle}
                 className={`p-3 transition-colors ${shuffleMode ? "text-blue-500" : "text-gray-400"}`}
@@ -336,7 +326,6 @@ const MobilePlayer = () => {
                 <IoMdShuffle className="text-2xl" />
               </button>
 
-              {/* Prev */}
               <button
                 onClick={handlePrev}
                 className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all"
@@ -344,7 +333,6 @@ const MobilePlayer = () => {
                 <RiSkipLeftFill className="text-3xl" />
               </button>
 
-              {/* Play/Pause */}
               <button
                 onClick={handleTogglePlay}
                 disabled={hasStreamError}
@@ -361,7 +349,6 @@ const MobilePlayer = () => {
                 )}
               </button>
 
-              {/* Next */}
               <button
                 onClick={handleNext}
                 className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all"
@@ -369,7 +356,6 @@ const MobilePlayer = () => {
                 <RiSkipRightFill className="text-3xl" />
               </button>
 
-              {/* Repeat */}
               <button
                 onClick={handleRepeatToggle}
                 className={`p-3 transition-colors ${repeatMode !== "off" ? "text-blue-500" : "text-gray-400"}`}
@@ -383,7 +369,6 @@ const MobilePlayer = () => {
             </div>
           </div>
 
-          {/* Optional: small indicator for repeat/shuffle state (like Spotify) */}
           <div className="flex justify-center gap-4 text-[10px] text-gray-500">
             {shuffleMode && <span>Shuffle is on</span>}
             {repeatMode === "all" && <span>Repeat all</span>}

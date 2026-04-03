@@ -10,6 +10,7 @@ import {
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutUser } from '../../features/auth/authSlice';
+import { forceLogout } from '../../utills/axiosInstance';
 import { toast } from 'sonner';
 
 const AdminSidebar = ({ activeTab, setActiveTab }) => {
@@ -17,6 +18,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    await forceLogout();
     await dispatch(logoutUser());
     toast.success('Logged out successfully');
     navigate('/login');

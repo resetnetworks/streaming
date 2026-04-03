@@ -81,9 +81,8 @@ const SocialLoginCallback = () => {
         <p className="text-gray-300 mb-4">Please wait while we authenticate your account</p>
         
         <div className="mt-4 text-sm text-gray-400 space-y-1">
-          <p>🔄 Verifying credentials...</p>
-          <p>📂 Fetching your profile data...</p>
-          <p>💾 Setting up your session...</p>
+          <p>Verifying credentials...</p>
+          <p>Fetching your profile data...</p>
         </div>
       </div>
     </div>

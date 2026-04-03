@@ -11,6 +11,7 @@ import { getS3Url } from "../../../utills/s3Utils";
 import {  compressArtistCoverImage, compressProfileImage } from "../../../utills/imageCompression";
 import { logoutUser } from "../../../features/auth/authSlice";
 import { useDispatch } from "react-redux";
+import { forceLogout } from "../../../utills/axiosInstance";
 
 const ProfileHeroSection = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ const ProfileHeroSection = () => {
   const hasImage = selectedImageType === "profile" ? !!artistProfile?.profileImage : !!artistProfile?.coverImage;
 
   const handleLogout = async () => {
+    await forceLogout();
     await dispatch(logoutUser());
     toast.success('Logged out successfully');
     navigate('/login');
@@ -238,19 +240,20 @@ const ProfileHeroSection = () => {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
             <button
-              onClick={() => triggerImageUpload('cover')}
-              className="flex flex-col items-center justify-center text-white/70 hover:text-white transition-colors"
-              disabled={isUploading && uploadType === 'cover'}
-            >
-              {isUploading && uploadType === 'cover' ? (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
-              ) : (
-                <IoAddCircleOutline className="text-4xl mb-2" />
-              )}
-              <span className="text-sm">
-                {isUploading && uploadType === 'cover' ? 'Uploading...' : 'Add background image'}
-              </span>
-            </button>
+  onClick={() => triggerImageUpload('cover')}
+  className="flex flex-col items-center justify-center text-white/70 hover:text-white transition-colors"
+  disabled={isUploading && uploadType === 'cover'}
+>
+  {isUploading && uploadType === 'cover' ? (
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
+  ) : null}
+
+  <span className="text-sm">
+    {isUploading && uploadType === 'cover'
+      ? 'Uploading...'
+      : 'Add background image'}
+  </span>
+</button>
           </div>
         )}
         

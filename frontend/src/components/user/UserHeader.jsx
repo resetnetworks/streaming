@@ -16,6 +16,7 @@ import { selectCurrentUser } from "../../features/auth/authSelectors";
 import { logoutUser } from "../../features/auth/authSlice";
 import { getAvatarColor } from "../../utills/helperFunctions";
 import { getMyArtistApplication } from "../../features/artistApplications/artistApplicationSlice";
+import { forceLogout } from "../../utills/axiosInstance";
 
 const UserHeader = () => {
   const user = useSelector(selectCurrentUser);
@@ -63,6 +64,7 @@ const UserHeader = () => {
 
   const handleLogout = async () => {
     setOpen(false);
+    await forceLogout()
     await dispatch(logoutUser());
     toast.success("Logged out successfully");
   };

@@ -131,6 +131,7 @@ export const useCreateAlbum = () => {
     onSuccess: (newAlbum) => {
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: albumKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["artists", "dashboard-albums"], });
       
       if (newAlbum.artist?.id) {
         queryClient.invalidateQueries({ 

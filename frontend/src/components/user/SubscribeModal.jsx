@@ -92,22 +92,6 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
                   </div>
                 </div>
               )}
-
-              {/* Features */}
-              <div className="flex items-center justify-center space-x-4 text-xs text-gray-400 mt-4">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>High Quality</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                  <span>Ad-Free</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-                  <span>Exclusive</span>
-                </div>
-              </div>
             </div>
 
             {/* ✅ Single Action Button - Goes to Artist Page */}

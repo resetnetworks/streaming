@@ -138,6 +138,7 @@ export const useCreateSong = () => {
     mutationFn: songApi.create,
     onSuccess: (song) => {
       queryClient.invalidateQueries({ queryKey: songKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["artists", "dashboard-singles"], });
       queryClient.invalidateQueries({
         queryKey: songKeys.artist(song.artist),
       });

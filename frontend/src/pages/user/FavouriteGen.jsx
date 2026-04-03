@@ -183,15 +183,6 @@ const FavouriteGen = () => {
     } else {
       const newSelected = [...selected, id];
       setSelected(newSelected);
-      
-      // Show success toast when reaching 3 or more
-      if (newSelected.length === 3) {
-        toast.success("Great! You can now continue or select more genres.");
-      } else if (newSelected.length === 1) {
-        toast.info("Good start! Select 2 more genres to continue.");
-      } else if (newSelected.length === 2) {
-        toast.info("Almost there! Select 1 more genre to continue.");
-      }
     }
   };
 
