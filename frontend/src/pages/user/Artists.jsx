@@ -148,7 +148,7 @@ const Artists = () => {
           "description": "List of artists featured on Reset Music streaming platform. Members can discover, stream, and subscribe to their favorite artists.",
           "url": "https://musicreset.com/artists",
         }}
-        noIndex={true}
+        noIndex={false}
       />
 
       <UserHeader />

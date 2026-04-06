@@ -232,7 +232,7 @@ const Artist = () => {
           image: artist.image || null,
           sameAs: artist.socialLinks || [],
         }}
-        noIndex={true}
+        noIndex={false}
       />
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">

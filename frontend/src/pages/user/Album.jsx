@@ -409,7 +409,7 @@ export default function Album() {
           numTracks: songs.length,
           datePublished: album.releaseDate,
         }}
-        noIndex={true}
+        noIndex={false}
       />
 
       <UserHeader />
