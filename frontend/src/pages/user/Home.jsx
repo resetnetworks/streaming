@@ -98,7 +98,7 @@ const Home = () => {
       "name": "Open Member Streaming Dashboard"
     }
   }}
-  noIndex={true}
+  noIndex={false}
 />
 
 

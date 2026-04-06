@@ -112,7 +112,7 @@ async function fetchDynamicRoutes() {
 
     while (currentPage <= totalPages) {
       const res = await fetch(
-        `${BACKEND_URL}/api/songs/singles?page=${currentPage}&limit=100`
+        `${BACKEND_URL}/api/songs?page=${currentPage}&limit=100`
       );
 
       const json = await res.json();

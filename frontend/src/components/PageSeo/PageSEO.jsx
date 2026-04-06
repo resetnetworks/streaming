@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 const PageSEO = ({
   title,
   description,
-  keywords,
   canonicalUrl,
   ogUrl,
   twitterTitle,
@@ -17,7 +16,6 @@ const PageSEO = ({
   // Default fallback values
   const defaultTitle = "Reset Streaming Platform - Reset Music | Instrumental Music";
   const defaultDescription = "Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles.";
-  const defaultKeywords = "reset streaming platform, musicreset, reset music, ambient music streaming, instrumental music platform, experimental music, electronic music, classical music, sound design, audiophile platform, IDM, drone, techno, electroacoustic";
   const defaultUrl = "https://musicreset.com";
 
   // Default WebSite structured data
@@ -38,7 +36,6 @@ const PageSEO = ({
   // Build final values
   const finalTitle = title || defaultTitle;
   const finalDescription = description || defaultDescription;
-  const finalKeywords = keywords || defaultKeywords;
   const finalCanonicalUrl = canonicalUrl || defaultUrl;
   const finalOgUrl = ogUrl || finalCanonicalUrl;
   const finalTwitterTitle = twitterTitle || finalTitle;
@@ -52,7 +49,6 @@ const PageSEO = ({
       {/* Basic Meta Tags */}
       <title>{finalTitle}</title>
       <meta name="description" content={finalDescription} />
-      <meta name="keywords" content={finalKeywords} />
       <meta name="author" content="Reset Music" />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <link rel="canonical" href={finalCanonicalUrl} />
@@ -70,6 +66,11 @@ const PageSEO = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content="Reset Music - Ambient and Electronic Music Streaming Platform" />
       <meta property="og:locale" content="en_US" />
+
+      <meta property="og:title" content={finalTitle} />
+      <meta property="og:description" content={finalDescription} />
+      <meta property="og:image" content={twitterImage || "https://musicreset.com/images/home.png"} />
+      <meta name="twitter:image" content={twitterImage || "https://musicreset.com/images/home.png"} />
 
       {/* Twitter Card Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -93,7 +94,6 @@ const PageSEO = ({
 PageSEO.propTypes = {
   title: PropTypes.string,
   description: PropTypes.string,
-  keywords: PropTypes.string,
   canonicalUrl: PropTypes.string,
   ogUrl: PropTypes.string,
   twitterTitle: PropTypes.string,
