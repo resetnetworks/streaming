@@ -20,11 +20,7 @@ const formatTime = (seconds) => {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
-const waveHeights = [
-  4, 7, 10, 6, 12, 18, 14, 9, 16, 20, 13, 8, 18, 15, 10,
-  7, 14, 19, 11, 6, 9, 17, 13, 8, 16, 20, 12, 7, 10, 15,
-  18, 6, 11, 14, 9, 17, 13, 8, 16, 10, 7, 12, 20, 15, 9, 13,
-];
+
 
 // ─── Ghost / Empty State Player ───────────────────────────────────────────────
 const GhostPlayer = () => {
@@ -54,15 +50,6 @@ const GhostPlayer = () => {
 
         {/* Ghost Progress */}
         <div className="w-full mt-4 flex flex-col gap-[6px]">
-          <div className="flex items-end gap-[2px] h-5 w-full opacity-30">
-            {waveHeights.map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-t-sm bg-gray-600"
-                style={{ height: `${h}px` }}
-              />
-            ))}
-          </div>
           <div className="w-full h-1 rounded-full bg-gray-700/60" />
           <div className="flex justify-between text-xs text-gray-600 mt-1 px-[2px]">
             <span>0:00</span>
@@ -159,6 +146,7 @@ const PlayerUI = ({
   handleRepeatToggle,
   shuffleMode,
   handleShuffleToggle,
+  barHeights,
 }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [open, setOpen] = useState(true);
@@ -214,25 +202,24 @@ const PlayerUI = ({
 
           {/* Waveform bars */}
           <div className="flex items-end gap-[2px] h-5 w-full">
-            {waveHeights.map((h, i) => {
-              const filled =
-                !isDisplayOnly &&
-                duration > 0 && // ✅ Only fill if duration is known
-                (i / waveHeights.length) * 100 < parseFloat(progressPercent);
-              return (
-                <div
-                  key={i}
-                  className="flex-1 rounded-t-sm"
-                  style={{
-                    height: `${h}px`,
-                    background: filled ? "#3b82f6" : "rgba(255,255,255,0.08)",
-                    opacity: filled ? 0.4 + (h / 20) * 0.6 : 1,
-                    transition: transitionReady ? "background 0.1s" : "none",
-                  }}
-                />
-              );
-            })}
-          </div>
+  {barHeights.map((h, i) => {
+    const filled =
+      !isDisplayOnly &&
+      duration > 0 &&
+      (i / barHeights.length) * 100 < parseFloat(progressPercent);
+    return (
+      <div
+        key={i}
+        className="flex-1 rounded-t-sm"
+        style={{
+          height: `${h}px`,
+          background: filled ? "#3b82f6" : "rgba(255,255,255,0.08)",
+          transition: transitionReady ? "height 0.08s ease, background 0.1s" : "none",
+        }}
+      />
+    );
+  })}
+</div>
 
           {/* Scrub track */}
           <div className="relative w-full h-1 bg-white/10 rounded-full cursor-pointer group">
