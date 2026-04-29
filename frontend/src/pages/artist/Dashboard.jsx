@@ -8,6 +8,7 @@ import ProfileComponent from "../../components/artist/profile/ProfileComponent";
 import Topbar from "../../components/artist/dashboard/Topbar";
 import SingleUpload from "./SingleUpload";
 import AlbumUpload from "./AlbumUpload";
+import MixUpload from "./MixUpload";
 import { useDispatch } from "react-redux";
 import { resetAllAlbumState } from "../../features/artistAlbums/artistAlbumsSlice";
 import { resetUploadState } from "../../features/artistSong/artistSongSlice";
@@ -248,7 +249,13 @@ export default function Dashboard() {
                 onComplete={handleUploadComplete}
                 onBatchProgress={handleBatchProgress}
               />
-            ) : (
+            ) : currentUploadPage === "mix" ? (
+              <MixUpload
+                onCancel={handleCancelUpload}
+                onComplete={handleUploadComplete}
+                onBatchProgress={handleBatchProgress}
+              />
+            ) :(
               tabComponents[selectedTab]
             )}
           </main>

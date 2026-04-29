@@ -24,7 +24,7 @@ const CareerPage = () => {
 
   const openEmailApplication = (position) => {
     const subject = `Job Application: ${position}`;
-    const mailtoLink = `mailto:contact@reset93.net?subject=${encodeURIComponent(subject)}`;
+    const mailtoLink = `mailto:support@musicreset.com?subject=${encodeURIComponent(subject)}`;
     window.open(mailtoLink, '_blank');
   };
 
@@ -277,7 +277,7 @@ const jobsStructuredData = {
                 "logo": "https://musicreset.com/icon.png",
                 "contactPoint": {
                     "@type": "ContactPoint",
-                    "email": "contact@reset93.net",
+                    "email": "support@musicreset.com",
                     "contactType": "HR department"
                 }
             },

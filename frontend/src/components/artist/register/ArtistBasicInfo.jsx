@@ -22,6 +22,17 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+
+  // Track which fields the user has interacted with (touched/blurred)
+  const [touched, setTouched] = useState({
+    firstName: false,
+    email: false,
+    password: false,
+  });
+
+  // Password criteria only show after user starts typing in password field
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
   const [passwordCriteria, setPasswordCriteria] = useState({
     length: false,
     lowercase: false,
@@ -30,22 +41,74 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
     symbol: false,
   });
 
-  // same validation as normal Register
-  const validate = () =>
+  // Validate all fields and return errors object
+  const validate = (data = formData) =>
     validators.validateForm({
-      name: formData.firstName,
-      email: formData.email,
-      password: formData.password,
+      name: data.firstName,
+      email: data.email,
+      password: data.password,
     });
+
+  // Validate a single field on blur
+  const validateField = (field) => {
+    const allErrors = validate();
+    // Map field names to validator keys
+    const keyMap = { firstName: 'name', email: 'email', password: 'password' };
+    const key = keyMap[field];
+
+    setFormErrors(prev => ({
+      ...prev,
+      // If error exists for this field, set it; otherwise clear it
+      [key]: allErrors[key] || undefined,
+    }));
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validateField(field);
+  };
+
+  const handleChange = (field, value) => {
+    const updatedData = { ...formData, [field]: value };
+    setFormData(updatedData);
+
+    // If field was already touched (had an error), re-validate on change for instant feedback
+    if (touched[field]) {
+      const allErrors = validate(updatedData);
+      const keyMap = { firstName: 'name', email: 'email', password: 'password' };
+      const key = keyMap[field];
+      setFormErrors(prev => ({
+        ...prev,
+        [key]: allErrors[key] || undefined,
+      }));
+    }
+  };
 
   const handlePasswordChange = (e) => {
     const val = e.target.value;
+
+    // Mark password as touched as soon as user starts typing
+    if (!passwordTouched) setPasswordTouched(true);
+
     setFormData(prev => ({ ...prev, password: val }));
     setPasswordCriteria(validators.getPasswordCriteria(val));
+
+    // If field was already blurred, re-validate on change
+    if (touched.password) {
+      const allErrors = validate({ ...formData, password: val });
+      setFormErrors(prev => ({
+        ...prev,
+        password: allErrors.password || undefined,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // On submit, mark all fields as touched and show all errors
+    setTouched({ firstName: true, email: true, password: true });
+    setPasswordTouched(true);
 
     const errors = validate();
     if (Object.keys(errors).length > 0) {
@@ -64,26 +127,22 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
       ).unwrap();
 
       toast.success("Account created! Continuing to artist application...");
-      
+
       // Store basic user info in artist application Redux store
       dispatch(updateApplicationFormData({
         firstName: formData.firstName,
-        lastName: '', // Add if you have last name field
+        lastName: '',
         email: formData.email,
       }));
-      
+
       // Call parent callback with user data
       if (onRegistrationSuccess) {
         onRegistrationSuccess(userData);
       }
-      
+
     } catch (err) {
       toast.error(err || "Registration failed");
     }
-  };
-
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -108,11 +167,13 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
             className="input-login"
             value={formData.firstName}
             onChange={(e) => handleChange("firstName", e.target.value)}
+            onBlur={() => handleBlur("firstName")}
             placeholder="Enter your artist name"
             disabled={loading}
           />
         </div>
-        {formErrors.name && (
+        {/* Show name error only after field is touched/blurred */}
+        {touched.firstName && formErrors.name && (
           <p className="text-red-500 text-left w-full text-sm mt-1">
             {formErrors.name}
           </p>
@@ -133,11 +194,13 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
             className="input-login"
             value={formData.email}
             onChange={(e) => handleChange("email", e.target.value)}
+            onBlur={() => handleBlur("email")}
             placeholder="Enter your email address"
             disabled={loading}
           />
         </div>
-        {formErrors.email && (
+        {/* Show email error only after field is touched/blurred */}
+        {touched.email && formErrors.email && (
           <p className="text-red-500 text-left w-full text-sm mt-1">
             {formErrors.email}
           </p>
@@ -158,6 +221,7 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
             className="input-login"
             value={formData.password}
             onChange={handlePasswordChange}
+            onBlur={() => handleBlur("password")}
             placeholder="Create a strong password"
             disabled={loading}
           />
@@ -170,48 +234,25 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
           </div>
         </div>
 
-        {/* Password criteria */}
-        <div className="text-sm mt-2 w-full flex flex-wrap gap-2">
-          <span
-            className={
-              passwordCriteria.length ? "text-green-500" : "text-red-500"
-            }
-          >
-            At least 8 characters
-          </span>
-          <span
-            className={
-              passwordCriteria.lowercase ? "text-green-500" : "text-red-500"
-            }
-          >
-            • Lowercase
-          </span>
-          <span
-            className={
-              passwordCriteria.uppercase ? "text-green-500" : "text-red-500"
-            }
-          >
-            • Uppercase
-          </span>
-          <span
-            className={
-              passwordCriteria.number ? "text-green-500" : "text-red-500"
-            }
-          >
-            • Number
-          </span>
-          <span
-            className={
-              passwordCriteria.symbol ? "text-green-500" : "text-red-500"
-            }
-          >
-            • Symbol
-          </span>
-        </div>
-        {formErrors.password && (
-          <p className="text-red-500 text-left w-full text-sm mt-1">
-            {formErrors.password}
-          </p>
+        {/* Password criteria — only shown after user starts typing in password field */}
+        {passwordTouched && (
+          <div className="text-sm mt-2 w-full flex flex-wrap gap-2">
+            <span className={passwordCriteria.length ? "text-green-500" : "text-red-500"}>
+              At least 8 characters
+            </span>
+            <span className={passwordCriteria.lowercase ? "text-green-500" : "text-red-500"}>
+              • Lowercase
+            </span>
+            <span className={passwordCriteria.uppercase ? "text-green-500" : "text-red-500"}>
+              • Uppercase
+            </span>
+            <span className={passwordCriteria.number ? "text-green-500" : "text-red-500"}>
+              • Number
+            </span>
+            <span className={passwordCriteria.symbol ? "text-green-500" : "text-red-500"}>
+              • Symbol
+            </span>
+          </div>
         )}
 
         <div className="button-wrapper mt-6 shadow-sm shadow-black">

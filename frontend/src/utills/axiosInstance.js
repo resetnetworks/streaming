@@ -4,7 +4,7 @@ import axios from "axios";
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
   withCredentials: true,
-  timeout: 300000,
+  timeout: 10000,
 });
 
 const getTokenFromCookie = () => {
@@ -88,25 +88,16 @@ export const forceLogout = async () => {
 };
 
 // ✅ Request interceptor
+// ✅ Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
     if (isLoggingOut) return config;
-
-    let token = localStorage.getItem("token") || localStorage.getItem("authToken");
-    if (!token) {
-      token = getTokenFromCookie();
-      if (token) localStorage.setItem('token', token);
-    }
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+// ✅ Response interceptor
 // ✅ Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -121,17 +112,35 @@ axiosInstance.interceptors.response.use(
 
     const status = error.response?.status;
 
-    // ✅ 401 — sirf tab logout karo jab token exist karta ho
+    // ✅ 401 — hamesha logout agar token tha
     if (status === 401) {
       const token = localStorage.getItem("token") || getTokenFromCookie();
-
-      // Token tha hi nahi — silently fail, redirect nahi
       if (!token) return Promise.reject(error);
-
-      // Token tha but server ne reject kiya — expired/invalid, logout karo
       await forceLogout();
       return Promise.reject(error);
     }
+
+    // ✅ 403 — sirf artist routes pe logout
+if (status === 403) {
+  const isArtistRoute = 
+    error.config?.url?.includes('/artist/') || 
+    error.config?.url?.includes('/v2/artist/');
+  
+  if (isArtistRoute) {
+    await forceLogout();
+    return Promise.reject(error);
+  }
+}
+
+if (status === 404) {
+  const isUserNotFound = error.response?.data?.message?.toLowerCase().includes('user not found') ||
+                         error.response?.data?.code === 'USER_NOT_FOUND';
+  
+  if (isUserNotFound) {
+    await forceLogout();
+    return Promise.reject(error);
+  }
+}
 
     return Promise.reject(error);
   }

@@ -5,7 +5,7 @@ import IconHeader from "../../components/IconHeader";
 const Subscription = () => {
   const [selected, setSelected] = useState("monthly");
   return (
-    <section className="bg-image min-h-screen w-full flex flex-col items-center text-white">
+    <section className="min-h-screen w-full flex flex-col items-center text-white">
       <IconHeader />
       <h1 className="text-4xl mb-1 mt-10">
         choose <span className="text-blue-700">subscription plan</span>

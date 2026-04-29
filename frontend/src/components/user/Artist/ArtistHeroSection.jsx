@@ -59,7 +59,7 @@ const UnsubscribeModal = ({ open, artist, subscriptionPrice, currentCycle, onCon
               <div className="w-20 h-20 bg-gradient-to-br from-[#1a0f0f] to-[#0d0909] rounded-full flex items-center justify-center shadow-2xl border border-red-500/30">
                 <FiAlertTriangle className="text-3xl text-red-400" />
               </div>
-              <div className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-ping opacity-20" />
+              <div className="absolute inset-0 rounded-full border-2 border-red-500/40 opacity-20" />
             </div>
 
             {/* Badge */}
@@ -135,6 +135,7 @@ const ArtistHeroSection = ({
   subscriptionLoading,
   setSubscriptionLoading,
   subscriberCountData,
+  requireLogin, // NEW prop to trigger login modal
 }) => {
   const queryClient = useQueryClient();
   const [unsubscribeModalOpen, setUnsubscribeModalOpen] = useState(false);
@@ -157,6 +158,7 @@ const ArtistHeroSection = ({
     isInView,
     artist?._id
   );
+
 
   const availableCycles = useMemo(() => {
     const plans = artist?.subscriptionPlans || [];
@@ -209,10 +211,7 @@ const ArtistHeroSection = ({
   };
 
   const handleSubscribeClick = () => {
-    if (!currentUser) {
-      toast.error("Please sign in to subscribe");
-      return;
-    }
+    if (!requireLogin("purchase", "subscription", artist)) return;
     if (!artist?._id) {
       toast.error("Artist info not loaded.");
       return;

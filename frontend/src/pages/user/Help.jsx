@@ -27,7 +27,7 @@ const Help = () => {
         },
         {
           q: "I made a payment but didn't receive the song or subscription. What should I do?",
-          a: 'If you\'ve successfully completed a payment for a song or an artist subscription but haven\'t received access, please contact us immediately. Email us at <a href="mailto:contact@reset93.net" class="text-blue-400 hover:underline">contact@reset93.net</a> with the following:<br/><br/>• Your registered email or username<br/>• Payment proof (screenshot or transaction ID)<br/>• Name of the song or artist you paid for<br/><br/>We\'ll verify and resolve the issue as quickly as possible.'
+          a: 'If you\'ve successfully completed a payment for a song or an artist subscription but haven\'t received access, please contact us immediately. Email us at <a href="mailto:support@musicreset.com" class="text-blue-400 hover:underline">support@musicreset.com</a> with the following:<br/><br/>• Your registered email or username<br/>• Payment proof (screenshot or transaction ID)<br/>• Name of the song or artist you paid for<br/><br/>We\'ll verify and resolve the issue as quickly as possible.'
         }
       ]
     },
@@ -95,7 +95,7 @@ description="Get help with Reset Music streaming account issues, subscriptions, 
         "name": "I made a payment but didn't receive the song or subscription. What should I do?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "If you've completed a payment but haven't received access, contact us at contact@reset93.net with your registered email, payment proof, and the name of the song or artist you paid for."
+          "text": "If you've completed a payment but haven't received access, contact us at suppo with your registered email, payment proof, and the name of the song or artist you paid for."
         }
       },
       {
@@ -122,7 +122,7 @@ description="Get help with Reset Music streaming account issues, subscriptions, 
       "contactPoint": [
         {
           "@type": "ContactPoint",
-          "email": "contact@reset93.net",
+          "email": "suppo",
           "telephone": "+919266084749",
           "contactType": "customer support",
           "areaServed": "Worldwide"
@@ -263,10 +263,10 @@ description="Get help with Reset Music streaming account issues, subscriptions, 
                         <h4 className="font-medium text-white">Email Support</h4>
                       </div>
                       <a
-                        href="mailto:contact@reset93.net?subject=Help & Support Request"
+                        href="mailto:suppo?subject=Help & Support Request"
                         className="text-blue-400 hover:text-blue-300 hover:underline transition-colors block"
                       >
-                        contact@reset93.net
+                        support@musicreset.com
                       </a>
                     </div>
                     <div className="space-y-3">

@@ -137,8 +137,10 @@ export const useCreateSong = () => {
   return useMutation({
     mutationFn: songApi.create,
     onSuccess: (song) => {
+      // existing
       queryClient.invalidateQueries({ queryKey: songKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["artists", "dashboard-singles"], });
+      queryClient.invalidateQueries({ queryKey: ["artists", "dashboard-singles"] });
+
       queryClient.invalidateQueries({
         queryKey: songKeys.artist(song.artist),
       });
@@ -148,8 +150,15 @@ export const useCreateSong = () => {
           queryKey: songKeys.album(song.album),
         });
       }
-    },
-    onError: (err) => {
+
+      // ✅ NEW ADD
+      queryClient.invalidateQueries({
+        queryKey: songKeys.singles(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: songKeys.singlesArtist(song.artist),
+      });
     },
   });
 };

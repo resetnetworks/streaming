@@ -295,7 +295,7 @@ if (!sampleUrl.trim()) {
                 Required Documents *
               </h3>
               <p className="text-slate-400 text-sm mb-4">
-                Upload your {selectedDocType.replace('_', ' ')} document for verification
+ID proof is required for secure payouts and to ensure authenticity against AI-generated content.
               </p>
               
               <label className="block relative border-2 border-dashed border-slate-600 rounded-xl p-8 text-center bg-slate-800/30 hover:border-slate-500 transition-colors cursor-pointer">

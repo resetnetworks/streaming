@@ -30,12 +30,12 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
             <div className="relative">
               <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#020216] rounded-full flex items-center justify-center shadow-2xl border border-[#88b2ef]/30">
                 {isPurchaseModal ? (
-                  <FaShoppingCart className="text-3xl text-[#88b2ef] animate-pulse" />
+                  <FaShoppingCart className="text-3xl text-[#88b2ef]" />
                 ) : (
-                  <FaLock className="text-3xl text-[#88b2ef] animate-pulse" />
+                  <FaLock className="text-3xl text-[#88b2ef]" />
                 )}
               </div>
-              <div className="absolute inset-0 rounded-full border-2 border-[#3b82f6] animate-ping opacity-20"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-[#3b82f6] opacity-20"></div>
             </div>
 
             {/* Dynamic Badge */}

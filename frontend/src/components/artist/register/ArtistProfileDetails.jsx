@@ -15,6 +15,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
   const { formData, isSaving } = useSelector((state) => state.artistApplication);
 
   const [localProfileImage, setLocalProfileImage] = useState(formData.profileImage || '');
+  const [stageName, setStageName] = useState(formData.stageName || '');
   const [errors, setErrors] = useState({});
 
   // Optimize: Use useMemo for sorted countries to prevent re-sorting on every render
@@ -42,6 +43,11 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
 
     return () => clearTimeout(timer);
   }, [formData, dispatch]);
+
+  const handleStageNameChange = (value) => {
+  setStageName(value);
+  dispatch(updateField({ field: 'stageName', value }));
+};
 
   // Load from localStorage on component mount - optimized
   useEffect(() => {
@@ -190,8 +196,8 @@ const validateForm = () => {
                       name="stageName"
                       placeholder="Lady Gaga"
                       className="input-login pl-10"
-                      value={formData.stageName || ''}
-                      onChange={(e) => handleChange('stageName', e.target.value)}
+                       value={stageName}
+                       onChange={(e) => handleStageNameChange(e.target.value)}
                       aria-invalid={!!errors.stageName}
                       aria-describedby={errors.stageName ? "stageName-error" : undefined}
                     />
@@ -289,16 +295,16 @@ const validateForm = () => {
                       className="input-login pl-10 min-h-[100px] resize-y"
                       value={formData.bio || ''}
                       onChange={(e) => handleChange('bio', e.target.value)}
-                      maxLength={2000}
+                      maxLength={500}
                     />
                     <MdDescription className="absolute left-3 top-3 text-slate-400 w-4 h-4" />
                   </div>
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-xs text-slate-500">
-                      Max 2000 characters. This will appear on your artist profile.
+                      Max 500 characters. This will appear on your artist profile.
                     </p>
                     <span className={`text-xs ${(formData.bio?.length || 0) >= 1900 ? 'text-yellow-500' : 'text-slate-500'}`}>
-                      {formData.bio?.length || 0}/2000
+                      {formData.bio?.length || 0}/500
                     </span>
                   </div>
                 </div>

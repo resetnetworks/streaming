@@ -215,7 +215,7 @@ const Artists = () => {
                     <div
                       key={artist._id}
                       onClick={() => handleArtistClick(artist.slug)}
-                      className="group cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:scale-105"
+                      className="group cursor-pointer transform transition-all duration-300"
                     >
                       <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
                         {/* Artist Image */}
@@ -225,7 +225,7 @@ const Artists = () => {
                               loading="lazy"
                               src={artist?.profileImage}
                               alt={artist?.name || "Artist"}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              className="w-full h-full object-cover transition-transform duration-500"
                             />
                           ) : (
                             <div
@@ -260,7 +260,7 @@ const Artists = () => {
               <button
                 onClick={handlePrevPage}
                 disabled={pagination.page <= 1 || isPreviousData}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-900 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-blue-500/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-900 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ← Prev
               </button>
@@ -285,7 +285,7 @@ const Artists = () => {
               <button
                 onClick={handleNextPage}
                 disabled={pagination.page >= pagination.totalPages || isPreviousData}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-cyan-500/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 Next →
               </button>

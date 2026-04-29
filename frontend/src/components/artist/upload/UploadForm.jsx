@@ -52,6 +52,7 @@ const UploadForm = ({
   const [coverImage, setCoverImage] = useState(initialData.coverImage || null);
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [title, setTitle] = useState(initialData.title || "");
+  const [copyright, setCopyright] = useState(initialData.copyright || "");
   const [date, setDate] = useState(
     initialData.date || new Date().toISOString().split("T")[0],
   );
@@ -75,6 +76,7 @@ const UploadForm = ({
   const [tracks, setTracks] = useState(initialData.tracks || []);
   const [editingTrackId, setEditingTrackId] = useState(null);
   const [editTrackName, setEditTrackName] = useState("");
+  const [isLocked, setIsLocked] = useState(false);
 
   const hiddenDateInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -311,6 +313,7 @@ const UploadForm = ({
 
     // Prevent submission if already submitting
     if (isSubmitting || isUploadingAudio || isUploadingCover) return;
+    setIsLocked(true);
 
     // Validate required fields
     if (!coverImageFile) {
@@ -347,7 +350,8 @@ const UploadForm = ({
       type,
       title: title.trim(),
       date,
-      description,
+      description: type === "album" ? description : "",
+      copyright: copyright.trim(),
       isrc: isrc.trim(),
       genre: selectedGenres,
       coverImageFile,
@@ -399,23 +403,52 @@ const UploadForm = ({
   // Helper function to get type-specific text
   const getTypeText = () => {
     return {
-      titleLabel: type === "album" ? "Album" : "Song",
+      titleLabel: type === "album" ? "Album" : type === "mix" ? "Mix" : "Track",
+
       titlePlaceholder:
-        type === "album" ? "Enter album title" : "Enter song title",
+        type === "album"
+          ? "Enter album title"
+          : type === "mix"
+            ? "Enter mix title"
+            : "Enter track title",
+
       descriptionPlaceholder:
         type === "album"
           ? "Tell us about this album..."
-          : "Tell us about this song...",
-      accessDescription: `How users can access this ${type === "album" ? "album" : "song"}`,
-      isrcLabel: type === "album" ? "UPC" : "ISRC",
+          : type === "mix"
+            ? "Tell us about this mix..."
+            : "Tell us about this track...",
+
+      accessDescription: `How users can access this ${
+        type === "album" ? "album" : type === "mix" ? "mix" : "track"
+      }`,
+
+      isrcLabel: type === "album" ? "UPC" : type === "mix" ? "Mix ID" : "ISRC",
+
       isrcPlaceholder:
-        type === "album" ? "e.g., 123456789012" : "e.g., US-ABC-12-34567",
+        type === "album"
+          ? "e.g., 123456789012"
+          : type === "mix"
+            ? "e.g., MIX-001"
+            : "e.g., US-ABC-12-34567",
+
       isrcDescription:
         type === "album"
           ? "Universal Product Code"
-          : "International Standard Recording Code",
-      descriptionLabel: `Share the story or inspiration behind this ${type === "album" ? "album" : "song"}`,
-      submitButton: type === "album" ? "create album" : "upload song",
+          : type === "mix"
+            ? "Internal mix identifier"
+            : "International Standard Recording Code",
+
+      descriptionLabel: `Share the story behind this ${
+        type === "album" ? "album" : type === "mix" ? "mix" : "track"
+      }`,
+
+      submitButton:
+        type === "album"
+          ? "create album"
+          : type === "mix"
+            ? "upload mix"
+            : "upload track",
     };
   };
 
@@ -593,7 +626,7 @@ const UploadForm = ({
                     <IconComponent size={16} />
                   </div>
                   <div className="text-left">
-                    <div className="text-white text-sm font-medium">
+                    <div className="text-white text-sm font-bold">
                       {selectedAccessType.label}
                     </div>
                     <div className="text-gray-400 text-xs">
@@ -603,8 +636,8 @@ const UploadForm = ({
                 </div>
                 <FiChevronDown
                   size={18}
-                  className={`text-gray-500 transition-transform ${
-                    showAccessDropdown ? "rotate-180 text-gray-300" : ""
+                  className={`text-[#e0e2ec] font-bold transition-transform ${
+                    showAccessDropdown ? "rotate-180 text-[#e0e2ec]" : ""
                   }`}
                 />
               </button>
@@ -702,34 +735,54 @@ const UploadForm = ({
           )}
 
           {/* Description */}
+          {type === "album" && (
+            <div className="flex flex-col gap-2">
+              <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
+                Description
+              </label>
+
+              <textarea
+                placeholder={typeText.descriptionPlaceholder}
+                value={description}
+                maxLength={300}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 resize-none"
+                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+              />
+
+              <div className="flex justify-between text-xs mt-1">
+                <span className="text-gray-400">
+                  {typeText.descriptionLabel}
+                </span>
+
+                <span
+                  className={`font-medium ${
+                    description.length > 280
+                      ? "text-amber-400"
+                      : "text-gray-100"
+                  }`}
+                >
+                  {description.length}/300
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
-            <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
-              Description
-              <span className="text-blue-400 text-xs font-normal ml-1">
-                (Optional)
-              </span>
+            <label className="text-gray-200 text-sm font-medium">
+              Copyright
             </label>
-            <textarea
-              placeholder={typeText.descriptionPlaceholder}
-              value={description}
-              maxLength={300}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 resize-none"
+
+            <input
+              type="text"
+              placeholder="© Your Name / Label"
+              value={copyright}
+              onChange={(e) => setCopyright(e.target.value)}
+              className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500"
               disabled={isSubmitting || isUploadingAudio || isUploadingCover}
             />
-            <div className="flex justify-between text-xs mt-1">
-  <span className="text-gray-400">
-    {typeText.descriptionLabel}
-  </span>
 
-  <span
-    className={`font-medium ${
-      description.length > 280 ? "text-amber-400" : "text-gray-100"
-    }`}
-  >
-    {description.length}/300
-  </span>
-</div>
+            <div className="text-gray-400 text-xs">Ownership or label info</div>
           </div>
         </div>
       </div>
@@ -797,15 +850,19 @@ const UploadForm = ({
                 {isUploadingAudio
                   ? `Uploading... ${audioUploadProgress}%`
                   : tracks.length > 0
-                    ? "Track Successfully Selected"
-                    : "Click anywhere to upload track"}
+                    ? "File Successfully Selected"
+                    : type === "mix"
+                      ? "Click anywhere to upload mix"
+                      : "Click anywhere to upload track"}
               </h4>
               <p className="text-gray-400 text-sm max-w-[280px] mx-auto leading-relaxed">
                 {isUploadingAudio
-                  ? "Uploading to S3, please wait..."
+                  ? "Uploading, please wait..."
                   : tracks.length > 0
-                    ? "Remove existing track to upload a new one"
-                    : "WAV, AIFF, FLAC supported. Max 1 track for singles."}
+                    ? "Remove existing file to upload a new one"
+                    : type === "mix"
+                      ? "WAV, AIFF, FLAC supported. Upload your full DJ mix."
+                      : "WAV, AIFF, FLAC supported. Max 1 track for singles."}
               </p>
             </div>
 
@@ -1011,6 +1068,7 @@ const UploadForm = ({
           type="submit"
           className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-2.5 rounded-full font-medium transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           disabled={
+            isLocked ||
             isSubmitting ||
             isUploadingAudio ||
             isUploadingCover ||

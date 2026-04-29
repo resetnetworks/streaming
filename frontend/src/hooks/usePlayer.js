@@ -1,4 +1,3 @@
-
 // hooks/usePlayer.js
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -32,13 +31,11 @@ import {
 } from "../features/songs/songSelectors";
 import { useLikeSong, useLikedSongs } from "./api/useSongs";
 
-// ✅ Module level — React re-renders aur remounts se bahar
 const connectedVideoNodes = new WeakMap();
 
 export const usePlayer = () => {
   const dispatch = useDispatch();
 
-  // Selectors
   const songs = useSelector(selectAllSongs);
   const selectedSong = useSelector(selectSelectedSong);
   const defaultSong = useSelector(selectDefaultSong);
@@ -61,47 +58,46 @@ export const usePlayer = () => {
   const likeMutation = useLikeSong();
   const { data } = useLikedSongs(20);
 
-  // Local state
   const [playbackError, setPlaybackError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isBuffering, setIsBuffering] = useState(false);
+
+  // ── Spectrum state ──────────────────────────────────────────────────────────
+  // frequencyData: raw Uint8Array (length 46) from analyser — passed directly to SpectrumCanvas
+  // beatPulse: 0–1 float, decays on each frame; SpectrumCanvas reads it for glow
+  const [frequencyData, setFrequencyData] = useState(() => new Uint8Array(46).fill(0));
+  const [beatPulse, setBeatPulse] = useState(0);
+
   const repeatModeRef = useRef(repeatMode);
 
-  // Refs
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const queueRef = useRef(queue);
+
   const analyserRef = useRef(null);
   const audioCtxRef = useRef(null);
   const animFrameRef = useRef(null);
+  const sourceNodeRef = useRef(null);
+
+  // Beat detection refs
   const beatHistoryRef = useRef([]);
   const lastBeatTimeRef = useRef(0);
-  const sourceNodeRef = useRef(null);
-  const [barHeights, setBarHeights] = useState(() => Array(46).fill(4));
+  const beatPulseRef = useRef(0);
 
-  useEffect(() => {
-    queueRef.current = queue;
-  }, [queue]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+  useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
-  useEffect(() => {
-    repeatModeRef.current = repeatMode;
-  }, [repeatMode]);
-
-  // Computed values
   const currentSong = displaySong;
-  const contextSongs =
-    playbackContextSongs.length > 0 ? playbackContextSongs : songs;
-
-  const nextSongs = queue.upcoming;
+  const contextSongs = playbackContextSongs.length > 0 ? playbackContextSongs : songs;
+ const nextSongs = queue.upcoming;
 
   const likedSongs = data?.pages?.flatMap((page) => page.songs) || [];
   const isLiked = currentSong
     ? likedSongs.some((song) => song._id === currentSong._id)
     : false;
 
-  // Effects
   useEffect(() => {
     if (!hasPersistentDefault && songs.length > 0) {
       dispatch(setRandomDefaultFromSongs(songs));
@@ -117,18 +113,11 @@ export const usePlayer = () => {
       const songInContext = playbackContextSongs.some(
         (song) => song._id === currentSong._id,
       );
-
       if (!songInContext && queue.upcoming.length === 0) {
         dispatch(clearPlaybackContext());
       }
     }
-  }, [
-    currentSong?._id,
-    playbackContext.type,
-    playbackContextSongs,
-    queue.upcoming.length,
-    dispatch,
-  ]);
+  }, [currentSong?._id, playbackContext.type, playbackContextSongs, queue.upcoming.length, dispatch]);
 
   useEffect(() => {
     if (selectedSong && !streamUrls[selectedSong._id]) {
@@ -161,9 +150,7 @@ export const usePlayer = () => {
             navigator.connection ||
             navigator.mozConnection ||
             navigator.webkitConnection;
-
           if (!connection) return 25;
-
           const speed = connection.downlink;
           if (speed >= 5) return 40;
           if (speed >= 2) return 25;
@@ -192,9 +179,7 @@ export const usePlayer = () => {
             }
           });
 
-          hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-            hls.loadSource(mediaUrl);
-          });
+          hls.on(Hls.Events.MEDIA_ATTACHED, () => { hls.loadSource(mediaUrl); });
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
             video.currentTime = currentTime || 0;
@@ -236,34 +221,25 @@ export const usePlayer = () => {
           }
         };
 
-        video.onwaiting = () => {
-          setIsBuffering(true);
-        };
-
+        video.onwaiting = () => { setIsBuffering(true); };
         video.onplaying = () => {
           setIsBuffering(false);
           setIsLoading(false);
           dispatch(play());
         };
-
-        video.oncanplaythrough = () => {
-          setIsBuffering(false);
-        };
+        video.oncanplaythrough = () => { setIsBuffering(false); };
 
         video.onended = () => {
           const repeat = repeatModeRef.current;
-
           if (repeat === "one") {
             video.currentTime = 0;
             video.play().catch(() => {});
             return;
           }
-
           if (!shuffleMode && queueRef.current.upcoming.length > 0) {
             handleNext();
             return;
           }
-
           if (shuffleMode) {
             const randomSong = getRandomSongFromContext();
             if (randomSong) {
@@ -272,34 +248,30 @@ export const usePlayer = () => {
               return;
             }
           }
-
-          if (
-            playbackContext?.type !== "all" &&
-            playbackContextSongs.length > 0
-          ) {
+          if (playbackContext?.type !== "all" && playbackContextSongs.length > 0) {
             const currentIndex = playbackContextSongs.findIndex(
               (s) => s._id === selectedSong?._id,
             );
             const nextIndex = currentIndex + 1;
-
             if (nextIndex < playbackContextSongs.length) {
               dispatch(setSelectedSong(playbackContextSongs[nextIndex]));
               dispatch(play());
               return;
             }
-
             const firstSong = playbackContextSongs[0];
             dispatch(setSelectedSong(firstSong));
-
             if (repeat === "all") {
               dispatch(play());
             } else {
-              dispatch(pause());
+              video.currentTime = 0;
+dispatch(setCurrentTime(0));
+dispatch(pause());
             }
             return;
           }
-
-          dispatch(pause());
+          video.currentTime = 0;
+dispatch(setCurrentTime(0));
+dispatch(pause());
         };
       } catch (err) {
         setPlaybackError(err.message);
@@ -311,12 +283,10 @@ export const usePlayer = () => {
     initPlayer();
 
     return () => {
-      // Cleanup HLS instance
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
-      // Remove video event listeners
       const video = videoRef.current;
       if (video) {
         video.ontimeupdate = null;
@@ -327,9 +297,7 @@ export const usePlayer = () => {
         video.oncanplaythrough = null;
       }
     };
-  }, [selectedSong, streamUrls]); // Missing dependencies: isPlaying, shuffleMode, etc. are intentionally omitted to avoid re-creating the effect too often.
-  // The onended callback uses refs (repeatModeRef, queueRef) and the latest handleNext function (which is stable via useCallback later).
-  // However handleNext depends on many things. This is a known trade-off; for crash fixes we focus on AudioContext.
+  }, [selectedSong, streamUrls]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -338,45 +306,35 @@ export const usePlayer = () => {
     }
   }, [volume, isMuted]);
 
-  // ✅ FIXED: Properly close AudioContext on unmount to prevent browser limit crash
   useEffect(() => {
     return () => {
-  cancelAnimationFrame(animFrameRef.current);
-  animFrameRef.current = null;
-
-  const video = videoRef.current;
-
-  if (video && connectedVideoNodes.has(video)) {
-    const existing = connectedVideoNodes.get(video);
-
-    if (existing?.ctx?.state !== "closed") {
-      existing.ctx.suspend(); // NOT close
-    }
-
-    connectedVideoNodes.delete(video);
-  }
-
-  sourceNodeRef.current = null;
-  analyserRef.current = null;
-  audioCtxRef.current = null;
-};
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+      const video = videoRef.current;
+      if (video && connectedVideoNodes.has(video)) {
+        const existing = connectedVideoNodes.get(video);
+        if (existing?.ctx?.state !== "closed") {
+          existing.ctx.suspend();
+        }
+        connectedVideoNodes.delete(video);
+      }
+      sourceNodeRef.current = null;
+      analyserRef.current = null;
+      audioCtxRef.current = null;
+    };
   }, []);
 
   const getRandomSongFromContext = () => {
     if (!contextSongs || contextSongs.length === 0) return null;
-    const filtered = contextSongs.filter(
-      (song) => song._id !== selectedSong?._id,
-    );
+    const filtered = contextSongs.filter((song) => song._id !== selectedSong?._id);
     if (filtered.length === 0) return contextSongs[0];
-    const randomIndex = Math.floor(Math.random() * filtered.length);
-    return filtered[randomIndex];
+    return filtered[Math.floor(Math.random() * filtered.length)];
   };
 
   const setupAnalyser = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Reuse existing AudioContext for this video element if available
     if (connectedVideoNodes.has(video)) {
       const existing = connectedVideoNodes.get(video);
       audioCtxRef.current = existing.ctx;
@@ -389,7 +347,7 @@ export const usePlayer = () => {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.75;
+      analyser.smoothingTimeConstant = 0.8;
 
       const source = ctx.createMediaElementSource(video);
       source.connect(analyser);
@@ -398,69 +356,67 @@ export const usePlayer = () => {
       audioCtxRef.current = ctx;
       analyserRef.current = analyser;
       sourceNodeRef.current = source;
-
       connectedVideoNodes.set(video, { ctx, analyser, source });
     } catch (err) {
       console.warn("AudioContext setup failed:", err.message);
     }
   }, []);
 
+  // ── Spectrum animation loop ─────────────────────────────────────────────────
   useEffect(() => {
     if (isPlaying) {
       if (!audioCtxRef.current) setupAnalyser();
       if (audioCtxRef.current?.state === "suspended") {
-  audioCtxRef.current.resume().catch(() => {});
-}
+        audioCtxRef.current.resume().catch(() => {});
+      }
+// Raw FFT mapped bins — SpectrumCanvas internally samples these down to its own BAR_COUNT
+      const BAR_COUNT = 46;
+      const fullFreqBins = analyserRef.current?.frequencyBinCount || 256;
+      const rawBuffer = new Uint8Array(fullFreqBins);
+      const mappedData = new Uint8Array(BAR_COUNT);
 
       const animate = () => {
         if (!analyserRef.current) return;
 
-        const data = new Uint8Array(analyserRef.current.frequencyBinCount);
-        analyserRef.current.getByteFrequencyData(data);
+        analyserRef.current.getByteFrequencyData(rawBuffer);
 
-        let bassEnergy = 0;
-        const bassRange = 10;
-        for (let i = 0; i < bassRange; i++) {
-          bassEnergy += data[i];
+        // Map full FFT bins → 46 bars (log-ish scale, bass bins get more bars)
+        for (let i = 0; i < BAR_COUNT; i++) {
+          const start = Math.floor((i / BAR_COUNT) * (fullFreqBins * 0.7));
+          const end = Math.floor(((i + 1) / BAR_COUNT) * (fullFreqBins * 0.7));
+          let sum = 0;
+          for (let j = start; j < end; j++) sum += rawBuffer[j];
+          mappedData[i] = Math.round(sum / Math.max(1, end - start));
         }
+
+        // Beat detection — bass energy vs rolling average
+        let bassEnergy = 0;
+        const bassRange = 8;
+        for (let i = 0; i < bassRange; i++) bassEnergy += rawBuffer[i];
         bassEnergy = bassEnergy / bassRange;
 
         beatHistoryRef.current.push(bassEnergy);
-        if (beatHistoryRef.current.length > 40) {
-          beatHistoryRef.current.shift();
-        }
+        if (beatHistoryRef.current.length > 40) beatHistoryRef.current.shift();
 
         const avgEnergy =
           beatHistoryRef.current.reduce((a, b) => a + b, 0) /
           beatHistoryRef.current.length;
 
         const now = Date.now();
-        const threshold = avgEnergy * 1.4;
-        let isBeat = false;
-
-        if (bassEnergy > threshold && now - lastBeatTimeRef.current > 200) {
-          isBeat = true;
+        if (
+          bassEnergy > avgEnergy * 1.45 &&
+          now - lastBeatTimeRef.current > 220
+        ) {
+          beatPulseRef.current = 1.0;
           lastBeatTimeRef.current = now;
         }
 
-        let lastActiveBin = 0;
-        for (let i = data.length - 1; i >= 0; i--) {
-          if (data[i] > 5) {
-            lastActiveBin = i;
-            break;
-          }
-        }
+        beatPulseRef.current *= 0.86;
 
-        const activeBins = Math.max(lastActiveBin + 1, 20);
+        // Push to React state (canvas reads this via prop)
+        setFrequencyData(new Uint8Array(mappedData));
+        setBeatPulse(parseFloat(beatPulseRef.current.toFixed(3)));
 
-        const heights = Array.from({ length: 46 }, (_, i) => {
-          const idx = Math.floor((i / 46) * activeBins);
-          let h = Math.max(3, (data[idx] / 255) * 28);
-          if (isBeat) h *= 1.6;
-          return h;
-        });
-
-        setBarHeights(heights);
         animFrameRef.current = requestAnimationFrame(animate);
       };
 
@@ -469,7 +425,9 @@ export const usePlayer = () => {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
       audioCtxRef.current?.suspend();
-      setBarHeights((prev) => prev.map((h) => Math.max(4, Math.round(h * 0.6))));
+      // Signal canvas to decay to flat
+      setFrequencyData(new Uint8Array(46).fill(0));
+      setBeatPulse(0);
     }
 
     return () => {
@@ -478,18 +436,15 @@ export const usePlayer = () => {
     };
   }, [isPlaying, setupAnalyser]);
 
-  // Event handlers (useCallback for stability)
+  // Event handlers
   const handleTogglePlay = useCallback(async () => {
     const video = videoRef.current;
-
     if (isDisplayOnly && defaultSong) {
       dispatch(setSelectedSong(defaultSong));
       dispatch(play());
       return;
     }
-
     if (!video || !selectedSong) return;
-
     try {
       if (isPlaying) {
         await video.pause();
@@ -504,25 +459,19 @@ export const usePlayer = () => {
   }, [isPlaying, isDisplayOnly, defaultSong, selectedSong, dispatch]);
 
   const handleRepeatToggle = useCallback(() => {
-    if (repeatMode === "off") {
-      dispatch(setRepeatMode("all"));
-    } else if (repeatMode === "all") {
-      dispatch(setRepeatMode("one"));
-    } else {
-      dispatch(setRepeatMode("off"));
-    }
+    if (repeatMode === "off") dispatch(setRepeatMode("all"));
+    else if (repeatMode === "all") dispatch(setRepeatMode("one"));
+    else dispatch(setRepeatMode("off"));
   }, [repeatMode, dispatch]);
 
   const handleNext = useCallback(() => {
     const queueNext = queueRef.current?.upcoming?.[0];
-
     if (!shuffleMode && queueNext) {
       dispatch(setSelectedSong(queueNext));
       dispatch(removeFirstQueueItem());
       dispatch(play());
       return;
     }
-
     if (shuffleMode) {
       const randomSong = getRandomSongFromContext();
       if (randomSong) {
@@ -531,12 +480,10 @@ export const usePlayer = () => {
         return;
       }
     }
-
     if (playbackContext?.type !== "all" && playbackContextSongs?.length > 0) {
       const currentIndex = playbackContextSongs.findIndex(
         (s) => s._id === selectedSong?._id,
       );
-
       if (currentIndex === -1) {
         const firstSong = playbackContextSongs[0];
         const remainingSongs = playbackContextSongs.slice(1);
@@ -545,48 +492,29 @@ export const usePlayer = () => {
         dispatch(play());
         return;
       }
-
       const nextIndex = currentIndex + 1;
-
       if (nextIndex >= playbackContextSongs.length) {
         const firstSong = playbackContextSongs[0];
         dispatch(setSelectedSong(firstSong));
-
-        if (repeatMode === "all") {
-          dispatch(play());
-        } else {
-          dispatch(pause());
-        }
+        if (repeatMode === "all") dispatch(play());
+        else dispatch(pause());
         return;
       }
-
       dispatch(setSelectedSong(playbackContextSongs[nextIndex]));
       dispatch(play());
       return;
     }
-
     dispatch(pause());
-  }, [
-    shuffleMode,
-    playbackContext?.type,
-    playbackContextSongs,
-    selectedSong?._id,
-    repeatMode,
-    dispatch,
-  ]);
+  }, [shuffleMode, playbackContext?.type, playbackContextSongs, selectedSong?._id, repeatMode, dispatch]);
 
   const handlePrev = useCallback(() => {
     const video = videoRef.current;
-
     if (video && video.currentTime > 3) {
       video.currentTime = 0;
       dispatch(setCurrentTime(0));
       return;
     }
-
-    const prevSong =
-      queueRef.current?.history?.[queueRef.current.history.length - 1];
-
+    const prevSong = queueRef.current?.history?.[queueRef.current.history.length - 1];
     if (!prevSong) {
       if (video) {
         video.currentTime = 0;
@@ -594,7 +522,6 @@ export const usePlayer = () => {
       }
       return;
     }
-
     dispatch(removeLastHistoryItem());
     dispatch(setSelectedSong(prevSong));
     dispatch(play());
@@ -626,17 +553,13 @@ export const usePlayer = () => {
 
   const handleLikeToggle = useCallback(() => {
     if (!currentSong?._id) return;
-
     if (!currentUser) {
       toast.error("You must be logged in to like songs");
       return;
     }
-
     likeMutation.mutate(currentSong._id, {
       onSuccess: () => {
-        toast.success(
-          isLiked ? "Removed from Liked Songs" : "Added to Liked Songs",
-        );
+        toast.success(isLiked ? "Removed from Liked Songs" : "Added to Liked Songs");
       },
       onError: () => {
         toast.error("Failed to update like");
@@ -644,13 +567,13 @@ export const usePlayer = () => {
     });
   }, [currentSong?._id, currentUser, likeMutation, isLiked]);
 
-  const handleNextSongClick = useCallback(
-    (song) => {
-      dispatch(setSelectedSong(song));
-      dispatch(play());
-    },
-    [dispatch],
-  );
+const handleNextSongClick = useCallback(
+  (song) => {
+    dispatch(setSelectedSong(song));
+    dispatch(play());
+  },
+  [dispatch]
+);
 
   const handleToggleMute = useCallback(() => {
     if (isMuted) {
@@ -662,22 +585,14 @@ export const usePlayer = () => {
     setIsMuted(!isMuted);
   }, [isMuted, volume, prevVolume, dispatch]);
 
-  // Global keyboard / external event listener
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action;
       const video = videoRef.current;
-
       if (action === "pause") {
-        if (video) {
-          video.pause();
-          dispatch(pause());
-        }
+        if (video) { video.pause(); dispatch(pause()); }
       } else if (action === "play") {
-        if (video) {
-          video.play().catch(() => {});
-          dispatch(play());
-        }
+        if (video) { video.play().catch(() => {}); dispatch(play()); }
       } else {
         handleTogglePlay();
       }
@@ -711,7 +626,10 @@ export const usePlayer = () => {
     selectedSong,
     repeatMode,
     shuffleMode,
-    barHeights,
+    // ── new spectrum props (replaces barHeights) ──
+    frequencyData,
+    beatPulse,
+    // ─────────────────────────────────────────────
     handleTogglePlay,
     handleToggleMute,
     handleNext,

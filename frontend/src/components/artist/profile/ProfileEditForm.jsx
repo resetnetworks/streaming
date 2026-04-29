@@ -273,7 +273,7 @@ if (
             </div>
           </div>
 
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
+          {/* <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
             <SocialMediaInput
   newSocial={newSocial}
   setNewSocial={setNewSocial}
@@ -288,7 +288,7 @@ if (
   isLoading={isLoading}
 />
 
-          </div>
+          </div> */}
 
           <div className="flex gap-3 pt-4 border-t border-gray-800">
             <button

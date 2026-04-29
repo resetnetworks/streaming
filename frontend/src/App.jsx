@@ -55,7 +55,6 @@ useEffect(() => {
     const token = localStorage.getItem("token") || getTokenFromCookie();
     
     if (token) {
-      // Token hai tabhi profile fetch karo
       dispatch(getMyProfile())
         .unwrap()
         .catch((error) => {
@@ -63,13 +62,19 @@ useEffect(() => {
         })
         .finally(() => setInitialLoad(false));
     } else {
-      // Token nahi = public user, seedha load complete
+      // ❌ Yahan sirf setInitialLoad nahi, user bhi clear karo
       setInitialLoad(false);
     }
   } else {
-    setInitialLoad(false);
+    // ✅ Authenticated hai toh backend se verify karo
+    dispatch(getMyProfile())
+      .unwrap()
+      .catch((error) => {
+        Sentry.captureException(error);
+      })
+      .finally(() => setInitialLoad(false));
   }
-}, [dispatch, isAuthenticated]);
+}, [dispatch]); // isAuthenticated dependency hata do
 
 const getTokenFromCookie = () => {
   const cookies = document.cookie.split('; ');
@@ -78,16 +83,48 @@ const getTokenFromCookie = () => {
 };
 
 useEffect(() => {
-  if (user?._id) {
-    Sentry.setUser({
-      id: user._id,
-      email: user.email,
-      role: user.role,
-    });
+  if (!isAuthenticated) {
+    const token = localStorage.getItem("token") || getTokenFromCookie();
+    if (token) {
+      dispatch(getMyProfile())
+        .unwrap()
+        .then((userData) => {
+          // ✅ Profile milte hi Sentry set karo, effect ka wait mat karo
+          if (userData?._id) {
+            Sentry.setUser({
+              id: userData._id,
+              email: userData.email,
+              username: userData.name,
+            });
+            Sentry.setTag("role", userData.role);
+          }
+        })
+        .catch((error) => {
+          Sentry.captureException(error);
+        })
+        .finally(() => setInitialLoad(false));
+    } else {
+      setInitialLoad(false);
+    }
   } else {
-    Sentry.setUser(null); // logout case
+    dispatch(getMyProfile())
+      .unwrap()
+      .then((userData) => {
+        if (userData?._id) {
+          Sentry.setUser({
+            id: userData._id,
+            email: userData.email,
+            username: userData.name,
+          });
+          Sentry.setTag("role", userData.role);
+        }
+      })
+      .catch((error) => {
+        Sentry.captureException(error);
+      })
+      .finally(() => setInitialLoad(false));
   }
-}, [user]);
+}, [dispatch]);
 
 
 
@@ -163,6 +200,7 @@ useEffect(() => {
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
             <Route path="/careers" element={<Pages.Career />} />
             <Route path="/artist-details" element={<Pages.ArtistDetails />} />
+            <Route path="/report-issue" element={<Pages.ReportIssue />} />
 
             {/* 🔥 NEW: Social Login Callback Route */}
             <Route path="/auth/callback" element={<Pages.SocialLoginCallback />} />

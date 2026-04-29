@@ -69,7 +69,6 @@ const Register = () => {
       const result = await dispatch(registerUser({ email, password, name })).unwrap();
       setJustRegistered(true);
     } catch (err) {
-      console.log(err)
       toast.error(err || "Registration failed");
     }
   };

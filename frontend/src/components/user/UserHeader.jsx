@@ -8,6 +8,7 @@ import {
   FiClock,
   FiLogOut,
   FiBell,
+  FiAlertCircle
 } from "react-icons/fi";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { toast } from "sonner";
@@ -129,7 +130,7 @@ const UserHeader = () => {
             >
               {user?.name?.charAt(0) || "G"}
             </div>
-            <p className="md:ml-3 ml-2 md:text-sm sm:inline-block hidden text-sm">
+            <p className="md:ml-3 ml-2 md:text-sm text-white sm:inline-block hidden text-sm">
               {user?.name}
             </p>
             {open ? (
@@ -157,6 +158,13 @@ const UserHeader = () => {
                   Help & Support
                 </li>
                 <li
+      className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-yellow-400 ${isActive("/report-issue") ? "text-yellow-400" : ""}`}
+      onClick={() => { setOpen(false); navigate("/report-issue"); }}
+    >
+      <FiAlertCircle />
+      Report Issue
+    </li>
+                <li
                   className="px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-red-500"
                   onClick={handleLogout}
                 >
@@ -174,7 +182,7 @@ const UserHeader = () => {
   return (
     <div className="w-full flex justify-between items-center px-4 py-4 relative">
       {isHomePage ? (
-        <h1 className="md:text-3xl text-xl">
+        <h1 className="md:text-3xl text-xl text-white">
           {getTimeBasedGreeting()},{" "}
           <span className="text-blue-700">
             {user ? user.name : "Guest"}

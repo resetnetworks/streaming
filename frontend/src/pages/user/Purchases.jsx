@@ -292,7 +292,7 @@ const Purchases = () => {
                     img={song?.coverImage || "/images/placeholder.png"}
                     songName={song.title}
                     singerName={song.artist?.name || "Unknown Artist"}
-                    seekTime={formatDuration(song.duration || 0)}
+                    seekTime={song.duration || 0}
                     onPlay={() => handlePlaySong(song)}
                     isSelected={selectedSong?._id === song._id}
                   />

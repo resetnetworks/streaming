@@ -99,7 +99,7 @@ const CancellationRefundPolicy = () => {
       "url": "https://musicreset.com",
       "contactPoint": {
         "@type": "ContactPoint",
-        "email": "contact@reset93.net",
+        "email": "support@musicreset.com",
         "contactType": "customer support"
       }
     },
@@ -365,10 +365,10 @@ const CancellationRefundPolicy = () => {
               <div className="space-y-2 text-sm text-gray-400">
                 <p>Reset Music Support Team</p>
                 <a
-                  href="mailto:contact@reset93.net?subject=Cancellation and Refund Policy Inquiry"
+                  href="mailto:support@musicreset.com?subject=Cancellation and Refund Policy Inquiry"
                   className="text-blue-400 hover:underline"
                 >
-                  contact@reset93.net
+                  support@musicreset.com
                 </a>
               </div>
             </div>

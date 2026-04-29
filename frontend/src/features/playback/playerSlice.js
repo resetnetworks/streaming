@@ -156,12 +156,13 @@ const playerSlice = createSlice({
     playNext(state, action) {
   const song = action.payload;
 
-  // duplicate avoid karo
-  const exists = state.queue.upcoming.some((s) => s._id === song._id);
+  // 🔥 STEP 1: remove if already exists anywhere
+  state.queue.upcoming = state.queue.upcoming.filter(
+    (s) => s._id !== song._id
+  );
 
-  if (!exists) {
-    state.queue.upcoming.unshift(song); // start me add
-  }
+  // 🔥 STEP 2: insert at the front (highest priority)
+  state.queue.upcoming.unshift(song);
 
   try {
     localStorage.setItem("player-queue", JSON.stringify(state.queue));

@@ -54,12 +54,12 @@ const TermsAndConditions = () => {
     {
       id: "usage-rules",
       title: "F. Services and Content Usage Rules",
-      content: `• The Service and Content are licensed only for personal, non-commercial streaming use.
-• Downloading or saving tracks is prohibited; Content is only available for streaming.
-• Any attempt to bypass or circumvent restrictions on downloading will result in termination.
-• Users may not manipulate metrics such as play counts, ratings, or other engagement measures.
-• Streaming limits and simultaneous device restrictions may apply.
-• Users are responsible for compliant use; content availability may vary due to licensing.`,
+      content: `The Service and Content are licensed only for personal, non-commercial streaming use.
+Downloading or saving tracks is prohibited; Content is only available for streaming.
+Any attempt to bypass or circumvent restrictions on downloading will result in termination.
+Users may not manipulate metrics such as play counts, ratings, or other engagement measures.
+Streaming limits and simultaneous device restrictions may apply.
+Users are responsible for compliant use; content availability may vary due to licensing.`,
     },
     {
       id: "termination",
@@ -112,99 +112,99 @@ const TermsAndConditions = () => {
     {
       id: "definitions",
       title: "1. Definitions",
-      content: `• "Content" means all audio recordings, audiovisual works, artwork, metadata, compositions, live performances, and related materials provided by the Artist for digital distribution.
-• "Platform" means all websites, mobile applications, APIs, and partner services operated or controlled by RESET NETWORKS for distribution, streaming, and promotion.
-• "Net Revenue" means gross receipts from monetization less applicable transaction fees, taxes, and refunds.
-• "Artist Dashboard" means the online portal provided by RESET NETWORKS for Artists to upload Content, view analytics, and access revenue reports.`,
+      content: `"Content" means all audio recordings, audiovisual works, artwork, metadata, compositions, live performances, and related materials provided by the Artist for digital distribution.
+"Platform" means all websites, mobile applications, APIs, and partner services operated or controlled by RESET NETWORKS for distribution, streaming, and promotion.
+"Net Revenue" means gross receipts from monetization less applicable transaction fees, taxes, and refunds.
+"Artist Dashboard" means the online portal provided by RESET NETWORKS for Artists to upload Content, view analytics, and access revenue reports.`,
     },
     {
       id: "appointment-scope",
       title: "2. Appointment and Scope",
-      content: `• The Artist appoints RESET NETWORKS as digital distributor and streaming platform for the Content globally.
-• The license granted is non-exclusive and worldwide in scope.
-• RESET NETWORKS is authorized to use Content, metadata, and promotional materials for streaming, downloads, and promotional campaigns.
-• The Artist retains all ownership of the Content, subject only to the rights granted to RESET NETWORKS.`,
+      content: `The Artist appoints RESET NETWORKS as digital distributor and streaming platform for the Content globally.
+The license granted is non-exclusive and worldwide in scope.
+RESET NETWORKS is authorized to use Content, metadata, and promotional materials for streaming, downloads, and promotional campaigns.
+The Artist retains all ownership of the Content, subject only to the rights granted to RESET NETWORKS.`,
     },
     {
       id: "platform-fees-payouts",
       title: "3. Platform Fees and Payouts",
-      content: `• RESET NETWORKS is entitled to a 15% platform fee on all Net Revenue generated from the Artist's Content.
-• The remaining 85% of Net Revenue is remitted to the Artist within 15 days of each monthly accounting cycle.
-• Payments are made via bank transfer, PayPal, or other designated modes.
-• RESET NETWORKS may withhold or adjust payouts for fraudulent, disputed, or refunded transactions.
-• All payouts are subject to applicable taxes and regulatory deductions.`,
+      content: `RESET NETWORKS is entitled to a 15% platform fee on all Net Revenue generated from the Artist's Content.
+The remaining 85% of Net Revenue is remitted to the Artist within 15 days of each monthly accounting cycle.
+Payments are made via bank transfer, PayPal, or other designated modes.
+RESET NETWORKS may withhold or adjust payouts for fraudulent, disputed, or refunded transactions.
+All payouts are subject to applicable taxes and regulatory deductions.`,
     },
     {
       id: "artist-representations",
       title: "4. Artist Representations and Warranties",
-      content: `• The Artist is the sole owner or authorized licensee of the Content with full rights to grant licenses.
-• The Content does not infringe any third-party rights including copyrights, trademarks, or moral rights.
-• The Content does not contain defamatory, obscene, or unlawful material and complies with all applicable laws.
-• The Artist is responsible for obtaining and paying for all necessary rights, permissions, or clearances.`,
+      content: `The Artist is the sole owner or authorized licensee of the Content with full rights to grant licenses.
+The Content does not infringe any third-party rights including copyrights, trademarks, or moral rights.
+The Content does not contain defamatory, obscene, or unlawful material and complies with all applicable laws.
+The Artist is responsible for obtaining and paying for all necessary rights, permissions, or clearances.`,
     },
     {
       id: "obligations",
       title: "5. Obligations of RESET NETWORKS",
-      content: `• Host, distribute, and promote the Content professionally through digital platforms and partner channels.
-• Provide the Artist with access to analytics and periodic sales/streaming reports.
-• Ensure timely processing of Artist payouts as per the agreement.
-• Maintain technical systems to ensure uptime, security, and availability of the Content.`,
+      content: `Host, distribute, and promote the Content professionally through digital platforms and partner channels.
+Provide the Artist with access to analytics and periodic sales/streaming reports.
+Ensure timely processing of Artist payouts as per the agreement.
+Maintain technical systems to ensure uptime, security, and availability of the Content.`,
     },
     {
       id: "intellectual-property",
       title: "6. Intellectual Property and Usage Rights",
-      content: `• All rights, title, and interest in the Content remain with the Artist.
-• The Artist grants RESET NETWORKS a worldwide, non-exclusive, royalty-free, transferable license to use, reproduce, distribute, and promote the Content.
-• RESET NETWORKS may use the Artist's name, likeness, and artwork for platform-related promotional materials.
-• No transfer of ownership is implied by this Agreement.`,
+      content: `All rights, title, and interest in the Content remain with the Artist.
+The Artist grants RESET NETWORKS a worldwide, non-exclusive, royalty-free, transferable license to use, reproduce, distribute, and promote the Content.
+RESET NETWORKS may use the Artist's name, likeness, and artwork for platform-related promotional materials.
+No transfer of ownership is implied by this Agreement.`,
     },
     {
       id: "term-termination",
       title: "7. Term and Termination",
-      content: `• This Agreement commences on the Effective Date and continues until terminated by either Party.
-• The Artist may terminate by providing 30 days' written notice through the Artist Dashboard.
-• RESET NETWORKS may suspend or terminate immediately for breach of terms or infringing Content.
-• Upon termination, RESET NETWORKS shall remove the Content from the Platform within 30 days.
-• Termination does not affect rights or obligations accrued prior to termination.`,
+      content: `This Agreement commences on the Effective Date and continues until terminated by either Party.
+The Artist may terminate by providing 30 days' written notice through the Artist Dashboard.
+RESET NETWORKS may suspend or terminate immediately for breach of terms or infringing Content.
+Upon termination, RESET NETWORKS shall remove the Content from the Platform within 30 days.
+Termination does not affect rights or obligations accrued prior to termination.`,
     },
     {
       id: "confidentiality",
       title: "8. Confidentiality",
-      content: `• Both Parties shall keep confidential all non-public business, technical, and financial information.
-• Confidentiality obligations survive termination of this Agreement.
-• Royalty rates and payment terms are confidential and may not be disclosed.
-• Unreleased content is treated as confidential until publication.`,
+      content: ` Both Parties shall keep confidential all non-public business, technical, and financial information.
+ Confidentiality obligations survive termination of this Agreement.
+ Royalty rates and payment terms are confidential and may not be disclosed.
+ Unreleased content is treated as confidential until publication.`,
     },
     {
       id: "indemnity-liability",
       title: "9. Indemnity and Limitation of Liability",
-      content: `• The Artist indemnifies RESET NETWORKS against claims arising from the Artist's breach or violations of third-party rights.
-• RESET NETWORKS is not liable for indirect, incidental, consequential, or punitive damages.
-• Total aggregate liability of RESET NETWORKS shall not exceed the total commission earned in the 6 months preceding the claim.
-• The Artist is responsible for claims related to copyright infringement.`,
+      content: `The Artist indemnifies RESET NETWORKS against claims arising from the Artist's breach or violations of third-party rights.
+RESET NETWORKS is not liable for indirect, incidental, consequential, or punitive damages.
+Total aggregate liability of RESET NETWORKS shall not exceed the total commission earned in the 6 months preceding the claim.
+The Artist is responsible for claims related to copyright infringement.`,
     },
     {
       id: "taxes",
       title: "10. Taxes",
-      content: `• Each Party is responsible for its own applicable taxes arising from this Agreement.
-• RESET NETWORKS may deduct taxes as required under applicable law prior to remitting payouts.
-• Artists are responsible for declaring and paying taxes in their respective jurisdictions.`,
+      content: `Each Party is responsible for its own applicable taxes arising from this Agreement.
+RESET NETWORKS may deduct taxes as required under applicable law prior to remitting payouts.
+Artists are responsible for declaring and paying taxes in their respective jurisdictions.`,
     },
     {
       id: "governing-law",
       title: "11. Governing Law and Dispute Resolution",
-      content: `• For Artists based in India: Governed by laws of India, exclusive jurisdiction of courts in New Delhi.
-• For Artists outside India: Governed by laws of Estonia, exclusive jurisdiction of courts in Tallinn.
-• Disputes not resolved amicably within 30 days shall be referred to arbitration by a sole arbitrator.
-• Arbitration shall be conducted in English.`,
+      content: `For Artists based in India: Governed by laws of India, exclusive jurisdiction of courts in New Delhi.
+For Artists outside India: Governed by laws of Estonia, exclusive jurisdiction of courts in Tallinn.
+Disputes not resolved amicably within 30 days shall be referred to arbitration by a sole arbitrator.
+Arbitration shall be conducted in English.`,
     },
     {
       id: "miscellaneous-provisions",
       title: "12. Miscellaneous Provisions",
-      content: `• This Agreement constitutes the entire understanding between the Parties.
-• No modification is valid unless made in writing and accepted by both Parties.
-• Continued use of the Platform constitutes acceptance of updated terms.
-• Digital acceptance through the Platform constitutes binding consent.`,
+      content: `This Agreement constitutes the entire understanding between the Parties.
+No modification is valid unless made in writing and accepted by both Parties.
+Continued use of the Platform constitutes acceptance of updated terms.
+Digital acceptance through the Platform constitutes binding consent.`,
     },
   ];
 
@@ -281,7 +281,7 @@ const TermsAndConditions = () => {
               url: "https://musicreset.com",
               contactPoint: {
                 "@type": "ContactPoint",
-                email: "contact@reset93.net",
+                email: "support@musicreset.com",
                 contactType: "legal department",
                 areaServed: "Worldwide",
               },
@@ -579,10 +579,10 @@ const TermsAndConditions = () => {
                     <p>Reset Music Streaming Platform</p>
                     <div className="flex flex-col gap-1">
                       <a
-                        href="mailto:contact@reset93.net?subject=Terms and Conditions Inquiry"
+                        href="mailto:support@musicreset.com?subject=Terms and Conditions Inquiry"
                         className="text-blue-400 hover:underline"
                       >
-                        contact@reset93.net
+                        support@musicreset.com
                       </a>
                     </div>
                   </div>

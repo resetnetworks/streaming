@@ -1,16 +1,77 @@
 // src/components/user/CurrencySelectionModal.jsx
 import React, { useState, useEffect } from 'react';
 import { MdClose, MdAlbum } from 'react-icons/md';
-import { FaMusic, FaGlobeAmericas } from 'react-icons/fa';
-import { BiWorld } from 'react-icons/bi';
+import { FaMusic, FaLock } from 'react-icons/fa';
 
+// ─── 5 fixed currencies ────────────────────────────────────────────────────────
+const CURRENCIES = [
+  { currency: 'USD', symbol: '$',  name: 'US Dollar'    },
+  { currency: 'EUR', symbol: '€',  name: 'Euro'          },
+  { currency: 'GBP', symbol: '£',  name: 'British Pound' },
+  { currency: 'JPY', symbol: '¥',  name: 'Japanese Yen'  },
+  { currency: 'INR', symbol: '₹',  name: 'Indian Rupee'  },
+];
+
+const CURRENCY_MAP = Object.fromEntries(CURRENCIES.map((c) => [c.currency, c]));
+
+const formatAmount = (amount) => {
+  const n = Number(amount);
+  if (!n) return '0';
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+};
+
+// ─── Currency row — identical to SubscriptionMethodModal & PaymentMethodModal ──
+const CurrencyRow = ({ currency, symbol, name, amount, isBase, onClick }) => (
+  <button
+    onClick={onClick}
+    className="w-full flex items-center justify-between gap-3 px-4 py-3.5
+      bg-gray-800/60 hover:bg-gray-700/80 border border-gray-700 hover:border-gray-500
+      rounded-xl transition-all duration-200 group text-left"
+  >
+    {/* Left: symbol badge + currency info */}
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-700 border border-gray-600
+        flex items-center justify-center">
+        <span className="text-base font-bold text-white">{symbol}</span>
+      </div>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-white">{currency}</span>
+          {isBase && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded
+              bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 leading-none">
+              Base
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-gray-400 mt-0.5 truncate">{name}</div>
+      </div>
+    </div>
+
+    {/* Right: price + label + arrow */}
+    <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="text-right">
+        <div className="text-base font-bold text-white">
+          {symbol}{formatAmount(amount)}
+        </div>
+        <div className="text-[11px] text-gray-400 mt-0.5">one-time purchase</div>
+      </div>
+      <span className="text-gray-500 group-hover:text-white group-hover:translate-x-0.5
+        transition-all duration-200 text-sm">
+        →
+      </span>
+    </div>
+  </button>
+);
+
+// ─── Main component ────────────────────────────────────────────────────────────
 const CurrencySelectionModal = ({
   open,
   onClose,
   onSelectCurrency,
-  item, // Generic item (album/song)
-  itemType, // 'album' or 'song'
-  title // Optional custom title
+  item,
+  itemType,
+  title,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -18,291 +79,173 @@ const CurrencySelectionModal = ({
     if (open) {
       setIsVisible(true);
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => setIsVisible(false), 300);
+      return () => clearTimeout(t);
     }
   }, [open]);
 
-  // Helper function to get currency symbol
-  const getCurrencySymbol = (currency) => {
-    const symbols = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'JPY': '¥',
-      'INR': '₹',
-      'CAD': 'C$',
-      'AUD': 'A$',
-      'CHF': 'CHF',
-      'CNY': '¥',
-      'SEK': 'kr',
-      'NZD': 'NZ$',
-      'MXN': '$',
-      'SGD': 'S$',
-      'HKD': 'HK$',
-      'NOK': 'kr',
-      'TRY': '₺',
-      'RUB': '₽',
-      'BRL': 'R$',
-      'ZAR': 'R'
-    };
-    return symbols[currency] || currency;
-  };
-
-  // Helper function to get currency name
-  const getCurrencyName = (currency) => {
-    const names = {
-      'USD': 'US Dollar',
-      'EUR': 'Euro',
-      'GBP': 'British Pound',
-      'JPY': 'Japanese Yen',
-      'INR': 'Indian Rupee',
-      'CAD': 'Canadian Dollar',
-      'AUD': 'Australian Dollar',
-      'CHF': 'Swiss Franc',
-      'CNY': 'Chinese Yuan',
-      'SEK': 'Swedish Krona',
-      'NZD': 'New Zealand Dollar',
-      'MXN': 'Mexican Peso',
-      'SGD': 'Singapore Dollar',
-      'HKD': 'Hong Kong Dollar',
-      'NOK': 'Norwegian Krone',
-      'TRY': 'Turkish Lira',
-      'RUB': 'Russian Ruble',
-      'BRL': 'Brazilian Real',
-      'ZAR': 'South African Rand'
-    };
-    return names[currency] || currency;
-  };
-
-  // Get available currencies for the item
-  const getAvailableCurrencies = () => {
-    if (!item?.basePrice || !item?.convertedPrices) return [];
-    
-    return [
-      {
-        currency: item.basePrice.currency,
-        amount: item.basePrice.amount,
-        isBaseCurrency: true
-      },
-      ...item.convertedPrices.map(price => ({
-        currency: price.currency,
-        amount: price.amount,
-        isBaseCurrency: false
-      }))
-    ];
-  };
-
-  // Get gradient colors for currencies
-  const getCurrencyGradient = (index) => {
-    const gradients = [
-      'from-blue-600 to-blue-800',
-      'from-green-600 to-green-800',
-      'from-purple-600 to-purple-800',
-      'from-orange-600 to-orange-800',
-      'from-pink-600 to-pink-800',
-      'from-indigo-600 to-indigo-800',
-      'from-red-600 to-red-800',
-      'from-teal-600 to-teal-800',
-      'from-cyan-600 to-cyan-800',
-      'from-amber-600 to-amber-800'
-    ];
-    return gradients[index % gradients.length];
-  };
-
-  // Get display content based on itemType
-  const getDisplayContent = () => {
-    const baseContent = {
-      icon: itemType === 'album' ? MdAlbum : FaMusic,
-      iconColor: itemType === 'album' ? 'text-blue-400' : 'text-green-400',
-      purchaseType: itemType === 'album' ? 'Album Purchase' : 'Song Purchase',
-      itemTitle: item?.title || `Unknown ${itemType}`,
-      itemSubtitle: itemType === 'album' 
-        ? (item?.artist?.name || 'Various Artists') 
-        : (item?.album?.title || item?.artist?.name || 'Unknown Artist'),
-      benefits: itemType === 'album' 
-        ? [
-            'Lifetime access to album',
-            'High-quality audio download',
-            'Secure payment processing',
-            'Support the artist directly'
-          ]
-        : [
-            'Lifetime access to song',
-            'High-quality audio download',
-            'Secure payment processing', 
-            'Support the artist directly'
-          ]
-    };
-
-    return {
-      ...baseContent,
-      modalTitle: title || `Select Currency - ${baseContent.purchaseType}`
-    };
-  };
-
-  // Don't render if not open
   if (!open && !isVisible) return null;
-  
-  // Safety checks
-  if (open && !item) {
+  if (open && !item) return null;
+
+  // Build available prices: match item data to our 5 fixed currencies only
+  const getAmountForCurrency = (currency) => {
+    if (item?.basePrice?.currency === currency) {
+      return { amount: item.basePrice.amount, isBase: true };
+    }
+    const converted = item?.convertedPrices?.find((p) => p.currency === currency);
+    if (converted) return { amount: converted.amount, isBase: false };
+    // Fallback for USD if no basePrice set
+    if (currency === 'USD' && item?.price) return { amount: item.price, isBase: true };
     return null;
-  }
+  };
 
-  const availableCurrencies = getAvailableCurrencies();
-  const displayContent = getDisplayContent();
-  const IconComponent = displayContent.icon;
+  const availablePrices = CURRENCIES
+    .map((c) => {
+      const priceData = getAmountForCurrency(c.currency);
+      if (!priceData) return null;
+      return { ...c, amount: priceData.amount, isBase: priceData.isBase };
+    })
+    .filter(Boolean);
 
-  // Show message if no converted prices available
-  if (!availableCurrencies.length) {
+  const isAlbum       = itemType === 'album';
+  const IconComponent = isAlbum ? MdAlbum : FaMusic;
+  const iconColor     = isAlbum ? 'text-blue-400' : 'text-green-400';
+  const purchaseType  = isAlbum ? 'Album Purchase' : 'Song Purchase';
+  const itemTitle     = item?.title || `Unknown ${itemType || 'item'}`;
+  const itemSubtitle  = isAlbum
+    ? (item?.artist?.name || 'Various Artists')
+    : (item?.album?.title || item?.artist?.name || 'Unknown Artist');
+
+  const benefits = isAlbum
+    ? ['Lifetime access to album', 'High-quality audio download', 'Secure payment processing', 'Support the artist directly']
+    : ['Lifetime access to song',  'High-quality audio download', 'Secure payment processing', 'Support the artist directly'];
+
+  // No currencies available fallback
+  if (open && !availablePrices.length) {
     return (
-      <>
-        <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="absolute inset-0 bg-black bg-opacity-75" onClick={onClose} />
-          <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6 border border-gray-700">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold flex items-center gap-3">
-                <IconComponent className={`w-6 h-6 ${displayContent.iconColor}`} />
-                Currency Selection
-              </h2>
-              <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700 transition-colors">
-                <MdClose className="w-6 h-6 text-gray-400" />
-              </button>
-            </div>
-            <div className="text-center py-8">
-              <p className="text-gray-300 mb-4">No currency options available for this {itemType}.</p>
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
+      <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300
+        ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      >
+        <div className="absolute inset-0 bg-black/75" onClick={onClose} />
+        <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white
+          rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 border border-gray-700">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-base font-semibold flex items-center gap-2">
+              <IconComponent className={`w-4 h-4 ${iconColor}`} />
+              Select Currency
+            </h2>
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-700 transition-colors">
+              <MdClose className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+          <div className="text-center py-8">
+            <p className="text-gray-400 text-sm mb-4">No currency options available for this {itemType || 'item'}.</p>
+            <button onClick={onClose}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm">
+              Close
+            </button>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}>
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black bg-opacity-75"
-          onClick={onClose}
-        />
+    <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300
+      ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+    >
+      <div className="absolute inset-0 bg-black/75" onClick={onClose} />
 
-        {/* Modal Content */}
-        <div className={`relative bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6 border border-gray-700 transition-transform duration-300 ${open ? 'scale-100' : 'scale-95'} max-h-[90vh] overflow-y-auto custom-scrollbar`}>
-          
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
-            <h2 className="text-xl font-bold flex items-center gap-3">
-              <IconComponent className={`w-6 h-6 ${displayContent.iconColor}`} />
-              Select Currency
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-700 transition-colors"
-            >
-              <MdClose className="w-6 h-6 text-gray-400" />
+      <div className={`relative bg-gradient-to-br from-gray-900 to-gray-800 text-white
+        rounded-2xl shadow-2xl w-full mx-4 border border-gray-700
+        transition-transform duration-300 ${open ? 'scale-100' : 'scale-95'}
+        max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}
+      >
+        <div className="p-5 sm:p-6 flex flex-col gap-5">
+
+          {/* ── Header ── */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700
+                flex items-center justify-center shrink-0">
+                <img src={`${window.location.origin}/icon.png`} alt="logo"
+                  className="w-5 h-5 object-contain" />
+              </div>
+              <h2 className="text-base sm:text-lg font-semibold text-white">
+                {title || 'Select Currency'}
+              </h2>
+            </div>
+            <button onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-gray-700 transition-colors shrink-0">
+              <MdClose className="w-5 h-5 text-gray-400" />
             </button>
           </div>
 
-          {/* Item Info */}
-          <div className="text-center mb-6 p-4 bg-gray-800 rounded-xl border border-gray-700">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <IconComponent className={`w-4 h-4 ${displayContent.iconColor}`} />
-              <p className="text-sm text-gray-400 uppercase tracking-wider">
-                {displayContent.purchaseType}
-              </p>
+          {/* ── Item info card ── */}
+          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <IconComponent className={`w-3 h-3 ${iconColor} shrink-0`} />
+              <span className="text-[11px] text-gray-400 uppercase tracking-widest font-medium">
+                {purchaseType}
+              </span>
             </div>
-            <p className="text-lg font-medium text-white truncate">{displayContent.itemTitle}</p>
-            <p className="text-sm text-gray-300 mt-1">{displayContent.itemSubtitle}</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{itemTitle}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{itemSubtitle}</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
               Choose your preferred currency for purchase
             </p>
           </div>
 
-          {/* Currency Selection Grid */}
-          <div className="space-y-3 mb-6">
-            <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2 mb-4">
-              <FaGlobeAmericas className="w-4 h-4" />
-              Available Currencies ({availableCurrencies.length})
-            </h3>
-            
-            <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-              {availableCurrencies.map((currencyOption, index) => {
-                const currency = currencyOption.currency;
-                const amount = currencyOption.amount;
-                const symbol = getCurrencySymbol(currency);
-                const currencyName = getCurrencyName(currency);
-                const gradient = getCurrencyGradient(index);
-
-                return (
-                  <button
-                    key={`${currency}-${index}`}
-                    onClick={() => onSelectCurrency(currencyOption)}
-                    className={`w-full p-4 rounded-xl border border-gray-600 bg-gradient-to-r ${gradient} hover:scale-[1.02] text-white transition-all duration-300 flex items-center justify-between shadow-lg group hover:shadow-xl relative overflow-hidden`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center sm:w-12 sm:h-12 h-10 w-10 bg-black bg-opacity-30 rounded-lg border border-white border-opacity-20">
-                        <span className="md:text-xl text-lg font-bold">{symbol}</span>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-semibold md:text-lg text-base">{currency}</div>
-                        <div className="text-xs text-gray-200 mt-1">{currencyName}</div>
-                        {currencyOption.isBaseCurrency && (
-                          <div className="text-xs text-yellow-300 mt-1">Base Price</div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="md:text-2xl text-xl font-bold">
-                        {symbol}{amount % 1 === 0 ? amount : amount.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-gray-200">
-                        one-time purchase
-                      </div>
-                    </div>
-                    
-                    <div className="text-xl opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1">
-                      →
-                    </div>
-                  </button>
-                );
-              })}
+          {/* ── Currency list ── */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                Available Currencies
+              </h3>
+              <span className="text-xs text-gray-500">{availablePrices.length} options</span>
             </div>
-          </div>
-
-          {/* Purchase Benefits */}
-          <div className={`mt-4 p-4 bg-gradient-to-r ${itemType === 'album' ? 'from-blue-900/30 to-indigo-900/30 border-blue-700/50' : 'from-green-900/30 to-emerald-900/30 border-green-700/50'} rounded-lg border backdrop-blur-sm`}>
-            <div className="flex items-center gap-2 mb-3">
-              <IconComponent className={`w-5 h-5 ${itemType === 'album' ? 'text-blue-300' : 'text-green-300'}`} />
-              <h4 className={`text-sm font-semibold ${itemType === 'album' ? 'text-blue-300' : 'text-green-300'}`}>Purchase Benefits:</h4>
-            </div>
-            <ul className={`text-xs ${itemType === 'album' ? 'text-blue-200' : 'text-green-200'} space-y-2`}>
-              {displayContent.benefits.map((benefit, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  <span className={`w-1 h-1 ${itemType === 'album' ? 'bg-blue-400' : 'bg-green-400'} rounded-full`}></span>
-                  {benefit}
-                </li>
+            <div className="flex flex-col gap-2">
+              {availablePrices.map((price) => (
+                <CurrencyRow
+                  key={price.currency}
+                  currency={price.currency}
+                  symbol={price.symbol}
+                  name={price.name}
+                  amount={price.amount}
+                  isBase={price.isBase}
+                  onClick={() => onSelectCurrency({
+                    currency: price.currency,
+                    amount: price.amount,
+                    symbol: price.symbol,
+                    isBaseCurrency: price.isBase,
+                  })}
+                />
               ))}
-            </ul>
+            </div>
           </div>
 
-          {/* Cancel Button */}
-          <button
-            onClick={onClose}
-            className="w-full mt-6 px-4 py-3 border border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600 rounded-xl transition-all duration-300 font-medium"
-          >
+          {/* ── Security note ── */}
+          <div className="flex items-center justify-center gap-2 pt-4 border-t border-gray-700/50
+            text-xs text-gray-500">
+            <FaLock className="w-3 h-3 shrink-0" />
+            <span>Secure & encrypted payment processing</span>
+          </div>
+
+          {/* ── Cancel ── */}
+          <button onClick={onClose}
+            className="w-full py-2.5 border border-gray-700 text-gray-400
+              hover:bg-gray-800 hover:text-gray-300 rounded-xl transition-colors
+              duration-200 font-medium text-sm">
             Cancel
           </button>
+
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

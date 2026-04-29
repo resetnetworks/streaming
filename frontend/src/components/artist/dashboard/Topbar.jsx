@@ -12,6 +12,8 @@ const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
     displayText = "Single Upload";
   } else if (currentUploadPage === "album") {
     displayText = "Album Upload";
+  } else if (currentUploadPage === "mix"){
+    displayText = "Mix Upload";
   } else if (selectedTab === "home") {
     displayText = <>welcome, <span className='font-semibold'>allison malone</span></>;
   } else if (selectedTab === "uploads") {

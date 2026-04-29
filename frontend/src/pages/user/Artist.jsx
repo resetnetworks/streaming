@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
@@ -18,8 +18,8 @@ import { useArtistAlbumsSimple } from "../../hooks/api/useAlbums";
 import { selectPaymentError } from "../../features/payments/paymentSelectors";
 import { useSubscriptionPayment } from "../../hooks/useSubscriptionPayment";
 import { usePaymentGateway } from "../../hooks/usePaymentGateway";
-import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
-import { useUserPurchases } from "../../hooks/api/useUserDashboard";
+import { useUserPurchases, useUserSubscriptions } from "../../hooks/api/useUserDashboard";
+import LoginRequiredModal from "../../components/user/LoginRequiredModal"
 
 const Artist = () => {
   const { artistId } = useParams();
@@ -27,15 +27,24 @@ const Artist = () => {
   const heroSectionRef = useRef(null);
   const [isInView, setIsInView] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [loginModal, setLoginModal] = useState({
+  open: false,
+  type: "play",
+  contentType: "song",
+  data: null,
+});
   const dispatch = useDispatch();
 
   const currentUser = useSelector((state) => state.auth.user);
 
-  // ✅ Unconditionally call — hook ke andar enabled: !!currentUser already hai
   const { data: purchasesData } = useUserPurchases();
   const userPurchases = Array.isArray(purchasesData?.history)
     ? purchasesData.history
     : [];
+
+  // ✅ Real API se subscriptions fetch karo — localStorage nahi
+  const { data: subscriptionsData } = useUserSubscriptions();
+  const userSubscriptions = subscriptionsData?.subscriptions || [];
 
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -44,6 +53,19 @@ const Artist = () => {
 
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const requireLogin = (type, contentType, data = null) => {
+  if (!currentUser) {
+    setLoginModal({
+      open: true,
+      type,
+      contentType,
+      data,
+    });
+    return false;
+  }
+  return true;
+};
 
   const {
     data: artist,
@@ -77,6 +99,16 @@ const Artist = () => {
     getPaymentDisplayInfo,
   } = usePaymentGateway();
 
+  // ✅ Real API data se subscription check — artist load hone ke baad
+  const isSubscribedToCurrentArtist = useMemo(() => {
+    if (!artist || !userSubscriptions.length) return false;
+    return userSubscriptions.some(
+      (sub) =>
+        sub.artist?._id === artist?._id ||
+        sub.artist?.slug === artist?.slug
+    );
+  }, [userSubscriptions, artist]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => setIsInView(entry.isIntersecting),
@@ -100,26 +132,27 @@ const Artist = () => {
     setSubscriptionLoading(false);
   };
 
-  const handlePurchaseClick = (item, itemType, currencyData = null) => {
-    setProcessingPayment(false);
-    setPaymentLoading(false);
-    openPaymentOptions(item, itemType, currencyData);
-  };
+ const handlePurchaseClick = (item, itemType) => {
+  setProcessingPayment(false);
+  setPaymentLoading(false);
+  openPaymentOptions(item, itemType); // no currencyData needed
+};
 
-  const handlePaymentMethodSelect = async (gateway) => {
-    try {
-      setProcessingPayment(true);
-      setPaymentLoading(true);
-      await originalHandlePaymentMethodSelect(gateway);
-    } catch (error) {
-      console.error("Payment method selection error:", error);
-    } finally {
-      setTimeout(() => {
-        setProcessingPayment(false);
-        setPaymentLoading(false);
-      }, 1000);
-    }
-  };
+const handlePaymentMethodSelect = async (gateway, currencyInfo) => {
+  try {
+    setProcessingPayment(true);
+    setPaymentLoading(true);
+    // Pass the selected currency info to the original handler
+    await originalHandlePaymentMethodSelect(gateway, currencyInfo);
+  } catch (error) {
+    console.error("Payment method selection error:", error);
+  } finally {
+    setTimeout(() => {
+      setProcessingPayment(false);
+      setPaymentLoading(false);
+    }, 1000);
+  }
+};
 
   const handleClosePaymentOptions = () => {
     setProcessingPayment(false);
@@ -127,37 +160,43 @@ const Artist = () => {
     closePaymentOptions();
   };
 
-  const handleSubscribeDecision = (artist, type, data) => {
-    const alreadySubscribed = hasArtistSubscriptionInPurchaseHistory(
-      currentUser,
-      artist
-    );
+  // ✅ localStorage/purchaseHistory hatao — real subscription data use karo
+  const handleSubscribeDecision = (targetArtist, type, data) => {
 
-    if (type === "purchase") {
-      if (alreadySubscribed) {
-        const itemType = data.type || "song";
-        handlePurchaseClick(data, itemType);
-        return;
-      }
-      setModalArtist(artist);
-      setModalType(type);
-      setModalData(data);
-      setSubscribeModalOpen(true);
+  // ✅ FIRST: login check
+  if (!requireLogin(type, data?.type || "song", data)) return;
+
+  const alreadySubscribed = userSubscriptions.some(
+    (sub) =>
+      sub.artist?._id === targetArtist?._id ||
+      sub.artist?.slug === targetArtist?.slug
+  );
+
+  if (type === "purchase") {
+    if (alreadySubscribed) {
+      const itemType = data.type || "song";
+      handlePurchaseClick(data, itemType);
       return;
     }
-
-    if (type === "play") {
-      if (alreadySubscribed) {
-        setSubscribeModalOpen(false);
-        return;
-      }
-    }
-
-    setModalArtist(artist);
+    setModalArtist(targetArtist);
     setModalType(type);
     setModalData(data);
     setSubscribeModalOpen(true);
-  };
+    return;
+  }
+
+  if (type === "play") {
+    if (alreadySubscribed) {
+      setSubscribeModalOpen(false);
+      return;
+    }
+  }
+
+  setModalArtist(targetArtist);
+  setModalType(type);
+  setModalData(data);
+  setSubscribeModalOpen(true);
+};
 
   if (isArtistLoading) {
     return (
@@ -246,6 +285,7 @@ const Artist = () => {
             subscriptionLoading={subscriptionLoading}
             setSubscriptionLoading={setSubscriptionLoading}
             subscriberCountData={subscriberCountData}
+            requireLogin={requireLogin}
           />
         </div>
 
@@ -267,6 +307,7 @@ const Artist = () => {
           onSubscribeRequired={handleSubscribeDecision}
           processingPayment={processingPayment}
           paymentLoading={paymentLoading}
+          userSubscriptions={userSubscriptions}
         />
 
         <ArtistAboutSection
@@ -305,6 +346,15 @@ const Artist = () => {
           onClose={handleSubscribeModalClose}
           onNavigate={handleNavigateToArtist}
         />
+
+        <LoginRequiredModal
+  open={loginModal.open}
+  onClose={() => setLoginModal(prev => ({ ...prev, open: false }))}
+  type={loginModal.type}
+  contentType={loginModal.contentType}
+  itemData={loginModal.data}
+  onLogin={() => navigate("/login")}
+/>
       </SkeletonTheme>
     </>
   );

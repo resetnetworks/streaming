@@ -403,6 +403,7 @@ const authSlice = createSlice({
           name: action.payload.name || currentUser.name || "",
           email: action.payload.email || currentUser.email || "",
           profileImage: action.payload.profileImage || currentUser.profileImage || "",
+          role: action.payload.role || currentUser.role || "user",
           purchasedSongs: action.payload.purchasedSongs || [],
           purchasedAlbums: action.payload.purchasedAlbums || [],
           likedsong: action.payload.likedsong || [],
@@ -415,12 +416,11 @@ const authSlice = createSlice({
         storeAuthToLocal(user);
       })
       .addCase(getMyProfile.rejected, (state) => {
-        if (state.isAuthenticated) {
-    state.user = null;
-    state.isAuthenticated = false;
-  }
-        state.status = "failed";
-      })
+  state.user = null;           // ✅ user clear
+  state.isAuthenticated = false;
+  state.status = "failed";
+  clearAuthFromLocal();        // ✅ localStorage bhi clear
+})
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;

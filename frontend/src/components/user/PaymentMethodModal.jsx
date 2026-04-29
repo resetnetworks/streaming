@@ -1,312 +1,536 @@
 // src/components/user/PaymentMethodModal.jsx
-import React, { useState, useEffect } from 'react';
-import { FaMusic, FaLock } from 'react-icons/fa';
-import { MdClose } from 'react-icons/md';
-import { SiRazorpay } from 'react-icons/si';
-import { FaPaypal } from 'react-icons/fa6';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaLock, FaChevronDown, FaMusic } from "react-icons/fa";
+import { MdClose, MdAlbum } from "react-icons/md";
+import { SiRazorpay } from "react-icons/si";
+import { FaPaypal, FaStripe } from "react-icons/fa";
 
+// ---------- Constants ----------
+const CURRENCIES = [
+  { currency: "USD", symbol: "$", name: "US Dollar" },
+  { currency: "EUR", symbol: "€", name: "Euro" },
+  { currency: "GBP", symbol: "£", name: "British Pound" },
+  { currency: "JPY", symbol: "¥", name: "Japanese Yen" },
+  { currency: "INR", symbol: "₹", name: "Indian Rupee" },
+];
+
+const PAYPAL_SUPPORTED = ["USD", "EUR", "GBP", "JPY"];
+
+const formatAmount = (amount) => {
+  const n = Number(amount);
+  if (!n) return "0";
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+};
+
+// ---------- Portal Dropdown (floating) ----------
+const PortalDropdown = ({ triggerRef, open, onClose, children }) => {
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const dropdownRef = useRef(null);
+
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [triggerRef]);
+
+  useEffect(() => {
+    if (open) {
+      updatePosition();
+      window.addEventListener("resize", updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      return () => {
+        window.removeEventListener("resize", updatePosition);
+        window.removeEventListener("scroll", updatePosition, true);
+      };
+    }
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target)
+      ) {
+        onClose();
+      }
+    };
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [open, onClose, triggerRef]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <motion.div
+      ref={dropdownRef}
+      initial={{ opacity: 0, y: -8, scaleY: 0.96 }}
+      animate={{ opacity: 1, y: 0, scaleY: 1 }}
+      exit={{ opacity: 0, y: -8, scaleY: 0.96 }}
+      transition={{ type: "spring", damping: 28, stiffness: 320 }}
+      style={{
+        position: "fixed",
+        top: position.top,
+        left: position.left,
+        width: position.width,
+        zIndex: 9999,
+        transformOrigin: "top",
+      }}
+      className="bg-[#181c22] border border-white/[0.07] rounded-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.6)] overflow-hidden"
+    >
+      <div className="max-h-64 overflow-y-auto no-scrollbar">{children}</div>
+    </motion.div>,
+    document.body,
+  );
+};
+
+// ---------- Currency Dropdown Item ----------
+const CurrencyDropdownItem = ({ currency, symbol, amount, name, onClick }) => (
+  <button
+    onClick={onClick}
+    className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.04] transition-colors text-left group"
+  >
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white font-bold text-sm">
+        {symbol}
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-[#e0e2ec]">{currency}</div>
+        <div className="text-xs text-[#8b919f]">{name}</div>
+      </div>
+    </div>
+    <div className="font-bold text-sm text-[#e0e2ec]">
+      {symbol}
+      {formatAmount(amount)}
+    </div>
+  </button>
+);
+
+// ---------- Gateway Button ----------
+const GatewayButton = ({ id, name, description, icon, badge, onClick }) => {
+  const configs = {
+    stripe: {
+      iconBg: "bg-white-500/10 border-white-500/20",
+      iconColor: "text-white",
+      hoverBorder: "hover:border-blue-500/40",
+    },
+    razorpay: {
+      iconBg: "bg-white-500/10 border-white-500/20",
+      iconColor: "text-white",
+      hoverBorder: "hover:border-blue-500/40",
+    },
+    paypal: {
+      iconBg: "bg-white-500/10 border-white-500/20",
+      iconColor: "text-white",
+      hoverBorder: "hover:border-blue-500/40",
+    },
+  };
+
+  const cfg = configs[id] || configs.stripe;
+
+  return (
+    <motion.button
+      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      onClick={onClick}
+      className={`w-full flex items-center gap-5 px-5 py-4 
+        bg-[#0b0e15] border border-white/[0.06] ${cfg.hoverBorder}
+        rounded-xl transition-all duration-200 group
+        shadow-[0_2px_12px_rgba(0,0,0,0.2)]
+        `}
+    >
+      {/* Icon */}
+      <div
+        className={`w-12 h-12 rounded-xl ${cfg.iconBg} border 
+          flex items-center justify-center shrink-0
+          transition-transform duration-200`}
+      >
+        {React.cloneElement(icon, {
+          className: `w-6 h-6 ${cfg.iconColor}`,
+        })}
+      </div>
+
+      {/* Text */}
+      <div className="text-left flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="font-bold text-[15px] text-[#e0e2ec]">{name}</h3>
+          {badge && (
+            <span
+              className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold 
+                uppercase tracking-widest bg-[#aac7ff]/10 text-[#aac7ff] border border-[#aac7ff]/20"
+            >
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="text-[12px] text-[#8b919f] mt-0.5 font-medium">
+          {description}
+        </p>
+      </div>
+
+      {/* Arrow */}
+      <motion.span
+        initial={{ x: 0, opacity: 0.4 }}
+        whileHover={{ x: 3, opacity: 1 }}
+        className="text-[#414753] group-hover:text-[#aac7ff] transition-colors duration-200 shrink-0 text-lg"
+      >
+        ›
+      </motion.span>
+    </motion.button>
+  );
+};
+
+// ---------- Main Modal ----------
 const PaymentMethodModal = ({
   open,
   onClose,
   onSelectMethod,
   item,
   itemType,
-  currencyData = null, // ✅ Add currency data prop
-  getPaymentDisplayInfo = null // ✅ Add helper function prop
+  currencyData = null,
+  getPaymentDisplayInfo = null,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [selectedPrice, setSelectedPrice] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const triggerRef = useRef(null);
+
+  // Build available prices from item data
+  const availablePrices = useMemo(() => {
+    const getAmountForCurrency = (currency) => {
+      if (item?.basePrice?.currency === currency) {
+        return { amount: item.basePrice.amount, isBase: true };
+      }
+      const converted = item?.convertedPrices?.find(
+        (p) => p.currency === currency,
+      );
+      if (converted) return { amount: converted.amount, isBase: false };
+      // fallback for legacy price field
+      if (currency === "USD" && item?.price)
+        return { amount: item.price, isBase: true };
+      return null;
+    };
+
+    return CURRENCIES.map((c) => {
+      const priceData = getAmountForCurrency(c.currency);
+      if (!priceData) return null;
+      return { ...c, amount: priceData.amount, isBase: priceData.isBase };
+    }).filter(Boolean);
+  }, [item]);
+
+  // Auto-select best currency when modal opens
+  useEffect(() => {
+    if (open && availablePrices.length > 0 && !selectedPrice) {
+      const userLocale =
+        typeof navigator !== "undefined" ? navigator.language : "en-US";
+      const getCurrencyFromLocale = (locale) => {
+        if (!locale) return "USD";
+        const map = {
+          IN: "INR",
+          US: "USD",
+          GB: "GBP",
+          JP: "JPY",
+          DE: "EUR",
+          FR: "EUR",
+          ES: "EUR",
+          IT: "EUR",
+        };
+        const countryCode = locale.split("-")[1];
+        return map[countryCode] || "USD";
+      };
+      const detected = getCurrencyFromLocale(userLocale);
+      const preferred =
+        availablePrices.find((p) => p.currency === detected) ||
+        availablePrices.find((p) => p.currency === "USD") ||
+        availablePrices[0];
+      setSelectedPrice(preferred);
+    }
+    if (!open) setSelectedPrice(null);
+  }, [open, availablePrices]);
 
   useEffect(() => {
-    if (open) {
-      setIsVisible(true);
+  if (!open) {
+    setDropdownOpen(false);
+  }
+}, [open]);
+
+  if (!open || !item) return null;
+
+  const isAlbum = itemType === "album";
+  const IconComponent = isAlbum ? MdAlbum : FaMusic;
+  const iconColor = isAlbum ? "text-blue-400" : "text-green-400";
+  const purchaseType = isAlbum ? "Album Purchase" : "Song Purchase";
+  const itemTitle = item?.title || "Unknown Item";
+  const itemSubtitle = isAlbum
+    ? item?.artist?.name || "Various Artists"
+    : item?.album?.title || item?.artist?.name || "Unknown Artist";
+
+  const getGatewaysForCurrency = (currency) => {
+    const isINR = currency === "INR";
+    const paypalOk = PAYPAL_SUPPORTED.includes(currency);
+    const list = [];
+
+    if (isINR) {
+      list.push({
+        id: "razorpay",
+        name: "Razorpay",
+        description: "UPI, Cards, Net Banking & Wallets",
+        icon: <SiRazorpay />,
+        badge: "Instant",
+      });
+      list.push({
+        id: "stripe",
+        name: "Stripe",
+        description: "Cards, Apple Pay, Google Pay",
+        icon: <FaStripe />,
+        badge: null,
+      });
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [open]);
-
-  // ✅ Helper function to get currency symbol with null safety
-  const getCurrencySymbol = (currency) => {
-    if (!currency) return '$'; // Default fallback
-    
-    const symbols = {
-      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'INR': '₹',
-      'CAD': 'C$', 'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr',
-      'NZD': 'NZ$', 'MXN': '$', 'SGD': 'S$', 'HKD': 'HK$', 'NOK': 'kr',
-      'TRY': '₺', 'RUB': '₽', 'BRL': 'R$', 'ZAR': 'R'
-    };
-    return symbols[currency] || currency;
-  };
-
-  // ✅ PayPal supported currencies list (PayPal doesn't support INR)
-  const paypalSupportedCurrencies = [
-    'AUD', 'BRL', 'CAD', 'CNY', 'CZK', 'DKK', 'EUR', 'HKD', 
-    'HUF', 'ILS', 'JPY', 'MYR', 'MXN', 'TWD', 'NZD', 'NOK', 
-    'PHP', 'PLN', 'GBP', 'SGD', 'SEK', 'CHF', 'THB', 'USD'
-  ];
-
-  // ✅ Razorpay supports 130+ currencies including all major ones
-  const razorpaySupportedCurrencies = [
-    // Major currencies
-    'USD', 'EUR', 'GBP', 'JPY', 'INR', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK',
-    'NZD', 'MXN', 'SGD', 'HKD', 'NOK', 'TRY', 'RUB', 'BRL', 'ZAR',
-    // Additional currencies supported by Razorpay
-    'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AWG', 'AZN',
-    'BAM', 'BBD', 'BDT', 'BGN', 'BHD', 'BIF', 'BMD', 'BND', 'BOB',
-    'BSD', 'BTN', 'BWP', 'BYN', 'BZD', 'CDF', 'CLF', 'CLP', 'COP',
-    'CRC', 'CUC', 'CUP', 'CVE', 'CZK', 'DJF', 'DOP', 'DZD', 'EGP',
-    'ERN', 'ETB', 'FJD', 'FKP', 'GEL', 'GGP', 'GHS', 'GIP', 'GMD',
-    'GNF', 'GTQ', 'GYD', 'HNL', 'HRK', 'HTG', 'HUF', 'IDR', 'ILS',
-    'IMP', 'IQD', 'IRR', 'ISK', 'JEP', 'JMD', 'JOD', 'KES', 'KGS',
-    'KHR', 'KMF', 'KPW', 'KRW', 'KWD', 'KYD', 'KZT', 'LAK', 'LBP',
-    'LKR', 'LRD', 'LSL', 'LYD', 'MAD', 'MDL', 'MGA', 'MKD', 'MMK',
-    'MNT', 'MOP', 'MRU', 'MUR', 'MVR', 'MWK', 'MZN', 'NAD', 'NGN',
-    'NIO', 'NPR', 'OMR', 'PAB', 'PEN', 'PGK', 'PKR', 'PYG', 'QAR',
-    'RON', 'RSD', 'RWF', 'SAR', 'SBD', 'SCR', 'SDG', 'SHP', 'SLE',
-    'SLL', 'SOS', 'SRD', 'STD', 'STN', 'SVC', 'SYP', 'SZL', 'TJS',
-    'TMT', 'TND', 'TOP', 'TTD', 'TVD', 'TWD', 'TZS', 'UAH', 'UGX',
-    'UYU', 'UZS', 'VED', 'VES', 'VND', 'VUV', 'WST', 'XAF', 'XCD',
-    'XDR', 'XOF', 'XPF', 'YER', 'ZMW', 'ZWL'
-  ];
-
-  // ✅ Get payment display information with null safety
-  const getDisplayInfo = () => {
-    // Use helper function if available
-    if (getPaymentDisplayInfo) {
-      return getPaymentDisplayInfo();
-    }
-
-    // Fallback logic with null safety
-    if (currencyData && currencyData.currency) {
-      return {
-        amount: currencyData.amount || 0,
-        currency: currencyData.currency,
-        symbol: currencyData.symbol || getCurrencySymbol(currencyData.currency),
-        displayPrice: `${currencyData.symbol || getCurrencySymbol(currencyData.currency)}${currencyData.amount || 0}`,
-        isBaseCurrency: currencyData.isBaseCurrency || false
-      };
-    }
-    
-    if (item?.basePrice && item.basePrice.currency) {
-      const symbol = getCurrencySymbol(item.basePrice.currency);
-      return {
-        amount: item.basePrice.amount || 0,
-        currency: item.basePrice.currency,
-        symbol,
-        displayPrice: `${symbol}${item.basePrice.amount || 0}`,
-        isBaseCurrency: true
-      };
-    }
-    
-    // Final fallback with safe defaults
-    return {
-      amount: item?.price || 0,
-      currency: 'USD',
-      symbol: '$',
-      displayPrice: `$${item?.price || 0}`,
-      isBaseCurrency: true
-    };
-  };
-
-  // ✅ Get filtered payment methods based on currency with comprehensive support
-  const getAvailablePaymentMethods = (selectedCurrency) => {
-    if (!selectedCurrency) return []; // Return empty if no currency
-
-    const allMethods = [
-      {
-        id: 'razorpay',
-        name: 'Razorpay',
-        description: 'UPI, Cards, Net Banking & Wallets',
-        icon: <SiRazorpay className="w-7 h-7 text-blue-400" />,
-        color: 'from-blue-900 to-blue-800',
-        border: 'border-blue-700',
-        hover: 'hover:from-blue-800 hover:to-blue-700',
-        supportedCurrencies: razorpaySupportedCurrencies
-      },
-      {
-        id: 'paypal',
-        name: 'PayPal',
-        description: 'Secure PayPal payment',
-        icon: <FaPaypal className="w-6 h-6 text-blue-300" />,
-        color: 'from-indigo-900 to-indigo-800',
-        border: 'border-indigo-700',
-        hover: 'hover:from-indigo-800 hover:to-indigo-700',
-        supportedCurrencies: paypalSupportedCurrencies
+      list.push({
+        id: "stripe",
+        name: "Stripe",
+        description: "Cards, Apple Pay, Google Pay",
+        icon: <FaStripe />,
+        badge: "Recommended",
+      });
+      list.push({
+        id: "razorpay",
+        name: "Razorpay",
+        description: "UPI, Cards, Net Banking & Wallets",
+        icon: <SiRazorpay />,
+        badge: null,
+      });
+      if (paypalOk) {
+        list.push({
+          id: "paypal",
+          name: "PayPal",
+          description: "Secure PayPal payment",
+          icon: <FaPaypal />,
+          badge: null,
+        });
       }
-    ];
+    }
+    return list;
+  };
 
-    // Filter methods based on selected currency
-    return allMethods.filter(method => {
-      return method.supportedCurrencies.includes(selectedCurrency);
+  const gateways = selectedPrice
+    ? getGatewaysForCurrency(selectedPrice.currency)
+    : [];
+
+  const handleGatewaySelect = (gatewayId) => {
+    if (!selectedPrice) return;
+    const { currency, amount, symbol } = selectedPrice;
+    onSelectMethod(gatewayId, {
+      currency,
+      amount,
+      symbol,
+      isBaseCurrency: selectedPrice.isBase,
     });
   };
 
-  if (!open && !isVisible) return null;
-  
-  if (open && !item) return null;
-
-  const displayInfo = getDisplayInfo();
-  const availablePaymentMethods = getAvailablePaymentMethods(displayInfo?.currency);
+  const priceVariants = {
+    initial: { opacity: 0, y: 6 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -6 },
+  };
 
   return (
-    <>
-      <div className={`fixed inset-0 z-40 flex items-center justify-center transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black bg-opacity-70"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
           onClick={onClose}
-        />
-
-        {/* Modal Content */}
-        <div className={`relative bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6 border border-gray-700 transition-transform duration-300 ${open ? 'scale-100' : 'scale-95'}`}>
-          
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              <div className="p-2 bg-gray-800 rounded-lg">
-                <img src={`${window.location.origin}/icon.png`} alt="resetmusic logo icon" className="w-6 h-6" />
-              </div>
-              Select Payment Method
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-700 transition-colors"
-            >
-              <MdClose className="w-6 h-6 text-gray-400" />
-            </button>
-          </div>
-
-          {/* Item Info with Currency */}
-          <div className="text-center mb-6 p-4 bg-gray-800 rounded-xl border border-gray-700">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <FaMusic className="w-4 h-4 text-blue-400" />
-              <p className="text-sm text-gray-400 uppercase tracking-wider">
-                {itemType === 'album' ? 'Album Purchase' : 'Single Purchase'}
-              </p>
-            </div>
-            
-            <p className="text-lg font-medium text-white truncate">
-              {item?.title || 'Unknown Item'}
-            </p>
-            
-            <p className="text-sm text-gray-300 mt-1">
-              {item?.artist?.name || 'Various Artists'}
-            </p>
-            
-            {/* ✅ Enhanced Price Display with Currency Info and null safety */}
-            <div className="mt-4">
-              <p className="text-3xl font-bold text-blue-400 mb-2">
-                {displayInfo?.displayPrice || '$0'}
-              </p>
-              
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                  {displayInfo?.currency || 'USD'}
-                </span>
-                
-                {displayInfo?.isBaseCurrency && (
-                  <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded border border-yellow-400/20">
-                    Base Price
-                  </span>
-                )}
-              </div>
-              
-              <p className="text-xs text-gray-500 mt-2">
-                One-time purchase • Lifetime access
-              </p>
-            </div>
-          </div>
-
-          {/* Payment Methods */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-300 mb-3">
-              Choose Payment Method:
-            </h3>
-            
-            {availablePaymentMethods.length > 0 ? (
-              availablePaymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  onClick={() => onSelectMethod(method.id)}
-                  className={`w-full p-4 rounded-xl border ${method.border} bg-gradient-to-r ${method.color} ${method.hover} text-white transition-all duration-300 flex items-center gap-4 shadow-lg group`}
-                >
-                  <div className="flex items-center justify-center w-12 h-12 bg-black bg-opacity-30 rounded-lg">
-                    {method.icon}
-                  </div>
-                  <div className="text-left flex-1">
-                    <div className="font-semibold text-lg">{method.name}</div>
-                    <div className="text-xs text-gray-300 mt-1">{method.description}</div>
-                  </div>
-                  <div className="text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:translate-x-1">
-                    →
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="text-center py-8 bg-gray-800 rounded-xl border border-gray-700">
-                <p className="text-gray-400 mb-2">No payment methods available</p>
-                <p className="text-xs text-gray-500">
-                  Selected currency ({displayInfo?.currency || 'Unknown'}) is not supported by available payment gateways
-                </p>
-                <button
-                  onClick={onClose}
-                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
-                >
-                  Select Different Currency
-                </button>
-              </div>
-            )}
-
-            {/* ✅ Currency Support Information */}
-            {displayInfo?.currency === 'INR' && (
-              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-blue-400">💡</span>
-                  <span className="text-xs font-semibold text-blue-400">Currency Info:</span>
-                </div>
-                <p className="text-xs text-blue-200">
-                  PayPal doesn't support INR payments. Razorpay supports all major currencies including INR with great exchange rates.
-                </p>
-              </div>
-            )}
-
-            {displayInfo?.currency && !paypalSupportedCurrencies.includes(displayInfo.currency) && displayInfo.currency !== 'INR' && (
-              <div className="mt-4 p-3 bg-green-900/20 border border-green-700/30 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-green-400">✅</span>
-                  <span className="text-xs font-semibold text-green-400">Razorpay Support:</span>
-                </div>
-                <p className="text-xs text-green-200">
-                  Razorpay supports {displayInfo.currency} and 130+ other currencies. PayPal has limited currency support.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Security & Benefits */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-lg border border-green-700/30">
-            <div className="flex items-center gap-2 mb-3">
-              <FaLock className="w-4 h-4 text-green-400" />
-              <h4 className="text-sm font-semibold text-green-400">Secure & Trusted:</h4>
-            </div>
-            <ul className="text-xs text-gray-300 space-y-1">
-              <li>• 256-bit SSL encryption</li>
-              <li>• PCI DSS compliant</li>
-              <li>• Instant download access</li>
-              <li>• 24/7 customer support</li>
-            </ul>
-          </div>
-
-          {/* Cancel Button */}
-          <button
-            onClick={onClose}
-            className="w-full mt-4 px-4 py-3 border border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600 rounded-xl transition-all duration-300 font-medium"
+        >
+          <motion.div
+            initial={{ scale: 0.96, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.96, opacity: 0, y: 16 }}
+            transition={{ type: "spring", damping: 26, stiffness: 280 }}
+            className="relative w-full max-w-[480px]"
+            onClick={(e) => e.stopPropagation()}
           >
-            Cancel Purchase
-          </button>
-        </div>
-      </div>
-    </>
+            {/* ── Modal Shell ── */}
+            <div className="relative w-full bg-[#0b0e15] rounded-2xl overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)]">
+              {/* ── Header ── */}
+              <header className="flex justify-between items-center px-7 py-5">
+                <h1 className="text-[17px] font-extrabold tracking-tight text-[#e0e2ec]">
+                  Choose Currency &amp; Payment
+                </h1>
+                <motion.button
+                  whileHover={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={onClose}
+                  className="w-9 h-9 flex items-center justify-center rounded-full text-[#8b919f] transition-colors"
+                >
+                  <MdClose className="w-5 h-5" />
+                </motion.button>
+              </header>
+
+              {/* Thin separator */}
+              <div className="h-px bg-white/[0.05] mx-7" />
+
+              {/* ── Scrollable Content ── */}
+              <main className="px-7 pt-6 pb-7 space-y-6 max-h-[78vh] overflow-y-auto">
+                {/* ── Item Summary Card ── */}
+                <section
+                  className="relative p-6 rounded-xl overflow-hidden"
+                  style={{
+                    background:
+                      "linear-gradient(45deg, #0F3272 0%, #1A5DB4 100%, #3B82F6 100%)",
+                  }}
+                >
+                  {/* Decorative blobs */}
+                  <div className="absolute -right-8 -top-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-white/[0.07] rounded-full blur-xl pointer-events-none" />
+
+                  <div className="relative flex justify-between items-end gap-4">
+                    <div className="space-y-1 min-w-0">
+                      <h2 className="text-[20px] font-black text-white/90 leading-tight">
+                        {purchaseType}
+                      </h2>
+                      <p className="text-[13px] text-white/40 font-semibold">
+                        {itemTitle}
+                      </p>
+                      <p className="text-[12px] text-white/30 font-medium">
+                        {itemSubtitle}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={selectedPrice?.amount}
+                          variants={priceVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
+                          transition={{
+                            type: "spring",
+                            stiffness: 320,
+                            damping: 26,
+                          }}
+                          className="block text-[38px] font-black tracking-tighter text-white/100 leading-none"
+                        >
+                          {selectedPrice?.symbol || "$"}
+                          {selectedPrice
+                            ? formatAmount(selectedPrice.amount)
+                            : "0"}
+                        </motion.span>
+                      </AnimatePresence>
+                      <span className="text-[11px] font-semibold text-white/40 mt-0.5 block">
+                        One‑time payment
+                      </span>
+                    </div>
+                  </div>
+                </section>
+
+                {/* ── Currency Selection ── */}
+                <section className="space-y-2.5">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-white/80 ml-0.5">
+                    Select Currency
+                  </label>
+                  <div className="relative">
+                    <button
+                      ref={triggerRef}
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="w-full flex items-center justify-between px-5 py-3.5 
+                        bg-[#181c22] hover:bg-[#1c2026] 
+                        rounded-xl border border-white/[0.06] hover:border-white/[0.1]
+                        transition-all duration-150"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-[14px] text-[#e0e2ec]">
+                          {selectedPrice?.currency} – {selectedPrice?.name}
+                        </span>
+                      </div>
+                      <motion.span
+                        animate={{ rotate: dropdownOpen ? 180 : 0 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 24,
+                        }}
+                        className="text-[#8b919f]"
+                      >
+                        <FaChevronDown className="w-3.5 h-3.5" />
+                      </motion.span>
+                    </button>
+
+                    <PortalDropdown
+                      triggerRef={triggerRef}
+                      open={dropdownOpen}
+                      onClose={() => setDropdownOpen(false)}
+                    >
+                      {availablePrices.map((price) => (
+                        <CurrencyDropdownItem
+                          key={price.currency}
+                          symbol={price.symbol}
+                          amount={price.amount}
+                          currency={price.currency}
+                          name={price.name}
+                          onClick={() => {
+                            setSelectedPrice(price);
+                            setDropdownOpen(false);
+                          }}
+                        />
+                      ))}
+                    </PortalDropdown>
+                  </div>
+                </section>
+
+                {/* ── Payment Gateways ── */}
+                <section className="space-y-2.5">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-white/80 ml-0.5">
+                    Payment Method
+                  </label>
+                  <div className="space-y-2.5">
+                    {gateways.map((gw) => (
+                      <GatewayButton
+                        key={gw.id}
+                        {...gw}
+                        onClick={() => handleGatewaySelect(gw.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              </main>
+
+              {/* ── Footer ── */}
+              <footer className="px-7 py-5 bg-[#181c22] border-t border-white/[0.05] flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 text-[#8b919f]">
+                  <FaLock
+                    className="text-[#aac7ff]"
+                    style={{ fontSize: "11px" }}
+                  />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em]">
+                    Secure &amp; Encrypted Payments
+                  </span>
+                </div>
+              </footer>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

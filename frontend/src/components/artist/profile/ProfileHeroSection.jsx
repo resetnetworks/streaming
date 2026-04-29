@@ -196,7 +196,7 @@ const ProfileHeroSection = () => {
     }
     
     const amount = artistProfile.subscriptionPlans[0].basePrice.amount || 10;
-    const cycle = artistProfile.monetization?.plans?.[0]?.cycle || "1m";
+    const cycle = artistProfile.subscriptionPlans[0]?.cycle || "1m";
     
     switch(cycle) {
       case "1m":

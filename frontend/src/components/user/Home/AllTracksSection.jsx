@@ -38,26 +38,24 @@ const AllTracksSection = ({
 
   // ✅ Flatten all singles from all pages
   const allSingles = data?.pages?.flatMap(page => page.songs) || [];
+
   
   // ✅ Get pagination info from last page
   const lastPage = data?.pages?.[data.pages.length - 1];
   const singlesPagination = lastPage?.pagination || { page: 1, totalPages: 1 };
-
+  
   // ✅ Track active song share dropdown
   const [activeSongShareDropdown, setActiveSongShareDropdown] = useState(null);
-
   // ✅ Handle song share dropdown toggle
   const handleSongShareDropdownToggle = (songId) => {
     setActiveSongShareDropdown(prev => prev === songId ? null : songId);
   };
-
   // ✅ Load more singles function
   const loadMoreSingles = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage && !isFetching) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, isFetching, fetchNextPage]);
-
   // ✅ Intersection observer for infinite scroll
   const lastElementRef = useCallback((node) => {
     if (isLoading || isFetchingNextPage) return;
@@ -76,7 +74,6 @@ const AllTracksSection = ({
       return () => observer.disconnect();
     }
   }, [isLoading, isFetchingNextPage, hasNextPage, loadMoreSingles]);
-
   // Handle scroll buttons
   const handleScroll = useCallback((direction = "right") => {
     if (!scrollRef.current) return;
@@ -103,6 +100,14 @@ const onPlaySong = useCallback((song) => {
       toast.error(error.message || "Failed to load singles");
     }
   }, [isError, error]);
+
+    if(!isLoading && !isFetching && allSingles.length==0){
+     return (
+    <div className="text-gray-400 text-sm">
+      No songs available right now
+    </div>
+  );
+  }
 
   // Grid columns for horizontal scroll
   const chunkSize = 5;
@@ -213,15 +218,6 @@ const onPlaySong = useCallback((song) => {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* ✅ Empty state */}
-          {!isLoading && !isFetching && allSingles.length === 0 && (
-            <div className="min-w-[400px] flex items-center justify-center py-8">
-              <p className="text-gray-400 text-center">
-                No singles available at the moment
-              </p>
             </div>
           )}
         </div>

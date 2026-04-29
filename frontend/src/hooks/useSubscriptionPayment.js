@@ -7,12 +7,13 @@ import {
   setPaymentGateway,
   setSubscriptionCycle
 } from '../features/payments/paymentSlice';
+import { useCreateSubscription } from './api/usePayments';
 import { toast } from 'sonner';
 
 export const useSubscriptionPayment = () => {
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.auth.user);
-
+  const { mutateAsync: createStripeSubscription } = useCreateSubscription();
   const [showSubscriptionOptions, setShowSubscriptionOptions] = useState(false);
   const [pendingSubscription, setPendingSubscription] = useState(null);
 
@@ -33,72 +34,90 @@ export const useSubscriptionPayment = () => {
   };
 
   // ✅ UPDATED: Handle both regular method selection and PayPal with currency
-  const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
-    if (!pendingSubscription) return;
+const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
+  if (!pendingSubscription) return;
 
-    const { artist, cycle, subscriptionPrice } = pendingSubscription;
-    setShowSubscriptionOptions(false);
-    dispatch(setPaymentGateway(gateway));
-    dispatch(setSubscriptionCycle(cycle));
+  const { artist, cycle, subscriptionPrice } = pendingSubscription;
 
-    try {
-      if (gateway === 'razorpay') {
-        const razorpayResponse = await dispatch(initiateRazorpaySubscription({
+  setShowSubscriptionOptions(false);
+  dispatch(setPaymentGateway(gateway));
+  dispatch(setSubscriptionCycle(cycle));
+
+  try {
+    // 🔥 STRIPE ADD HERE
+    if (gateway === "stripe") {
+      await createStripeSubscription({
+        artistId: artist._id,
+        cycle,
+        currency: options?.currency || "INR", // dynamic if needed
+        gateway: "stripe",
+      });
+
+      return; // 🔥 important (prevent further execution)
+    }
+
+    // =============================
+    // EXISTING RAZORPAY
+    // =============================
+    if (gateway === 'razorpay') {
+      const razorpayResponse = await dispatch(initiateRazorpaySubscription({
+        artistId: artist._id,
+        cycle
+      })).unwrap();
+
+      if (razorpayResponse.success && razorpayResponse.subscriptionId) {
+        openRazorpaySubscriptionCheckout(razorpayResponse, artist, cycle, subscriptionPrice);
+      } else {
+        throw new Error('Could not create Razorpay subscription.');
+      }
+
+    }
+
+    // =============================
+    // EXISTING PAYPAL
+    // =============================
+    else if (gateway === 'paypal') {
+      const { paypalPlan } = options;
+
+      if (!paypalPlan) {
+        throw new Error('PayPal plan information is missing.');
+      }
+
+      const paypalResponse = await dispatch(initiatePaypalSubscription({
+        artistId: artist._id,
+        cycle,
+        currency: paypalPlan.currency,
+        paypalPlanId: paypalPlan.paypalPlanId,
+        amount: paypalPlan.amount || subscriptionPrice
+      })).unwrap();
+
+      if (paypalResponse.success && paypalResponse.approveUrl) {
+        localStorage.setItem('pendingPaypalSubscription', JSON.stringify({
           artistId: artist._id,
-          cycle
-        })).unwrap();
-
-        if (razorpayResponse.success && razorpayResponse.subscriptionId) {
-          openRazorpaySubscriptionCheckout(razorpayResponse, artist, cycle, subscriptionPrice);
-        } else {
-          throw new Error('Could not create Razorpay subscription.');
-        }
-
-      } else if (gateway === 'paypal') {
-        // ✅ NEW: Extract PayPal plan details from options
-        const { paypalPlan } = options;
-        
-        if (!paypalPlan) {
-          throw new Error('PayPal plan information is missing.');
-        }
-
-
-        // ✅ NEW: Use selected PayPal plan for subscription
-        const paypalResponse = await dispatch(initiatePaypalSubscription({
-          artistId: artist._id,
+          artistName: artist.name,
           cycle,
           currency: paypalPlan.currency,
-          paypalPlanId: paypalPlan.paypalPlanId,
-          amount: paypalPlan.amount || subscriptionPrice
-        })).unwrap();
+          amount: paypalPlan.amount || subscriptionPrice,
+          paypalPlanId: paypalPlan.paypalPlanId
+        }));
 
-        if (paypalResponse.success && paypalResponse.approveUrl) {
-          // ✅ Store PayPal plan info in localStorage for callback handling
-          localStorage.setItem('pendingPaypalSubscription', JSON.stringify({
-            artistId: artist._id,
-            artistName: artist.name,
-            cycle,
-            currency: paypalPlan.currency,
-            amount: paypalPlan.amount || subscriptionPrice,
-            paypalPlanId: paypalPlan.paypalPlanId
-          }));
-          
-          window.location.href = paypalResponse.approveUrl;
-        } else {
-          throw new Error('PayPal subscription approval link not found.');
-        }
-      }
-    } catch (error) {
-      console.error('Subscription error:', error);
-      toast.error(error.message || 'Subscription creation failed. Please try again.');
-      setShowSubscriptionOptions(true);
-      setPendingSubscription({ artist, cycle, subscriptionPrice });
-    } finally {
-      if (gateway !== 'paypal') {
-        setPendingSubscription(null);
+        window.location.href = paypalResponse.approveUrl;
+      } else {
+        throw new Error('PayPal subscription approval link not found.');
       }
     }
-  };
+
+  } catch (error) {
+    console.error('Subscription error:', error);
+    toast.error(error.message || 'Subscription creation failed.');
+    setShowSubscriptionOptions(true);
+    setPendingSubscription({ artist, cycle, subscriptionPrice });
+  } finally {
+    if (gateway !== 'paypal') {
+      setPendingSubscription(null);
+    }
+  }
+};
 
   const openRazorpaySubscriptionCheckout = (subscriptionData, artist, cycle, subscriptionPrice) => {
     if (typeof window.Razorpay === 'undefined') {

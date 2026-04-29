@@ -71,9 +71,10 @@ const ProfileDetailSection = () => {
     );
   }
 
-  const renderEmptyValue = (value) => {
-    return value || <span className="text-gray-400 italic">Not provided</span>;
-  };
+ const renderEmptyValue = (value) => {
+  if (typeof value === "object") return "Invalid data";
+  return value || <span className="text-gray-400 italic">Not provided</span>;
+};
 
   return (
     <>

@@ -33,16 +33,13 @@ const PrivacyPolicy = () => {
 • Email address
 • Password (encrypted)
 • Phone number (if provided)
-• Payment details (via PayU, Razorpay, etc.)
+• Payment details (via Stripe, Razorpay and PayPal)
 
 b. Usage Data
 • Tracks streamed, playlists, likes, listening habits
 • Device and browser type
 • IP address and approximate location
-• Log data like access times, pages viewed
-
-c. Cookies & Tracking
-We use cookies and tools (e.g., Google Analytics) to personalize your experience and analyze usage.`
+• Log data like access times, pages viewed`
     },
     {
       id: "how-we-use",
@@ -79,7 +76,7 @@ We use cookies and tools (e.g., Google Analytics) to personalize your experience
 • Object to specific processing
 • Unsubscribe from promotional emails
 
-To exercise any of these rights, email us at: contact@reset93.net`
+To exercise any of these rights, email us at: support@musicreset.com`
     },
     {
       id: "childrens-privacy",
@@ -101,7 +98,7 @@ To exercise any of these rights, email us at: contact@reset93.net`
       title: "9. Contact Us",
       content: `Reset Networks Studios
 Website: musicreset.com
-Email: contact@reset93.net
+Email: support@musicreset.com
 
 Note: If you request data deletion, make sure you send the request using your own registered email.`
     }
@@ -154,7 +151,7 @@ description="Learn how Reset Music streaming collects, uses & protects your pers
         "url": "https://musicreset.com",
         "contactPoint": {
           "@type": "ContactPoint",
-          "email": "contact@reset93.net",
+          "email": "support@musicreset.com",
           "contactType": "privacy officer",
           "areaServed": "Worldwide"
         }
@@ -314,14 +311,14 @@ description="Learn how Reset Music streaming collects, uses & protects your pers
                                   <p className="text-gray-200 font-medium leading-relaxed">
                                     {paragraph}
                                   </p>
-                                ) : paragraph.includes('contact@reset93.net') ? (
+                                ) : paragraph.includes('support@musicreset.com') ? (
                                   <p className="text-gray-300 leading-relaxed">
-                                    {paragraph.replace('contact@reset93.net', '')}
+                                    {paragraph.replace('support@musicreset.com', '')}
                                     <a
-                                      href="mailto:contact@reset93.net?subject=Privacy Rights Request"
+                                      href="mailto:support@musicreset.com?subject=Privacy Rights Request"
                                       className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
                                     >
-                                      contact@reset93.net
+                                      support@musicreset.com
                                     </a>
                                   </p>
                                 ) : paragraph.includes('musicreset.com') ? (
@@ -374,10 +371,10 @@ description="Learn how Reset Music streaming collects, uses & protects your pers
                     <p>
                       Email: {" "}
                       <a
-                        href="mailto:contact@reset93.net?subject=Privacy Policy Inquiry"
+                        href="mailto:support@musicreset.com?subject=Privacy Policy Inquiry"
                         className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
                       >
-                        contact@reset93.net
+                        support@musicreset.com
                       </a>
                     </p>
                   </div>

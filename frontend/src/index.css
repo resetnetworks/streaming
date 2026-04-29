@@ -27,11 +27,6 @@ body {
   overflow-x: hidden; /* ✅ Horizontal scroll prevent */
 }
 
-.bg-image {
-  background-image: url("./images/bg.jpg");
-  background-size: cover;
-}
-
 .gradiant-line {
   height: 1px;
   width: 100%;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import IconHeader from "./IconHeader.jsx"
+import IconHeader from "./IconHeader.jsx";
 import { RxDashboard } from "react-icons/rx";
 import { FaRegUser } from "react-icons/fa";
 import MobileNavBar from "./MobileNavBar";
@@ -10,7 +10,7 @@ import { FaShoppingCart } from "react-icons/fa";
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
-import { selectAllSongs } from "../../features/songs/songSelectors.js";  // Adjust path as needed
+import { selectAllSongs } from "../../features/songs/songSelectors.js"; // Adjust path as needed
 
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/home" },
@@ -38,7 +38,7 @@ const UserSidebar = () => {
   return (
     <>
       {!isMobile && (
-        <aside className="w-80 min-h-screen bg-[#0E1525] rounded-tr-[50px] rounded-br-[50px] pb-4">
+        <aside className=" h-screen sticky top-0 bg-[#0E1525] rounded-tr-[50px] pb-4">
           <IconHeader />
 
           <div className="w-64 text-white p-4">
@@ -74,7 +74,7 @@ const UserSidebar = () => {
           {/* You still have access to songs here if you want to do something with them */}
           {/* But UI remains unchanged */}
 
-          <div className="flex justify-center pr-2">
+          <div className="flex justify-center px-4">
             <Player />
           </div>
         </aside>

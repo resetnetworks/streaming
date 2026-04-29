@@ -7,13 +7,18 @@ import BackgroundWrapper from "../BackgroundWrapper";
 const UserLayout = () => {
   return (
     <BackgroundWrapper className="sm:pb-0 pb-36">
-      <div className="flex">
+      <div className="flex flex-col md:flex-row md:h-screen md:overflow-hidden">
+        {/* Sidebar desktop par sticky, mobile par hidden (UserSidebar khud handle karta hai) */}
         <UserSidebar />
-        <div className="w-full overflow-auto text-white">
-          <Outlet />
+
+        {/* Main content + Footer */}
+        <div className="flex-1 flex flex-col no-scrollbar md:overflow-y-auto">
+          <div className="flex-1">
+            <Outlet />
+            <Footer />
+          </div>
         </div>
       </div>
-      <Footer/>
     </BackgroundWrapper>
   );
 };

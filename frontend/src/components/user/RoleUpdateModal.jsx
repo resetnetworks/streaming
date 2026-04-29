@@ -34,7 +34,7 @@ const RoleUpdateModal = ({ open }) => {
               <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#020216] rounded-full flex items-center justify-center shadow-2xl border border-green-500/30">
                 <FaCheckCircle className="text-3xl text-green-500 animate-pulse" />
               </div>
-              <div className="absolute inset-0 rounded-full border-2 border-green-500 animate-ping opacity-20"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-green-500 opacity-20"></div>
             </div>
 
             {/* Badge */}

@@ -239,8 +239,8 @@ const ArtistConfirmation = ({ onReapply }) => {
         <div className="mt-8 pt-6 border-t border-slate-700 max-w-md mx-auto">
           <p className="text-slate-400 text-xs">
             Need help? Contact{' '}
-            <a href="mailto:contact@reset93.net" className="text-blue-400 hover:text-blue-300">
-              contact@reset93.net
+            <a href="mailto:support@musicreset.com" className="text-blue-400 hover:text-blue-300">
+              support@musicreset.com
             </a>
           </p>
         </div>

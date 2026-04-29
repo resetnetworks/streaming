@@ -138,7 +138,7 @@ const SongList = ({
           <MdAccessTimeFilled
             className={`text-base ${isSelected ? "text-blue-700" : "text-gray-500"}`}
           />
-          <span className="ml-2">{formatDuration(seekTime)}</span>
+          <span className="ml-2 text-white">{formatDuration(seekTime)}</span>
         </div>
 
         <button

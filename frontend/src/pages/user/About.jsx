@@ -1,15 +1,11 @@
 // src/pages/About.jsx
 import React from "react";
-import { FiMusic, FiUsers, FiHeart, FiStar, FiHeadphones, FiMic, FiHome, FiMail, FiInstagram, FiTwitter } from "react-icons/fi";
+import { FiMusic, FiUsers, FiHeart, FiStar, FiHeadphones, FiMic, FiHome, FiMail, FiInstagram, FiTwitter, FiMapPin, FiGlobe } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/user/Footer";
 import IconHeader from "../../components/user/IconHeader";
 import useNavigation from "../../hooks/useAuthNavigation";
 import PageSEO from "../../components/PageSeo/PageSEO";
-
-
-
-
 
 const About = () => {
   const navigate = useNavigate();
@@ -58,32 +54,32 @@ const About = () => {
 
   return (
     <>
-     <PageSEO
+      <PageSEO
         title="About Reset Music Streaming - Our Mission & Values"
         description="Learn about Reset Music streaming platform's mission to connect music lovers & creators. Discover our values, community & transformative music."
         canonicalUrl="https://musicreset.com/about-us"
         structuredData={{
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "About Reset Music",
-    "description": "about Reset Music's mission to connect music lovers, creators, and innovators. Discover our values, community.",
-    "url": "https://musicreset.com/about-us",
-    "mainEntity": {
-      "@type": "Organization",
-      "name": "Reset Music",
-      "url": "https://musicreset.com",
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "email": "contact@reset93.net",
-        "contactType": "customer support"
-      }
-    },
-    "dateModified": "2025-09-29"
-  }}
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "About Reset Music",
+          "description": "about Reset Music's mission to connect music lovers, creators, and innovators. Discover our values, community.",
+          "url": "https://musicreset.com/about-us",
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "Reset Music",
+            "url": "https://musicreset.com",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "email": "support@musicreset.com",
+              "contactType": "customer support"
+            }
+          },
+          "dateModified": "2025-09-29"
+        }}
       />
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white">
         <IconHeader />
-        
+
         {/* Hero Section */}
         <div className="relative bg-gradient-to-r from-gray-900 to-blue-900/30 border-b border-gray-700/50">
           <div className="max-w-7xl mx-auto px-6 py-16">
@@ -96,7 +92,7 @@ const About = () => {
                   About Reset Music
                 </h1>
               </div>
-              
+
               <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
                 We believe in the transformative power of music. Our mission is to connect listeners, creators, and innovators through a platform where music resets, renews, and redefines what it means to feel inspired.
               </p>
@@ -124,7 +120,7 @@ const About = () => {
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-white">Our Mission</h2>
                 </div>
-                
+
                 <p className="text-lg text-gray-300 max-w-4xl mx-auto leading-relaxed">
                   We exist to help artists reach new ears—and for listeners to discover sounds that refresh their day and stir their soul. Reset Music is where music resets your perspective, renews your energy, and redefines your connection to sound.
                 </p>
@@ -214,7 +210,7 @@ const About = () => {
           </div>
 
           {/* Join Our Community Section */}
-          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-3xl border border-blue-500/30 p-8 md:p-12">
+          <div className="mb-20 bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-3xl border border-blue-500/30 p-8 md:p-12">
             <div className="text-center space-y-8">
               <div className="space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold text-white">Join Our Community</h2>
@@ -259,11 +255,77 @@ const About = () => {
                 <div className="space-y-2 text-sm text-gray-400">
                   <p>Ready to reset your music experience?</p>
                   <a
-                    href="mailto:contact@reset93.net?subject=Community Inquiry"
+                    href="mailto:support@musicreset.com?subject=Community Inquiry"
                     className="text-blue-400 hover:underline font-medium"
                   >
-                    contact@reset93.net
+                    support@musicreset.com
                   </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Registered Offices Section */}
+          <div className="mb-20">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Registered Offices</h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                Our legal presence across the globe
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Indian Office */}
+              <div className="bg-gray-800/40 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-blue-600/20 rounded-xl border border-blue-500/30">
+                    <FiMapPin className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white">
+                    RESET NETWORKS (OPC) PRIVATE LIMITED
+                  </h3>
+                </div>
+                <div className="space-y-3 text-gray-300 pl-2">
+                  <p className="flex items-baseline gap-2">
+                    <span className="text-gray-400 text-sm min-w-[70px]">CIN:</span>
+                    <span className="font-mono text-blue-300">U92100WB2021OPC243771</span>
+                  </p>
+                  <p className="flex items-baseline gap-2">
+                    <span className="text-gray-400 text-sm min-w-[70px]">GSTIN:</span>
+                    <span className="font-mono text-blue-300">07AAKCR8658Q1Z8</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-gray-400 text-sm min-w-[70px]">Address:</span>
+                    <span className="leading-relaxed">
+                      45 Maharishi Dayanand Road, Corner Market, Malviya Nagar,<br />
+                      New Delhi, Delhi, 110017, India
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Estonian Office */}
+              <div className="bg-gray-800/40 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 md:p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-blue-600/20 rounded-xl border border-blue-500/30">
+                    <FiGlobe className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white">
+                    RESET NETWORKS OÜ
+                  </h3>
+                </div>
+                <div className="space-y-3 text-gray-300 pl-2">
+                  <p className="flex items-baseline gap-2">
+                    <span className="text-gray-400 text-sm min-w-[90px]">Registry Code:</span>
+                    <span className="font-mono text-blue-300">17321913</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-gray-400 text-sm min-w-[90px]">Address:</span>
+                    <span className="leading-relaxed">
+                      Harju maakond, Tallinn, Kesklinna linnaosa,<br />
+                      Sakala tn 7-2, 10141, Estonia
+                    </span>
+                  </p>
                 </div>
               </div>
             </div>

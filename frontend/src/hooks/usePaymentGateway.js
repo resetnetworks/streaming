@@ -8,12 +8,14 @@ import {
 } from '../features/payments/paymentSlice';
 import { addPurchase } from '../features/auth/authSlice'; // ✅ Import the existing action
 import { toast } from 'sonner';
+import { useCreatePayment } from './api/usePayments';
 
 export const usePaymentGateway = () => {
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.auth.user);
 
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const { mutateAsync: createPayment } = useCreatePayment();
   const [pendingPayment, setPendingPayment] = useState(null);
 
   const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
@@ -118,6 +120,13 @@ export const usePaymentGateway = () => {
         } else {
           throw new Error('PayPal approval link not found.');
         }
+      } else if(gateway === 'stripe'){
+         await createPayment({
+    itemId: item._id,
+    itemType,
+    currency: paymentDetails.currency,
+    gateway: 'stripe'
+  });
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -140,7 +149,6 @@ export const usePaymentGateway = () => {
       toast.error('Payment gateway is not available. Please refresh and try again.');
       return;
     }
-     console.log(RAZORPAY_KEY)
     if (!RAZORPAY_KEY) {
       toast.error('Payment configuration error. Please contact support.');
       return;

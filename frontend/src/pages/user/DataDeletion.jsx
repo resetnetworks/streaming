@@ -1,6 +1,8 @@
 import React from "react";
 import IconHeader from "../../components/user/IconHeader";
 import PageSEO from "../../components/PageSeo/PageSEO";
+import BackgroundWrapper from "../../components/BackgroundWrapper";
+import Footer from "../../components/user/Footer";
 
 const DataDeletion = () => {
   return (
@@ -21,16 +23,16 @@ description="Learn how to delete your Reset Music streaming account data & perso
       "url": "https://musicreset.com",
       "contactPoint": {
         "@type": "ContactPoint",
-        "email": "contact@reset93.net",
+        "email": "support@musicreset.com",
         "contactType": "customer support"
       }
     }
   }}
 />
 
-      <div className="bg-gray-950">
+      <BackgroundWrapper>
       <IconHeader />
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center px-4">
+      <div className="min-h-screen to-gray-900 text-white flex items-center justify-center px-4">
         <div className="max-w-2xl w-full bg-gray-800 rounded-2xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-blue-400 mb-6 text-center">
             Data Deletion Instructions
@@ -45,10 +47,10 @@ description="Learn how to delete your Reset Music streaming account data & perso
               <li>
                 Send an email to{" "}
                 <a
-                  href="mailto:contact@reset93.net?subject=Data Deletion Request"
+                  href="mailto:support@musicreset.com?subject=Data Deletion Request"
                   className="text-blue-400 font-medium hover:underline"
                 >
-                  contact@reset93.net
+                  support@musicreset.com
                 </a>{" "}
                 with the subject line: <span className="italic">"Data Deletion Request"</span>.
               </li>
@@ -67,16 +69,17 @@ description="Learn how to delete your Reset Music streaming account data & perso
           <p className="text-sm text-gray-400 text-center mt-6">
             For additional support, contact us at{" "}
             <a
-              href="mailto:contact@reset93.net?subject=Support Request"
+              href="mailto:support@musicreset.com?subject=Support Request"
               className="text-blue-400 hover:underline"
             >
-              contact@reset93.net
+              support@musicreset.com
             </a>
             . Please note that you must send the request using your own registered email address.
           </p>
         </div>
       </div>
-      </div>
+      <Footer />
+      </BackgroundWrapper>
     </>
   );
 };

@@ -53,6 +53,7 @@ const uploadSongMutation = useUploadSong();
       title: formData.title,
       releaseDate: formData.date,
       description: formData.description || "",
+      copyright: formData.copyright || "",
       genre: formData.genre || [],
       accessType: formData.accessType || "subscription",
       coverImageKey, // ✅ REAL S3 KEY
