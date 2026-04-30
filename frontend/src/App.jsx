@@ -7,6 +7,7 @@ import { getMyProfile } from "./features/auth/authSlice";
 import UserLayout from "./components/user/UserLayout";
 import PayPalSuccessHandler from "./components/PayPalSuccessHandler";
 import ScrollToTop from "./components/ScrollToTop";
+import RoleUpdateModal from "./components/user/RoleUpdateModal";
 import {
   selectIsAuthenticated,
   selectAuthStatus,
@@ -378,6 +379,7 @@ useEffect(() => {
           </Routes>      
         </Suspense>
         <Toaster richColors position="top-center" />
+        <RoleUpdateModal />
       </BrowserRouter>
 
       

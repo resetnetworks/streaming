@@ -97,22 +97,32 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Response interceptor
+
 // ✅ Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (isLoggingOut) return Promise.reject(error);
 
-    // PayPal routes pe logout mat karo
     if (error.config?.url?.includes('/paypal/')) return Promise.reject(error);
 
-    // Network error — server band ya internet cut, logout nahi karna
     if (!error.response) return Promise.reject(error);
 
     const status = error.response?.status;
+    const code = error.response?.data?.code; // ✅ NEW: code check karo
 
-    // ✅ 401 — hamesha logout agar token tha
+    // ✅ NEW: ROLE_CHANGED — modal show karo, logout mat karo abhi
+    if (status === 401 && code === "ROLE_CHANGED") {
+      if (window.store) {
+        try {
+          const { setRoleUpdateModal } = await import("../features/auth/authSlice");
+          window.store.dispatch(setRoleUpdateModal(true));
+        } catch (e) {}
+      }
+      return Promise.reject(error); // ✅ aage propagate mat karo logout tak
+    }
+
+    // ✅ 401 — normal logout (ROLE_CHANGED wala upar handle ho gaya)
     if (status === 401) {
       const token = localStorage.getItem("token") || getTokenFromCookie();
       if (!token) return Promise.reject(error);
@@ -121,26 +131,27 @@ axiosInstance.interceptors.response.use(
     }
 
     // ✅ 403 — sirf artist routes pe logout
-if (status === 403) {
-  const isArtistRoute = 
-    error.config?.url?.includes('/artist/') || 
-    error.config?.url?.includes('/v2/artist/');
-  
-  if (isArtistRoute) {
-    await forceLogout();
-    return Promise.reject(error);
-  }
-}
+    if (status === 403) {
+      const isArtistRoute =
+        error.config?.url?.includes('/artist/') ||
+        error.config?.url?.includes('/v2/artist/');
 
-if (status === 404) {
-  const isUserNotFound = error.response?.data?.message?.toLowerCase().includes('user not found') ||
-                         error.response?.data?.code === 'USER_NOT_FOUND';
-  
-  if (isUserNotFound) {
-    await forceLogout();
-    return Promise.reject(error);
-  }
-}
+      if (isArtistRoute) {
+        await forceLogout();
+        return Promise.reject(error);
+      }
+    }
+
+    if (status === 404) {
+      const isUserNotFound =
+        error.response?.data?.message?.toLowerCase().includes('user not found') ||
+        error.response?.data?.code === 'USER_NOT_FOUND';
+
+      if (isUserNotFound) {
+        await forceLogout();
+        return Promise.reject(error);
+      }
+    }
 
     return Promise.reject(error);
   }

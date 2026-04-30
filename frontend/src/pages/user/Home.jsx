@@ -27,9 +27,6 @@ const Home = () => {
   const [modalType, setModalType] = useState(null); // "play" | "purchase"
   const [modalData, setModalData] = useState(null); // song or item
 
-  // ✅ NEW: State for role update modal
-  const [roleUpdateModalOpen, setRoleUpdateModalOpen] = useState(false);
-
   const currentUser = useSelector((state) => state.auth.user);
 
 
@@ -54,11 +51,6 @@ const Home = () => {
 
   const navigateToArtistDirect = (artist) => {
     if (artist?.slug) navigate(`/artist/${artist.slug}`);
-  };
-
-  // ✅ NEW: Callback for when role update error occurs
-  const handleRoleUpdateError = () => {
-    setRoleUpdateModalOpen(true);
   };
 
 
@@ -120,7 +112,6 @@ const Home = () => {
           {/* Matching Genre */}
           {currentUser && (
             <MatchingGenreSection
-              onRoleUpdateError={handleRoleUpdateError} // ✅ NEW: Pass callback
             />
           )}
 
@@ -140,9 +131,6 @@ const Home = () => {
         onClose={handleSubscribeModalClose}
         onNavigate={handleNavigateToArtist}
       />
-
-      {/* ✅ NEW: Role Update Modal */}
-      <RoleUpdateModal open={roleUpdateModalOpen} />
     </>
   );
 };

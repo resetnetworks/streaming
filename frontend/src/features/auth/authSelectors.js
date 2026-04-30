@@ -8,6 +8,7 @@ export const selectAuthError = (state) => state.auth.error;
 export const selectAuthMessage = (state) => state.auth.message;
 export const selectIsAuthenticated = (state) => !!state.auth.user;
 export const selectUserRole = (state) => state.auth.user?.role || null;
+export const selectRoleUpdateModalOpen = (state) => state.auth.roleUpdateModalOpen;
 export const selectPreferredGenres = (state) =>
   state.auth.user?.preferredGenres || [];
 

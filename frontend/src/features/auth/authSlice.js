@@ -308,6 +308,7 @@ const initialState = {
   status: "idle",
   error: null,
   message: null,
+  roleUpdateModalOpen: false,
 };
 
 // ====================
@@ -336,6 +337,9 @@ const authSlice = createSlice({
 
       storeAuthToLocal(state.user);
     },
+    setRoleUpdateModal: (state, action) => {
+  state.roleUpdateModalOpen = action.payload;
+},
     addPurchasedSong: (state, action) => {
       if (state.user) {
         if (!state.user.purchasedSongs) {
@@ -474,5 +478,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearMessage, addPurchase, addPurchasedSong, addPurchasedAlbum } = authSlice.actions;
+export const { clearMessage, addPurchase, addPurchasedSong, addPurchasedAlbum,setRoleUpdateModal } = authSlice.actions;
 export default authSlice.reducer;
