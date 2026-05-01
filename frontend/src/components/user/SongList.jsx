@@ -118,14 +118,14 @@ const SongList = ({
         <img
           src={img}
           alt=""
-          className={`w-10 h-10 rounded-lg object-cover ${
+          className={`md:w-10 md:h-10 w-8 h-8 rounded-lg object-cover ${
             isSelected ? "shadow-[0_0_5px_1px_#3b82f6]" : ""
           }`}
         />
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px]">
             <h3 className="text-white text-lg leading-none sm:truncate">
-              <span className="block sm:hidden">
-                {songName.length > 12 ? songName.slice(0, 7) + "..." : songName}
+              <span className="block text-sm md:text-base md:hidden">
+                {songName.length > 12 ? songName.slice(0, 8) + "..." : songName}
               </span>
               <span className="hidden sm:block">{songName}</span>
             </h3>
@@ -136,9 +136,9 @@ const SongList = ({
       <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
           <MdAccessTimeFilled
-            className={`text-base ${isSelected ? "text-blue-700" : "text-gray-500"}`}
+            className={`md:text-base text-sm ${isSelected ? "text-blue-700" : "text-gray-500"}`}
           />
-          <span className="ml-2 text-white">{formatDuration(seekTime)}</span>
+          <span className="ml-2 md:text-base text-sm text-white">{formatDuration(seekTime)}</span>
         </div>
 
         <button
@@ -148,9 +148,9 @@ const SongList = ({
           disabled={likeMutation.isLoading}
         >
           {isLiked ? (
-            <BsHeartFill className="text-red-600 text-md" />
+            <BsHeartFill className="text-red-600 md:text-base text-sm" />
           ) : (
-            <BsHeart className="text-white text-md hover:text-red-700" />
+            <BsHeart className="text-white md:text-base text-sm hover:text-red-700" />
           )}
         </button>
 
@@ -158,7 +158,7 @@ const SongList = ({
         <div className="relative action-btn">
           <button ref={triggerRef} className="action-btn" onClick={handleToggle}>
             <FiMoreHorizontal
-              className={`text-lg ${isOpen ? "text-blue-400" : "text-white"}`}
+              className={`md:text-base text-sm ${isOpen ? "text-blue-400" : "text-white"}`}
             />
           </button>
 
