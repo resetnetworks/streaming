@@ -21,16 +21,11 @@ const menuItems = [
 ];
 
 const UserSidebar = () => {
-  // Use Redux selector instead of context
   const songs = useSelector(selectAllSongs);
-
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -38,21 +33,24 @@ const UserSidebar = () => {
   return (
     <>
       {!isMobile && (
-        <aside className=" h-screen sticky top-0 bg-[#0E1525] rounded-tr-[50px] pb-4">
-          <IconHeader />
+        <aside className="h-screen sticky top-0 bg-[#0E1525] rounded-tr-[50px] flex flex-col">
+          {/* ✅ flex-shrink-0 — yeh kabhi squeeze nahi hoga */}
+          <div className="flex-shrink-0">
+            <IconHeader />
+          </div>
 
-          <div className="w-64 text-white p-4">
+          {/* ✅ Nav links — flex-shrink-0 */}
+          <div className="w-64 text-white xl:p-4 px-4 pt-4 pb-2 flex-shrink-0">
             {menuItems.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
                   `flex items-center gap-3 p-1 rounded-md mb-1 transition-all 
-                ${
-                  isActive
+                  ${isActive
                     ? "bg-gradient-to-r from-[#0950D7] via-[#4197C8] to-[#040b1e00] border-l-4 text-white"
                     : "hover:bg-gray-800 text-gray-400"
-                }`
+                  }`
                 }
                 style={({ isActive }) =>
                   isActive
@@ -65,16 +63,15 @@ const UserSidebar = () => {
                     : {}
                 }
               >
-                <span className="text-sm">{item.icon}</span>
-                <span className="capitalize text-sm">{item.name}</span>
+                <span className="xl:text-sm text-xs">{item.icon}</span>
+                <span className="capitalize xl:text-sm text-xs">{item.name}</span>
               </NavLink>
             ))}
           </div>
 
-          {/* You still have access to songs here if you want to do something with them */}
-          {/* But UI remains unchanged */}
-
-          <div className="flex justify-center px-4">
+          {/* ✅ Player container — flex-1 + overflow-y-auto + min-h-0 
+              min-h-0 zaroori hai flex child mein overflow kaam karne ke liye */}
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col pb-4 px-4 no-scrollbar">
             <Player />
           </div>
         </aside>
