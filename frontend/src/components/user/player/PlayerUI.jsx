@@ -164,7 +164,7 @@ const PlayerUI = ({
 
   return (
     <div className="player-wrapper">
-      <div className="player-card w-[15.25rem] py-4 px-4 flex flex-col items-center">
+      <div className="player-card max-w-[15.25rem] py-4 px-4 flex flex-col items-center">
         {/* Album Art */}
         <div className="w-full aspect-square overflow-hidden rounded-md relative">
           <img
@@ -182,8 +182,8 @@ const PlayerUI = ({
         </div>
 
         {/* Song Info */}
-        <p className="text-lg mt-2">{currentSong?.title}</p>
-        <span className="text-sm text-gray-500">{currentSong?.singer}</span>
+        <p className="xl:text-lg text-base mt-2">{currentSong?.title}</p>
+        <span className="xl:text-sm text-xs text-gray-500">{currentSong?.singer}</span>
 
         {/* ── Spectrum + Progress Section ── */}
         <div className="w-full flex flex-col gap-[6px]">
@@ -196,7 +196,7 @@ const PlayerUI = ({
           />
 
           {/* Scrub track */}
-          <div className="relative w-full h-1 bg-white/10 rounded-full cursor-pointer group mt-1">
+          <div className="relative w-full h-1 bg-white/10 rounded-full cursor-pointer group">
             <div
               className="h-full bg-blue-500 rounded-full relative"
               style={{
@@ -231,7 +231,7 @@ const PlayerUI = ({
         </div>
 
         {/* Player Controls */}
-        <div className="w-full mt-4 flex justify-between items-center">
+        <div className="w-full mt-2 flex justify-between items-center">
           {/* Like */}
           <button onClick={handleLikeToggle} className="focus:outline-none">
             {isLiked ? (
@@ -409,7 +409,7 @@ const PlayerUI = ({
             </div>
 
             {open && (
-              <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1 no-scrollbar">
+              <div className="max-h-24 overflow-y-auto space-y-1.5 pr-1 no-scrollbar">
                 {nextSongs.map((song) => (
                   <div
                     key={song._id}
