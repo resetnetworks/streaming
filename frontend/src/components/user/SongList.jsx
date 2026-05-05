@@ -127,7 +127,7 @@ const SongList = ({
               <span className="block text-sm md:text-base md:hidden">
                 {songName.length > 12 ? songName.slice(0, 8) + "..." : songName}
               </span>
-              <span className="hidden sm:block">{songName}</span>
+              <span className="hidden md:block">{songName}</span>
             </h3>
         </div>
       </div>

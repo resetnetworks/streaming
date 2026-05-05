@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { BsShare } from "react-icons/bs";
 import { IoIosShareAlt } from "react-icons/io";
 import { FaPlay, FaPause } from "react-icons/fa";
 import { useQueryClient } from "@tanstack/react-query";
@@ -506,7 +505,7 @@ export default function Album() {
         {/* Mobile Layout */}
         {isMobile ? (
           <div className="min-h-screen text-white pb-8">
-            {/* Cover with share icon – now with visibility background */}
+            {/* Cover image (no share button on cover anymore) */}
             <div className="px-4 pt-4 flex justify-center">
               <div className="relative w-[80%] max-w-xs">
                 <img
@@ -514,31 +513,6 @@ export default function Album() {
                   alt="Album Cover"
                   className="w-full rounded-lg shadow-2xl object-cover aspect-square"
                 />
-                {/* Share button with dark circular background for visibility */}
-                <div className="absolute top-2 right-2">
-                  <button
-                    ref={shareBtnRef}
-                    onClick={() => setShowShareMenu(!showShareMenu)}
-                    className="bg-black/50 backdrop-blur-sm rounded-full p-1.5 text-white hover:bg-black/70 transition-colors"
-                    aria-label="Share"
-                  >
-                    <IoIosShareAlt className="w-5 h-5" />
-                  </button>
-                  <ShareDropdown
-                    triggerRef={shareBtnRef}
-                    isOpen={showShareMenu}
-                    onClose={() => setShowShareMenu(false)}
-                    url={`${window.location}`}
-                    title={album.title}
-                    text={`Listen to "${album.title}" by ${
-                      album.artist?.name || artistName
-                    } on Reset Music`}
-                    isActive={showShareMenu}
-                    isPlayerContext={true}
-                    artistSlug={getArtistSlug()}
-                    navigate={navigate}
-                  />
-                </div>
               </div>
             </div>
 
@@ -585,8 +559,9 @@ export default function Album() {
                 )}
               </div>
 
-              {/* Action buttons */}
+              {/* Action buttons - Play, Share, then Price/Purchase */}
               <div className="flex items-center gap-3 flex-wrap mb-6">
+                {/* Play/Pause */}
                 <button
                   onClick={handleAlbumPlayPause}
                   className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-lg flex items-center justify-center flex-shrink-0"
@@ -599,7 +574,33 @@ export default function Album() {
                   )}
                 </button>
 
-                {/* Purchase */}
+                {/* Share Button (mobile) - now in action row */}
+                <div className="relative">
+                  <button
+                    ref={shareBtnRef}
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                    className="p-2 rounded-full border border-gray-600 hover:border-white transition-colors"
+                    aria-label="Share"
+                  >
+                    <IoIosShareAlt className="w-4 h-4" />
+                  </button>
+                  <ShareDropdown
+                    triggerRef={shareBtnRef}
+                    isOpen={showShareMenu}
+                    onClose={() => setShowShareMenu(false)}
+                    url={`${window.location}`}
+                    title={album.title}
+                    text={`Listen to "${album.title}" by ${
+                      album.artist?.name || artistName
+                    } on Reset Music`}
+                    isActive={showShareMenu}
+                    isPlayerContext={true}
+                    artistSlug={getArtistSlug()}
+                    navigate={navigate}
+                  />
+                </div>
+
+                {/* Purchase / Subscription actions */}
                 {album?.basePrice?.amount > 0 && !isSubscriptionAlbum && (
                   <>
                     <div className="px-3 py-1.5 bg-gray-800 rounded-full border border-gray-700">
@@ -630,7 +631,6 @@ export default function Album() {
                   </>
                 )}
 
-                {/* Subscription */}
                 {isSubscriptionAlbum && getArtistSlug() && (
                   <>
                     <span className="text-sm font-semibold text-blue-400">
@@ -693,20 +693,21 @@ export default function Album() {
               </div>
 
               {album?.description && (
-                <div className="bg-gray-800/50 rounded-2xl p-4 mb-4">
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    {mobileDisplayedDescription}
-                  </p>
-                  {isMobileLongDescription && (
-                    <button
-                      onClick={() => setShowFullDesc(!showFullDesc)}
-                      className="text-blue-400 text-sm font-medium hover:underline"
-                    >
-                      {showFullDesc ? "show less" : "show more..."}
-                    </button>
-                  )}
-                </div>
-              )}
+  <div className="bg-gray-800/50 rounded-2xl p-4 mb-4">
+    <p className="text-sm text-gray-300 leading-relaxed">
+      {mobileDisplayedDescription}
+      {isMobileLongDescription && !showFullDesc && "..."}
+      {isMobileLongDescription && (
+        <span
+          onClick={() => setShowFullDesc(!showFullDesc)}
+          className="ml-2 text-blue-400 text-sm font-medium hover:underline cursor-pointer"
+        >
+          {showFullDesc ? "show less" : "show more"}
+        </span>
+      )}
+    </p>
+  </div>
+)}
             </div>
 
             {/* Copyright */}
@@ -743,7 +744,7 @@ export default function Album() {
                       onClick={() => setShowFullDesc(!showFullDesc)}
                       className="ml-2 text-blue-400 cursor-pointer hover:underline text-sm"
                     >
-                      {showFullDesc ? "View less" : "View more"}
+                      {showFullDesc ? "show less" : "show more"}
                     </span>
                   )}
                 </p>
@@ -762,8 +763,9 @@ export default function Album() {
                   <span>{formatDuration(totalDuration)}</span>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons - Play, Share, then Price/Purchase */}
                 <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
+                  {/* Play/Pause */}
                   <button
                     onClick={handleAlbumPlayPause}
                     className="p-3 sm:p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center shadow-lg"
@@ -775,6 +777,36 @@ export default function Album() {
                     )}
                   </button>
 
+                  {/* Share Button (desktop) - now immediately after play */}
+                  <div className="relative">
+                    <button
+                      ref={shareBtnRef}
+                      onClick={() => setShowShareMenu(!showShareMenu)}
+                      className="p-2 sm:p-2.5 md:p-3.5 rounded-full border border-gray-600 hover:border-white transition-colors"
+                    >
+                      <IoIosShareAlt
+                        className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                          showShareMenu ? "text-blue-400" : ""
+                        }`}
+                      />
+                    </button>
+                    <ShareDropdown
+                      triggerRef={shareBtnRef}
+                      isOpen={showShareMenu}
+                      onClose={() => setShowShareMenu(false)}
+                      url={`${window.location}`}
+                      title={album.title}
+                      text={`Listen to "${album.title}" by ${
+                        album.artist?.name || artistName
+                      } on Reset Music`}
+                      isActive={showShareMenu}
+                      isPlayerContext={true}
+                      artistSlug={getArtistSlug()}
+                      navigate={navigate}
+                    />
+                  </div>
+
+                  {/* Purchase / Subscription actions */}
                   {album?.basePrice?.amount > 0 && !isSubscriptionAlbum && (
                     <>
                       <div className="px-2 py-0.5 sm:px-3 sm:py-1 md:px-5 md:py-3 bg-gray-800 rounded-full border border-gray-700">
@@ -831,35 +863,6 @@ export default function Album() {
                       </button>
                     </>
                   )}
-
-                  {/* Share Button (desktop) */}
-                  <div className="relative">
-                    <button
-                      ref={shareBtnRef}
-                      onClick={() => setShowShareMenu(!showShareMenu)}
-                      className="p-2 sm:p-2.5 md:p-3.5 rounded-full border border-gray-600 hover:border-white transition-colors"
-                    >
-                      <BsShare
-                        className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                          showShareMenu ? "text-blue-400" : ""
-                        }`}
-                      />
-                    </button>
-                    <ShareDropdown
-                      triggerRef={shareBtnRef}
-                      isOpen={showShareMenu}
-                      onClose={() => setShowShareMenu(false)}
-                      url={`${window.location}`}
-                      title={album.title}
-                      text={`Listen to "${album.title}" by ${
-                        album.artist?.name || artistName
-                      } on Reset Music`}
-                      isActive={showShareMenu}
-                      isPlayerContext={true}
-                      artistSlug={getArtistSlug()}
-                      navigate={navigate}
-                    />
-                  </div>
                 </div>
               </div>
             </div>
