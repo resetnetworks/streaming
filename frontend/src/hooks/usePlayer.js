@@ -31,8 +31,6 @@ import {
 } from "../features/songs/songSelectors";
 import { useLikeSong, useLikedSongs } from "./api/useSongs";
 
-const connectedVideoNodes = new WeakMap();
-
 export const usePlayer = () => {
   const dispatch = useDispatch();
 
@@ -64,34 +62,17 @@ export const usePlayer = () => {
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isBuffering, setIsBuffering] = useState(false);
 
-  // ── Spectrum state ──────────────────────────────────────────────────────────
-  // frequencyData: raw Uint8Array (length 46) from analyser — passed directly to SpectrumCanvas
-  // beatPulse: 0–1 float, decays on each frame; SpectrumCanvas reads it for glow
-  const [frequencyData, setFrequencyData] = useState(() => new Uint8Array(46).fill(0));
-  const [beatPulse, setBeatPulse] = useState(0);
-
   const repeatModeRef = useRef(repeatMode);
-
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const queueRef = useRef(queue);
-
-  const analyserRef = useRef(null);
-  const audioCtxRef = useRef(null);
-  const animFrameRef = useRef(null);
-  const sourceNodeRef = useRef(null);
-
-  // Beat detection refs
-  const beatHistoryRef = useRef([]);
-  const lastBeatTimeRef = useRef(0);
-  const beatPulseRef = useRef(0);
 
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
   const currentSong = displaySong;
   const contextSongs = playbackContextSongs.length > 0 ? playbackContextSongs : songs;
- const nextSongs = queue.upcoming;
+  const nextSongs = queue.upcoming;
 
   const likedSongs = data?.pages?.flatMap((page) => page.songs) || [];
   const isLiked = currentSong
@@ -264,14 +245,14 @@ export const usePlayer = () => {
               dispatch(play());
             } else {
               video.currentTime = 0;
-dispatch(setCurrentTime(0));
-dispatch(pause());
+              dispatch(setCurrentTime(0));
+              dispatch(pause());
             }
             return;
           }
           video.currentTime = 0;
-dispatch(setCurrentTime(0));
-dispatch(pause());
+          dispatch(setCurrentTime(0));
+          dispatch(pause());
         };
       } catch (err) {
         setPlaybackError(err.message);
@@ -306,135 +287,12 @@ dispatch(pause());
     }
   }, [volume, isMuted]);
 
-  useEffect(() => {
-    return () => {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-      const video = videoRef.current;
-      if (video && connectedVideoNodes.has(video)) {
-        const existing = connectedVideoNodes.get(video);
-        if (existing?.ctx?.state !== "closed") {
-          existing.ctx.suspend();
-        }
-        connectedVideoNodes.delete(video);
-      }
-      sourceNodeRef.current = null;
-      analyserRef.current = null;
-      audioCtxRef.current = null;
-    };
-  }, []);
-
   const getRandomSongFromContext = () => {
     if (!contextSongs || contextSongs.length === 0) return null;
     const filtered = contextSongs.filter((song) => song._id !== selectedSong?._id);
     if (filtered.length === 0) return contextSongs[0];
     return filtered[Math.floor(Math.random() * filtered.length)];
   };
-
-  const setupAnalyser = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (connectedVideoNodes.has(video)) {
-      const existing = connectedVideoNodes.get(video);
-      audioCtxRef.current = existing.ctx;
-      analyserRef.current = existing.analyser;
-      sourceNodeRef.current = existing.source;
-      return;
-    }
-
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.8;
-
-      const source = ctx.createMediaElementSource(video);
-      source.connect(analyser);
-      analyser.connect(ctx.destination);
-
-      audioCtxRef.current = ctx;
-      analyserRef.current = analyser;
-      sourceNodeRef.current = source;
-      connectedVideoNodes.set(video, { ctx, analyser, source });
-    } catch (err) {
-      console.warn("AudioContext setup failed:", err.message);
-    }
-  }, []);
-
-  // ── Spectrum animation loop ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (isPlaying) {
-      if (!audioCtxRef.current) setupAnalyser();
-      if (audioCtxRef.current?.state === "suspended") {
-        audioCtxRef.current.resume().catch(() => {});
-      }
-// Raw FFT mapped bins — SpectrumCanvas internally samples these down to its own BAR_COUNT
-      const BAR_COUNT = 46;
-      const fullFreqBins = analyserRef.current?.frequencyBinCount || 256;
-      const rawBuffer = new Uint8Array(fullFreqBins);
-      const mappedData = new Uint8Array(BAR_COUNT);
-
-      const animate = () => {
-        if (!analyserRef.current) return;
-
-        analyserRef.current.getByteFrequencyData(rawBuffer);
-
-        // Map full FFT bins → 46 bars (log-ish scale, bass bins get more bars)
-        for (let i = 0; i < BAR_COUNT; i++) {
-          const start = Math.floor((i / BAR_COUNT) * (fullFreqBins * 0.7));
-          const end = Math.floor(((i + 1) / BAR_COUNT) * (fullFreqBins * 0.7));
-          let sum = 0;
-          for (let j = start; j < end; j++) sum += rawBuffer[j];
-          mappedData[i] = Math.round(sum / Math.max(1, end - start));
-        }
-
-        // Beat detection — bass energy vs rolling average
-        let bassEnergy = 0;
-        const bassRange = 8;
-        for (let i = 0; i < bassRange; i++) bassEnergy += rawBuffer[i];
-        bassEnergy = bassEnergy / bassRange;
-
-        beatHistoryRef.current.push(bassEnergy);
-        if (beatHistoryRef.current.length > 40) beatHistoryRef.current.shift();
-
-        const avgEnergy =
-          beatHistoryRef.current.reduce((a, b) => a + b, 0) /
-          beatHistoryRef.current.length;
-
-        const now = Date.now();
-        if (
-          bassEnergy > avgEnergy * 1.45 &&
-          now - lastBeatTimeRef.current > 220
-        ) {
-          beatPulseRef.current = 1.0;
-          lastBeatTimeRef.current = now;
-        }
-
-        beatPulseRef.current *= 0.86;
-
-        // Push to React state (canvas reads this via prop)
-        setFrequencyData(new Uint8Array(mappedData));
-        setBeatPulse(parseFloat(beatPulseRef.current.toFixed(3)));
-
-        animFrameRef.current = requestAnimationFrame(animate);
-      };
-
-      animFrameRef.current = requestAnimationFrame(animate);
-    } else {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-      audioCtxRef.current?.suspend();
-      // Signal canvas to decay to flat
-      setFrequencyData(new Uint8Array(46).fill(0));
-      setBeatPulse(0);
-    }
-
-    return () => {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    };
-  }, [isPlaying, setupAnalyser]);
 
   // Event handlers
   const handleTogglePlay = useCallback(async () => {
@@ -567,13 +425,13 @@ dispatch(pause());
     });
   }, [currentSong?._id, currentUser, likeMutation, isLiked]);
 
-const handleNextSongClick = useCallback(
-  (song) => {
-    dispatch(setSelectedSong(song));
-    dispatch(play());
-  },
-  [dispatch]
-);
+  const handleNextSongClick = useCallback(
+    (song) => {
+      dispatch(setSelectedSong(song));
+      dispatch(play());
+    },
+    [dispatch]
+  );
 
   const handleToggleMute = useCallback(() => {
     if (isMuted) {
@@ -626,10 +484,6 @@ const handleNextSongClick = useCallback(
     selectedSong,
     repeatMode,
     shuffleMode,
-    // ── new spectrum props (replaces barHeights) ──
-    frequencyData,
-    beatPulse,
-    // ─────────────────────────────────────────────
     handleTogglePlay,
     handleToggleMute,
     handleNext,

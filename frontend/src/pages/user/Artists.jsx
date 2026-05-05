@@ -9,38 +9,6 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { FaPlay, FaMicrophone } from "react-icons/fa";
 import { HiSpeakerWave } from "react-icons/hi2";
 
-// Helper: map cycle codes to readable labels
-const cycleLabel = (c) => {
-  switch (String(c)) {
-    case "1m":
-      return "Monthly";
-    case "3m":
-      return "3 Months";
-    case "6m":
-      return "6 Months";
-    case "12m":
-      return "Yearly";
-    default:
-      return c || "";
-  }
-};
-
-// Format price based on currency
-const formatPrice = (amount, currency) => {
-  if (typeof amount !== "number") return "";
-  try {
-    if (currency === "INR") {
-      return `₹${new Intl.NumberFormat("en-IN").format(amount)}`;
-    } else if (currency === "USD") {
-      return `$${new Intl.NumberFormat("en-US").format(amount)}`;
-    } else {
-      return `${amount} ${currency}`;
-    }
-  } catch {
-    return `${amount} ${currency}`;
-  }
-};
-
 const Artists = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
