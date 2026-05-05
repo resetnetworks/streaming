@@ -275,7 +275,7 @@ const Footer = () => {
                   key={index}
                   src={item.src}
                   alt={item.alt}
-                  className="h-5 w-auto object-contain invert brightness-0 opacity-80"
+                  className="md:h-5 h-4 w-auto object-contain invert brightness-0 opacity-80"
                 />
               ))}
             </div>

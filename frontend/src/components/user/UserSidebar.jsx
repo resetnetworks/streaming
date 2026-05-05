@@ -33,7 +33,7 @@ const UserSidebar = () => {
   return (
     <>
       {!isMobile && (
-        <aside className="h-screen sticky top-0 bg-[#0E1525] rounded-tr-[50px] flex flex-col">
+        <aside className="h-screen sticky top-0 bg-[#0E1525] flex flex-col">
           {/* ✅ flex-shrink-0 — yeh kabhi squeeze nahi hoga */}
           <div className="flex-shrink-0">
             <IconHeader />

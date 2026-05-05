@@ -3,7 +3,9 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FaShoppingCart, FaCheck, FaPause, FaPlay } from "react-icons/fa";
-import { BsHeart, BsHeartFill, BsShare } from "react-icons/bs";
+import { BsHeart, BsHeartFill } from "react-icons/bs";
+import { IoIosShareAlt } from "react-icons/io";
+
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import { toast } from "sonner";
 
@@ -466,7 +468,7 @@ export default function Song() {
           <div className="flex flex-col lg:flex-row items-start lg:items-end gap-8 pb-8">
             {/* Song Cover */}
             <div
-              className="relative group w-full max-w-[200px] sm:max-w-[300px] mx-0"
+              className="relative group w-full max-w-[240px] sm:max-w-[300px] mx-auto"
               onMouseEnter={() => setIsHoveringCover(true)}
               onMouseLeave={() => setIsHoveringCover(false)}
             >
@@ -474,7 +476,7 @@ export default function Song() {
                 <img
                   src={song?.coverImage || song?.album?.coverImage}
                   alt={`${song.title} cover`}
-                  className="w-full max-w-[200px] sm:max-w-[300px] h-auto aspect-square object-cover rounded-2xl shadow-2xl transition-all duration-300 mx-auto cursor-pointer"
+                  className="w-full h-auto aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 cursor-pointer"
                   onClick={handleCoverClick}
                 />
               </div>
@@ -616,7 +618,7 @@ export default function Song() {
                         : "text-gray-300 border-gray-700 hover:bg-gray-800/50 hover:text-blue-400"
                     }`}
                   >
-                    <BsShare
+                    <IoIosShareAlt
                       className={`w-4 h-4 sm:w-5 sm:h-5 ${
                         showShareMenu
                           ? "text-blue-400"
@@ -671,7 +673,7 @@ export default function Song() {
                   onClick={() => navigate(`/artist/${song.artist.slug}`)}
                   className="ml-auto px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
                 >
-                  View Artist Profile →
+                Artist Profile
                 </button>
               </div>
             </div>

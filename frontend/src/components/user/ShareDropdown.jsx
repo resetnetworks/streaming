@@ -7,12 +7,12 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-import { BsShare, BsTelegram } from "react-icons/bs";
+import {BsTelegram } from "react-icons/bs";
+import { IoIosShareAlt } from "react-icons/io";
 import {
   MdAlbum,
   MdMusicNote,
   MdPerson,
-  MdShare,
   MdSkipNext,
   MdQueueMusic,
   MdClose,
@@ -100,7 +100,7 @@ const ShareModal = ({ isOpen, onClose, url, songName, singerName }) => {
           {
             key: "native",
             label: "More options…",
-            icon: <BsShare className="w-4 h-4" />,
+            icon: <IoIosShareAlt className="w-4 h-4" />,
             color: "text-purple-400",
             bg: "hover:bg-purple-500/20",
             action: async () => {
@@ -363,7 +363,7 @@ const ShareDropdown = ({
     {
       key: "share",
       label: "Share",
-      icon: <MdShare className="w-4 h-4" />,
+      icon: <IoIosShareAlt className="w-4 h-4" />,
       onClick: () => setShareModalOpen(true),
       show: true,
     },

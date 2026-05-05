@@ -9,20 +9,12 @@ import {
   RiVolumeMuteFill,
 } from "react-icons/ri";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
-import { IoIosMore, IoMdMore, IoMdShuffle } from "react-icons/io";
-import { FaPlay, FaPause, FaLock } from "react-icons/fa";
+import { IoIosMore, IoMdShuffle } from "react-icons/io";
+import { FaPlay } from "react-icons/fa";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { TbRepeat, TbRepeatOnce } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
-import SpectrumCanvas from "./SpectrumCanvas";
 
-const formatTime = (seconds) => {
-  const mins = Math.floor(seconds / 60) || 0;
-  const secs = Math.floor(seconds % 60) || 0;
-  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-};
-
-// ─── Ghost / Empty State Player ───────────────────────────────────────────────
 const GhostPlayer = () => {
   const [open, setOpen] = useState(true);
 
@@ -48,7 +40,6 @@ const GhostPlayer = () => {
         <div className="w-3/4 h-4 mt-3 rounded bg-gray-700/60" />
         <div className="w-1/2 h-3 mt-2 rounded bg-gray-700/40" />
 
-        {/* Ghost Spectrum */}
         <div className="w-full mt-4 flex flex-col gap-[6px]">
           <div className="flex justify-between text-xs text-gray-600 mt-1 px-[2px]">
             <span>0:00</span>
@@ -56,7 +47,6 @@ const GhostPlayer = () => {
           </div>
         </div>
 
-        {/* Ghost scrub */}
         <div className="w-full h-1 rounded-full bg-gray-700/60 mt-1" />
 
         <div className="w-full mt-4 flex justify-between items-center opacity-40">
@@ -110,7 +100,6 @@ const GhostPlayer = () => {
   );
 };
 
-// ─── Main PlayerUI ─────────────────────────────────────────────────────────────
 const PlayerUI = ({
   currentSong,
   isPlaying,
@@ -138,9 +127,6 @@ const PlayerUI = ({
   handleRepeatToggle,
   shuffleMode,
   handleShuffleToggle,
-  // ── new spectrum props ──
-  frequencyData,
-  beatPulse,
 }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [open, setOpen] = useState(true);
@@ -182,19 +168,11 @@ const PlayerUI = ({
         </div>
 
         {/* Song Info */}
-        <p className="xl:text-lg text-base mt-2">{currentSong?.title}</p>
+        <p className="xl:text-lg text-base mt-4">{currentSong?.title}</p>
         <span className="xl:text-sm text-xs text-gray-500">{currentSong?.singer}</span>
 
-        {/* ── Spectrum + Progress Section ── */}
-        <div className="w-full flex flex-col gap-[6px]">
-
-          {/* Canvas-based spectrum visualizer */}
-          <SpectrumCanvas
-            frequencyData={isDisplayOnly ? null : frequencyData}
-            isPlaying={isPlaying && !isDisplayOnly}
-            beatPulse={isDisplayOnly ? 0 : beatPulse}
-          />
-
+        {/* Progress Section */}
+        <div className="w-full flex flex-col gap-[6px] mt-4">
           {/* Scrub track */}
           <div className="relative w-full h-1 bg-white/10 rounded-full cursor-pointer group">
             <div
