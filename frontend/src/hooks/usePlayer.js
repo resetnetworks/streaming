@@ -66,6 +66,7 @@ export const usePlayer = () => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const queueRef = useRef(queue);
+  const isDraggingRef = useRef(false);
 
   useEffect(() => { queueRef.current = queue; }, [queue]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
@@ -197,7 +198,7 @@ export const usePlayer = () => {
         };
 
         video.ontimeupdate = () => {
-          if (!isNaN(video.currentTime)) {
+          if (!isDraggingRef.current && !isNaN(video.currentTime)) {
             dispatch(setCurrentTime(video.currentTime));
           }
         };
@@ -346,7 +347,10 @@ export const usePlayer = () => {
         const firstSong = playbackContextSongs[0];
         const remainingSongs = playbackContextSongs.slice(1);
         dispatch(setSelectedSong(firstSong));
-        remainingSongs.forEach((song) => dispatch(addToQueue(song)));
+        const existingIds = new Set(queueRef.current?.upcoming?.map((s) => s._id) || []);
+        remainingSongs
+          .filter((song) => !existingIds.has(song._id))
+          .forEach((song) => dispatch(addToQueue(song)));
         dispatch(play());
         return;
       }
@@ -389,16 +393,24 @@ export const usePlayer = () => {
     dispatch(setShuffleMode(!shuffleMode));
   }, [shuffleMode, dispatch]);
 
-  const handleSeekChange = useCallback(
-    (val) => {
-      const video = videoRef.current;
-      if (video && !isDisplayOnly) {
-        video.currentTime = val;
-        dispatch(setCurrentTime(val));
-      }
-    },
-    [isDisplayOnly, dispatch],
-  );
+  const handleSeekStart = useCallback(() => {
+    isDraggingRef.current = true;
+  }, []);
+
+  const handleSeeking = useCallback((val) => {
+    if (!isDisplayOnly) {
+      dispatch(setCurrentTime(val)); // only UI update
+    }
+  }, [isDisplayOnly, dispatch]);
+
+  const handleSeekCommit = useCallback((val) => {
+    const video = videoRef.current;
+    if (video && !isDisplayOnly) {
+      video.currentTime = val;
+      dispatch(setCurrentTime(val));
+    }
+    isDraggingRef.current = false;
+  }, [isDisplayOnly, dispatch]);
 
   const handleVolumeChange = useCallback(
     (e) => {
@@ -488,7 +500,9 @@ export const usePlayer = () => {
     handleToggleMute,
     handleNext,
     handlePrev,
-    handleSeekChange,
+    handleSeekStart,
+    handleSeeking,
+    handleSeekCommit,
     handleLikeToggle,
     handleVolumeChange,
     handleNextSongClick,
