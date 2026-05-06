@@ -79,8 +79,6 @@ const playerSlice = createSlice({
   reducers: {
     setSelectedSong(state, action) {
   const newSong = action.payload;
-
-  // ✅ check same song
   const isSameSong = state.selectedSong?._id === newSong._id;
 
   state.selectedSong = newSong;
@@ -88,13 +86,11 @@ const playerSlice = createSlice({
   state.lastSelectedAt = Date.now();
   state.forceRefreshToken = Date.now();
 
-  // 🔥 only reset if different song
   if (!isSameSong) {
     state.currentTime = 0;
     state.duration = 0;
   }
 },
-
     play(state) {
       state.isPlaying = true;
     },
@@ -182,42 +178,36 @@ const playerSlice = createSlice({
 },
 
     removeFirstQueueItem(state) {
-      state.queue.upcoming.shift();
+  state.queue.upcoming.shift();
 
-      if (state.selectedSong) {
-        // prevent duplicate history entries
-        if (
-          state.queue.history[state.queue.history.length - 1]?._id !==
-          state.selectedSong._id
-        ) {
-          state.queue.history.push(state.selectedSong);
-        }
+  if (state.selectedSong) {
+    if (
+      state.queue.history[state.queue.history.length - 1]?._id !==
+      state.selectedSong._id
+    ) {
+      state.queue.history.push(state.selectedSong);
 
-        // limit history size
-        if (state.queue.history.length > MAX_HISTORY) {
-          state.queue.history.shift();
-        }
+      if (state.queue.history.length > MAX_HISTORY) {
+        state.queue.history.shift();
       }
+    }
+  }
 
-      try {
-        localStorage.setItem("player-queue", JSON.stringify(state.queue));
-      } catch (e) {
-        console.warn("Failed to persist queue", e);
-      }
-    },
-    removeLastHistoryItem(state) {
-      const prev = state.queue.history.pop();
+  try {
+    localStorage.setItem("player-queue", JSON.stringify(state.queue));
+  } catch (e) {
+    console.warn("Failed to persist queue", e);
+  }
+},
+   removeLastHistoryItem(state) {
+  state.queue.history.pop();
 
-      if (state.selectedSong && prev) {
-        state.queue.upcoming.unshift(state.selectedSong);
-      }
-
-      try {
-        localStorage.setItem("player-queue", JSON.stringify(state.queue));
-      } catch (e) {
-        console.warn("Failed to persist queue", e);
-      }
-    },
+  try {
+    localStorage.setItem("player-queue", JSON.stringify(state.queue));
+  } catch (e) {
+    console.warn("Failed to persist queue", e);
+  }
+},
 
     // ✅ NEW: Set repeat mode with persistence
     setRepeatMode(state, action) {
