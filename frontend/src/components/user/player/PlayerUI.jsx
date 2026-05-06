@@ -118,7 +118,9 @@ const PlayerUI = ({
   handleToggleMute,
   handleNext,
   handlePrev,
-  handleSeekChange,
+  handleSeekStart,
+  handleSeeking,
+  handleSeekCommit,
   handleVolumeChange,
   handleLikeToggle,
   handleNextSongClick,
@@ -131,12 +133,42 @@ const PlayerUI = ({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [open, setOpen] = useState(true);
   const [transitionReady, setTransitionReady] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragValueRef = useRef(0);
+  const rangeRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setTransitionReady(true));
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  useEffect(() => {
+    const el = rangeRef.current;
+    if (!el) return;
+
+    const onChange = () => {
+      if (isDragging) {
+        handleSeekCommit(dragValueRef.current);
+        setIsDragging(false);
+      }
+    };
+
+    el.addEventListener("change", onChange);
+    return () => el.removeEventListener("change", onChange);
+  }, [isDragging, handleSeekCommit]);
+
+  const onInput = (e) => {
+    const val = parseFloat(e.target.value);
+
+    if (!isDragging) {
+      handleSeekStart();
+      setIsDragging(true);
+    }
+
+    dragValueRef.current = val;
+    handleSeeking(val);
+  };
 
   const shareMenuTriggerRef = useRef(null);
 
@@ -179,7 +211,7 @@ const PlayerUI = ({
               className="h-full bg-blue-500 rounded-full relative"
               style={{
                 width: `${isDisplayOnly ? 0 : progressPercent}%`,
-                transition: transitionReady ? "width 0.1s linear" : "none",
+                transition: transitionReady && !isDragging ? "width 0.1s linear" : "none",
               }}
             >
               {!isDisplayOnly && (
@@ -187,11 +219,12 @@ const PlayerUI = ({
               )}
             </div>
             <input
+              ref={rangeRef}
               type="range"
               min="0"
               max={duration || 100}
               value={isDisplayOnly ? 0 : currentTime}
-              onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
+              onInput={onInput}
               className="absolute inset-0 opacity-0 w-full cursor-pointer"
               disabled={isDisplayOnly}
             />
