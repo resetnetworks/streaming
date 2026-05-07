@@ -14,26 +14,24 @@ import { resetAllAlbumState } from "../../features/artistAlbums/artistAlbumsSlic
 import { resetUploadState } from "../../features/artistSong/artistSongSlice";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Static tab components (no props needed)
 const tabComponents = {
   profile: <ProfileComponent />,
   dashboard: <HomeComponent />,
-  uploads: <UploadsComponent />,
   revenue: <ArtistDashboardRevenue />,
 };
 
 export default function Dashboard() {
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
-  // Initialize state from localStorage or default to "profile"
+  // Restore last active tab from localStorage, default to "profile"
   const [selectedTab, setSelectedTab] = useState(() => {
-    // Check if we're in the browser environment
     if (typeof window !== "undefined") {
       const savedTab = localStorage.getItem("dashboardSelectedTab");
-      // Validate that the saved tab is one of our valid tabs
-      const validTabs = ["profile", "dashboard", "uploads"];
+      const validTabs = ["profile", "dashboard", "uploads", "revenue"];
       return validTabs.includes(savedTab) ? savedTab : "profile";
     }
     return "profile";
@@ -44,7 +42,10 @@ export default function Dashboard() {
   const [showBatchProgress, setShowBatchProgress] = useState(false);
   const [batchProgressData, setBatchProgressData] = useState(null);
 
-  // Monetization Modal State
+  // After upload completes, signal UploadsComponent which tab to show
+  const [uploadedTabToShow, setUploadedTabToShow] = useState(null);
+
+  // Monetization state — restored from localStorage for instant UI
   const [showMonetizationModal, setShowMonetizationModal] = useState(false);
   const [isMonetized, setIsMonetized] = useState(() => {
     if (typeof window !== "undefined") {
@@ -53,14 +54,14 @@ export default function Dashboard() {
     return false;
   });
 
-  // Save selected tab to localStorage whenever it changes
+  // Persist active tab to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("dashboardSelectedTab", selectedTab);
     }
   }, [selectedTab]);
 
-  // Also save upload page state if needed
+  // Persist upload page so refresh doesn't lose progress
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (currentUploadPage) {
@@ -71,80 +72,64 @@ export default function Dashboard() {
     }
   }, [currentUploadPage]);
 
-  // Load upload page state on initial render
+  // Restore upload page on initial render
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedUploadPage = localStorage.getItem("currentUploadPage");
-      const validUploadPages = ["single", "album"];
+      const validUploadPages = ["single", "album", "mix"];
       if (validUploadPages.includes(savedUploadPage)) {
         setCurrentUploadPage(savedUploadPage);
       }
     }
   }, []);
 
-  // Check if artist is monetized on component mount
+  // Verify monetization status from server on mount
   useEffect(() => {
     const checkMonetizationStatus = async () => {
       try {
-        // Fetch monetization status from Redux
         const result = await dispatch(getMyMonetizationSetupStatus());
-        
-        // Check both Redux state and localStorage
-        const reduxMonetized = result?.payload?.isMonetizationComplete;
+        const serverMonetized = result?.payload?.isMonetizationComplete;
         const localMonetized = localStorage.getItem("artistMonetized") === "true";
-        
-        // Determine final monetization status
-        const finalMonetizedStatus = reduxMonetized || localMonetized;
-        
-        // Update state
-        setIsMonetized(finalMonetizedStatus);
+        const finalStatus = serverMonetized || localMonetized;
 
-        // अगर artist monetized नहीं है, तो modal show करें
-        if (!finalMonetizedStatus) {
-          // Small delay to ensure component is fully mounted
-          setTimeout(() => {
-            setShowMonetizationModal(true);
-          }, 500);
+        setIsMonetized(finalStatus);
+
+        if (!finalStatus) {
+          setTimeout(() => setShowMonetizationModal(true), 500);
         }
       } catch (error) {
-        console.error("Error checking monetization status:", error);
+        console.error("Monetization check failed:", error);
       }
     };
 
     checkMonetizationStatus();
   }, [dispatch]);
 
-  // Handle tab change
+  // Handle sidebar/topbar tab navigation
   const handleTabChange = (tab) => {
-    // If artist is not monetized, don't allow tab changes (except profile)
     if (!isMonetized && tab !== "profile") {
       alert("Please complete monetization setup to access this feature");
       setShowMonetizationModal(true);
       return;
     }
 
-    // If switching tabs while in upload mode, cancel upload first
+    // Cancel any active upload before switching tabs
     if (currentUploadPage) {
       handleCancelUpload();
     }
     setSelectedTab(tab);
   };
 
-  const queryClient = useQueryClient();
-  // Handle monetization completion
+  // Mark monetization as complete and refresh profile data
   const handleMonetizationComplete = () => {
     setIsMonetized(true);
     localStorage.setItem("artistMonetized", "true");
-    queryClient.invalidateQueries({
-    queryKey: ["artist-dashboard", "profile"],
-  });
+    queryClient.invalidateQueries({ queryKey: ["artist-dashboard", "profile"] });
     setShowMonetizationModal(false);
-    // setSelectedTab("profile"); // Automatically switch to dashboard after monetization
   };
 
-  // Handle upload type selection
+  // Begin an upload flow (single / album / mix)
   const handleUploadTypeSelect = (type) => {
-    // Check if artist is monetized before allowing uploads
     if (!isMonetized) {
       alert("Please complete monetization setup to upload content");
       setShowMonetizationModal(true);
@@ -155,21 +140,18 @@ export default function Dashboard() {
       setShowUploadModal(true);
     } else {
       setCurrentUploadPage(type);
-      dispatch(resetAllAlbumState()); // Reset album state for fresh start
-      dispatch(resetUploadState()); // Reset song state
+      dispatch(resetAllAlbumState());
+      dispatch(resetUploadState());
     }
   };
 
-  // Handle upload cancellation
+  // Cancel an in-progress upload and clean up state
   const handleCancelUpload = () => {
     if (currentUploadPage === "album") {
-      // Confirm before cancelling album upload (as it may have progress)
-      const confirmCancel = window.confirm(
+      const confirmed = window.confirm(
         "Are you sure you want to cancel? Any unsaved progress will be lost."
       );
-      if (!confirmCancel) return;
-
-      // Reset all album and song states
+      if (!confirmed) return;
       dispatch(resetAllAlbumState());
       dispatch(resetUploadState());
     } else {
@@ -180,29 +162,32 @@ export default function Dashboard() {
     setShowUploadModal(false);
   };
 
-  // Handle batch upload progress
+  /**
+   * Called by SingleUpload / AlbumUpload / MixUpload on success.
+   * uploadType: "single" | "album" | "mix"
+   * Navigates to the uploads tab and signals which sub-tab to activate.
+   */
+  const handleUploadComplete = (uploadType) => {
+    dispatch(resetAllAlbumState());
+    dispatch(resetUploadState());
+    setCurrentUploadPage(null);
+    setSelectedTab("uploads");
+    // "single" and "mix" both belong to the "songs" tab
+    setUploadedTabToShow(uploadType === "album" ? "albums" : "songs");
+  };
+
+  // Batch progress handlers for album multi-song uploads
   const handleBatchProgress = (data) => {
     setBatchProgressData(data);
     setShowBatchProgress(true);
   };
 
-  // Close batch progress modal
   const handleCloseBatchProgress = () => {
     setShowBatchProgress(false);
     setBatchProgressData(null);
   };
 
-  // Handle upload completion
-  const handleUploadComplete = () => {
-
-    // Reset and go back to uploads tab
-    dispatch(resetAllAlbumState());
-    dispatch(resetUploadState());
-    setCurrentUploadPage(null);
-    setSelectedTab("uploads");
-  };
-
-  // Listen for escape key to cancel upload
+  // Close upload modal on Escape key
   useEffect(() => {
     const handleEscapeKey = (e) => {
       if (e.key === "Escape" && currentUploadPage) {
@@ -214,10 +199,52 @@ export default function Dashboard() {
       document.addEventListener("keydown", handleEscapeKey);
     }
 
-    return () => {
-      document.removeEventListener("keydown", handleEscapeKey);
-    };
+    return () => document.removeEventListener("keydown", handleEscapeKey);
   }, [currentUploadPage]);
+
+  // Render the correct content for the active tab
+  const renderMainContent = () => {
+    if (currentUploadPage === "single") {
+      return (
+        <SingleUpload
+          onCancel={handleCancelUpload}
+          onComplete={handleUploadComplete}
+        />
+      );
+    }
+
+    if (currentUploadPage === "album") {
+      return (
+        <AlbumUpload
+          onCancel={handleCancelUpload}
+          onComplete={handleUploadComplete}
+          onBatchProgress={handleBatchProgress}
+        />
+      );
+    }
+
+    if (currentUploadPage === "mix") {
+      return (
+        <MixUpload
+          onCancel={handleCancelUpload}
+          onComplete={handleUploadComplete}
+          onBatchProgress={handleBatchProgress}
+        />
+      );
+    }
+
+    // Uploads tab gets special props to auto-switch its internal tab
+    if (selectedTab === "uploads") {
+      return (
+        <UploadsComponent
+          defaultTab={uploadedTabToShow}
+          onTabConsumed={() => setUploadedTabToShow(null)}
+        />
+      );
+    }
+
+    return tabComponents[selectedTab] || null;
+  };
 
   return (
     <BackgroundWrapper>
@@ -229,6 +256,7 @@ export default function Dashboard() {
           onUploadSelect={handleUploadTypeSelect}
           isMonetized={isMonetized}
         />
+
         <div className="flex-grow w-full flex flex-col">
           <Topbar
             selectedTab={selectedTab}
@@ -237,51 +265,28 @@ export default function Dashboard() {
             onUploadSelect={handleUploadTypeSelect}
             isMonetized={isMonetized}
           />
+
           <main className="flex-grow relative">
-            {currentUploadPage === "single" ? (
-              <SingleUpload
-                onCancel={handleCancelUpload}
-                onComplete={handleUploadComplete}
-              />
-            ) : currentUploadPage === "album" ? (
-              <AlbumUpload
-                onCancel={handleCancelUpload}
-                onComplete={handleUploadComplete}
-                onBatchProgress={handleBatchProgress}
-              />
-            ) : currentUploadPage === "mix" ? (
-              <MixUpload
-                onCancel={handleCancelUpload}
-                onComplete={handleUploadComplete}
-                onBatchProgress={handleBatchProgress}
-              />
-            ) :(
-              tabComponents[selectedTab]
-            )}
+            {renderMainContent()}
           </main>
         </div>
 
-        {/* Mandatory Monetization Modal */}
+        {/* Monetization gate — blocks access until setup is complete */}
         <MonetizationModal
           isOpen={showMonetizationModal}
           onClose={() => {
-            // Allow closing only if monetized
-            if (isMonetized) {
-              setShowMonetizationModal(false);
-            }
+            if (isMonetized) setShowMonetizationModal(false);
           }}
           onComplete={handleMonetizationComplete}
-          isMandatory={!isMonetized} // Pass isMandatory prop
+          isMandatory={!isMonetized}
         />
 
-        {/* Upload Type Selection Modal */}
+        {/* Upload type picker modal (shown before album flow starts) */}
         {showUploadModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 max-w-md w-full mx-4">
               <h2 className="text-2xl text-white mb-2">Choose Upload Type</h2>
-              <p className="text-gray-400 mb-6">
-                Select what you want to upload
-              </p>
+              <p className="text-gray-400 mb-6">Select what you want to upload</p>
 
               <div className="space-y-4">
                 <button
@@ -297,9 +302,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h3 className="text-white text-lg mb-1">Single Track</h3>
-                      <p className="text-gray-400 text-sm">
-                        Upload one individual song
-                      </p>
+                      <p className="text-gray-400 text-sm">Upload one individual song</p>
                     </div>
                   </div>
                 </button>
@@ -318,9 +321,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h3 className="text-white text-lg mb-1">Album</h3>
-                      <p className="text-gray-400 text-sm">
-                        Create album with multiple songs
-                      </p>
+                      <p className="text-gray-400 text-sm">Create album with multiple songs</p>
                     </div>
                   </div>
                 </button>
@@ -338,7 +339,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Batch Upload Progress Modal */}
+        {/* Batch upload progress modal for album songs */}
         {showBatchProgress && batchProgressData && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-lg w-full mx-4">
@@ -355,8 +356,7 @@ export default function Dashboard() {
               <div className="mb-6">
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-300">
-                    {batchProgressData.currentIndex + 1} of{" "}
-                    {batchProgressData.totalSongs} songs
+                    {batchProgressData.currentIndex + 1} of {batchProgressData.totalSongs} songs
                   </span>
                   <span className="text-blue-400 font-mono">
                     {batchProgressData.currentProgress}%
@@ -368,14 +368,11 @@ export default function Dashboard() {
                     className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
                     style={{
                       width: `${
-                        (batchProgressData.currentIndex /
-                          batchProgressData.totalSongs) *
-                          100 +
-                        batchProgressData.currentProgress /
-                          batchProgressData.totalSongs
+                        (batchProgressData.currentIndex / batchProgressData.totalSongs) * 100 +
+                        batchProgressData.currentProgress / batchProgressData.totalSongs
                       }%`,
                     }}
-                  ></div>
+                  />
                 </div>
               </div>
 
@@ -386,20 +383,13 @@ export default function Dashboard() {
                       <span className="text-blue-400">♪</span>
                     </div>
                     <div>
-                      <p className="text-white font-medium">
-                        {batchProgressData.currentSongName}
-                      </p>
+                      <p className="text-white font-medium">{batchProgressData.currentSongName}</p>
                       <p className="text-gray-400 text-sm">
-                        Uploading song {batchProgressData.currentIndex + 1} of{" "}
-                        {batchProgressData.totalSongs}
+                        Uploading song {batchProgressData.currentIndex + 1} of {batchProgressData.totalSongs}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-blue-400 text-lg">
-                      {batchProgressData.currentProgress}%
-                    </div>
-                  </div>
+                  <div className="text-blue-400 text-lg">{batchProgressData.currentProgress}%</div>
                 </div>
               </div>
 

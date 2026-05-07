@@ -11,8 +11,8 @@ import { fetchArtistProfile } from "../../../features/artists/artistsSlice";
 const menuItems = [
   { name: "profile", icon: <FaRegUserCircle size={20} /> },
   { name: "uploads", icon: <FiMusic size={20} strokeWidth={1.5} /> },
-  { name: "dashboard", icon: <RxDashboard size={20} /> },
   { name: "revenue", icon: <FaWallet size={20} /> },
+  { name: "dashboard", icon: <RxDashboard size={20} /> },
   // { name: "insights", icon: <FaChartLine size={18} /> },
 ];
 

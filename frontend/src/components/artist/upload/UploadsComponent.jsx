@@ -1,4 +1,3 @@
-// UploadsComponent.jsx - ✅ CLEANED UP (MODAL IMPORTED)
 import React, { useState, useEffect, useCallback } from "react";
 import { LuCalendarDays } from "react-icons/lu";
 import { FiSearch } from "react-icons/fi";
@@ -9,7 +8,16 @@ import {
   useDashboardAlbums,
 } from "../../../hooks/api/useArtists";
 
-const UploadsComponent = () => {
+/**
+ * defaultTab  — "songs" | "albums" | null
+ *   Passed by Dashboard after a successful upload so the right tab
+ *   is immediately visible without the user having to click.
+ *
+ * onTabConsumed — () => void
+ *   Called once after we apply defaultTab so Dashboard can reset
+ *   its signal. Without this, every re-render would force the tab back.
+ */
+const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
   const { data: songsData, isLoading: songsLoading } = useDashboardSingles();
   const { data: albumsData, isLoading: albumsLoading } = useDashboardAlbums();
 
@@ -20,12 +28,20 @@ const UploadsComponent = () => {
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
 
+  // Apply the one-time tab signal from Dashboard, then clear it
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+      onTabConsumed?.();
+    }
+  }, [defaultTab]);
+
   const handleImageError = useCallback((e) => {
     const target = e.target;
     if (target.dataset.errorHandled) return;
     target.dataset.errorHandled = "true";
-
     target.style.display = "none";
+
     const container = target.closest("div");
     if (container) {
       const title = container.dataset.title || "A";
@@ -51,14 +67,14 @@ const UploadsComponent = () => {
   }, []);
 
   const songs = songsData?.pages?.flatMap((page) => page.songs) || [];
-
   const albums = albumsData?.pages?.flatMap((page) => page.albums) || [];
   const data = activeTab === "songs" ? songs : albums;
 
   const filtered = data.filter((item) =>
-    item.title?.toLowerCase().includes(search.toLowerCase()),
+    item.title?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Show spinner while the active tab's data is loading
   if (
     (activeTab === "songs" && songsLoading) ||
     (activeTab === "albums" && albumsLoading)
@@ -66,7 +82,7 @@ const UploadsComponent = () => {
     return (
       <div className="p-4 md:p-6">
         <div className="w-full h-full text-white flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
         </div>
       </div>
     );
@@ -84,11 +100,9 @@ const UploadsComponent = () => {
         rounded-xl md:rounded-none md:hover:rounded-xl bg-white/3 md:bg-transparent
         backdrop-blur-sm ${activeTab === "albums" ? "cursor-pointer" : ""}
       `}
-      onClick={
-        activeTab === "albums" ? () => handleAlbumClick(item) : undefined
-      }
+      onClick={activeTab === "albums" ? () => handleAlbumClick(item) : undefined}
     >
-      {/* MOBILE VIEW */}
+      {/* ── Mobile row ── */}
       <div className="md:hidden">
         <div className="flex items-start gap-4">
           <div className="relative flex-shrink-0" data-title={item.title}>
@@ -104,6 +118,7 @@ const UploadsComponent = () => {
               {index + 1}
             </div>
           </div>
+
           <div className="flex-1 min-w-0">
             <h3 className="text-white font-bold lowercase text-base mb-1 truncate">
               {item.title}
@@ -114,12 +129,11 @@ const UploadsComponent = () => {
                   item.accessType === "purchase-only"
                     ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
                     : item.accessType === "subscription"
-                      ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                      : "bg-green-500/20 text-green-300 border border-green-500/30"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                    : "bg-green-500/20 text-green-300 border border-green-500/30"
                 }`}
               >
-                {item.accessType?.charAt(0).toLowerCase() +
-                  item.accessType?.slice(1) || "Free"}
+                {item.accessType?.charAt(0).toLowerCase() + item.accessType?.slice(1) || "Free"}
               </span>
               <div className="flex items-center gap-1 text-sm text-white/60">
                 <LuCalendarDays className="w-3 h-3 flex-shrink-0" />
@@ -132,11 +146,10 @@ const UploadsComponent = () => {
         </div>
       </div>
 
-      {/* DESKTOP VIEW */}
+      {/* ── Desktop row ── */}
       <div className="hidden md:contents">
-        <span className="text-white/70 flex items-center justify-center">
-          {index + 1}
-        </span>
+        <span className="text-white/70 flex items-center justify-center">{index + 1}</span>
+
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500/20 to-blue-500/20"
@@ -153,20 +166,21 @@ const UploadsComponent = () => {
             {item?.title}
           </span>
         </div>
+
         <div className="flex items-center justify-center">
           <span
             className={`px-3 py-1 lowercase rounded-full text-xs font-medium ${
               item?.accessType === "purchase-only"
                 ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
                 : item?.accessType === "subscription"
-                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                  : "bg-green-500/20 text-green-300 border border-green-500/30"
+                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                : "bg-green-500/20 text-green-300 border border-green-500/30"
             }`}
           >
-            {item.accessType?.charAt(0).toLowerCase() +
-              item.accessType?.slice(1) || "Free"}
+            {item.accessType?.charAt(0).toLowerCase() + item.accessType?.slice(1) || "Free"}
           </span>
         </div>
+
         <span className="text-right text-white/40 text-sm">
           {formatDate(item.createdAt || item.releaseDate)}
         </span>
@@ -182,7 +196,7 @@ const UploadsComponent = () => {
         album={selectedAlbum}
       />
 
-      {/* Mobile Header */}
+      {/* ── Mobile header ── */}
       <div className="flex items-center justify-between mb-6 md:hidden">
         <div className="flex items-center gap-2">
           <button
@@ -203,9 +217,10 @@ const UploadsComponent = () => {
                 : "bg-white/5 text-white/60"
             }`}
           >
-            songs
+            songs ({songs?.length})
           </button>
         </div>
+
         <div className="flex items-center text-white gap-2">
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
@@ -222,7 +237,7 @@ const UploadsComponent = () => {
         </div>
       </div>
 
-      {/* Mobile Search */}
+      {/* Mobile search input */}
       {showMobileSearch && (
         <div className="mb-4 md:hidden">
           <div className="relative">
@@ -246,7 +261,7 @@ const UploadsComponent = () => {
         </div>
       )}
 
-      {/* Mobile Filter */}
+      {/* Mobile filter dropdown */}
       {showMobileFilter && (
         <div className="mb-4 md:hidden">
           <div className="relative">
@@ -264,7 +279,7 @@ const UploadsComponent = () => {
         </div>
       )}
 
-      {/* Desktop Header */}
+      {/* ── Desktop header ── */}
       <div className="hidden md:flex items-center justify-between mb-8 pb-4 border-b border-gray-500/50">
         <div className="flex items-center gap-1">
           <button
@@ -273,7 +288,7 @@ const UploadsComponent = () => {
               activeTab === "albums" ? "text-[#0687F5]" : "text-white/50"
             }`}
           >
-            albums{" "}
+            albums
             {activeTab === "albums" && (
               <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-blue-400" />
             )}
@@ -284,12 +299,13 @@ const UploadsComponent = () => {
               activeTab === "songs" ? "text-[#0687F5]" : "text-white/50"
             }`}
           >
-            songs{" "}
+            songs
             {activeTab === "songs" && (
               <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-blue-400" />
             )}
           </button>
         </div>
+
         <div className="flex items-center gap-4">
           <div className="relative">
             <input
@@ -301,6 +317,7 @@ const UploadsComponent = () => {
             />
             <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/40" />
           </div>
+
           <div className="relative">
             <select
               value={filter}
@@ -316,7 +333,7 @@ const UploadsComponent = () => {
         </div>
       </div>
 
-      {/* Table Header */}
+      {/* Desktop table header */}
       <div className="hidden md:block px-6 border-b border-gray-500/50 pb-4 mb-2">
         <div className="grid grid-cols-[60px_1fr_120px_140px] text-sm text-white/60 font-medium">
           <span>#</span>
@@ -326,7 +343,7 @@ const UploadsComponent = () => {
         </div>
       </div>
 
-      {/* Content List */}
+      {/* Content list */}
       <div className="space-y-2 md:space-y-0">
         {filtered.length > 0 ? (
           filtered.map(renderRow)
@@ -336,19 +353,12 @@ const UploadsComponent = () => {
               {search ? (
                 <>
                   <FiSearch className="w-12 h-12 text-white/30 mx-auto mb-4" />
-                  <p className="text-white/60">
-                    No results found for "{search}"
-                  </p>
+                  <p className="text-white/60">No results found for "{search}"</p>
                 </>
               ) : (
                 <>
                   <div className="w-12 h-12 text-white/30 mx-auto mb-4 flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
