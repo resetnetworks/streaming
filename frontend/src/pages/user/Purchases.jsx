@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import { fetchAllSongs } from "../../features/songs/songSlice";
+import React, { useRef, useState, useCallback } from "react";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { useNavigate } from "react-router-dom";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import UserHeader from "../../components/user/UserHeader";
 import SongList from "../../components/user/SongList";
-import { formatDuration, getAvatarColor } from "../../utills/helperFunctions";
+import { getAvatarColor } from "../../utills/helperFunctions";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useUserDashboard } from "../../hooks/api/useUserDashboard";
@@ -17,8 +16,9 @@ const Purchases = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
+  // यह state और ref वैसे ही रहेंगे (अप्रयुक्त को हटाया जा सकता है, पर कोड तोड़ने से बचने के लिए रखते हैं)
   const [page, setPage] = useState(1);
-  const [librarySongs, setLibrarySongs] = useState([]);
+  const [, setLibrarySongs] = useState([]);
   const recentScrollRef = useRef(null);
   const observerRef = useRef();
 
@@ -153,7 +153,7 @@ const Purchases = () => {
     );
   };
 
-  // ✅ Auth check - Purchases component ke andar, return ke pehle
+  // Auth check
   if (!isAuthenticated) {
     return (
       <>
@@ -166,11 +166,11 @@ const Purchases = () => {
             </p>
           </div>
           <button
-  onClick={() => navigate("/login")}
-  className="mt-2 px-6 py-2 border border-gray-600 hover:border-white text-white text-sm font-medium rounded-full transition-colors cursor-pointer bg-transparent"
->
-  Sign in
-</button>
+            onClick={() => navigate("/login")}
+            className="mt-2 px-6 py-2 border border-gray-600 hover:border-white text-white text-sm font-medium rounded-full transition-colors cursor-pointer bg-transparent"
+          >
+            Sign in
+          </button>
         </div>
       </>
     );
@@ -194,7 +194,6 @@ const Purchases = () => {
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="text-white px-4 py-2 flex flex-col gap-6">
-
           {/* Active Subscriptions */}
           <div>
             <div className="w-full flex justify-between items-center mb-4">
@@ -227,7 +226,15 @@ const Purchases = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">You're not subscribed to any artists.</p>
+              <div className="bg-white/5 border border-gray-700/50 rounded-xl p-6 text-center">
+                <p className="text-gray-400 text-sm mb-4">You're not subscribed to any artists.</p>
+                <button
+                  onClick={() => navigate("/artists")}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
+                >
+                  Explore Artists
+                </button>
+              </div>
             )}
           </div>
 
@@ -264,7 +271,15 @@ const Purchases = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">No albums purchased yet.</p>
+              <div className="bg-white/5 border border-gray-700/50 rounded-xl p-6 text-center">
+                <p className="text-gray-400 text-sm mb-4">No albums purchased yet.</p>
+                <button
+                  onClick={() => navigate("/search")}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
+                >
+                  Discover Albums
+                </button>
+              </div>
             )}
           </div>
 
@@ -299,7 +314,15 @@ const Purchases = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">No songs purchased yet.</p>
+              <div className="bg-white/5 border border-gray-700/50 rounded-xl p-6 text-center">
+                <p className="text-gray-400 text-sm mb-4">No songs purchased yet.</p>
+                <button
+                  onClick={() => navigate("/search")}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
+                >
+                  Find Songs
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useUploadSong } from "../../hooks/api/useUpload";
 import { useS3Upload } from "../../hooks/api/useS3Upload";
 import { useCreateSong } from "../../hooks/api/useSongs";
 
-const MixUpload = ({ onCancel }) => {
+const MixUpload = ({ onComplete,onCancel }) => {
   // React Query hooks
   const uploadSongMutation = useUploadSong();
   const { uploadSongCover } = useS3Upload();
@@ -97,9 +97,9 @@ const MixUpload = ({ onCancel }) => {
       toast.dismiss("save-metadata");
       toast.success("Mix uploaded successfully!");
 
-      if (onCancel) {
-        setTimeout(() => onCancel(), 1500);
-      }
+      setTimeout(() => {
+        onComplete("single");
+      }, 1500);
     } catch (error) {
       console.error("Mix upload failed:", error);
       if (error.message.includes("Unauthorized") || error.message.includes("401")) {

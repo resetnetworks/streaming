@@ -184,6 +184,7 @@ const GenrePage = () => {
                      isSelected={selectedSong?._id === song._id}
                      isPlaying={selectedSong?._id === song._id && isPlaying}
                       shareUrl={`${window.location.origin}/song/${song.slug || song._id}`}
+                      currentUser={currentUser}
                       isShareDropdownOpen={activeShareDropdown === song._id}
                       onShareDropdownToggle={() => handleShareToggle(song._id)}
                       onShareMenuClose={handleShareClose}
