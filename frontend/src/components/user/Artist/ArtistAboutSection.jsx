@@ -76,7 +76,7 @@ const ArtistAboutSection = ({
   const subscriptionPrice =
     artist?.subscriptionPlans?.[0]?.basePrice?.amount ?? 4.99;
 
-  const BIO_LIMIT = 250;
+  const BIO_LIMIT = 500;
   const isLongBio = artist?.bio?.length > BIO_LIMIT;
 
   const displayedBio = showFullBio
@@ -125,22 +125,7 @@ const ArtistAboutSection = ({
     <div className="mt-12 flex flex-col md:flex-row gap-6 px-6 pb-12 text-white">
       {artist ? (
         <>
-          <div className="w-full h-72 md:w-1/4">
-            {artist?.profileImage ? (
-              <img
-                src={artist?.profileImage}
-                alt={`Artist ${artist?.name}`}
-                className="w-full h-full object-cover border-t-4 border-b-4 border-blue-600"
-              />
-            ) : (
-              <div
-                className={`w-full h-full ${artistColor} flex items-center justify-center text-white text-8xl font-bold border-t-4 border-b-4 border-blue-600`}
-              >
-                {artist.name ? artist.name.charAt(0).toUpperCase() : "A"}
-              </div>
-            )}
-          </div>
-          <div className="w-full md:w-2/3 bg-white/5 backdrop-blur-sm p-6 rounded-md shadow-lg border border-white/10">
+          <div className="w-full bg-white/5 backdrop-blur-sm p-6 rounded-md shadow-lg border border-white/10">
             <div className="mb-2 flex items-center gap-2 text-blue-400 text-xl font-bold">
               <span className="text-blue-500 text-2xl lowercase">about</span>
               <span className="text-white capitalize">
@@ -149,7 +134,8 @@ const ArtistAboutSection = ({
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-300 mb-2">
               <FiMapPin className="text-blue-500" />
-              <span>{artist?.location || "Unknown Location"} • </span>
+              <span> {artist?.location || "Unknown Location"}
+                {artist?.country ? `, ${artist.country}` : ""}  </span>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
               {displayedBio || "This artist has not provided a biography yet."}
@@ -159,7 +145,7 @@ const ArtistAboutSection = ({
                   onClick={() => setShowFullBio(!showFullBio)}
                   className="ml-2 text-blue-400 cursor-pointer hover:underline"
                 >
-                  {showFullBio ? "View less" : "View more"}
+                  {showFullBio ? "show less" : "show more"}
                 </span>
               )}
             </p>
