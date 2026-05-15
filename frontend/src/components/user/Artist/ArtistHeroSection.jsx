@@ -224,7 +224,7 @@ const ArtistHeroSection = ({
 
   return (
     <>
-      <div className="relative h-80 w-full">
+      <div className="relative h-80 w-full bg-black">
         {artist ? (
           <>
             {artist?.coverImage ? (

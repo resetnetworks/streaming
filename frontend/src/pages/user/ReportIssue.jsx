@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as Sentry from "@sentry/react";
 import IconHeader from "../../components/user/IconHeader";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { toast } from "sonner";
 import Footer from "../../components/user/Footer";
@@ -123,7 +123,7 @@ export default function ReportIssue() {
         canonicalUrl="https://musicreset.com/report-issue"
         noIndex={true}
       />
-      <BackgroundWrapper>
+      <>
         <section className="w-full min-h-screen flex flex-col items-center">
           <IconHeader />
 
@@ -220,7 +220,7 @@ export default function ReportIssue() {
           </div>
         </section>
       <Footer />
-      </BackgroundWrapper>
+      </>
     </>
   );
 }

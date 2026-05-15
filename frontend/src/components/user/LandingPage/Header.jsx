@@ -168,8 +168,8 @@ const Header = () => {
               onClick={() => navigate("/register")}
               className="px-6 py-2 text-sm font-semibold text-white rounded-lg transition-all duration-200"
               style={{
-                background: '#3380FF',
-                boxShadow: '0 4px 18px rgba(51,128,255,0.35)',
+                background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                boxShadow: '0 12px 32px rgba(51,128,255,0.35)',
               }}
               whileHover={{ scale: 1.04, y: -1 }}
               whileTap={{ scale: 0.96 }}
@@ -249,8 +249,8 @@ const Header = () => {
                   onClick={() => { navigate("/register"); setIsMenuOpen(false); }}
                   className="w-full py-3 text-base font-semibold text-white rounded-lg transition-all duration-200"
                   style={{
-                    background: '#3380FF',
-                    boxShadow: '0 4px 18px rgba(51,128,255,0.35)',
+                    background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                    boxShadow: '0 12px 32px rgba(51,128,255,0.35)',
                   }}
                   variants={mobileLinkVariants}
                   custom={navLinks.length + 1}

@@ -1,7 +1,7 @@
 import React from "react";
 import IconHeader from "../../components/user/IconHeader";
 import PageSEO from "../../components/PageSeo/PageSEO";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 import Footer from "../../components/user/Footer";
 
 const DataDeletion = () => {
@@ -30,7 +30,7 @@ description="Learn how to delete your Reset Music streaming account data & perso
   }}
 />
 
-      <BackgroundWrapper>
+      <>
       <IconHeader />
       <div className="min-h-screen to-gray-900 text-white flex items-center justify-center px-4">
         <div className="max-w-2xl w-full bg-gray-800 rounded-2xl shadow-lg p-8">
@@ -79,7 +79,7 @@ description="Learn how to delete your Reset Music streaming account data & perso
         </div>
       </div>
       <Footer />
-      </BackgroundWrapper>
+      </>
     </>
   );
 };

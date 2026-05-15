@@ -12,26 +12,26 @@ import SongList from "../../components/user/SongList";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 // Genre display mapping
 const genreAssets = {
-  electronic: { label: "Electronic" },
-  ambient: { label: "Ambient" },
-  idm: { label: "IDM" },
-  experimental: { label: "Experimental" },
-  "avant-garde": { label: "Avant Garde" },
-  noise: { label: "Noise" },
-  downtempo: { label: "Downtempo" },
-  soundtrack: { label: "Soundtrack" },
-  industrial: { label: "Industrial" },
-  ebm: { label: "EBM" },
-  electro: { label: "Electro" },
-  techno: { label: "Techno" },
-  dance: { label: "Dance" },
-  electronica: { label: "Electronica" },
-  "sound-art": { label: "Sound Art" },
-  jazz: { label: "Jazz" },
-  classical: { label: "Classical" },
-  "classical-crossover": { label: "Classical Crossover" },
-  soundscapes: { label: "Soundscapes" },
-  "field-recordings": { label: "Field Recordings" },
+  electronic: { label: "Electronic", image: "/images/genre1.jpg" },
+  idm: { label: "IDM", image: "/images/genre2.jpg" },
+  ambient: { label: "Ambient", image: "/images/genre3.jpg" },
+  experimental: { label: "Experimental", image: "/images/genre4.jpg" },
+  "avant-garde": { label: "Avant Garde", image: "/images/genre5.jpg" },
+  noise: { label: "Noise", image: "/images/genre6.jpg" },
+  downtempo: { label: "Downtempo", image: "/images/genre7.jpg" },
+  soundtrack: { label: "Soundtrack", image: "/images/genre8.jpg" },
+  industrial: { label: "Industrial", image: "/images/genre9.jpg" },
+  ebm: { label: "EBM", image: "/images/genre10.jpg" },
+  electro: { label: "Electro", image: "/images/genre11.jpg" },
+  techno: { label: "Techno", image: "/images/genre12.jpg" },
+  dance: { label: "Dance", image: "/images/genre13.jpg" },
+  electronica: { label: "Electronica", image: "/images/genre14.jpg" },
+  "sound-art": { label: "Sound Art", image: "/images/genre15.jpg" },
+  jazz: { label: "Jazz", image: "/images/genre16.jpg" },
+  classical: { label: "Classical", image: "/images/genre17.jpg" },
+  "classical-crossover": { label: "Classical Crossover", image: "/images/genre18.jpg" },
+  soundscapes: { label: "Soundscapes", image: "/images/genre19.jpg" },
+  "field-recordings": { label: "Field Recordings", image: "/images/genre20.jpg" },
 };
 
 const toGenreKey = (v) =>
@@ -56,7 +56,7 @@ const GenrePage = () => {
   const [activeShareDropdown, setActiveShareDropdown] = useState(null);
 
   // Format genre for display and API
-  const { displayTitle, headerLabel } = useMemo(() => {
+  const { displayTitle, headerLabel, genreImage } = useMemo(() => {
     let decoded = "";
     try {
       decoded = decodeURIComponent(rawParam || "");
@@ -74,6 +74,7 @@ const GenrePage = () => {
     return {
       displayTitle: fromStateTitle || titleCase,
       headerLabel: fromStateTitle || mapped?.label || titleCase,
+      genreImage: mapped?.image || "/images/placeholder.png",
     };
   }, [location.state, rawParam]);
 
@@ -112,7 +113,7 @@ const GenrePage = () => {
       dispatch(setSelectedSong(song));
       resumePlayback();
     },
-    [currentUser, dispatch,resumePlayback]
+    [currentUser, dispatch, resumePlayback]
   );
 
   // Share dropdown handlers
@@ -142,17 +143,29 @@ const GenrePage = () => {
 
       {/* Genre header */}
       <div className="w-full">
-        <div className="relative w-full h-40 sm:h-52 md:h-64 lg:h-72 overflow-hidden bg-black flex items-center justify-center text-center">
-          <div className="pointer-events-none absolute inset-0 opacity-50 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.22)_0%,rgba(0,0,0,0.0)_55%)]" />
-          <div className="pointer-events-none absolute inset-0 opacity-[0.12] bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_2px,transparent_2px,transparent_8px)]" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-[#10153e8f] to-[#0E43CA]" />
-          <div className="relative z-10 px-4">
-            <h1 className="text-white font-semibold text-2xl sm:text-3xl md:text-4xl leading-tight">
+        <div className="relative w-full h-[320px] overflow-hidden bg-black flex items-end justify-start text-left">
+          {/* Genre Image Background */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${genreImage})` }}
+          />
+          {/* Gradient Overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(to bottom, transparent 0%, black 100%)'
+            }}
+          />
+
+          <div className="relative z-10 px-8 pb-10 w-full">
+            <h1 className="text-white font-bold text-4xl sm:text-5xl md:text-6xl leading-tight drop-shadow-lg">
               {headerLabel}
             </h1>
-            <p className="text-white/85 text-xs sm:text-sm mt-1">
-              {totalSongs} tracks
-            </p>
+            <div className="flex items-center gap-2 mt-4">
+              <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-white/90 text-sm border border-white/10">
+                {totalSongs} tracks
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -181,8 +194,8 @@ const GenrePage = () => {
                       singerName={song.singer || song.artist?.name}
                       seekTime={song.duration}
                       onPlay={() => handlePlay(song)}
-                     isSelected={selectedSong?._id === song._id}
-                     isPlaying={selectedSong?._id === song._id && isPlaying}
+                      isSelected={selectedSong?._id === song._id}
+                      isPlaying={selectedSong?._id === song._id && isPlaying}
                       shareUrl={`${window.location.origin}/song/${song.slug || song._id}`}
                       currentUser={currentUser}
                       isShareDropdownOpen={activeShareDropdown === song._id}

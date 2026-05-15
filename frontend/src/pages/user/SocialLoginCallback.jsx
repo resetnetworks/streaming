@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { handleSocialLoginSuccess } from "../../features/auth/authSlice"; // 🔥 Use the new thunk
 import { toast } from "sonner";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 
 const SocialLoginCallback = () => {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ const SocialLoginCallback = () => {
   }, [dispatch, navigate]);
 
   return (
-    <BackgroundWrapper>
+    <>
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-white text-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-6"></div>
@@ -86,7 +86,7 @@ const SocialLoginCallback = () => {
         </div>
       </div>
     </div>
-    </BackgroundWrapper>
+    </>
   );
 };
 
