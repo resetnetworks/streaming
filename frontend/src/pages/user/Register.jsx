@@ -9,7 +9,7 @@ import { registerUser } from "../../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "../../utills/axiosInstance";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { validators } from "../../utills/validators";
 import { CircleGeometry } from "three/src/Three.Core.js";
@@ -133,7 +133,7 @@ const Register = () => {
         noIndex={true}
       />
 
-      <BackgroundWrapper>
+      <>
         <section className="w-full min-h-screen flex flex-col items-center">
           <IconHeader/>
 
@@ -252,7 +252,7 @@ const Register = () => {
             </p>
           </div>
         </section>
-      </BackgroundWrapper>
+      </>
     </>
   );
 };

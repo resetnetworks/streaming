@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../features/auth/authSlice";
 import { toast } from "sonner";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 import PageSEO from "../../components/PageSeo/PageSEO";
 
 const Login = () => {
@@ -98,7 +98,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
   noIndex={true}
 />
 
-      <BackgroundWrapper>
+      <>
       <section className="w-full min-h-screen flex flex-col items-center">
         <IconHeader />
 
@@ -200,7 +200,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
           </p>
         </div>
       </section>
-      </BackgroundWrapper>
+      </>
     </>
   );
 };

@@ -1,6 +1,6 @@
 {
   "name": "Reset Music Streaming",
-  "short_name": "musicreset",
+  "short_name": "resetmusic",
   "start_url": "/home",
   "display": "standalone",
   "background_color": "#020216",
@@ -8,10 +8,15 @@
   "description": "Reset Streaming Platform by Reset Music - Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles. Multi-currency support with monthly subscriptions.",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "pwa-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     },
     {
       "src": "icon-192x192.png",

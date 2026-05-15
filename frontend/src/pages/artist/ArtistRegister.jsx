@@ -1,6 +1,6 @@
 // src/pages/ArtistRegister.js
 import React, { useState, useEffect } from 'react';
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 import IconHeader from "../../components/user/IconHeader";
 import ProgressTracker from '../../components/artist/register/ProgressTracker';
 import ArtistBasicInfo from '../../components/artist/register/ArtistBasicInfo';
@@ -102,7 +102,7 @@ const ArtistRegister = () => {
           canonicalUrl="https://musicreset.com/artist-dashboard"
         />
 
-        <BackgroundWrapper>
+        <>
           <IconHeader />
           <section className='text-white px-4'>
             <h1 className="text-4xl text-center mt-4 md:mt-10">
@@ -142,7 +142,7 @@ const ArtistRegister = () => {
               </div>
             </div>
           </section>
-        </BackgroundWrapper>
+        </>
       </>
     );
   }
@@ -274,7 +274,7 @@ const ArtistRegister = () => {
         noIndex={true}
       />
 
-      <BackgroundWrapper>
+      <>
         <IconHeader />
         <section className='text-white px-4'>
           <h1 className="text-4xl text-center mt-4 md:mt-10">
@@ -287,7 +287,7 @@ const ArtistRegister = () => {
 
           {renderCurrentStep()}
         </section>
-      </BackgroundWrapper>
+      </>
     </>
   );
 };

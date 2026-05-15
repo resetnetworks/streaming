@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import IconHeader from "../../components/user/IconHeader";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -42,7 +42,7 @@ const ResetPassword = () => {
 
   return (
     <>
-    <BackgroundWrapper>
+    <>
     <section className="w-full min-h-screen flex flex-col items-center">
       <IconHeader />
 
@@ -112,7 +112,7 @@ const ResetPassword = () => {
         </form>
       </div>
     </section>
-    </BackgroundWrapper>
+    </>
     </>
   );
 };
