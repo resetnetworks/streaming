@@ -92,7 +92,7 @@ const ProfileDetailSection = () => {
           <button 
             onClick={handleEditClick}
             disabled={isUpdating}
-            className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md border border-white/20 text-white shadow-lg hover:shadow-2xl transition-all duration-200 ${
+            className={`flex items-center justify-center w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] rounded-full backdrop-blur-md border border-white/20 text-white shadow-lg hover:shadow-2xl transition-all duration-200 ${
               isUpdating ? 'bg-gray-600 cursor-not-allowed' : 'bg-gradient-to-tl from-black to-gray-500'
             }`}
             title="Edit Basic Details"

@@ -464,334 +464,327 @@ const UploadForm = ({
       {/* The JSX structure doesn't change, only the handleSubmit function changes */}
 
       {/* SECTION 1: Basic Info (Cover, Title, Date) */}
-      <div
-        className={`flex flex-col lg:flex-row gap-6 items-start pb-8 ${
-          type !== "album" ? "border-b border-gray-700" : ""
-        }`}
+     <div
+  className={`flex flex-col lg:flex-row gap-6 items-start pb-8 ${
+    type !== "album" ? "border-b border-gray-700" : ""
+  }`}
+>
+  {/* Left Side: Image Upload */}
+  <div className="w-full lg:w-[250px] shrink-0">
+    <div className="h-[250px]">
+      <input
+        type="file"
+        accept="image/*"
+        id="cover-upload"
+        ref={coverImageInputRef}
+        onChange={handleCoverImageChange}
+        className="hidden"
+      />
+
+      <label
+        htmlFor="cover-upload"
+        className="cursor-pointer block w-full h-full relative overflow-hidden group rounded-xl 
+          bg-gradient-to-br from-gray-800 to-gray-900 
+          border-2 border-dashed border-gray-500 hover:border-blue-400 transition-all"
       >
-        {/* Left Side: Image Upload */}
-        <div className="w-full lg:w-[250px] shrink-0">
-          <div className="h-[250px]">
-            <input
-              type="file"
-              accept="image/*"
-              id="cover-upload"
-              ref={coverImageInputRef}
-              onChange={handleCoverImageChange}
-              className="hidden"
+        {coverImage ? (
+          <div className="relative w-full h-full">
+            <img
+              src={coverImage}
+              alt="Cover Preview"
+              className="w-full h-full object-cover"
             />
 
-            <label
-              htmlFor="cover-upload"
-              className="cursor-pointer block w-full h-full relative overflow-hidden group rounded-xl 
-                bg-gradient-to-br from-gray-800 to-gray-900 
-                border border-gray-700 hover:border-gray-600 transition-colors"
-            >
-              {coverImage ? (
-                <div className="relative w-full h-full">
-                  <img
-                    src={coverImage}
-                    alt="Cover Preview"
-                    className="w-full h-full object-cover"
-                  />
-
-                  {/* Upload Progress Overlay */}
-                  {isUploadingCover && (
-                    <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-                      <div className="w-16 h-16 mb-2">
-                        <div className="relative w-full h-full">
-                          <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
-                          <div
-                            className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
-                            style={{
-                              transform: `rotate(${coverImageUploadProgress * 3.6}deg)`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                      <span className="text-white text-sm">
-                        {Math.round(coverImageUploadProgress)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4">
-                  <div className="text-gray-500 text-4xl mb-2 group-hover:text-gray-400 transition-colors">
-                    <FiImage />
+            {/* Upload Progress Overlay */}
+            {isUploadingCover && (
+              <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 mb-2">
+                  <div className="relative w-full h-full">
+                    <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
+                    <div
+                      className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
+                      style={{
+                        transform: `rotate(${coverImageUploadProgress * 3.6}deg)`,
+                      }}
+                    ></div>
                   </div>
-
-                  <span className="text-gray-500 text-sm font-medium group-hover:text-gray-400 transition-colors">
-                    Upload Cover Art <span className="text-red-400">*</span>
-                  </span>
-
-                  <span className="text-gray-600 text-xs mt-1 text-center group-hover:text-gray-500 transition-colors">
-                    Click to browse or drag & drop
-                  </span>
                 </div>
-              )}
-
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {coverImage ? "Change Image" : "Upload Cover Image"}
+                <span className="text-white text-sm">
+                  {Math.round(coverImageUploadProgress)}%
                 </span>
               </div>
-            </label>
+            )}
+
+            {/* Hover Change Overlay */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span className="text-white text-sm font-medium bg-black/60 px-4 py-2 rounded-full">
+                Change Image
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+            <div className="text-gray-400 text-4xl mb-2 group-hover:text-blue-400 transition-colors">
+              <FiImage />
+            </div>
+            <span className="text-gray-200 text-sm font-semibold group-hover:text-blue-400 transition-colors">
+              Upload Cover Art <span className="text-red-400">*</span>
+            </span>
+            <span className="text-gray-300 text-xs mt-1">
+              Click or drag & drop an image
+            </span>
+          </div>
+        )}
+      </label>
+    </div>
+  </div>
+
+  {/* Right Side: Inputs */}
+  <div className="flex-1 flex flex-col gap-6 w-full">
+    {/* Title and Date Row */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Title Input */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
+          {typeText.titleLabel} Title
+          <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="text"
+          placeholder={typeText.titlePlaceholder}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
+                     focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500"
+          required
+          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+        />
+      </div>
+
+      {/* Date Input (Original custom with blue button) */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
+          Release Date
+          <span className="text-red-400">*</span>
+        </label>
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder="YYYY-MM-DD"
+            value={date}
+            onChange={handleDateChange}
+            className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
+                       focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500 pr-12"
+            disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+          />
+
+          <input
+            type="date"
+            ref={hiddenDateInputRef}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="absolute top-0 left-0 w-full h-full opacity-0 pointer-events-none"
+          />
+          <div
+            onClick={openCalendar}
+            className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer 
+                       bg-[#4DB3FF] text-white p-2 rounded-md transition-all"
+          >
+            <FiCalendar size={16} />
           </div>
         </div>
-
-        {/* Right Side: Inputs */}
-        <div className="flex-1 flex flex-col gap-5 w-full">
-          {/* Title and Date Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Title Input */}
-            <div className="flex flex-col gap-2">
-              <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
-                {typeText.titleLabel} Title
-                <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder={typeText.titlePlaceholder}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500"
-                required
-                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-              />
-            </div>
-
-            {/* Date Input */}
-            <div className="flex flex-col gap-2 relative">
-              <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
-                Release Date
-                <span className="text-red-400">*</span>
-              </label>
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="YYYY-MM-DD"
-                  value={date}
-                  onChange={handleDateChange}
-                  className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 pr-12"
-                />
-
-                <input
-                  type="date"
-                  ref={hiddenDateInputRef}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="absolute top-0 left-0 w-full h-full opacity-0 pointer-events-none"
-                />
-                <div
-                  onClick={openCalendar}
-                  className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer 
-  bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-md transition-all"
-                >
-                  <FiCalendar size={16} />
-                </div>
-              </div>
-              <div className="text-gray-400 text-xs">
-                Format: YYYY-MM-DD • You can type or select from calendar
-              </div>
-            </div>
-          </div>
-
-          {/* Access Type Selection */}
-          <div className="flex flex-col gap-2" ref={accessDropdownRef}>
-            <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
-              Access Type
-              <span className="text-red-400">*</span>
-            </label>
-
-            {/* Dropdown Trigger */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowAccessDropdown(!showAccessDropdown)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 flex items-center justify-between hover:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      selectedAccessType.color === "green"
-                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : selectedAccessType.color === "blue"
-                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                    }`}
-                  >
-                    <IconComponent size={16} />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-white text-sm font-bold">
-                      {selectedAccessType.label}
-                    </div>
-                    <div className="text-gray-400 text-xs">
-                      {selectedAccessType.description}
-                    </div>
-                  </div>
-                </div>
-                <FiChevronDown
-                  size={18}
-                  className={`text-[#e0e2ec] font-bold transition-transform ${
-                    showAccessDropdown ? "rotate-180 text-[#e0e2ec]" : ""
-                  }`}
-                />
-              </button>
-
-              {/* Dropdown Menu */}
-              {showAccessDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-20 overflow-hidden">
-                  {ACCESS_TYPE_OPTIONS.map((option) => {
-                    const OptionIcon = option.icon;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handleAccessTypeSelect(option.value)}
-                        className={`w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-700/80 transition-colors ${
-                          accessType === option.value ? "bg-gray-700/80" : ""
-                        }`}
-                      >
-                        <div
-                          className={`p-2 rounded-lg ${
-                            option.color === "green"
-                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              : option.color === "blue"
-                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                          }`}
-                        >
-                          <OptionIcon size={16} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-white text-sm font-medium">
-                            {option.label}
-                          </div>
-                          <div className="text-gray-400 text-xs">
-                            {option.description}
-                          </div>
-                        </div>
-                        {accessType === option.value && (
-                          <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            <div className="text-gray-400 text-xs">
-              {typeText.accessDescription}
-            </div>
-          </div>
-
-          {/* Price Input (only for purchase-only) */}
-          {accessType === "purchase-only" && (
-            <div className="flex flex-col gap-2">
-              <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
-                Price (USD)
-                <span className="text-red-400">*</span>
-              </label>
-              <div className="flex gap-4">
-                <div className="relative flex-1">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <FiDollarSign size={16} />
-                  </div>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    value={price}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Allow only positive numbers
-                      if (
-                        value === "" ||
-                        (!isNaN(value) && parseFloat(value) >= 0)
-                      ) {
-                        setPrice(value);
-                      }
-                    }}
-                    className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500"
-                    min="0"
-                    step="0.01"
-                    required={accessType === "purchase-only"}
-                    disabled={
-                      isSubmitting || isUploadingAudio || isUploadingCover
-                    }
-                  />
-                </div>
-                <div className="w-32 bg-gray-800 text-gray-400 px-4 py-3 rounded-lg border border-gray-700 flex items-center justify-center text-sm">
-                  USD ($)
-                </div>
-              </div>
-              <div className="text-gray-400 text-xs">
-                Set price for individual purchase (USD only)
-              </div>
-            </div>
-          )}
-
-          {/* Description */}
-          {type === "album" && (
-            <div className="flex flex-col gap-2">
-              <label className="text-gray-200 text-sm font-medium flex items-center gap-1">
-                Description
-              </label>
-
-              <textarea
-                placeholder={typeText.descriptionPlaceholder}
-                value={description}
-                maxLength={300}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-gray-500 resize-none"
-                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-              />
-
-              <div className="flex justify-between text-xs mt-1">
-                <span className="text-gray-400">
-                  {typeText.descriptionLabel}
-                </span>
-
-                <span
-                  className={`font-medium ${
-                    description.length > 280
-                      ? "text-amber-400"
-                      : "text-gray-100"
-                  }`}
-                >
-                  {description.length}/300
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <label className="text-gray-200 text-sm font-medium">
-              Copyright
-            </label>
-
-            <input
-              type="text"
-              placeholder="© Your Name / Label"
-              value={copyright}
-              onChange={(e) => setCopyright(e.target.value)}
-              className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-700 focus:border-blue-500"
-              disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-            />
-
-            <div className="text-gray-400 text-xs">Ownership or label info</div>
-          </div>
+        <div className="text-gray-300 text-xs">
+          Format: YYYY-MM-DD • You can type or select from calendar
         </div>
       </div>
+    </div>
+
+    {/* Access Type Selection */}
+    <div className="flex flex-col gap-1.5" ref={accessDropdownRef}>
+      <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
+        Access Type
+        <span className="text-red-400">*</span>
+      </label>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setShowAccessDropdown(!showAccessDropdown)}
+          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 flex items-center justify-between 
+                     hover:border-gray-500 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2 rounded-lg ${
+                selectedAccessType.color === "green"
+                  ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/50"
+                  : selectedAccessType.color === "blue"
+                    ? "bg-blue-500/30 text-blue-300 border border-blue-500/50"
+                    : "bg-amber-500/30 text-amber-300 border border-amber-500/50"
+              }`}
+            >
+              <IconComponent size={20} />
+            </div>
+            <div className="text-left">
+              <div className="text-white text-sm font-bold">
+                {selectedAccessType.label}
+              </div>
+              <div className="text-gray-300 text-xs font-medium">
+                {selectedAccessType.description}
+              </div>
+            </div>
+          </div>
+          <FiChevronDown
+            size={20}
+            className={`text-gray-400 transition-transform ${
+              showAccessDropdown ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {/* Dropdown Menu */}
+        {showAccessDropdown && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl shadow-black/30 z-20 overflow-hidden">
+            {ACCESS_TYPE_OPTIONS.map((option) => {
+              const OptionIcon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => handleAccessTypeSelect(option.value)}
+                  className={`w-full px-4 py-3 flex items-center gap-3 text-left transition-colors ${
+                    accessType === option.value
+                      ? "bg-gray-700/80 border-l-4 border-blue-400"
+                      : "hover:bg-gray-700/50 border-l-4 border-transparent"
+                  }`}
+                >
+                  <div
+                    className={`p-2 rounded-lg ${
+                      option.color === "green"
+                        ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/50"
+                        : option.color === "blue"
+                          ? "bg-blue-500/30 text-blue-300 border border-[#4DB3FF]"
+                          : "bg-amber-500/30 text-amber-300 border border-amber-500/50"
+                    }`}
+                  >
+                    <OptionIcon size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-white text-sm font-semibold">
+                      {option.label}
+                    </div>
+                    <div className="text-gray-300 text-xs">
+                      {option.description}
+                    </div>
+                  </div>
+                  {accessType === option.value && (
+                    <FiCheck className="text-blue-400 shrink-0" size={20} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <div className="text-gray-300 text-xs">
+        {typeText.accessDescription}
+      </div>
+    </div>
+
+    {/* Price Input (only for purchase-only) */}
+    {accessType === "purchase-only" && (
+      <div className="flex flex-col gap-1.5">
+        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
+          Price (USD)
+          <span className="text-red-400">*</span>
+        </label>
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <FiDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+            <input
+              type="number"
+              placeholder="0.00"
+              value={price}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "" || (!isNaN(value) && parseFloat(value) >= 0)) {
+                  setPrice(value);
+                }
+              }}
+              className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-lg outline-none border border-gray-600 
+                         focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500"
+              min="0"
+              step="0.01"
+              required={accessType === "purchase-only"}
+              disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+            />
+          </div>
+          <div className="w-32 bg-gray-700 text-gray-200 px-4 py-3 rounded-lg border border-gray-600 flex items-center justify-center text-sm font-medium">
+            USD ($)
+          </div>
+        </div>
+        <div className="text-gray-300 text-xs">
+          Set price for individual purchase (USD only)
+        </div>
+      </div>
+    )}
+
+    {/* Description (only for album type) */}
+    {type === "album" && (
+      <div className="flex flex-col gap-1.5">
+        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
+          Description
+        </label>
+        <textarea
+          placeholder={typeText.descriptionPlaceholder}
+          value={description}
+          maxLength={300}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
+                     focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500 resize-none"
+          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+        />
+        <div className="flex justify-between text-xs mt-1">
+          <span className="text-gray-300">{typeText.descriptionLabel}</span>
+          <span
+            className={`font-medium ${
+              description.length > 280 ? "text-amber-300" : "text-gray-300"
+            }`}
+          >
+            {description.length}/300
+          </span>
+        </div>
+      </div>
+    )}
+
+    {/* Copyright */}
+    <div className="flex flex-col gap-1.5">
+      <label className="text-gray-100 text-sm font-semibold">
+        Copyright
+      </label>
+      <input
+        type="text"
+        placeholder="© Your Name / Label"
+        value={copyright}
+        onChange={(e) => setCopyright(e.target.value)}
+        className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
+                   focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500"
+        disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+      />
+      <div className="text-gray-300 text-xs">
+        Ownership or label info
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* SECTION 2: ADD TRACK */}
       {type !== "album" && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-gray-200 text-lg font-medium lowercase tracking-wide">
+            <h3 className="text-gray-100 text-lg font-semibold lowercase tracking-wide">
               upload track
             </h3>
             {tracks.length > 0 && (
@@ -807,7 +800,7 @@ const UploadForm = ({
             ${
               tracks.length > 0 || isUploadingAudio
                 ? "opacity-50 pointer-events-none border-gray-700 bg-gray-800/20"
-                : "bg-gray-800/40 border-blue-500 hover:bg-gray-800/60 shadow-xl"
+                : "bg-gray-800/40 border-[#4DB3FF] hover:bg-gray-800/60 shadow-xl"
             }`}
           >
             <input
@@ -819,16 +812,13 @@ const UploadForm = ({
               disabled={tracks.length > 0 || isUploadingAudio || isSubmitting}
             />
 
-            {/* Top Accent Line */}
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
-
             {/* Center Icon Section */}
-            <div className="mb-5 w-20 h-20 rounded-full border border-blue-500/30 bg-blue-500/5 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform duration-300">
+            <div className="mb-5 w-20 h-20 rounded-full border border-[#4DB3FF]/30 bg-[#4DB3FF]/5 flex items-center justify-center text-[#4DB3FF] group-hover:scale-110 transition-transform duration-300">
               {isUploadingAudio ? (
                 <div className="relative w-12 h-12">
                   <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
                   <div
-                    className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
+                    className="absolute inset-0 rounded-full border-4 border-[#4DB3FF] border-t-transparent animate-spin"
                     style={{
                       transform: `rotate(${audioUploadProgress * 3.6}deg)`,
                     }}
@@ -855,7 +845,7 @@ const UploadForm = ({
                       ? "Click anywhere to upload mix"
                       : "Click anywhere to upload track"}
               </h4>
-              <p className="text-gray-400 text-sm max-w-[280px] mx-auto leading-relaxed">
+              <p className="text-[#4DB3FF] text-sm max-w-[280px] mx-auto leading-relaxed">
                 {isUploadingAudio
                   ? "Uploading, please wait..."
                   : tracks.length > 0
@@ -975,69 +965,83 @@ const UploadForm = ({
       )}
 
       {/* SECTION 3: GENRE SELECTION */}
-      <div className="mt-6 border-t border-gray-700 pt-6">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-gray-200 text-lg font-medium lowercase tracking-wide">
-              select genres<span className="text-red-400">*</span>
-            </h3>
-            <div className="text-gray-300 text-base font-medium">
-              {selectedGenres.length}/3 selected
-            </div>
-          </div>
+     <div className="mt-6 border-t border-gray-700 pt-6">
+  <div className="flex flex-col gap-3">
+    {/* Header with label and counter */}
+    <div className="flex items-center justify-between">
+      <h3 className="text-gray-100 text-sm font-semibold lowercase tracking-wide flex items-center gap-1">
+        select genres
+        <span className="text-red-400">*</span>
+      </h3>
+      <div
+        className={`text-sm font-medium ${
+          selectedGenres.length === 3 ? "text-amber-300" : "text-gray-300"
+        }`}
+      >
+        {selectedGenres.length}/3 selected
+      </div>
+    </div>
 
-          {/* Selected Genres Display */}
-          <div className="flex flex-wrap gap-2">
-            {selectedGenres.map((genre, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 px-3 py-2 rounded-lg group hover:border-blue-500/50 transition-colors"
-              >
-                <FiTag size={12} className="text-blue-400" />
-                <span className="text-blue-300 text-sm font-medium">
-                  {genre}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeGenre(genre)}
-                  className="text-gray-400 hover:text-red-400 transition-colors ml-1 p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={
-                    isSubmitting || isUploadingAudio || isUploadingCover
-                  }
-                >
-                  <FiX size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Add Genre Button */}
-          <button
-            type="button"
-            onClick={openGenreModal}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 hover:bg-gray-800/30 transition-colors group font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={
-              selectedGenres.length >= 3 ||
-              isSubmitting ||
-              isUploadingAudio ||
-              isUploadingCover
-            }
+    {/* Selected Genres Chips */}
+    {selectedGenres.length > 0 && (
+      <div className="flex flex-wrap gap-2">
+        {selectedGenres.map((genre, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-2 bg-blue-500/20 border border-blue-500/40 px-3 py-2 rounded-lg group hover:border-blue-400 transition-colors"
           >
-            <FiPlus
-              size={18}
-              className="group-hover:text-blue-400 transition-colors"
-            />
-            <span className="text-sm">
-              {selectedGenres.length >= 3
-                ? "Maximum genres selected"
-                : "Add Genres"}
-            </span>
-          </button>
+            <FiTag size={12} className="text-blue-400" />
+            <span className="text-blue-300 text-sm font-medium">{genre}</span>
+            <button
+              type="button"
+              onClick={() => removeGenre(genre)}
+              className="text-gray-400 hover:text-red-400 transition-colors ml-1 p-0.5 rounded-full hover:bg-red-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+            >
+              <FiX size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
 
-          <p className="text-gray-400 text-sm mt-1">
-            Select up to 3 genres that best describe your music
-          </p>
-        </div>
+    {/* Add Genre Button */}
+    <button
+      type="button"
+      onClick={openGenreModal}
+      className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed rounded-lg font-medium transition-all
+        ${
+          selectedGenres.length >= 3
+            ? "border-gray-600 text-gray-500 cursor-not-allowed"
+            : "border-gray-500 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-gray-800/50 active:scale-[0.98]"
+        }`}
+      disabled={
+        selectedGenres.length >= 3 ||
+        isSubmitting ||
+        isUploadingAudio ||
+        isUploadingCover
+      }
+    >
+      <FiPlus
+        size={18}
+        className={
+          selectedGenres.length >= 3
+            ? "text-gray-500"
+            : "text-gray-400 group-hover:text-blue-400 transition-colors"
+        }
+      />
+      <span className="text-sm">
+        {selectedGenres.length >= 3
+          ? "Maximum genres selected"
+          : "Add Genres"}
+      </span>
+    </button>
+
+    {/* Helper text */}
+    <p className="text-gray-300 text-xs">
+      Select up to 3 genres that best describe your music
+    </p>
+  </div>
       </div>
 
       {/* Genre Modal */}

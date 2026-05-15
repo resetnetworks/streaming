@@ -126,14 +126,14 @@ const ArtistAboutSection = ({
       {artist ? (
         <>
           <div className="w-full bg-white/5 backdrop-blur-sm p-6 rounded-md shadow-lg border border-white/10">
-            <div className="mb-2 flex items-center gap-2 text-blue-400 text-xl font-bold">
-              <span className="text-blue-500 text-2xl lowercase">about</span>
+            <div className="mb-2 flex items-center gap-2 text-xl font-bold" style={{ color: '#4DB3FF' }}>
+              <span className="text-2xl lowercase" style={{ color: '#4DB3FF' }}>about</span>
               <span className="text-white capitalize">
                 {artist?.name || "Unknown"}
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-300 mb-2">
-              <FiMapPin className="text-blue-500" />
+              <FiMapPin style={{ color: '#4DB3FF' }} />
               <span> {artist?.location || "Unknown Location"}
                 {artist?.country ? `, ${artist.country}` : ""}  </span>
             </div>
@@ -143,14 +143,15 @@ const ArtistAboutSection = ({
               {isLongBio && (
                 <span
                   onClick={() => setShowFullBio(!showFullBio)}
-                  className="ml-2 text-blue-400 cursor-pointer hover:underline"
+                  className="ml-2 cursor-pointer hover:underline"
+                  style={{ color: '#4DB3FF' }}
                 >
                   {showFullBio ? "show less" : "show more"}
                 </span>
               )}
             </p>
             <div className="mt-6 pt-4 border-t border-white/10">
-              <h3 className="text-lg font-semibold text-blue-400 mb-2">
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#4DB3FF' }}>
                 Subscription Details
               </h3>
               <div className="flex items-center justify-between">

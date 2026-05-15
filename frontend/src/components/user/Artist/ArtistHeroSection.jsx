@@ -181,11 +181,13 @@ const ArtistHeroSection = ({
       <img
         src={imageUrl}
         alt={name || "Artist"}
-        className={`${size} rounded-full object-cover border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
+        className={`${size} rounded-full object-cover border-2 shadow-[0_0_5px_1px_#4DB3FF]`}
+        style={{ borderColor: '#4DB3FF' }}
       />
     ) : (
       <div
-        className={`${size} ${artistColor} rounded-full flex items-center justify-center text-white font-bold text-xl border-2 border-blue-500 shadow-[0_0_5px_1px_#3b82f6]`}
+        className={`${size} ${artistColor} rounded-full flex items-center justify-center text-white font-bold text-xl border-2 shadow-[0_0_5px_1px_#4DB3FF]`}
+        style={{ borderColor: '#4DB3FF' }}
       >
         {name ? name.charAt(0).toUpperCase() : "A"}
       </div>
@@ -249,13 +251,13 @@ const ArtistHeroSection = ({
                 </h1>
                 <div className="flex items-center sm:gap-3 flex-wrap">
                   <div className="flex items-center mt-1 text-gray-300 sm:text-sm text-xs">
-                    <FiMapPin className="mr-2 text-sm text-blue-400" />
+                    <FiMapPin className="mr-2 text-sm" style={{ color: '#4DB3FF' }} />
                     <span>{artist?.location || "Unknown City"}</span>
                   </div>
                   <div className="flex items-center mt-1 text-gray-300 text-sm">
-                    <HiUsers className="mr-2 text-sm text-blue-400" />
+                    <HiUsers className="mr-2 text-sm" style={{ color: '#4DB3FF' }} />
                     <span className="flex items-center gap-2">
-                      <span className="font-bold text-blue-400">
+                      <span className="font-bold" style={{ color: '#4DB3FF' }}>
                         {formatSubscriberCount(liveSubscriberCount)}
                       </span>
                       <span>subscribers</span>
@@ -265,7 +267,7 @@ const ArtistHeroSection = ({
 
                 {/* ✅ Button row — exact same position as original */}
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-lg font-semibold text-blue-400">
+                  <span className="text-lg font-semibold" style={{ color: '#4DB3FF' }}>
                     ${subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
                   </span>
 
@@ -283,8 +285,9 @@ const ArtistHeroSection = ({
                       id="artist-subscribe-btn"
                       onClick={handleSubscribeClick}
                       disabled={subscriptionLoading}
-                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md bg-blue-600 text-white hover:bg-blue-700
-                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md text-white
+                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90 hover:scale-105"}`}
+                      style={{ backgroundColor: '#3380FF' }}
                       title={currentCycle ? `Cycle: ${cycleLabel(currentCycle)}` : "Cycle unavailable"}
                     >
                       {subscriptionLoading ? "Processing..." : "Subscribe"}

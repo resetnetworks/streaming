@@ -46,20 +46,20 @@ const UserSidebar = () => {
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 p-1 rounded-md mb-1 transition-all 
+                  `flex items-center gap-3 p-1 rounded-md mb-1 font-semibold transition-all 
                   ${isActive
                     ? "bg-gradient-to-r from-[#0950D7] via-[#4197C8] to-[#040b1e00] border-l-4 text-white"
-                    : "hover:bg-gray-800 text-gray-400"
+                    : "hover:bg-gray-800 text-gray-300"
                   }`
                 }
                 style={({ isActive }) =>
                   isActive
                     ? {
-                        borderLeft: "3px solid",
-                        borderImageSource:
-                          "linear-gradient(90deg, #00B2FF 0%, #1D8FFF 50%, #0A0F3C 100%)",
-                        borderImageSlice: 1,
-                      }
+                      borderLeft: "3px solid",
+                      borderImageSource:
+                        "linear-gradient(90deg, #00B2FF 0%, #1D8FFF 50%, #0A0F3C 100%)",
+                      borderImageSlice: 1,
+                    }
                     : {}
                 }
               >
