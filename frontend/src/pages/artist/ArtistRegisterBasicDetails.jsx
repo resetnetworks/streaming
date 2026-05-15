@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 import IconHeader from "../../components/user/IconHeader";
 import ProgressTracker from '../../components/artist/register/ProgressTracker';
 import { MdOutlineEmail, MdPerson, MdPublic, MdLanguage, MdShare, MdCloudUpload } from 'react-icons/md';
@@ -25,7 +25,7 @@ const ArtistRegister = () => {
 
   return (
     <>
-      <BackgroundWrapper>
+      <>
         <IconHeader/>
         <section className='mx-4 text-white'>
           <h1 className='md:text-4xl text-3xl text-center mt-4 md:mt-8'>
@@ -276,7 +276,7 @@ const ArtistRegister = () => {
             </div>
           </form>
         </section>
-      </BackgroundWrapper>
+      </>
     </>
   )
 }

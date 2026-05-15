@@ -295,9 +295,9 @@ export default function Song() {
     e.preventDefault();
     e.stopPropagation();
     if (!currentUser) {
-  toast.error("You must be logged in to like songs");
-  return;
-}
+      toast.error("You must be logged in to like songs");
+      return;
+    }
 
     likeMutation.mutate(song?._id, {
       onSuccess: () => {
@@ -555,52 +555,52 @@ export default function Song() {
                   <svg className="w-9 h-9 sm:w-12 sm:h-12" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                       <filter id="sg_f_glass" x="-10%" y="-10%" width="120%" height="120%">
-                        <feFlood floodOpacity={0} result="BackgroundImageFix"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset dy={1}/><feGaussianBlur stdDeviation={1.5}/>
-                        <feComposite in2="hardAlpha" operator="out"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                        <feFlood floodOpacity={0} result="BackgroundImageFix" />
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                        <feOffset dy={1} /><feGaussianBlur stdDeviation={1.5} />
+                        <feComposite in2="hardAlpha" operator="out" />
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
                       </filter>
                       <linearGradient id="sg_grad_ring" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#ECF3FD"/>
-                        <stop offset="35%" stopColor="#1448FF"/>
-                        <stop offset="100%" stopColor="#010203"/>
+                        <stop offset="0%" stopColor="#ECF3FD" />
+                        <stop offset="35%" stopColor="#1448FF" />
+                        <stop offset="100%" stopColor="#010203" />
                       </linearGradient>
                       <linearGradient id="sg_grad_fill" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45"/>
-                        <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32"/>
-                        <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75"/>
-                        <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88"/>
-                        <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4"/>
-                        <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10"/>
+                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+                        <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32" />
+                        <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75" />
+                        <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88" />
+                        <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10" />
                       </linearGradient>
                       <linearGradient id="sg_grad_stroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="white"/>
-                        <stop offset="10%" stopColor="#88B2EF"/>
-                        <stop offset="64%" stopColor="#88B2EF"/>
-                        <stop offset="87%" stopColor="#033CAA"/>
+                        <stop offset="0%" stopColor="white" />
+                        <stop offset="10%" stopColor="#88B2EF" />
+                        <stop offset="64%" stopColor="#88B2EF" />
+                        <stop offset="87%" stopColor="#033CAA" />
                       </linearGradient>
                     </defs>
-                    <circle cx="22" cy="22" r="21" fill="none" stroke="url(#sg_grad_ring)" strokeWidth="1.2"/>
-                    <circle cx="22" cy="22" r="19.4" fill="#1A1C20"/>
-                    <circle cx="22" cy="22" r="19.4" fill="url(#sg_grad_fill)"/>
-                    <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#sg_grad_stroke)" strokeWidth="0.7"/>
+                    <circle cx="22" cy="22" r="21" fill="none" stroke="url(#sg_grad_ring)" strokeWidth="1.2" />
+                    <circle cx="22" cy="22" r="19.4" fill="#1A1C20" />
+                    <circle cx="22" cy="22" r="19.4" fill="url(#sg_grad_fill)" />
+                    <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#sg_grad_stroke)" strokeWidth="0.7" />
                     {isPlayerLoading ? (
                       <g>
                         <circle cx="22" cy="22" r="7" fill="none" stroke="white" strokeWidth="2" strokeDasharray="22" strokeDashoffset="10" opacity="0.8">
-                          <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite"/>
+                          <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite" />
                         </circle>
                       </g>
                     ) : isCurrentSongPlaying ? (
                       <g filter="url(#sg_f_glass)">
-                        <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
-                        <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                        <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white" />
+                        <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white" />
                       </g>
                     ) : (
                       <g filter="url(#sg_f_glass)" transform="translate(15.726, 14.691) scale(0.5455)">
-                        <path d="M21.5455 15.4362C21.4636 15.547 21.0818 16.018 20.7818 16.3227L20.6182 16.4889C18.3273 19.01 12.6273 22.8053 9.73636 24.0243C9.73636 24.052 8.01818 24.7723 7.2 24.8H7.09091C5.83636 24.8 4.66364 24.0797 4.06364 22.9162C3.73636 22.279 3.43636 20.4228 3.40909 20.3951C3.16364 18.7329 3 16.187 3 13.3861C3 10.4496 3.16364 7.79004 3.46364 6.15553C3.46364 6.12782 3.76364 4.63183 3.95455 4.13317C4.25455 3.41288 4.8 2.8034 5.48182 2.41555C6.02727 2.13852 6.6 2 7.2 2C7.82727 2.0277 9 2.44603 9.46364 2.63718C12.5182 3.85614 18.3545 7.84544 20.5909 10.2834C20.9727 10.6712 21.3818 11.1422 21.4909 11.253C21.9545 11.8625 22.2 12.6104 22.2 13.4166C22.2 14.1341 21.9818 14.8544 21.5455 15.4362Z" fill="white"/>
+                        <path d="M21.5455 15.4362C21.4636 15.547 21.0818 16.018 20.7818 16.3227L20.6182 16.4889C18.3273 19.01 12.6273 22.8053 9.73636 24.0243C9.73636 24.052 8.01818 24.7723 7.2 24.8H7.09091C5.83636 24.8 4.66364 24.0797 4.06364 22.9162C3.73636 22.279 3.43636 20.4228 3.40909 20.3951C3.16364 18.7329 3 16.187 3 13.3861C3 10.4496 3.16364 7.79004 3.46364 6.15553C3.46364 6.12782 3.76364 4.63183 3.95455 4.13317C4.25455 3.41288 4.8 2.8034 5.48182 2.41555C6.02727 2.13852 6.6 2 7.2 2C7.82727 2.0277 9 2.44603 9.46364 2.63718C12.5182 3.85614 18.3545 7.84544 20.5909 10.2834C20.9727 10.6712 21.3818 11.1422 21.4909 11.253C21.9545 11.8625 22.2 12.6104 22.2 13.4166C22.2 14.1341 21.9818 14.8544 21.5455 15.4362Z" fill="white" />
                       </g>
                     )}
                   </svg>
@@ -626,11 +626,10 @@ export default function Song() {
                         <button
                           onClick={handleMainPurchaseClick}
                           disabled={processingPayment || paymentLoading}
-                          className={`px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base text-white ${
-                            processingPayment || paymentLoading
+                          className={`px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base text-white ${processingPayment || paymentLoading
                               ? "bg-gray-500 cursor-not-allowed"
                               : ""
-                          }`}
+                            }`}
                           style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
                         >
                           <FaShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -668,11 +667,10 @@ export default function Song() {
                   <button
                     ref={shareBtnRef}
                     onClick={() => setShowShareMenu(!showShareMenu)}
-                    className={`p-2.5 sm:p-3.5 rounded-full border transition-colors group ${
-                      showShareMenu
+                    className={`p-2.5 sm:p-3.5 rounded-full border transition-colors group ${showShareMenu
                         ? "bg-gray-800/50 border-[#4DB3FF]"
                         : "text-gray-300 border-gray-700 hover:bg-gray-800/50"
-                    }`}
+                      }`}
                   >
                     <IoIosShareAlt
                       className="w-4 h-4 sm:w-5 sm:h-5"
@@ -686,9 +684,8 @@ export default function Song() {
                     triggerRef={shareBtnRef}
                     url={`${window.location}`}
                     title={song.title}
-                    text={`Listen to "${song.title}" by ${
-                      song.artist?.name || song.singer
-                    } on Reset Music`}
+                    text={`Listen to "${song.title}" by ${song.artist?.name || song.singer
+                      } on Reset Music`}
                     isActive={showShareMenu}
                     className="lg:right-0 right-[-80px] sm:right-[-40px]"
                   />
@@ -697,15 +694,15 @@ export default function Song() {
 
               {/* Album Info if from album */}
               {isFromAlbum && song?.album && (
-                <div className="mt-2">
-                  <span className="text-gray-400 text-sm">From album: </span>
+                <div className="mt-2 text-white ">
+                  <span className="text-sm">From album: </span>
                   <button
                     onClick={() =>
                       navigate(
                         `/album/${song?.album?.slug || song?.album?._id}`,
                       )
                     }
-                    className="text-white font-medium hover:underline text-sm sm:text-base"
+                    className="font-medium hover:underline text-sm sm:text-base"
                   >
                     {song.album.title}
                   </button>
@@ -726,7 +723,7 @@ export default function Song() {
                   onClick={() => navigate(`/artist/${song.artist.slug}`)}
                   className="ml-auto px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
                 >
-                Artist Profile
+                  Artist Profile
                 </button>
               </div>
             </div>
@@ -742,14 +739,14 @@ export default function Song() {
                 <div className="hidden sm:flex items-center gap-2">
                   <LuSquareChevronLeft
                     className="text-white cursor-pointer text-xl transition-colors"
-                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                    onMouseLeave={e => e.currentTarget.style.color=''}
+                    onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                     onClick={() => handleScroll("left", "singles")}
                   />
                   <LuSquareChevronRight
                     className="text-white cursor-pointer text-xl transition-colors"
-                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                    onMouseLeave={e => e.currentTarget.style.color=''}
+                    onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                     onClick={() => handleScroll("right", "singles")}
                   />
                 </div>
@@ -761,45 +758,45 @@ export default function Song() {
               >
                 {singlesLoading
                   ? [...Array(5)].map((_, idx) => (
-                      <div
-                        key={`single-skeleton-${idx}`}
-                        className="min-w-[140px] sm:min-w-[180px] flex-shrink-0"
-                      >
-                        <Skeleton className="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] rounded-xl" />
-                        <Skeleton width={120} height={16} className="mt-2" />
-                        <Skeleton width={80} height={14} className="mt-1" />
-                      </div>
-                    ))
+                    <div
+                      key={`single-skeleton-${idx}`}
+                      className="min-w-[140px] sm:min-w-[180px] flex-shrink-0"
+                    >
+                      <Skeleton className="w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] rounded-xl" />
+                      <Skeleton width={120} height={16} className="mt-2" />
+                      <Skeleton width={80} height={14} className="mt-1" />
+                    </div>
+                  ))
                   : filteredSingles.map((single) => (
-                      <div
-                        key={single._id}
-                        className="min-w-[140px] sm:min-w-[180px] flex-shrink-0"
-                      >
-                        <RecentPlays
-                          songId={single._id}
-                          title={single.title}
-                          image={
-                            single.coverImage ? (
-                              single.coverImage
-                            ) : (
-                              <div
-                                className={`w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] ${getArtistColor(
-                                  single.artist?.name || single.singer,
-                                )} flex items-center justify-center text-white font-bold text-xl sm:text-2xl`}
-                              >
-                                {single.title
-                                  ? single.title.charAt(0).toUpperCase()
-                                  : "S"}
-                              </div>
-                            )
-                          }
-                          price={getSongPriceDisplay(single)}
-                          onPlay={() => handlePlayOtherSong(single)}
-                          onTitleClick={() => handleSingleTitleClick(single)}
-                          isSelected={currentSong?._id === single._id}
-                        />
-                      </div>
-                    ))}
+                    <div
+                      key={single._id}
+                      className="min-w-[140px] sm:min-w-[180px] flex-shrink-0"
+                    >
+                      <RecentPlays
+                        songId={single._id}
+                        title={single.title}
+                        image={
+                          single.coverImage ? (
+                            single.coverImage
+                          ) : (
+                            <div
+                              className={`w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] ${getArtistColor(
+                                single.artist?.name || single.singer,
+                              )} flex items-center justify-center text-white font-bold text-xl sm:text-2xl`}
+                            >
+                              {single.title
+                                ? single.title.charAt(0).toUpperCase()
+                                : "S"}
+                            </div>
+                          )
+                        }
+                        price={getSongPriceDisplay(single)}
+                        onPlay={() => handlePlayOtherSong(single)}
+                        onTitleClick={() => handleSingleTitleClick(single)}
+                        isSelected={currentSong?._id === single._id}
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -814,14 +811,14 @@ export default function Song() {
                 <div className="hidden sm:flex items-center gap-2">
                   <LuSquareChevronLeft
                     className="text-white cursor-pointer text-xl transition-colors"
-                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                    onMouseLeave={e => e.currentTarget.style.color=''}
+                    onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                     onClick={() => handleScroll("left", "albums")}
                   />
                   <LuSquareChevronRight
                     className="text-white cursor-pointer text-xl transition-colors"
-                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                    onMouseLeave={e => e.currentTarget.style.color=''}
+                    onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                     onClick={() => handleScroll("right", "albums")}
                   />
                 </div>
@@ -833,28 +830,28 @@ export default function Song() {
               >
                 {albumsLoading
                   ? [...Array(5)].map((_, idx) => (
-                      <div
-                        key={`album-skeleton-${idx}`}
-                        className="min-w-[130px] sm:min-w-[160px] flex-shrink-0"
-                      >
-                        <Skeleton className="w-[130px] h-[130px] sm:w-[160px] sm:h-[160px] rounded-xl" />
-                        <Skeleton width={100} height={16} className="mt-2" />
-                      </div>
-                    ))
+                    <div
+                      key={`album-skeleton-${idx}`}
+                      className="min-w-[130px] sm:min-w-[160px] flex-shrink-0"
+                    >
+                      <Skeleton className="w-[130px] h-[130px] sm:w-[160px] sm:h-[160px] rounded-xl" />
+                      <Skeleton width={100} height={16} className="mt-2" />
+                    </div>
+                  ))
                   : filteredAlbums.slice(0, 10).map((album) => (
-                      <div
-                        key={album._id}
-                        className="min-w-[130px] sm:min-w-[160px] flex-shrink-0"
-                      >
-                        <AlbumCard
-                          tag={`${album.title || "music"}`}
-                          artists={album.artist?.name || "Various Artists"}
-                          image={album.coverImage || "/images/placeholder.png"}
-                          price={getAlbumPriceDisplay(album)}
-                          onClick={() => navigate(`/album/${album.slug}`)}
-                        />
-                      </div>
-                    ))}
+                    <div
+                      key={album._id}
+                      className="min-w-[130px] sm:min-w-[160px] flex-shrink-0"
+                    >
+                      <AlbumCard
+                        tag={`${album.title || "music"}`}
+                        artists={album.artist?.name || "Various Artists"}
+                        image={album.coverImage || "/images/placeholder.png"}
+                        price={getAlbumPriceDisplay(album)}
+                        onClick={() => navigate(`/album/${album.slug}`)}
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
           )}

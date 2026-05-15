@@ -4,7 +4,7 @@ import axios from "axios";
 import { MdOutlineEmail } from "react-icons/md";
 import { toast } from "sonner";
 import IconHeader from "../../components/user/IconHeader";
-import BackgroundWrapper from "../../components/BackgroundWrapper";
+
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -35,7 +35,7 @@ const ForgotPassword = () => {
 
   return (
     <>
-    <BackgroundWrapper>
+    <>
     <section className="w-full min-h-screen flex flex-col items-center">
       <IconHeader />
 
@@ -84,7 +84,7 @@ const ForgotPassword = () => {
         </form>
       </div>
     </section>
-    </BackgroundWrapper>
+    </>
     </>
   );
 };
