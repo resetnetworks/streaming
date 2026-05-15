@@ -84,7 +84,7 @@ const Purchases = () => {
           className="w-20 h-20 sm:w-24 sm:h-24 relative flex-shrink-0"
           onClick={() => navigate(`/artist/${artist?.slug}`)}
         >
-          <div className="w-full h-full relative rounded-full overflow-hidden border-2 border-blue-500 shadow-md bg-gray-700">
+          <div className="w-full h-full relative rounded-full overflow-hidden border-2 border-[#4DB3FF] shadow-[0_0_15px_rgba(77,179,255,0.3)] bg-gray-700">
             {!imageError && artist?.profileImage ? (
               <>
                 <img
@@ -127,7 +127,7 @@ const Purchases = () => {
         onClick={() => navigate(`/album/${album.slug || album._id}`)}
         className="flex-shrink-0 cursor-pointer"
       >
-        <div className="w-36 h-36 sm:w-40 sm:h-40 relative rounded-xl overflow-hidden border-2 border-blue-500 shadow-md bg-gray-700">
+        <div className="w-36 h-36 sm:w-40 sm:h-40 relative rounded-xl overflow-hidden border-2 border-[#4DB3FF] shadow-[0_0_15px_rgba(77,179,255,0.3)] bg-gray-700">
           {!imageError && album?.coverImage ? (
             <img
               src={album?.coverImage}
@@ -167,7 +167,7 @@ const Purchases = () => {
           </div>
           <button
             onClick={() => navigate("/login")}
-            className="mt-2 px-6 py-2 border border-gray-600 hover:border-white text-white text-sm font-medium rounded-full transition-colors cursor-pointer bg-transparent"
+            className="mt-2 px-6 py-2 bg-[#3380FF] hover:bg-[#4DB3FF] text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
           >
             Sign in
           </button>
@@ -200,10 +200,10 @@ const Purchases = () => {
               <h2 className="md:text-xl text-lg font-semibold">Active Subscriptions</h2>
               {activeSubscriptions.length > 0 && (
                 <div className="hidden md:flex items-center gap-2">
-                  <button type="button" className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors" onClick={() => handleArtistsScroll("left")}>
+                  <button type="button" className="text-white cursor-pointer text-lg hover:text-[#4DB3FF] transition-colors" onClick={() => handleArtistsScroll("left")}>
                     <LuSquareChevronLeft />
                   </button>
-                  <button type="button" className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors" onClick={() => handleArtistsScroll("right")}>
+                  <button type="button" className="text-white cursor-pointer text-lg hover:text-[#4DB3FF] transition-colors" onClick={() => handleArtistsScroll("right")}>
                     <LuSquareChevronRight />
                   </button>
                 </div>
@@ -230,7 +230,7 @@ const Purchases = () => {
                 <p className="text-gray-400 text-sm mb-4">You're not subscribed to any artists.</p>
                 <button
                   onClick={() => navigate("/artists")}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
+                  className="px-5 py-2 bg-[#3380FF] hover:bg-[#4DB3FF] text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
                 >
                   Explore Artists
                 </button>
@@ -244,10 +244,10 @@ const Purchases = () => {
               <h2 className="md:text-xl text-lg font-semibold">Purchased Albums</h2>
               {purchasedAlbums.length > 0 && (
                 <div className="hidden md:flex items-center gap-2">
-                  <button type="button" className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors" onClick={() => handleAlbumsScroll("left")}>
+                  <button type="button" className="text-white cursor-pointer text-lg hover:text-[#4DB3FF] transition-colors" onClick={() => handleAlbumsScroll("left")}>
                     <LuSquareChevronLeft />
                   </button>
-                  <button type="button" className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors" onClick={() => handleAlbumsScroll("right")}>
+                  <button type="button" className="text-white cursor-pointer text-lg hover:text-[#4DB3FF] transition-colors" onClick={() => handleAlbumsScroll("right")}>
                     <LuSquareChevronRight />
                   </button>
                 </div>
@@ -275,7 +275,7 @@ const Purchases = () => {
                 <p className="text-gray-400 text-sm mb-4">No albums purchased yet.</p>
                 <button
                   onClick={() => navigate("/search")}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
+                  className="px-5 py-2 bg-[#3380FF] hover:bg-[#4DB3FF] text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
                 >
                   Discover Albums
                 </button>
@@ -318,7 +318,7 @@ const Purchases = () => {
                 <p className="text-gray-400 text-sm mb-4">No songs purchased yet.</p>
                 <button
                   onClick={() => navigate("/search")}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
+                  className="px-5 py-2 bg-[#3380FF] hover:bg-[#4DB3FF] text-white text-sm font-medium rounded-full transition-colors cursor-pointer"
                 >
                   Find Songs
                 </button>

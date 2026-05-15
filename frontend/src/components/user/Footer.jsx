@@ -34,7 +34,7 @@ const Footer = () => {
           {/* Discover */}
           <div className="space-y-5">
             <h3
-              className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2"
+              className="text-xl font-semibold text-[#4DB3FF] flex items-center space-x-2"
               style={{ fontFamily: "Jura" }}
             >
               <IoMusicalNotes />
@@ -51,7 +51,7 @@ const Footer = () => {
                 <a
                   key={name}
                   href={link}
-                  className="block text-gray-300 hover:text-[#3b82f6] transition-all duration-300"
+                  className="block text-gray-300 hover:text-[#4DB3FF] transition-all duration-300"
                   style={{ fontFamily: "Jura" }}
                 >
                   {name}
@@ -63,7 +63,7 @@ const Footer = () => {
           {/* Legal Links */}
           <div className="space-y-5">
             <h3
-              className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2"
+              className="text-xl font-semibold text-[#4DB3FF] flex items-center space-x-2"
               style={{ fontFamily: "Jura" }}
             >
               <FaHeadphones />
@@ -72,42 +72,42 @@ const Footer = () => {
             <nav className="space-y-2.5 text-sm">
               <Link
                 to="/privacy-policy"
-                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 Privacy Policy
               </Link>
               <Link
                 to="/careers"
-                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 Careers
               </Link>
               <Link
                 to="/data-deletion"
-                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 Data Deletion
               </Link>
               <Link
                 to="/contact-us"
-                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 Support
               </Link>
               <Link
                 to="/report-issue"
-                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 Report Issue
               </Link>
               <Link
                 to="/terms-and-conditions"
-                className="block text-gray-300 hover:text-[#3b82f6] transition-colors"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 Terms &amp; Conditions
@@ -118,7 +118,7 @@ const Footer = () => {
           {/* Contact & Social */}
           <div className="space-y-5">
             <h3
-              className="text-xl font-semibold text-[#88b2ef] flex items-center space-x-2"
+              className="text-xl font-semibold text-[#4DB3FF] flex items-center space-x-2"
               style={{ fontFamily: "Jura" }}
             >
               <FaEnvelope />
@@ -129,7 +129,7 @@ const Footer = () => {
             <div className="space-y-3 text-sm">
               <a
                 href="mailto:support@musicreset.com"
-                className="block w-full truncate bg-white/5 rounded-lg px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                className="block w-max truncate bg-white/5 rounded-lg px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                 style={{ fontFamily: "Jura" }}
               >
                 support@musicreset.com
@@ -139,7 +139,7 @@ const Footer = () => {
             {/* Social Media */}
             <div>
               <h4
-                className="text-sm font-medium text-[#88b2ef] mb-3"
+                className="text-sm font-medium text-[#4DB3FF] mb-3"
                 style={{ fontFamily: "Jura" }}
               >
                 Follow the Beat
@@ -153,12 +153,12 @@ const Footer = () => {
                   },
                   {
                     icon: FaTwitter,
-                    color: "hover:text-[#1e3bf4]",
+                    color: "hover:text-[#4DB3FF]",
                     link: "https://x.com/reset_networks",
                   },
                   {
                     icon: FaFacebook,
-                    color: "hover:text-[#3b82f6]",
+                    color: "hover:text-[#4DB3FF]",
                     link: "https://www.facebook.com/reset.networks",
                   },
                   {
@@ -188,7 +188,7 @@ const Footer = () => {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
             {/* Left: Copyright + Security */}
             <div className="flex flex-col items-center lg:items-start gap-1.5 text-xs text-gray-400">
-              <span>© 2025 RESET NETWORKS (OPC) PRIVATE LIMITED.</span>
+              <span>© 2026 RESET NETWORKS (OPC) PRIVATE LIMITED.</span>
 
               <div className="flex items-center gap-4 text-gray-500">
                 <div className="flex items-center gap-1.5">

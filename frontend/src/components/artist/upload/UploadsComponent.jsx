@@ -268,7 +268,7 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full bg-[#1063F780] border border-white/10 text-white rounded-lg px-4 py-3 text-sm pr-12 pl-12"
+              className="w-full bg-[#4DB3FF] border border-white/10 text-white rounded-lg px-4 py-3 text-sm pr-12 pl-12"
             >
               <option value="lastMonth">last Month</option>
               <option value="lastWeek">last Week</option>
@@ -285,23 +285,23 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
           <button
             onClick={() => setActiveTab("albums")}
             className={`pb-2 text-lg px-2 relative ${
-              activeTab === "albums" ? "text-[#0687F5]" : "text-white/50"
+              activeTab === "albums" ? "text-[#4DB3FF]" : "text-white/50"
             }`}
           >
             albums
             {activeTab === "albums" && (
-              <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-blue-400" />
+              <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-[#4DB3FF]" />
             )}
           </button>
           <button
             onClick={() => setActiveTab("songs")}
             className={`pb-2 text-lg px-2 relative ${
-              activeTab === "songs" ? "text-[#0687F5]" : "text-white/50"
+              activeTab === "songs" ? "text-[#4DB3FF]" : "text-white/50"
             }`}
           >
             songs
             {activeTab === "songs" && (
-              <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-blue-400" />
+              <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-[#4DB3FF]" />
             )}
           </button>
         </div>
@@ -322,13 +322,13 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="bg-[#1063F780] border border-white/10 text-gray-300 rounded-lg px-4 py-2.5 text-sm pr-12 pl-12 min-w-[160px]"
+              className="bg-[#3380FF] border border-white/10 text-white font-bold rounded-lg px-4 py-2 text-sm pr-12 pl-12 min-w-[160px]"
             >
               <option value="lastMonth">last Month</option>
               <option value="lastWeek">last Week</option>
               <option value="allTime">all Time</option>
             </select>
-            <LuCalendarDays className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/60" />
+            <LuCalendarDays className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white font-bold" />
           </div>
         </div>
       </div>

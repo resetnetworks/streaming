@@ -26,10 +26,11 @@ const MobileNavBar = () => {
             className={({ isActive }) =>
               `flex items-center justify-center p-2 rounded-full transition-colors ${
                 isActive
-                  ? "bg-blue-600 text-white"
+                  ? "text-white"
                   : "text-gray-400 hover:text-white"
               }`
             }
+            style={({ isActive }) => isActive ? { backgroundColor: '#3380FF' } : {}}
           >
             <span className="sr-only">{item.name}</span>
             {item.icon}

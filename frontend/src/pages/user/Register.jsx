@@ -139,7 +139,7 @@ const Register = () => {
 
           <div className="text-white sm:mt-auto mt-0 mb-auto flex flex-col justify-around items-center">
             <h1 className="text-4xl my-6">
-              <span className="text-blue-700">sign up</span>, to musicreset
+              <span style={{ color: '#4DB3FF' }}>sign up</span>, to musicreset
             </h1>
 
             <form
@@ -248,7 +248,7 @@ const Register = () => {
 
             <p className={`mt-4 ${loading ? "pointer-events-none opacity-50" : ""}`}>
               Already have an account?{" "}
-              <a href="/login" className="text-blue-800 underline">Login</a>
+              <a href="/login" style={{ color: '#4DB3FF' }} className="underline">Login</a>
             </p>
           </div>
         </section>

@@ -144,14 +144,19 @@ const UserHeader = () => {
             <div className="absolute right-0 mt-3 w-52 bg-gradient-to-b from-black to-blue-900 rounded-xl border border-blue-500 shadow-[0_0_8px_1px_#3b82f6] z-40">
               <ul className="py-2 text-sm text-gray-400">
                 <li
-                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${isActive("/payment-history") ? "text-blue-500" : ""}`}
+                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors ${isActive("/payment-history") ? "" : ""}`}
+                  style={{ color: isActive("/payment-history") ? '#4DB3FF' : undefined }}
+                  onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                  onMouseLeave={e => e.currentTarget.style.color=''}
                   onClick={() => { setOpen(false); navigate("/payment-history"); }}
                 >
                   <FiClock />
                   Payment History
                 </li>
                 <li
-                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-blue-500 ${isActive("/contact-us") ? "text-blue-500" : ""}`}
+                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors`}
+                  onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                  onMouseLeave={e => e.currentTarget.style.color=''}
                   onClick={() => { setOpen(false); navigate("/contact-us"); }}
                 >
                   <FiHelpCircle />
@@ -184,13 +189,14 @@ const UserHeader = () => {
       {isHomePage ? (
         <h1 className="md:text-3xl text-xl text-white">
           {getTimeBasedGreeting()},{" "}
-          <span className="text-blue-700">
+          <span style={{ color: '#4DB3FF' }}>
             {user ? user.name : "Guest"}
           </span>
         </h1>
       ) : (
         <div
-          className="flex items-center cursor-pointer text-white hover:text-blue-800"
+          className="flex items-center cursor-pointer text-white"
+          style={{}}
           onClick={() => navigate(-1)}
         >
           <IoChevronBackOutline className="text-2xl mr-2" />

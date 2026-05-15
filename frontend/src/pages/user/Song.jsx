@@ -120,6 +120,7 @@ export default function Song() {
   // Current user from Redux
   const currentUser = useSelector((state) => state.auth?.user);
   const currentSong = useSelector((state) => state.player?.currentSong);
+  const isPlayerLoading = useSelector((state) => state.player?.isLoading);
 
   // State for modals and UI
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
@@ -337,7 +338,7 @@ export default function Song() {
 
     if (songItem?.accessType === "subscription") {
       return (
-        <span className="text-blue-400 text-xs font-semibold">Subs..</span>
+        <span className="text-xs font-semibold" style={{ color: '#4DB3FF' }}>Subs..</span>
       );
     }
 
@@ -355,7 +356,8 @@ export default function Song() {
             e.stopPropagation();
             handlePurchaseClick(songItem, "song");
           }}
-          className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded"
+          className="text-white sm:text-xs text-[10px] mt-2 sm:mt-0 px-3 py-1 rounded"
+          style={{ backgroundColor: '#3380FF' }}
         >
           Buy {symbol}
           {songItem.basePrice.amount}
@@ -378,7 +380,7 @@ export default function Song() {
 
     if (album.accessType === "subscription") {
       return (
-        <span className="text-blue-400 text-xs font-semibold">Subs..</span>
+        <span className="text-xs font-semibold" style={{ color: '#4DB3FF' }}>Subs..</span>
       );
     }
 
@@ -389,7 +391,8 @@ export default function Song() {
             e.stopPropagation();
             handlePurchaseClick(album, "album");
           }}
-          className="text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
+          className="text-white sm:text-xs text-[10px] sm:mt-0 px-3 py-1 rounded transition-colors"
+          style={{ backgroundColor: '#3380FF' }}
         >
           Buy ${album.basePrice.amount}
         </button>
@@ -449,7 +452,8 @@ export default function Song() {
             </p>
             <button
               onClick={() => navigate("/")}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-colors"
+              className="px-6 py-3 text-white rounded-full font-semibold transition-colors"
+              style={{ backgroundColor: '#3380FF' }}
             >
               Browse Music
             </button>
@@ -543,26 +547,75 @@ export default function Song() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                <button
+                {/* Play/Pause — same SVG as web player */}
+                <div
+                  className="cursor-pointer transition-transform duration-150"
                   onClick={handlePlaySong}
-                  className="p-3 sm:p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center shadow-lg"
-                  aria-label={isCurrentSongPlaying ? "Pause" : "Play"}
                 >
-                  {isCurrentSongPlaying ? (
-                    <FaPause className="w-4 h-4 sm:w-5 sm:h-5" />
-                  ) : (
-                    <FaPlay className="w-4 h-4 sm:w-5 sm:h-5 pl-0.5" />
-                  )}
-                </button>
+                  <svg className="w-9 h-9 sm:w-12 sm:h-12" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <filter id="sg_f_glass" x="-10%" y="-10%" width="120%" height="120%">
+                        <feFlood floodOpacity={0} result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy={1}/><feGaussianBlur stdDeviation={1.5}/>
+                        <feComposite in2="hardAlpha" operator="out"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                      </filter>
+                      <linearGradient id="sg_grad_ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ECF3FD"/>
+                        <stop offset="35%" stopColor="#1448FF"/>
+                        <stop offset="100%" stopColor="#010203"/>
+                      </linearGradient>
+                      <linearGradient id="sg_grad_fill" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45"/>
+                        <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32"/>
+                        <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75"/>
+                        <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88"/>
+                        <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4"/>
+                        <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10"/>
+                      </linearGradient>
+                      <linearGradient id="sg_grad_stroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="white"/>
+                        <stop offset="10%" stopColor="#88B2EF"/>
+                        <stop offset="64%" stopColor="#88B2EF"/>
+                        <stop offset="87%" stopColor="#033CAA"/>
+                      </linearGradient>
+                    </defs>
+                    <circle cx="22" cy="22" r="21" fill="none" stroke="url(#sg_grad_ring)" strokeWidth="1.2"/>
+                    <circle cx="22" cy="22" r="19.4" fill="#1A1C20"/>
+                    <circle cx="22" cy="22" r="19.4" fill="url(#sg_grad_fill)"/>
+                    <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#sg_grad_stroke)" strokeWidth="0.7"/>
+                    {isPlayerLoading ? (
+                      <g>
+                        <circle cx="22" cy="22" r="7" fill="none" stroke="white" strokeWidth="2" strokeDasharray="22" strokeDashoffset="10" opacity="0.8">
+                          <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite"/>
+                        </circle>
+                      </g>
+                    ) : isCurrentSongPlaying ? (
+                      <g filter="url(#sg_f_glass)">
+                        <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                        <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                      </g>
+                    ) : (
+                      <g filter="url(#sg_f_glass)" transform="translate(15.726, 14.691) scale(0.5455)">
+                        <path d="M21.5455 15.4362C21.4636 15.547 21.0818 16.018 20.7818 16.3227L20.6182 16.4889C18.3273 19.01 12.6273 22.8053 9.73636 24.0243C9.73636 24.052 8.01818 24.7723 7.2 24.8H7.09091C5.83636 24.8 4.66364 24.0797 4.06364 22.9162C3.73636 22.279 3.43636 20.4228 3.40909 20.3951C3.16364 18.7329 3 16.187 3 13.3861C3 10.4496 3.16364 7.79004 3.46364 6.15553C3.46364 6.12782 3.76364 4.63183 3.95455 4.13317C4.25455 3.41288 4.8 2.8034 5.48182 2.41555C6.02727 2.13852 6.6 2 7.2 2C7.82727 2.0277 9 2.44603 9.46364 2.63718C12.5182 3.85614 18.3545 7.84544 20.5909 10.2834C20.9727 10.6712 21.3818 11.1422 21.4909 11.253C21.9545 11.8625 22.2 12.6104 22.2 13.4166C22.2 14.1341 21.9818 14.8544 21.5455 15.4362Z" fill="white"/>
+                      </g>
+                    )}
+                  </svg>
+                </div>
 
                 {/* Purchase/Subscription Info */}
                 {song.accessType === "purchase-only" &&
                   song.basePrice?.amount > 0 && (
                     <>
-                      <div className="px-3 py-1 sm:px-5 sm:py-3 bg-gray-800 rounded-full border border-gray-700">
-                        <span className="text-base sm:text-xl font-bold text-white">
-                          ${song.basePrice.amount}
-                        </span>
+                      <div className="play-pause-wrapper">
+                        <div className="play-pause-button px-3 py-1 sm:px-5 sm:py-3 flex items-center justify-center" style={{ width: 'auto', height: 'auto', borderRadius: '9999px' }}>
+                          <span className="text-base sm:text-xl font-bold text-white">
+                            ${song.basePrice.amount}
+                          </span>
+                        </div>
                       </div>
                       {isSongPurchased ? (
                         <button className="px-4 py-2.5 sm:px-6 sm:py-3.5 bg-green-600 text-white rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base">
@@ -573,11 +626,12 @@ export default function Song() {
                         <button
                           onClick={handleMainPurchaseClick}
                           disabled={processingPayment || paymentLoading}
-                          className={`px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base ${
+                          className={`px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base text-white ${
                             processingPayment || paymentLoading
                               ? "bg-gray-500 cursor-not-allowed"
-                              : "bg-blue-600 hover:bg-blue-700"
-                          } text-white`}
+                              : ""
+                          }`}
+                          style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
                         >
                           <FaShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
                           {processingPayment || paymentLoading
@@ -589,7 +643,9 @@ export default function Song() {
                   )}
 
                 {song.accessType === "subscription" && (
-                  <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs sm:text-sm font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-full">
+                  <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 text-xs sm:text-sm font-semibold bg-blue-500/10 border border-blue-500/30 rounded-full"
+                    style={{ color: '#4DB3FF', borderColor: '#4DB3FF30' }}
+                  >
                     Subscription
                   </span>
                 )}
@@ -614,16 +670,13 @@ export default function Song() {
                     onClick={() => setShowShareMenu(!showShareMenu)}
                     className={`p-2.5 sm:p-3.5 rounded-full border transition-colors group ${
                       showShareMenu
-                        ? "bg-gray-800/50 text-blue-400 border-blue-400"
-                        : "text-gray-300 border-gray-700 hover:bg-gray-800/50 hover:text-blue-400"
+                        ? "bg-gray-800/50 border-[#4DB3FF]"
+                        : "text-gray-300 border-gray-700 hover:bg-gray-800/50"
                     }`}
                   >
                     <IoIosShareAlt
-                      className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                        showShareMenu
-                          ? "text-blue-400"
-                          : "group-hover:text-blue-400"
-                      }`}
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      style={showShareMenu ? { color: '#4DB3FF' } : {}}
                     />
                   </button>
 
@@ -665,7 +718,7 @@ export default function Song() {
           {song?.artist && (
             <div className="pt-4 mb-8 border-t border-gray-700">
               <div className="flex items-center gap-2 sm:gap-4 mb-6">
-                <div className="h-8 sm:h-12 w-1 bg-blue-600 rounded-full"></div>
+                <div className="h-8 sm:h-12 w-1 rounded-full" style={{ backgroundColor: '#4DB3FF' }}></div>
                 <h2 className="text-lg sm:text-2xl font-bold text-white">
                   Artist: {song.artist.name}
                 </h2>
@@ -688,11 +741,15 @@ export default function Song() {
                 </h2>
                 <div className="hidden sm:flex items-center gap-2">
                   <LuSquareChevronLeft
-                    className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                    className="text-white cursor-pointer text-xl transition-colors"
+                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color=''}
                     onClick={() => handleScroll("left", "singles")}
                   />
                   <LuSquareChevronRight
-                    className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                    className="text-white cursor-pointer text-xl transition-colors"
+                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color=''}
                     onClick={() => handleScroll("right", "singles")}
                   />
                 </div>
@@ -756,11 +813,15 @@ export default function Song() {
                 </h2>
                 <div className="hidden sm:flex items-center gap-2">
                   <LuSquareChevronLeft
-                    className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                    className="text-white cursor-pointer text-xl transition-colors"
+                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color=''}
                     onClick={() => handleScroll("left", "albums")}
                   />
                   <LuSquareChevronRight
-                    className="text-white cursor-pointer hover:text-blue-800 text-xl"
+                    className="text-white cursor-pointer text-xl transition-colors"
+                    onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                    onMouseLeave={e => e.currentTarget.style.color=''}
                     onClick={() => handleScroll("right", "albums")}
                   />
                 </div>

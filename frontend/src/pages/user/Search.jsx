@@ -142,7 +142,7 @@ const Search = () => {
             <>
               {results?.songs?.length > 0 && (
                 <>
-                  <h2 className="text-blue-500 font-bold text-lg mt-6 mb-2">Songs</h2>
+                  <h2 className="text-[#4DB3FF] font-bold text-lg mt-6 mb-2">Songs</h2>
                   <div className="flex flex-wrap gap-6">
                     {results.songs.map((song) => (
                       <RecentPlays
@@ -161,7 +161,7 @@ const Search = () => {
 
               {results?.artists?.length > 0 && (
                 <>
-                  <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Artists</h2>
+                  <h2 className="text-[#4DB3FF] font-bold text-lg mt-8 mb-2">Artists</h2>
                   <div className="flex flex-wrap gap-6">
                     {results.artists.map((artist) => (
                       <RecentPlays
@@ -180,7 +180,7 @@ const Search = () => {
 
               {results?.albums?.length > 0 && (
                 <>
-                  <h2 className="text-blue-500 font-bold text-lg mt-8 mb-2">Albums</h2>
+                  <h2 className="text-[#4DB3FF] font-bold text-lg mt-8 mb-2">Albums</h2>
                   <div className="flex flex-wrap gap-6">
                     {results.albums.map((album) => (
                       <div key={album._id}>

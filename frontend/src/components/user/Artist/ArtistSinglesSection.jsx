@@ -154,7 +154,7 @@ const handleSongPurchaseClick = (song) => {
     }
 
     if (song.accessType === "subscription") {
-      return <span className="text-blue-400 text-xs font-semibold">subs..</span>;
+      return <span className="text-xs font-semibold" style={{ color: '#4DB3FF' }}>subs..</span>;
     }
 
     if (song.accessType === "purchase-only") {
@@ -215,11 +215,15 @@ const handleSongPurchaseClick = (song) => {
             Page {singlesPagination.page} of {singlesPagination.totalPages}
           </span>
           <LuSquareChevronLeft
-            className="text-white cursor-pointer hover:text-blue-800 text-lg"
+            className="text-white cursor-pointer text-lg transition-colors"
+            onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+            onMouseLeave={e => e.currentTarget.style.color=''}
             onClick={() => handleScroll("left")}
           />
           <LuSquareChevronRight
-            className="text-white cursor-pointer hover:text-blue-800 text-lg"
+            className="text-white cursor-pointer text-lg transition-colors"
+            onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+            onMouseLeave={e => e.currentTarget.style.color=''}
             onClick={() => handleScroll("right")}
           />
         </div>
