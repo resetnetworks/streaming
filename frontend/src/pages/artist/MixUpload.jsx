@@ -24,8 +24,6 @@ const MixUpload = ({ onComplete,onCancel }) => {
     setIsSubmitting(true);
 
     try {
-      toast.loading("Starting mix upload...", { id: "upload-start" });
-
       let coverImageKey = "";
       let audioKey = "";
 
@@ -92,7 +90,6 @@ const MixUpload = ({ onComplete,onCancel }) => {
       }
 
       // Step 4: Save mix to database
-      toast.loading("Saving mix metadata...", { id: "save-metadata" });
       const createdMix = await createSongMutation.mutateAsync(mixData);
       toast.dismiss("save-metadata");
       toast.success("Mix uploaded successfully!");

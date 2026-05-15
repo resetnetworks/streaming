@@ -108,9 +108,8 @@ const SongList = ({
 
   return (
     <div
-      className={`flex w-full justify-between p-2 cursor-pointer relative ${
-        isSelected ? "border-b border-blue-500" : "border-b border-gray-600"
-      }`}
+      className={`flex w-full justify-between p-2 cursor-pointer relative ${isSelected ? "border-b border-[#3380FF]" : "border-b border-gray-600"
+        }`}
       onClick={handleClick}
     >
       {/* Left: thumbnail + title */}
@@ -118,17 +117,16 @@ const SongList = ({
         <img
           src={img}
           alt=""
-          className={`md:w-10 md:h-10 w-8 h-8 rounded-lg object-cover ${
-            isSelected ? "shadow-[0_0_5px_1px_#3b82f6]" : ""
-          }`}
+          className={`md:w-10 md:h-10 w-8 h-8 rounded-lg object-cover ${isSelected ? "shadow-[0_0_5px_1px_#3380FF]" : ""
+            }`}
         />
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px]">
-            <h3 className="text-white text-lg leading-none sm:truncate">
-              <span className="block text-sm md:text-base md:hidden">
-                {songName.length > 12 ? songName.slice(0, 8) + "..." : songName}
-              </span>
-              <span className="hidden md:block">{songName}</span>
-            </h3>
+          <h3 className="text-white text-lg leading-none sm:truncate">
+            <span className="block text-sm md:text-base md:hidden">
+              {songName.length > 12 ? songName.slice(0, 8) + "..." : songName}
+            </span>
+            <span className="hidden md:block">{songName}</span>
+          </h3>
         </div>
       </div>
 
@@ -136,7 +134,7 @@ const SongList = ({
       <div className="flex gap-6 ml-4 items-center">
         <div className="flex items-center">
           <MdAccessTimeFilled
-            className={`md:text-base text-sm ${isSelected ? "text-blue-700" : "text-gray-500"}`}
+            className={`md:text-base text-sm ${isSelected ? "text-[#3380FF]" : "text-gray-500"}`}
           />
           <span className="ml-2 md:text-base text-sm text-white">{formatDuration(seekTime)}</span>
         </div>
@@ -158,7 +156,7 @@ const SongList = ({
         <div className="relative action-btn">
           <button ref={triggerRef} className="action-btn" onClick={handleToggle}>
             <FiMoreHorizontal
-              className={`md:text-base text-sm ${isOpen ? "text-blue-400" : "text-white"}`}
+              className={`md:text-base text-sm ${isOpen ? "text-[#3380FF]" : "text-white"}`}
             />
           </button>
 

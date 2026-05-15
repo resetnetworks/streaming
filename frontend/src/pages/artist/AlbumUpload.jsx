@@ -32,8 +32,6 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
   // ─── Step 1: Create the album record ────────────────────────────────────────
   const handleAlbumSubmit = async (formData) => {
     try {
-      toast.loading("Creating album...", { id: "album" });
-
       let coverImageKey = "";
 
       // Upload cover art to S3 first
@@ -224,7 +222,7 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
       {/* Album mutation error banner */}
       {createAlbumMutation.isError && (
         <div className="mb-4 p-4 bg-red-900/30 border border-red-700 rounded-lg text-red-300">
-          Album Error: {createAlbumMutation.error?.message}
+          Album Error: {createAlbumMutation.error?.response?.data?.message}
         </div>
       )}
 

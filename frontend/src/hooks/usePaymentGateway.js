@@ -158,7 +158,7 @@ export const usePaymentGateway = () => {
       key: RAZORPAY_KEY,
       amount: order.amount,
       currency: order.currency || paymentDetails.currency || 'USD',
-      name: 'MUSICRESET',
+      name: 'RESET MUSIC',
       description: `Purchase: ${item.title}`,
       order_id: order.id,
       handler: (response) => {

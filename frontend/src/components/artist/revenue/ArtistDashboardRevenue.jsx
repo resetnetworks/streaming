@@ -156,7 +156,7 @@ const formatCurrency = (amount) => {
         {/* Available Balance Card */}
         <div className="relative p-5 rounded-xl bg-gradient-to-br from-gray-900 to-black border border-gray-800">
           <div className="absolute top-4 right-4">
-            <MdAccountBalanceWallet className="text-2xl text-blue-500" />
+            <MdAccountBalanceWallet className="text-2xl" style={{ color: '#4DB3FF' }} />
           </div>
           <div className="mb-2">
             <div className="text-gray-400 text-sm">Available Balance</div>
@@ -181,7 +181,7 @@ const formatCurrency = (amount) => {
               {balance.loading ? '...' : formatCurrency(balance.data?.totalEarned || 0)}
             </div>
           </div>
-          <div className="text-sm text-blue-400">Lifetime earnings</div>
+          <div className="text-sm" style={{ color: '#4DB3FF' }}>Lifetime earnings</div>
         </div>
 
         {/* Total Paid Out Card */}
@@ -201,7 +201,7 @@ const formatCurrency = (amount) => {
         {/* Payout Action Card */}
         <div className="relative p-5 rounded-xl bg-gradient-to-br from-blue-900/20 to-blue-800/10 border border-blue-800/30">
           <div className="absolute top-4 right-4">
-            <MdDownload className="text-2xl text-blue-400" />
+            <MdDownload className="text-2xl" style={{ color: '#4DB3FF' }} />
           </div>
           <div className="mb-4">
             <div className="text-gray-300 text-sm">Request Payout</div>
@@ -210,11 +210,16 @@ const formatCurrency = (amount) => {
           <button
             onClick={() => setShowPayoutModal(true)}
             disabled={!balance.data?.availableBalance || balance.data?.availableBalance <= 0}
-            className={`w-full py-2 px-4 rounded-lg flex text-white items-center justify-center gap-2 transition-colors ${
-              !balance.data?.availableBalance || balance.data?.availableBalance <= 0
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            className={`w-full py-2 px-4 rounded-lg flex text-white items-center justify-center gap-2 transition-all ${
+  !balance.data?.availableBalance || balance.data?.availableBalance <= 0
+    ? 'bg-gray-700 cursor-not-allowed'
+    : ''
+}`}
+style={
+  !balance.data?.availableBalance || balance.data?.availableBalance <= 0
+    ? {}
+    : { background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3B82F6 100%)' }
+}
           >
             <FaPaypal />
             Request Payout
@@ -362,7 +367,7 @@ const formatCurrency = (amount) => {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <FaPaypal className="text-blue-500" />
+                          <FaPaypal style={{ color: '#4DB3FF' }} />
                           <span className="text-gray-300">{payout.paymentMethod}</span>
                         </div>
                       </td>
@@ -395,8 +400,8 @@ const formatCurrency = (amount) => {
               {/* Available Balance Info */}
               <div className="mb-6 p-4 bg-blue-900/20 rounded-lg border border-blue-800/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <MdInfo className="text-blue-400" />
-                  <span className="text-blue-400 text-sm">Available Balance</span>
+                  <MdInfo style={{ color: '#4DB3FF' }} />
+                  <span className="text-sm" style={{ color: '#4DB3FF' }}>Available Balance</span>
                 </div>
                 <div className="text-2xl font-bold text-white">
                   {formatCurrency(balance.data?.availableBalance || 0)}
@@ -455,7 +460,10 @@ const formatCurrency = (amount) => {
                 <button
                   type="submit"
                   disabled={payoutRequest.loading || !payoutAmount || !paypalEmail}
-                  className="flex-1 px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 text-white rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)'
+                  }}
                 >
                   {payoutRequest.loading ? (
                     <>

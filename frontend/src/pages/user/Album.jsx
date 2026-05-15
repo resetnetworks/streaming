@@ -125,6 +125,8 @@ export default function Album() {
   // Redux
   const selectedSong = useSelector((state) => state.player.selectedSong);
   const currentUser = useSelector((state) => state.auth.user);
+  const isPlayerLoading = useSelector((state) => state.player.isLoading);
+  const streamError = useSelector((state) => state.player.streamError);
 
   // Payment states
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -356,8 +358,9 @@ export default function Album() {
               className={`text-white text-[10px] xs:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors ${
                 processingPayment || paymentLoading
                   ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700"
+                  : ""
               }`}
+              style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
               onClick={() => handlePurchaseClick(song, "song")}
               disabled={processingPayment || paymentLoading}
             >
@@ -470,7 +473,8 @@ export default function Album() {
             </p>
             <button
               onClick={() => navigate("/")}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-colors"
+              className="px-6 py-3 text-white rounded-full font-semibold transition-colors"
+              style={{ backgroundColor: '#3380FF' }}
             >
               Browse Albums
             </button>
@@ -561,18 +565,64 @@ export default function Album() {
 
               {/* Action buttons - Play, Share, then Price/Purchase */}
               <div className="flex items-center gap-3 flex-wrap mb-6">
-                {/* Play/Pause */}
-                <button
+                {/* Play/Pause — same SVG as web player */}
+                <div
+                  className="cursor-pointer transition-transform duration-150 flex-shrink-0"
                   onClick={handleAlbumPlayPause}
-                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-lg flex items-center justify-center flex-shrink-0"
-                  aria-label={isAlbumSongPlaying ? "Pause" : "Play"}
                 >
-                  {isAlbumSongPlaying ? (
-                    <FaPause style={{ display: "block" }} />
-                  ) : (
-                    <FaPlay style={{ display: "block", marginLeft: "2px" }} />
-                  )}
-                </button>
+                  <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <filter id="al_f_glass" x="-10%" y="-10%" width="120%" height="120%">
+                        <feFlood floodOpacity={0} result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy={1}/><feGaussianBlur stdDeviation={1.5}/>
+                        <feComposite in2="hardAlpha" operator="out"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                      </filter>
+                      <linearGradient id="al_grad_ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ECF3FD"/>
+                        <stop offset="35%" stopColor="#1448FF"/>
+                        <stop offset="100%" stopColor="#010203"/>
+                      </linearGradient>
+                      <linearGradient id="al_grad_fill" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45"/>
+                        <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32"/>
+                        <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75"/>
+                        <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88"/>
+                        <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4"/>
+                        <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10"/>
+                      </linearGradient>
+                      <linearGradient id="al_grad_stroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="white"/>
+                        <stop offset="10%" stopColor="#88B2EF"/>
+                        <stop offset="64%" stopColor="#88B2EF"/>
+                        <stop offset="87%" stopColor="#033CAA"/>
+                      </linearGradient>
+                    </defs>
+                    <circle cx="22" cy="22" r="21" fill="none" stroke="url(#al_grad_ring)" strokeWidth="1.2"/>
+                    <circle cx="22" cy="22" r="19.4" fill="#1A1C20"/>
+                    <circle cx="22" cy="22" r="19.4" fill="url(#al_grad_fill)"/>
+                    <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#al_grad_stroke)" strokeWidth="0.7"/>
+                    {isPlayerLoading ? (
+                      <g>
+                        <circle cx="22" cy="22" r="7" fill="none" stroke="white" strokeWidth="2" strokeDasharray="22" strokeDashoffset="10" opacity="0.8">
+                          <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite"/>
+                        </circle>
+                      </g>
+                    ) : isAlbumSongPlaying ? (
+                      <g filter="url(#al_f_glass)">
+                        <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                        <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                      </g>
+                    ) : (
+                      <g filter="url(#al_f_glass)" transform="translate(15.726, 14.691) scale(0.5455)">
+                        <path d="M21.5455 15.4362C21.4636 15.547 21.0818 16.018 20.7818 16.3227L20.6182 16.4889C18.3273 19.01 12.6273 22.8053 9.73636 24.0243C9.73636 24.052 8.01818 24.7723 7.2 24.8H7.09091C5.83636 24.8 4.66364 24.0797 4.06364 22.9162C3.73636 22.279 3.43636 20.4228 3.40909 20.3951C3.16364 18.7329 3 16.187 3 13.3861C3 10.4496 3.16364 7.79004 3.46364 6.15553C3.46364 6.12782 3.76364 4.63183 3.95455 4.13317C4.25455 3.41288 4.8 2.8034 5.48182 2.41555C6.02727 2.13852 6.6 2 7.2 2C7.82727 2.0277 9 2.44603 9.46364 2.63718C12.5182 3.85614 18.3545 7.84544 20.5909 10.2834C20.9727 10.6712 21.3818 11.1422 21.4909 11.253C21.9545 11.8625 22.2 12.6104 22.2 13.4166C22.2 14.1341 21.9818 14.8544 21.5455 15.4362Z" fill="white"/>
+                      </g>
+                    )}
+                  </svg>
+                </div>
 
                 {/* Share Button (mobile) - now in action row */}
                 <div className="relative">
@@ -610,7 +660,7 @@ export default function Album() {
                       </span>
                     </div>
                     {isAlbumPurchased ? (
-                      <span className="px-4 py-2 bg-blue-600 text-white rounded-full font-semibold text-sm">
+                      <span className="px-4 py-2 text-white rounded-full font-semibold text-sm" style={{ backgroundColor: '#3380FF' }}>
                         Purchased
                       </span>
                     ) : (
@@ -620,8 +670,9 @@ export default function Album() {
                         className={`px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200 shadow-md ${
                           processingPayment || paymentLoading
                             ? "bg-gray-500 cursor-not-allowed text-gray-300"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "text-white"
                         }`}
+                        style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
                       >
                         {processingPayment || paymentLoading
                           ? "Processing..."
@@ -633,12 +684,13 @@ export default function Album() {
 
                 {isSubscriptionAlbum && getArtistSlug() && (
                   <>
-                    <span className="text-sm font-semibold text-blue-400">
+                    <span className="text-sm font-semibold" style={{ color: '#4DB3FF' }}>
                       Subscription
                     </span>
                     <button
                       onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold text-sm transition-all duration-200 shadow-md flex items-center gap-1.5"
+                      className="px-4 py-2 text-white rounded-full font-semibold text-sm transition-all duration-200 shadow-md flex items-center gap-1.5"
+                      style={{ backgroundColor: '#3380FF' }}
                     >
                       <span>View Artist</span>
                       <svg
@@ -700,7 +752,8 @@ export default function Album() {
       {isMobileLongDescription && (
         <span
           onClick={() => setShowFullDesc(!showFullDesc)}
-          className="ml-2 text-blue-400 text-sm font-medium hover:underline cursor-pointer"
+          className="ml-2 text-sm font-medium hover:underline cursor-pointer"
+          style={{ color: '#4DB3FF' }}
         >
           {showFullDesc ? "show less" : "show more"}
         </span>
@@ -742,7 +795,8 @@ export default function Album() {
                   {isLongDescription && (
                     <span
                       onClick={() => setShowFullDesc(!showFullDesc)}
-                      className="ml-2 text-blue-400 cursor-pointer hover:underline text-sm"
+                      className="ml-2 cursor-pointer hover:underline text-sm"
+                      style={{ color: '#4DB3FF' }}
                     >
                       {showFullDesc ? "show less" : "show more"}
                     </span>
@@ -765,17 +819,64 @@ export default function Album() {
 
                 {/* Action Buttons - Play, Share, then Price/Purchase */}
                 <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6 flex-wrap">
-                  {/* Play/Pause */}
-                  <button
+                  {/* Play/Pause — same SVG as web player */}
+                  <div
+                    className="cursor-pointer transition-transform duration-150"
                     onClick={handleAlbumPlayPause}
-                    className="p-3 sm:p-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center shadow-lg"
                   >
-                    {isAlbumSongPlaying ? (
-                      <FaPause className="w-4 h-4 sm:w-5 sm:h-5" />
-                    ) : (
-                      <FaPlay className="w-4 h-4 sm:w-5 sm:h-5" />
-                    )}
-                  </button>
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <filter id="ald_f_glass" x="-10%" y="-10%" width="120%" height="120%">
+                          <feFlood floodOpacity={0} result="BackgroundImageFix"/>
+                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                          <feOffset dy={1}/><feGaussianBlur stdDeviation={1.5}/>
+                          <feComposite in2="hardAlpha" operator="out"/>
+                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                        </filter>
+                        <linearGradient id="ald_grad_ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#ECF3FD"/>
+                          <stop offset="35%" stopColor="#1448FF"/>
+                          <stop offset="100%" stopColor="#010203"/>
+                        </linearGradient>
+                        <linearGradient id="ald_grad_fill" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#000000" stopOpacity="0.45"/>
+                          <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32"/>
+                          <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75"/>
+                          <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88"/>
+                          <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4"/>
+                          <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10"/>
+                        </linearGradient>
+                        <linearGradient id="ald_grad_stroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="white"/>
+                          <stop offset="10%" stopColor="#88B2EF"/>
+                          <stop offset="64%" stopColor="#88B2EF"/>
+                          <stop offset="87%" stopColor="#033CAA"/>
+                        </linearGradient>
+                      </defs>
+                      <circle cx="22" cy="22" r="21" fill="none" stroke="url(#ald_grad_ring)" strokeWidth="1.2"/>
+                      <circle cx="22" cy="22" r="19.4" fill="#1A1C20"/>
+                      <circle cx="22" cy="22" r="19.4" fill="url(#ald_grad_fill)"/>
+                      <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#ald_grad_stroke)" strokeWidth="0.7"/>
+                      {isPlayerLoading ? (
+                        <g>
+                          <circle cx="22" cy="22" r="7" fill="none" stroke="white" strokeWidth="2" strokeDasharray="22" strokeDashoffset="10" opacity="0.8">
+                            <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite"/>
+                          </circle>
+                        </g>
+                      ) : isAlbumSongPlaying ? (
+                        <g filter="url(#ald_f_glass)">
+                          <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                          <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                        </g>
+                      ) : (
+                        <g filter="url(#ald_f_glass)" transform="translate(15.726, 14.691) scale(0.5455)">
+                          <path d="M21.5455 15.4362C21.4636 15.547 21.0818 16.018 20.7818 16.3227L20.6182 16.4889C18.3273 19.01 12.6273 22.8053 9.73636 24.0243C9.73636 24.052 8.01818 24.7723 7.2 24.8H7.09091C5.83636 24.8 4.66364 24.0797 4.06364 22.9162C3.73636 22.279 3.43636 20.4228 3.40909 20.3951C3.16364 18.7329 3 16.187 3 13.3861C3 10.4496 3.16364 7.79004 3.46364 6.15553C3.46364 6.12782 3.76364 4.63183 3.95455 4.13317C4.25455 3.41288 4.8 2.8034 5.48182 2.41555C6.02727 2.13852 6.6 2 7.2 2C7.82727 2.0277 9 2.44603 9.46364 2.63718C12.5182 3.85614 18.3545 7.84544 20.5909 10.2834C20.9727 10.6712 21.3818 11.1422 21.4909 11.253C21.9545 11.8625 22.2 12.6104 22.2 13.4166C22.2 14.1341 21.9818 14.8544 21.5455 15.4362Z" fill="white"/>
+                        </g>
+                      )}
+                    </svg>
+                  </div>
 
                   {/* Share Button (desktop) - now immediately after play */}
                   <div className="relative">
@@ -785,9 +886,8 @@ export default function Album() {
                       className="p-2 sm:p-2.5 md:p-3.5 rounded-full border border-gray-600 hover:border-white transition-colors"
                     >
                       <IoIosShareAlt
-                        className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                          showShareMenu ? "text-blue-400" : ""
-                        }`}
+                        className="w-4 h-4 sm:w-5 sm:h-5"
+                        style={showShareMenu ? { color: '#4DB3FF' } : {}}
                       />
                     </button>
                     <ShareDropdown
@@ -816,7 +916,7 @@ export default function Album() {
                         </span>
                       </div>
                       {isAlbumPurchased ? (
-                        <span className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-full font-semibold text-sm sm:text-base">
+                        <span className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 text-white rounded-full font-semibold text-sm sm:text-base" style={{ backgroundColor: '#3380FF' }}>
                           Purchased
                         </span>
                       ) : (
@@ -826,8 +926,9 @@ export default function Album() {
                           className={`px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-200 shadow-md text-sm sm:text-base ${
                             processingPayment || paymentLoading
                               ? "bg-gray-500 cursor-not-allowed text-gray-300"
-                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                              : "text-white"
                           }`}
+                          style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
                         >
                           {processingPayment || paymentLoading
                             ? "Processing..."
@@ -839,12 +940,13 @@ export default function Album() {
 
                   {isSubscriptionAlbum && getArtistSlug() && (
                     <>
-                      <span className="text-sm sm:text-base md:text-lg font-semibold text-blue-400">
+                      <span className="text-sm sm:text-base md:text-lg font-semibold" style={{ color: '#4DB3FF' }}>
                         Subscription
                       </span>
                       <button
                         onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                        className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                        style={{ backgroundColor: '#3380FF' }}
                       >
                         <span>View Artist</span>
                         <svg

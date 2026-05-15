@@ -97,7 +97,7 @@ const ArtistCircle = forwardRef(function ArtistCircle(
       ref={ref}
       type="button"
       onClick={onClick}
-      className="group relative sm:w-48 sm:h-48 h-32 w-32 shrink-0 rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/80 transition-shadow duration-300 ease-in-out shadow-[0_0_25px_rgba(59,130,246,0.4)]"
+      className="group relative sm:w-48 sm:h-48 h-32 w-32 shrink-0 rounded-full focus:outline-none focus-visible:ring-4 focus-visible:ring-[#4DB3FF]/80 transition-shadow duration-300 ease-in-out shadow-[0_0_25px_rgba(77,179,255,0.4)]"
       aria-label={`Open artist ${artist?.name || ""}`}
     >
       <div className="absolute inset-0 rounded-full overflow-hidden">
@@ -121,7 +121,7 @@ const ArtistCircle = forwardRef(function ArtistCircle(
           {truncateName(artist?.name)}
         </h3>
       </div>
-      <div className="absolute inset-0 transition-all duration-300 border-2 rounded-full pointer-events-none border-blue-500/80"></div>
+      <div className="absolute inset-0 transition-all duration-300 border-2 rounded-full pointer-events-none border-[#4DB3FF]/80"></div>
     </button>
   );
 });
@@ -166,7 +166,7 @@ const ArtistSection = ({ title = "Featured Artists", onNavigateArtist }) => {
         <div className="hidden md:flex items-center gap-2">
           <button
             type="button"
-            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            className="text-white cursor-pointer text-lg hover:text-[#4DB3FF] transition-colors"
             onClick={() => handleScroll("left")}
             aria-label="Scroll left"
             title="Back"
@@ -175,7 +175,7 @@ const ArtistSection = ({ title = "Featured Artists", onNavigateArtist }) => {
           </button>
           <button
             type="button"
-            className="text-white cursor-pointer text-lg hover:text-blue-400 transition-colors"
+            className="text-white cursor-pointer text-lg hover:text-[#4DB3FF] transition-colors"
             onClick={() => handleScroll("right")}
             aria-label="Scroll right"
             title="Next"

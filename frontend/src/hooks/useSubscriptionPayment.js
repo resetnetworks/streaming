@@ -132,7 +132,7 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
     const options = {
       key: RAZORPAY_KEY,
       subscription_id: subscriptionData.subscriptionId,
-      name: 'MUSICRESET',
+      name: 'RESET MUSIC',
       description: `${artist.name} - ${cycle} Subscription`,
       handler: (response) => {
         toast.success(`Subscription created successfully! Subscription ID: ${response.razorpay_subscription_id}`);

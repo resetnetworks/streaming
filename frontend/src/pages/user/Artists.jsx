@@ -125,11 +125,11 @@ const Artists = () => {
         <div className="relative z-10 p-6">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <HiSpeakerWave className="w-8 h-8 text-blue-400" />
-              <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 to-blue-900 bg-clip-text text-transparent">
+              <HiSpeakerWave className="w-8 h-8" style={{ color: '#4DB3FF' }} />
+              <h1 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #4DB3FF, #3380FF)' }}>
                 ARTISTS
               </h1>
-              <FaMicrophone className="w-8 h-8 text-blue-300" />
+              <FaMicrophone className="w-8 h-8" style={{ color: '#4DB3FF' }} />
             </div>
             <p className="text-gray-400 text-lg">Discover Amazing Artists</p>
           </div>
@@ -140,7 +140,8 @@ const Artists = () => {
                 <p className="text-red-400">Failed to load artists. Please try again.</p>
                 <button
                   onClick={() => refetch()}
-                  className="mt-2 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="mt-2 px-4 py-2 rounded-lg text-white transition-colors"
+                  style={{ backgroundColor: '#3380FF' }}
                 >
                   Retry
                 </button>
@@ -185,7 +186,11 @@ const Artists = () => {
                       onClick={() => handleArtistClick(artist.slug)}
                       className="group cursor-pointer transform transition-all duration-300"
                     >
-                      <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
+                      <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30 transition-all duration-300 hover:shadow-lg"
+                        style={{ '--tw-shadow-color': '#4DB3FF33' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#4DB3FF50'; e.currentTarget.style.boxShadow = '0 10px 25px -3px #4DB3FF20'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
+                      >
                         {/* Artist Image */}
                         <div className="relative aspect-square overflow-hidden rounded-xl mb-3">
                           {artist?.profileImage ? (
@@ -210,7 +215,10 @@ const Artists = () => {
 
                         {/* Artist Info */}
                         <div className="text-center space-y-2">
-                          <h3 className="text-white font-semibold text-sm truncate group-hover:text-blue-300 transition-colors">
+                          <h3 className="text-white font-semibold text-sm truncate transition-colors"
+                            onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
+                            onMouseLeave={e => e.currentTarget.style.color=''}
+                          >
                             {artist.name || "Unknown Artist"}
                           </h3>
 
@@ -228,7 +236,8 @@ const Artists = () => {
               <button
                 onClick={handlePrevPage}
                 disabled={pagination.page <= 1 || isPreviousData}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-900 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#3380FF' }}
               >
                 ← Prev
               </button>
@@ -241,9 +250,10 @@ const Artists = () => {
                     disabled={isPreviousData}
                     className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${
                       pageNum === pagination.page
-                        ? "bg-gradient-to-r from-blue-600 to-blue-900 text-white shadow-lg"
+                        ? "text-white shadow-lg"
                         : "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50"
                     }`}
+                    style={pageNum === pagination.page ? { backgroundColor: '#3380FF' } : {}}
                   >
                     {pageNum}
                   </button>
@@ -253,7 +263,8 @@ const Artists = () => {
               <button
                 onClick={handleNextPage}
                 disabled={pagination.page >= pagination.totalPages || isPreviousData}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="px-6 py-3 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#3380FF' }}
               >
                 Next →
               </button>

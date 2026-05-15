@@ -308,7 +308,7 @@ const ProfileHeroSection = () => {
                   <img
                     src={profileImageUrl}
                     alt={artistProfile?.name || 'Artist'}
-                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-blue-500 shadow-[0_0_10px_2px_#3b82f6] cursor-pointer"
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-[#3380FF] shadow-[0_0_10px_2px_#3380FF] cursor-pointer"
                     onClick={() => openPreviewModal('profile')}
                   />
                   
@@ -329,7 +329,7 @@ const ProfileHeroSection = () => {
               ) : (
                 <div 
                   onClick={() => triggerImageUpload('profile')}
-                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 border-dashed border-blue-500/50 flex items-center justify-center bg-gray-800/50 cursor-pointer hover:bg-gray-800/70 transition-colors relative"
+                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 border-dashed border-[#4DB3FF] flex items-center justify-center bg-gray-800/50 cursor-pointer hover:bg-gray-800/70 transition-colors relative"
                 >
                   {isUploading && uploadType === 'profile' ? (
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
@@ -358,7 +358,7 @@ const ProfileHeroSection = () => {
               </h1>
               
               <div className="flex items-center gap-1 mt-1 sm:mt-2 text-gray-200">
-                <span className="text-base text-blue-500 font-bold sm:text-xl">
+                <span className="text-base text-[#4DB3FF] font-bold sm:text-xl">
                   {calculateSubscriptionFees()}
                 </span>
               </div>
@@ -369,7 +369,7 @@ const ProfileHeroSection = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-8 w-full sm:w-auto">
             <button 
               onClick={handleLogout}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 sm:px-6 sm:py-2.5 md:px-7 md:py-2.5 rounded-full font-medium transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-1.5 sm:gap-2 text-sm w-full sm:w-auto justify-center"
+              className="bg-[#3380FF] text-white font-bold px-4 py-2 sm:px-6 sm:py-2.5 md:px-7 md:py-2.5 rounded-md transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-1.5 sm:gap-2 text-sm w-full sm:w-auto justify-center"
             >
               <span>Logout</span>
               <IoLogOutOutline className="text-base" />

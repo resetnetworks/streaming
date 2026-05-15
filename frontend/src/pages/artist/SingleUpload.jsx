@@ -22,8 +22,6 @@ const SingleUpload = ({ onCancel, onComplete }) => {
     setIsSubmitting(true);
 
     try {
-      toast.loading("Starting upload process...", { id: "upload-start" });
-
       let coverImageKey = "";
       let audioKey = "";
 
@@ -90,7 +88,6 @@ const SingleUpload = ({ onCancel, onComplete }) => {
       }
 
       // Step 4: Save song metadata to the database
-      toast.loading("Saving song metadata...", { id: "save-metadata" });
       await createSongMutation.mutateAsync(songData);
       toast.dismiss("save-metadata");
 

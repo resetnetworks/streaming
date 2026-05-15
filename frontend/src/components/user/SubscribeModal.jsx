@@ -39,7 +39,7 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
             </div>
 
             {/* Dynamic Badge */}
-            <div className="px-4 py-1 bg-gradient-to-r from-[#3b82f6] to-[#007aff] rounded-full text-xs font-medium text-white flex items-center space-x-2">
+            <div className="px-4 py-1 rounded-full text-xs font-medium text-white flex items-center space-x-2" style={{ background: 'linear-gradient(45deg, #1A5DB4 0%, #3380FF 100%)' }}>
               <IoMusicalNotes className="text-sm" />
               <span style={{ fontFamily: 'Jura' }}>
                 {isPurchaseModal && isPurchaseOnlySong ? 'Purchase Required' : 
@@ -77,7 +77,7 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
               {isPurchaseModal && isPurchaseOnlySong && (
                 <div className="flex justify-center space-x-2 mt-4">
                   <div className="flex flex-col items-center space-y-1">
-                    <div className="w-8 h-8 bg-[#3b82f6] rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'linear-gradient(45deg, #1A5DB4 0%, #3380FF 100%)' }}>1</div>
                     <span className="text-xs text-gray-400">Subscribe</span>
                   </div>
                   <div className="w-4 h-0.5 bg-[#88b2ef] mt-4"></div>
@@ -97,9 +97,12 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
             {/* ✅ Single Action Button - Goes to Artist Page */}
             <div className="w-full">
               <button
-                className="w-full py-3 px-4 bg-transparent border border-[#88b2ef]/60 hover:border-[#88b2ef]/90 rounded-lg text-white transition-all duration-300 text-sm font-medium"
+                className="w-full py-3 px-4 rounded-lg text-white transition-all duration-300 text-sm font-medium hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                 onClick={onNavigate}
-                style={{ fontFamily: 'Jura' }}
+                style={{
+                  fontFamily: 'Jura',
+                  background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)'
+                }}
               >
                 Subscribe Now
               </button>

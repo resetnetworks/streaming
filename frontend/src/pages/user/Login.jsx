@@ -104,7 +104,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
 
         <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center">
           <h1 className="text-4xl mb-6">
-            <span className="text-blue-700">login</span> to musicreset
+            <span style={{ color: '#4DB3FF' }}>login</span> to musicreset
           </h1>
 
           <form
@@ -154,7 +154,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
             {/* Forgot Password */}
             <a
               href="/forgot-password"
-              className={`hover:text-blue-800 ml-auto mt-1 text-base sm:text-xl ${
+              className={`ml-auto mt-1 text-base sm:text-xl ${
                 btnLoading ? "pointer-events-none opacity-50" : ""
               }`}
             >
@@ -194,7 +194,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
           {/* Register Link */}
           <p className={`mt-4 ${btnLoading ? "pointer-events-none opacity-50" : ""}`}>
             Don't have an account?{" "}
-            <a href="/register" className="text-blue-800 underline">
+            <a href="/register" style={{ color: '#4DB3FF' }} className="underline">
               Create Account
             </a>
           </p>
