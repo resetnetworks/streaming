@@ -236,9 +236,9 @@ const ArtistHeroSection = ({
             ) : (
               <div className={`w-full h-full ${artistColor} opacity-80`} />
             )}
-            <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-blue-900/30 z-10" />
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/70 to-transparent z-20" />
+
+            {/* Bottom black gradient overlay — ensures text & buttons stay readable */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
             <div className="absolute bottom-8 left-8 z-30 flex items-center gap-6 text-white">
               {renderArtistImage(artist?.profileImage, artist?.name)}

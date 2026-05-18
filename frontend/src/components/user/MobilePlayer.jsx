@@ -42,6 +42,11 @@ const MobilePlayer = () => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [touchStartY, setTouchStartY] = useState(null);
 
+  // Desktop player se same 3-phase seek state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragValueRef = useRef(0);
+  const seekRangeRef = useRef(null);
+
   const player = usePlayer();
   const {
     videoRef,
@@ -61,8 +66,36 @@ const MobilePlayer = () => {
     handleNext,
     handlePrev,
     handleSeekChange,
+    handleSeekStart,
+    handleSeeking,
+    handleSeekCommit,
     handleLikeToggle,
   } = player;
+
+  // Desktop PlayerUI ke same: change event pe final commit
+  useEffect(() => {
+    const el = seekRangeRef.current;
+    if (!el) return;
+    const onCommit = () => {
+      if (isDragging) {
+        handleSeekCommit(dragValueRef.current);
+        setIsDragging(false);
+      }
+    };
+    el.addEventListener("change", onCommit);
+    return () => el.removeEventListener("change", onCommit);
+  }, [isDragging, handleSeekCommit]);
+
+  // Desktop PlayerUI ke same: onInput pe live seeking
+  const onSeekInput = (e) => {
+    const val = parseFloat(e.target.value);
+    if (!isDragging) {
+      handleSeekStart();
+      setIsDragging(true);
+    }
+    dragValueRef.current = val;
+    handleSeeking(val);
+  };
 
   useEffect(() => {
     if (isFullPlayerOpen) setIsFullPlayerOpen(false);
@@ -297,15 +330,23 @@ const MobilePlayer = () => {
             <div className="relative h-1.5 mb-2 group">
               <div className="absolute inset-0 bg-gray-700 rounded-full" />
               <div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progressPercentage}%` }}
-              />
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                style={{
+                  width: `${progressPercentage}%`,
+                  transition: !isDragging ? "width 0.1s linear" : "none",
+                }}
+              >
+                {!isDisplayOnly && (
+                  <div className="absolute -right-[6px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.2)] group-hover:scale-125 transition-transform duration-150" />
+                )}
+              </div>
               <input
+                ref={seekRangeRef}
                 type="range"
                 min="0"
                 max={duration || 0}
                 value={isDisplayOnly ? 0 : currentTime}
-                onChange={(e) => handleSeekChange(parseFloat(e.target.value))}
+                onInput={onSeekInput}
                 disabled={isDisplayOnly}
                 className="absolute w-full h-full opacity-0 z-10 cursor-pointer"
               />

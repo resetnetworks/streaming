@@ -249,15 +249,17 @@ export default function Dashboard() {
   return (
     <>
       <div className="flex min-h-screen">
-        <Sidebar
-          selectedTab={selectedTab}
-          setSelectedTab={handleTabChange}
-          currentUploadPage={currentUploadPage}
-          onUploadSelect={handleUploadTypeSelect}
-          isMonetized={isMonetized}
-        />
+        <div className="flex-shrink-0">
+          <Sidebar
+            selectedTab={selectedTab}
+            setSelectedTab={handleTabChange}
+            currentUploadPage={currentUploadPage}
+            onUploadSelect={handleUploadTypeSelect}
+            isMonetized={isMonetized}
+          />
+        </div>
 
-        <div className="flex-grow w-full flex flex-col">
+        <div className="flex-grow min-w-0 flex flex-col overflow-hidden">
           <Topbar
             selectedTab={selectedTab}
             currentUploadPage={currentUploadPage}
