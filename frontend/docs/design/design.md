@@ -1,4 +1,4 @@
-# MusicReset — Unified Design System
+# Reset Music — Unified Design System
 
 > A simple, concise design reference for the MusicReset platform. Always use these exact tokens when building or updating components to ensure a consistent, premium dark-mode experience.
 
@@ -75,4 +75,4 @@ border: 1px solid rgba(135, 135, 135, 0.565); /* or border-[#4DB3FF]/20 */
 - ❌ **DON'T** use light backgrounds anywhere in the app.
 - ❌ **DON'T** introduce new font families.
 
-*Last updated: May 2026 | Project: MusicReset Streaming Platform*
+*Last updated: May 2026 | Project: Reset Music Streaming Platform*
