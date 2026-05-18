@@ -36,17 +36,17 @@ const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
         </div>
         {!currentUploadPage && (
           <div 
-            className="button-wrapper cursor-pointer shadow-[0_0_20px_10px_rgba(59,130,246,0.3)]"
+            className="button-wrapper cursor-pointer"
             onClick={() => setShowUploadModal(true)}
           >
             <button className="custom-button md:!w-32 sm:!w-24 !w-20 md:!text-[20px] !text-[12px] sm:!text-[14px] flex justify-center items-center">
-              upload <i className='ml-2 md:text-[23px] text-[16px] sm:text-[18px]'><IoAddCircleSharp /></i>
+              upload
             </button>
           </div>
         )}
         {currentUploadPage && (
           <div 
-            className="button-wrapper cursor-pointer shadow-[0_0_20px_10px_rgba(59,130,246,0.3)]"
+            className="button-wrapper cursor-pointer"
             onClick={() => setCurrentUploadPage(null)}
           >
             <button className="custom-button md:!w-32 sm:!w-24 !w-20 md:!text-[16px] !text-[12px] sm:!text-[14px] flex justify-center items-center">
