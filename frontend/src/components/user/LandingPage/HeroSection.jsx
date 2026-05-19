@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 
 /* ─── Flip-fade animated word ─── */
 const Letter = memo(function Letter({ char, letterDuration }) {
   return (
     <motion.span
-      style={{ transformStyle: "preserve-3d" }}
+      style={{ transformStyle: "preserve-3d", willChange: "transform, opacity, filter" }}
       variants={{
         initial: { rotateX: 90, y: 20, opacity: 0, filter: "blur(8px)" },
         animate: {
@@ -95,7 +95,7 @@ function CyclingWord() {
 }
 
 /* ─── Floating music card ─── */
-const MusicCard = ({goToHome}) => (
+const MusicCard = ({ goToHome, isHeroInView }) => (
   <motion.div
     initial={{ opacity: 0, x: 60, y: 20 }}
     animate={{ opacity: 1, x: 0, y: 0 }}
@@ -148,13 +148,14 @@ const MusicCard = ({goToHome}) => (
           }}
         />
         <motion.div
-          animate={{ rotate: 360 }}
+          animate={isHeroInView ? { rotate: 360 } : {}}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute top-[20%] left-[22%] w-[140px] h-[140px] opacity-80"
           style={{
             background:
               "conic-gradient(from 0deg, #3B82F6, #1D4ED8, #2563EB, #3B82F6)",
             borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
+            willChange: "transform",
           }}
         />
         <div
@@ -195,9 +196,12 @@ const MusicCard = ({goToHome}) => (
 /* ─── Main Hero ─── */
 const HeroSection = () => {
   const navigate = useNavigate();
+  const heroRef = useRef(null);
+  const isHeroInView = useInView(heroRef);
 
   return (
     <div
+      ref={heroRef}
       className="min-h-screen relative overflow-hidden flex items-center"
       style={{ background: "#020216" }}
     >
@@ -324,7 +328,6 @@ const HeroSection = () => {
                   style={{
                     background: "transparent",
                     border: "1px solid rgba(255,255,255,0.15)",
-                    backdropFilter: "blur(8px)",
                   }}
                 >
                   Join as Artist
@@ -343,7 +346,7 @@ const HeroSection = () => {
               }}
               className="flex flex-shrink-0 items-center justify-center"
             >
-              <MusicCard  goToHome={() => navigate("/home")}/>
+              <MusicCard goToHome={() => navigate("/home")} isHeroInView={isHeroInView} />
             </motion.div>
           </div>
         </div>

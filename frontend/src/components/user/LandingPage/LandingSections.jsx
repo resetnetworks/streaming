@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const stepsData = [
@@ -28,13 +28,12 @@ const StepCard = ({ step, index, isInView }) => (
     }}
     className="relative w-full"
     style={{
-  transformStyle: "preserve-3d",
-  perspective: "1200px",
-  filter: `
-    drop-shadow(0 30px 40px rgba(0,0,0,0.75))
-    drop-shadow(0 12px 32px rgba(59,130,246,0.14))
-  `,
-}}
+      boxShadow: `
+        0 30px 40px rgba(0,0,0,0.75),
+        0 12px 32px rgba(59,130,246,0.14)
+      `,
+      willChange: "transform, opacity",
+    }}
   >
     {/* SVG shape with a gradient fill + glowing stroke */}
     <svg
@@ -59,15 +58,9 @@ const StepCard = ({ step, index, isInView }) => (
       <path
         d="M674.3 76.3c0-3.9-3.1-7-7-7h-612c-3.9 0-7 3.1-7 7v97.3c0 3.9 3.1 7 7 7h739.3c3.9 0 7-3.1 7-7V97c0-3.9-3.1-7-7-7H681.3c-3.9 0-7-3.1-7-7v-6.8Z"
         fill={`url(#cardGrad-${index})`}
-stroke="rgba(96,165,250,0.18)"
-strokeWidth="1.3"
-fillRule="evenodd"
-style={{
-  filter: `
-    drop-shadow(0 28px 38px rgba(0,0,0,0.72))
-    drop-shadow(0 10px 24px rgba(59,130,246,0.10))
-  `,
-}}
+        stroke="rgba(96,165,250,0.18)"
+        strokeWidth="1.3"
+        fillRule="evenodd"
       />
     </svg>
 
@@ -99,18 +92,9 @@ style={{
 
 const LandingSections = () => {
   const perkRef = useRef(null);
-  const clubRef = useRef(null);
   const navigate = useNavigate();
 
   const perkInView = useInView(perkRef, { once: true, margin: "-100px" });
-  const clubInView = useInView(clubRef, { once: true, margin: "-100px" });
-
-  const { scrollYProgress } = useScroll({
-    target: clubRef,
-    offset: ["start end", "end start"],
-  });
-  const imgY = useTransform(scrollYProgress, [0, 1], [20, -20]);
-  const imgRotate = useTransform(scrollYProgress, [0, 1], [-2, 2]);
 
   return (
     <section
