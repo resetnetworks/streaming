@@ -35,13 +35,11 @@ const C = {
 /* ─── Card ─── */
 const FeatureCard = ({ card, index, isInView }) => (
   <motion.div
-    initial={{ opacity: 0, y: 60, rotateX: 20 }}
-    animate={isInView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+    initial={{ opacity: 0, y: 60 }}
+    animate={isInView ? { opacity: 1, y: 0 } : {}}
     transition={{ delay: 0.25 + index * 0.15, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     whileHover={{
       y: -12,
-      rotateX: 5,
-      rotateY: index === 0 ? 3 : index === 2 ? -3 : 0,
       transition: { duration: 0.4, ease: 'easeOut' },
     }}
     className="group relative flex flex-col p-8 rounded-[24px] cursor-pointer"
@@ -53,9 +51,8 @@ const FeatureCard = ({ card, index, isInView }) => (
         inset 1px 1px 1px rgba(255,255,255,0.05),
         0 0 0 1px rgba(59,130,246,0.1)
       `,
-      transformStyle: 'preserve-3d',
-      perspective: '1000px',
       minHeight: '280px',
+      willChange: 'transform, opacity',
     }}
   >
     {/* Hover glow overlay */}
