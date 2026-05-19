@@ -6,21 +6,19 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 const Letter = memo(function Letter({ char, letterDuration }) {
   return (
     <motion.span
-      style={{ transformStyle: "preserve-3d", willChange: "transform, opacity, filter" }}
+      style={{ transformStyle: "preserve-3d", willChange: "transform, opacity" }}
       variants={{
-        initial: { rotateX: 90, y: 20, opacity: 0, filter: "blur(8px)" },
+        initial: { rotateX: 90, y: 20, opacity: 0 },
         animate: {
           rotateX: 0,
           y: 0,
           opacity: 1,
-          filter: "blur(0px)",
           transition: { duration: letterDuration, ease: [0.2, 0.65, 0.3, 0.9] },
         },
         exit: {
           rotateX: -90,
           y: -20,
           opacity: 0,
-          filter: "blur(8px)",
           transition: { duration: letterDuration * 0.67, ease: "easeIn" },
         },
       }}
@@ -206,7 +204,10 @@ const HeroSection = () => {
       style={{ background: "#020216" }}
     >
       {/* Background orbs */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{ transform: "translateZ(0)", willChange: "transform" }}
+      >
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full"
           style={{

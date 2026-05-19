@@ -138,7 +138,10 @@ const PlatformFeaturesSection = () => {
 
 
       {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{ transform: "translateZ(0)", willChange: "transform" }}
+      >
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full"
           style={{ background: 'radial-gradient(ellipse, rgba(37,99,235,0.1) 0%, transparent 70%)' }}
