@@ -102,7 +102,10 @@ const LandingSections = () => {
       style={{ background: "#020216" }}
     >
       {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{ transform: "translateZ(0)", willChange: "transform" }}
+      >
         <div
           className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full"
           style={{
