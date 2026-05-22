@@ -58,32 +58,7 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
               Artists
             </button>
           </li>
-          <li>
-            <button
-              onClick={() => setActiveTab('albums')}
-              className={`flex items-center w-full px-4 py-3 rounded-lg ${
-                activeTab === 'albums'
-                  ? 'bg-blue-900 text-white'
-                  : 'text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              <FaCompactDisc className="mr-3" />
-              Albums
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => setActiveTab('songs')}
-              className={`flex items-center w-full px-4 py-3 rounded-lg ${
-                activeTab === 'songs'
-                  ? 'bg-blue-900 text-white'
-                  : 'text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              <FaMusic className="mr-3" />
-              Songs
-            </button>
-          </li>
+
           <li className="pt-4 mt-4 border-t border-gray-700">
             <button
               onClick={() => setActiveTab('payments')}

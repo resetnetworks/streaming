@@ -8,8 +8,6 @@ import {
 import AdminLayout from './AdminLayout';
 import Dashboard from './Dashboard';
 import Artists from './Artists';
-import Albums from "./Album";
-import Songs from './Songs';
 import AdminPaymentRequests from './AdminPaymentRequests';
 
 const Admin = () => {
@@ -17,25 +15,16 @@ const Admin = () => {
 
   const artists = useSelector(selectAllArtists);
 
-  const [albums, setAlbums] = useState([]);
-  const [songs, setSongs] = useState([]);
-
-  const handleAlbumUpdate = (updatedAlbums) => {
-    setAlbums(updatedAlbums);
-  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'artists':
         return <Artists />;
-      case 'albums':
-        return <Albums albums={albums} onAlbumUpdate={handleAlbumUpdate} />;
-      case 'songs':
-        return <Songs songs={songs} />;
+
       case 'payments':
         return <AdminPaymentRequests />;
       default:
-        return <Dashboard artists={artists} albums={albums} songs={songs} />;
+        return <Dashboard artists={artists} />;
     }
   };
 
