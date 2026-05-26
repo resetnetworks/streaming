@@ -147,7 +147,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
   // Desktop Sidebar
   return (
     <aside 
-      className="w-72 bg-[#222126B2] flex flex-col justify-between pb-4 border-r border-gray-500 min-h-screen"
+      className="w-72 bg-[#222126B2] flex flex-col justify-between pb-4 border-r border-gray-500 h-full"
     >
       <div>
         <IconHeader />
