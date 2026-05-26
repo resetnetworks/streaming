@@ -342,67 +342,7 @@ export default function Dashboard() {
         )}
 
         {/* Batch upload progress modal for album songs */}
-        {showBatchProgress && batchProgressData && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-lg w-full mx-4">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white text-xl">Uploading Album Songs</h3>
-                <button
-                  onClick={handleCloseBatchProgress}
-                  className="text-gray-400 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-300">
-                    {batchProgressData.currentIndex + 1} of {batchProgressData.totalSongs} songs
-                  </span>
-                  <span className="text-blue-400 font-mono">
-                    {batchProgressData.currentProgress}%
-                  </span>
-                </div>
-
-                <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
-                    style={{
-                      width: `${
-                        (batchProgressData.currentIndex / batchProgressData.totalSongs) * 100 +
-                        batchProgressData.currentProgress / batchProgressData.totalSongs
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-900/30 rounded flex items-center justify-center">
-                      <span className="text-blue-400">♪</span>
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">{batchProgressData.currentSongName}</p>
-                      <p className="text-gray-400 text-sm">
-                        Uploading song {batchProgressData.currentIndex + 1} of {batchProgressData.totalSongs}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-blue-400 text-lg">{batchProgressData.currentProgress}%</div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-gray-800">
-                <p className="text-gray-400 text-sm text-center">
-                  Please don't close this window while upload is in progress.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+     
       </div>
     </>
   );
