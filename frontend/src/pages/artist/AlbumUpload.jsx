@@ -303,12 +303,7 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
                   <span className="text-blue-300">"{createdAlbum.title}"</span>
                 </p>
               </div>
-              <button
-                onClick={() => setCurrentStep(1)}
-                className="text-gray-400 hover:text-white px-4 py-2"
-              >
-                ← Back to Album Info
-              </button>
+
             </div>
 
             {/* Quick album summary card */}
