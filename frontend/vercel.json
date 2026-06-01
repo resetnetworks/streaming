@@ -3,7 +3,25 @@
 
   "installCommand": "npm install --legacy-peer-deps",
 
+  "functions": {
+    "api/share.js": {
+      "includeFiles": "dist/index.html"
+    }
+  },
+
   "rewrites": [
+    {
+      "source": "/album/:albumId",
+      "destination": "/api/share?type=album&id=:albumId"
+    },
+    {
+      "source": "/song/:songId",
+      "destination": "/api/share?type=song&id=:songId"
+    },
+    {
+      "source": "/artist/:artistId",
+      "destination": "/api/share?type=artist&id=:artistId"
+    },
     {
       "source": "/(.*)",
       "destination": "/"
