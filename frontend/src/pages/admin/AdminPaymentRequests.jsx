@@ -164,7 +164,7 @@ const AdminPaymentRequests = () => {
           <p className="text-red-400/80 mb-4">{error}</p>
           <button
             onClick={handleRefresh}
-            className="px-6 py-4 bg-red-900/30 text-red-300 rounded-lg hover:bg-red-800/30 transition-colors border border-red-800/50"
+            className="px-4 py-2 bg-red-900/30 text-red-300 rounded-lg hover:bg-red-800/30 transition-colors border border-red-800/50"
           >
             Try Again
           </button>
