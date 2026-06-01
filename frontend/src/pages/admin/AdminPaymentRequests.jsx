@@ -5,11 +5,11 @@ import {
   markPayoutAsPaid,
   resetMarkPaid
 } from '../../features/payments/adminPayoutsSlice';
-import { 
-  FaCheckCircle, 
-  FaSync, 
-  FaWallet, 
-  FaEye, 
+import {
+  FaCheckCircle,
+  FaSync,
+  FaWallet,
+  FaEye,
   FaCalendarAlt,
   FaUser,
   FaEnvelope,
@@ -24,9 +24,9 @@ const AdminPaymentRequests = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
+
   // Get data from Redux store
-  const { 
+  const {
     pendingPayouts: { items: payouts, count, loading, error },
     markPaid: { loading: markLoading, success: markSuccess, error: markError }
   } = useSelector((state) => state.adminPayouts);
@@ -43,12 +43,12 @@ const AdminPaymentRequests = () => {
       setTimeout(() => setShowSuccess(false), 3000);
       dispatch(resetMarkPaid());
     }
-    
+
     if (markError) {
       setErrorMessage(markError);
       setTimeout(() => setErrorMessage(''), 3000);
     }
-    
+
     if (error) {
       setErrorMessage(error);
       setTimeout(() => setErrorMessage(''), 3000);
@@ -83,7 +83,7 @@ const AdminPaymentRequests = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-6">
-      
+
       {/* Success Alert */}
       {showSuccess && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
@@ -116,7 +116,7 @@ const AdminPaymentRequests = () => {
               <p className="text-gray-400">Manage and process artist payout requests</p>
             </div>
           </div>
-          
+
           <button
             onClick={handleRefresh}
             disabled={loading}
@@ -164,7 +164,7 @@ const AdminPaymentRequests = () => {
           <p className="text-red-400/80 mb-4">{error}</p>
           <button
             onClick={handleRefresh}
-            className="px-4 py-2 bg-red-900/30 text-red-300 rounded-lg hover:bg-red-800/30 transition-colors border border-red-800/50"
+            className="px-6 py-4 bg-red-900/30 text-red-300 rounded-lg hover:bg-red-800/30 transition-colors border border-red-800/50"
           >
             Try Again
           </button>
@@ -269,7 +269,7 @@ const AdminPaymentRequests = () => {
               </tbody>
             </table>
           </div>
-          
+
           {/* Footer with count */}
           <div className="px-6 py-4 bg-gray-900/50 border-t border-gray-700">
             <div className="flex items-center justify-between">
@@ -298,11 +298,11 @@ const AdminPaymentRequests = () => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <p className="text-gray-400 mb-6">
               Are you sure you want to mark this payout as paid? This action cannot be undone.
             </p>
-            
+
             <div className="bg-gray-900/50 rounded-lg p-4 mb-6 border border-gray-700">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-gray-400">Artist:</span>
@@ -315,7 +315,7 @@ const AdminPaymentRequests = () => {
                 </span>
               </div>
             </div>
-            
+
             <div className="flex space-x-3">
               <button
                 onClick={() => {
