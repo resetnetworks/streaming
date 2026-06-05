@@ -41,8 +41,16 @@ const Register = () => {
           localStorage.setItem("justRegistered", "true");
           localStorage.setItem("registrationTime", Date.now().toString());
           await axios.get("/users/me", { withCredentials: true });
-          toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
-          navigate("/genres");
+          
+          const pendingToken = localStorage.getItem("pendingInviteToken");
+          if (pendingToken) {
+            localStorage.removeItem("pendingInviteToken");
+            toast.success(`Welcome ${user.name}! Redirecting to accept invitation...`);
+            navigate(`/accept-invite?token=${pendingToken}`);
+          } else {
+            toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
+            navigate("/genres");
+          }
           setJustRegistered(false);
         } catch (error) {
           toast.error("Registration successful but please login again");

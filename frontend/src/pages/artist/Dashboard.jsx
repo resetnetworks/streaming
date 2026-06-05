@@ -15,6 +15,8 @@ import { resetUploadState } from "../../features/artistSong/artistSongSlice";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
+import TeamComponent from "../../components/artist/team/TeamComponent";
 
 // Static tab components (no props needed)
 const tabComponents = {
@@ -26,12 +28,22 @@ const tabComponents = {
 export default function Dashboard() {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+  const { data: workspaces = [] } = useMyWorkspaces();
+  const activeWorkspace = React.useMemo(() => {
+    if (!workspaces || workspaces.length === 0) return null;
+    if (typeof window !== "undefined") {
+      const savedId = localStorage.getItem("activeWorkspaceId");
+      const matched = workspaces.find((w) => w.workspaceId === savedId);
+      if (matched) return matched;
+    }
+    return workspaces[0];
+  }, [workspaces]);
 
   // Restore last active tab from localStorage, default to "profile"
   const [selectedTab, setSelectedTab] = useState(() => {
     if (typeof window !== "undefined") {
       const savedTab = localStorage.getItem("dashboardSelectedTab");
-      const validTabs = ["profile", "dashboard", "uploads", "revenue"];
+      const validTabs = ["profile", "dashboard", "uploads", "revenue", "team"];
       return validTabs.includes(savedTab) ? savedTab : "profile";
     }
     return "profile";
@@ -39,8 +51,8 @@ export default function Dashboard() {
 
   const [currentUploadPage, setCurrentUploadPage] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showBatchProgress, setShowBatchProgress] = useState(false);
-  const [batchProgressData, setBatchProgressData] = useState(null);
+  const [_showBatchProgress, setShowBatchProgress] = useState(false);
+  const [_batchProgressData, setBatchProgressData] = useState(null);
 
   // After upload completes, signal UploadsComponent which tab to show
   const [uploadedTabToShow, setUploadedTabToShow] = useState(null);
@@ -60,6 +72,17 @@ export default function Dashboard() {
       localStorage.setItem("dashboardSelectedTab", selectedTab);
     }
   }, [selectedTab]);
+
+  // Persist active workspace ID to localStorage for axios headers
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (activeWorkspace?.workspaceId) {
+        localStorage.setItem("activeWorkspaceId", activeWorkspace.workspaceId);
+      } else {
+        localStorage.removeItem("activeWorkspaceId");
+      }
+    }
+  }, [activeWorkspace]);
 
   // Persist upload page so refresh doesn't lose progress
   useEffect(() => {
@@ -86,6 +109,11 @@ export default function Dashboard() {
   // Verify monetization status from server on mount
   useEffect(() => {
     const checkMonetizationStatus = async () => {
+      // Bypass if user is collaborator (not owner)
+      if (activeWorkspace && activeWorkspace.role !== "owner") {
+        setIsMonetized(true);
+        return;
+      }
       try {
         const result = await dispatch(getMyMonetizationSetupStatus());
         const serverMonetized = result?.payload?.isMonetizationComplete;
@@ -103,7 +131,7 @@ export default function Dashboard() {
     };
 
     checkMonetizationStatus();
-  }, [dispatch]);
+  }, [dispatch, activeWorkspace]);
 
   // Handle sidebar/topbar tab navigation
   const handleTabChange = (tab) => {
@@ -182,7 +210,7 @@ export default function Dashboard() {
     setShowBatchProgress(true);
   };
 
-  const handleCloseBatchProgress = () => {
+  const _handleCloseBatchProgress = () => {
     setShowBatchProgress(false);
     setBatchProgressData(null);
   };
@@ -200,6 +228,7 @@ export default function Dashboard() {
     }
 
     return () => document.removeEventListener("keydown", handleEscapeKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUploadPage]);
 
   // Render the correct content for the active tab
@@ -241,6 +270,10 @@ export default function Dashboard() {
           onTabConsumed={() => setUploadedTabToShow(null)}
         />
       );
+    }
+
+    if (selectedTab === "team") {
+      return <TeamComponent workspace={activeWorkspace} />;
     }
 
     return tabComponents[selectedTab] || null;
