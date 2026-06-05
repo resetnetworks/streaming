@@ -37,8 +37,12 @@ const SocialLoginCallback = () => {
         // Determine where to redirect based on user status
         const hasGenres = user.preferredGenres && user.preferredGenres.length > 0;
         
-        
-        if (isNewUser || !hasGenres) {
+        const pendingToken = localStorage.getItem("pendingInviteToken");
+        if (pendingToken) {
+          localStorage.removeItem("pendingInviteToken");
+          toast.success(`Welcome ${user.name}! Redirecting to accept invitation...`);
+          navigate(`/accept-invite?token=${pendingToken}`);
+        } else if (isNewUser || !hasGenres) {
           // New user or user without genres - go to genre selection
           localStorage.setItem("justRegistered", "true");
           localStorage.setItem("registrationTime", Date.now().toString());

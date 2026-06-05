@@ -92,6 +92,15 @@ export const forceLogout = async () => {
 axiosInstance.interceptors.request.use(
   (config) => {
     if (isLoggingOut) return config;
+    
+    // Inject active workspace ID if present in localStorage
+    if (typeof window !== 'undefined') {
+      const activeWorkspaceId = localStorage.getItem("activeWorkspaceId");
+      if (activeWorkspaceId) {
+        config.headers["x-workspace-id"] = activeWorkspaceId;
+      }
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)

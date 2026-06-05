@@ -8,7 +8,8 @@ import {
   FiClock,
   FiLogOut,
   FiBell,
-  FiAlertCircle
+  FiAlertCircle,
+  FiGrid
 } from "react-icons/fi";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import { logoutUser } from "../../features/auth/authSlice";
 import { getAvatarColor } from "../../utills/helperFunctions";
 import { getMyArtistApplication } from "../../features/artistApplications/artistApplicationSlice";
 import { forceLogout } from "../../utills/axiosInstance";
+import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
 
 const UserHeader = () => {
   const user = useSelector(selectCurrentUser);
@@ -28,10 +30,15 @@ const UserHeader = () => {
 
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [workspaceModalOpen, setWorkspaceModalOpen] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { data: workspaces = [] } = useMyWorkspaces({
+    enabled: !!isAuthenticated,
+  });
 
   const isHomePage = location.pathname === "/home";
   const hasArtistPendingRole = user?.role === "artist-pending";
@@ -83,20 +90,36 @@ const UserHeader = () => {
 
   const isActive = (path) => location.pathname === path;
 
+  const handleWorkspaceDashboardClick = () => {
+    if (!workspaces || workspaces.length === 0) return;
+
+    if (workspaces.length === 1) {
+      const ws = workspaces[0];
+      localStorage.setItem("activeWorkspaceId", ws.workspaceId);
+      toast.success(`Entering workspace: ${ws.name}`);
+      navigate("/artist/dashboard");
+      if (window.location.pathname === "/artist/dashboard") {
+        window.location.reload();
+      }
+    } else {
+      setWorkspaceModalOpen(true);
+    }
+  };
+
   const renderUserMenu = () => {
     // ✅ Guest user - Login button
     if (!isAuthenticated) {
-  return (
-    <div
-      className="button-wrapper shadow-md shadow-gray-800 user-menu-container"
-      onClick={() => navigate("/login")}
-    >
-      <button className="player-button flex justify-center items-center gap-2">
-        Sign in
-      </button>
-    </div>
-  );
-}
+      return (
+        <div
+          className="button-wrapper shadow-md shadow-gray-800 user-menu-container"
+          onClick={() => navigate("/login")}
+        >
+          <button className="player-button flex justify-center items-center gap-2">
+            Sign in
+          </button>
+        </div>
+      );
+    }
 
     if (user?.role === "admin") {
       return (
@@ -143,11 +166,23 @@ const UserHeader = () => {
           {open && (
             <div className="absolute right-0 mt-3 w-52 bg-gradient-to-b from-black to-blue-900 rounded-xl border border-blue-500 shadow-[0_0_8px_1px_#3b82f6] z-40">
               <ul className="py-2 text-sm text-gray-400">
+                {workspaces.length > 0 && (
+                  <li
+                    className="px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors hover:text-[#4DB3FF] border-b border-blue-900/30"
+                    onClick={() => {
+                      setOpen(false);
+                      handleWorkspaceDashboardClick();
+                    }}
+                  >
+                    <FiGrid />
+                    Collaborator
+                  </li>
+                )}
                 <li
                   className={`px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors ${isActive("/payment-history") ? "" : ""}`}
                   style={{ color: isActive("/payment-history") ? '#4DB3FF' : undefined }}
-                  onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                  onMouseLeave={e => e.currentTarget.style.color=''}
+                  onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                  onMouseLeave={e => e.currentTarget.style.color = ''}
                   onClick={() => { setOpen(false); navigate("/payment-history"); }}
                 >
                   <FiClock />
@@ -155,20 +190,20 @@ const UserHeader = () => {
                 </li>
                 <li
                   className={`px-4 py-2 flex items-center gap-2 cursor-pointer transition-colors`}
-                  onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                  onMouseLeave={e => e.currentTarget.style.color=''}
+                  onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                  onMouseLeave={e => e.currentTarget.style.color = ''}
                   onClick={() => { setOpen(false); navigate("/contact-us"); }}
                 >
                   <FiHelpCircle />
                   Help & Support
                 </li>
                 <li
-      className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-yellow-400 ${isActive("/report-issue") ? "text-yellow-400" : ""}`}
-      onClick={() => { setOpen(false); navigate("/report-issue"); }}
-    >
-      <FiAlertCircle />
-      Report Issue
-    </li>
+                  className={`px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-yellow-400 ${isActive("/report-issue") ? "text-yellow-400" : ""}`}
+                  onClick={() => { setOpen(false); navigate("/report-issue"); }}
+                >
+                  <FiAlertCircle />
+                  Report Issue
+                </li>
                 <li
                   className="px-4 py-2 flex items-center gap-2 cursor-pointer hover:text-red-500"
                   onClick={handleLogout}
@@ -247,13 +282,12 @@ const UserHeader = () => {
                   <h4 className="text-white font-medium mb-2">Admin Notes:</h4>
                   <p className="text-gray-300 text-sm">{myApplication.adminNotes}</p>
                   {myApplication.status && (
-                    <div className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      myApplication.status === 'approved'
-                        ? 'bg-green-900 text-green-300'
-                        : myApplication.status === 'rejected'
+                    <div className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-medium ${myApplication.status === 'approved'
+                      ? 'bg-green-900 text-green-300'
+                      : myApplication.status === 'rejected'
                         ? 'bg-red-900 text-red-300'
                         : 'bg-yellow-900 text-yellow-300'
-                    }`}>
+                      }`}>
                       Status: {myApplication.status}
                     </div>
                   )}
@@ -275,6 +309,55 @@ const UserHeader = () => {
 
         {renderUserMenu()}
       </div>
+
+      {/* Workspace Selection Modal */}
+      {workspaceModalOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div className="bg-gradient-to-b from-[#0A0A23] to-[#020216] border border-[#4DB3FF]/30 p-6 rounded-2xl w-full max-w-md shadow-[0_0_15px_rgba(77,179,255,0.2)] mx-4 font-['Jura']">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white tracking-wider">Select Workspace</h2>
+              <button
+                onClick={() => setWorkspaceModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors text-lg"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">
+              Select an artist workspace to access their collaborator dashboard:
+            </p>
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+              {workspaces.map((ws) => (
+                <div
+                  key={ws.workspaceId}
+                  onClick={() => {
+                    localStorage.setItem("activeWorkspaceId", ws.workspaceId);
+                    setWorkspaceModalOpen(false);
+                    toast.success(`Entering workspace: ${ws.name}`);
+                    navigate("/artist/dashboard");
+                    if (window.location.pathname === "/artist/dashboard") {
+                      window.location.reload();
+                    }
+                  }}
+                  className="p-4 rounded-xl border border-gray-800 hover:border-[#4DB3FF]/50 bg-black/40 hover:bg-[#4DB3FF]/5 transition-all cursor-pointer flex justify-between items-center group"
+                >
+                  <div>
+                    <h3 className="font-semibold text-white group-hover:text-[#4DB3FF] transition-colors">
+                      {ws.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 capitalize mt-0.5">
+                      Role: {ws.role}
+                    </p>
+                  </div>
+                  <span className="text-xs text-gray-400 border border-gray-700 px-2 py-1 rounded bg-black/60 capitalize">
+                    {ws.role}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
