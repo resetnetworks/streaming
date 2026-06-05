@@ -1,6 +1,6 @@
-// /components/RouteGuards.jsx
-
 import { Navigate } from "react-router-dom";
+import { useMyWorkspaces } from "../hooks/api/useWorkspace";
+import Loader from "./Loader";
 
 export const ProtectedRoute = ({ isAuthenticated, children, redirectTo = "/login" }) =>
   isAuthenticated ? children : <Navigate to={redirectTo} replace />;
@@ -33,13 +33,22 @@ export const ArtistRegisterRoute = ({ isAuthenticated, user, children }) => {
 };
 
 export const ArtistRoute = ({ isAuthenticated, user, children }) => {
+  const { data: workspaces, isLoading } = useMyWorkspaces();
+
   // ❌ Not logged in
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // ❌ Not artist
-  if (user?.role !== "artist") {
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  const isCollaborator = workspaces && workspaces.length > 0;
+  const isAllowed = user?.role === "artist" || isCollaborator;
+
+  // ❌ Not allowed
+  if (!isAllowed) {
     return <Navigate to="/home" replace />;
   }
 

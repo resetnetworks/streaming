@@ -202,6 +202,7 @@ useEffect(() => {
             <Route path="/careers" element={<Pages.Career />} />
             <Route path="/artist-details" element={<Pages.ArtistDetails />} />
             <Route path="/report-issue" element={<Pages.ReportIssue />} />
+            <Route path="/accept-invite" element={<Pages.AcceptInvite />} />
 
             {/* 🔥 NEW: Social Login Callback Route */}
             <Route path="/auth/callback" element={<Pages.SocialLoginCallback />} />

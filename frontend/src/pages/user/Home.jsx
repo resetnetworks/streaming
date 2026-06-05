@@ -35,6 +35,14 @@ const Home = () => {
     dispatch(fetchRandomArtistWithSongs({ page: 1, limit: 10 }));
   }, [dispatch]);
 
+  useEffect(() => {
+    const pendingToken = localStorage.getItem("pendingInviteToken");
+    if (pendingToken) {
+      localStorage.removeItem("pendingInviteToken");
+      navigate(`/accept-invite?token=${pendingToken}`);
+    }
+  }, [navigate]);
+
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);

@@ -1,23 +1,47 @@
 import React from "react";
 import IconHeader from "../../user/IconHeader";
 import MobileNavBar from "../../user/MobileNavBar";
-import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet } from "react-icons/fa";
+import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
 import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchArtistProfile } from "../../../features/artists/artistsSlice";
+import { useMyWorkspaces } from "../../../hooks/api/useWorkspace";
 
 const menuItems = [
   { name: "profile", icon: <FaRegUserCircle size={20} /> },
-  { name: "uploads", icon: <FiMusic size={20} strokeWidth={1.5} /> },
-  { name: "revenue", icon: <FaWallet size={20} /> },
-  { name: "dashboard", icon: <RxDashboard size={20} /> },
+  { name: "uploads", icon: <FiMusic size={20} strokeWidth={1.5} />, permission: "uploadSong" },
+  { name: "revenue", icon: <FaWallet size={20} />, permission: "viewPayments" },
+  { name: "dashboard", icon: <RxDashboard size={20} />, permission: "viewAnalytics" },
+  { name: "team", icon: <FaUsers size={20} />, permission: "manageTeam" },
   // { name: "insights", icon: <FaChartLine size={18} /> },
 ];
 
-const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
+const Sidebar = ({ selectedTab, setSelectedTab }) => {
   const dispatch = useDispatch();
+  const { data: workspaces = [] } = useMyWorkspaces();
+  const activeWorkspace = React.useMemo(() => {
+    if (!workspaces || workspaces.length === 0) return null;
+    if (typeof window !== "undefined") {
+      const savedId = localStorage.getItem("activeWorkspaceId");
+      const matched = workspaces.find((w) => w.workspaceId === savedId);
+      if (matched) return matched;
+    }
+    return workspaces[0];
+  }, [workspaces]);
+  const permissions = activeWorkspace?.permissions || {};
+  const currentRole = activeWorkspace?.role;
+
+  const hasPermission = (permission) => {
+    if (currentRole === "owner") return true;
+    return permissions[permission] === true;
+  };
+
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!item.permission) return true;
+    return hasPermission(item.permission);
+  });
 
   useEffect(() => {
     dispatch(fetchArtistProfile());
@@ -25,7 +49,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
   
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const { artistProfile, profileLoading } = useSelector((state) => state.artists);
+  const { artistProfile } = useSelector((state) => state.artists);
   const imageUrl = artistProfile?.profileImage;
   const artistName = artistProfile?.name;
 
@@ -99,7 +123,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
                   </button>
                 </div>
                 <div className="w-full mt-6">
-                  {menuItems.map((item) => (
+                  {filteredMenuItems.map((item) => (
                     <button
                       key={item.name}
                       onClick={() => handleMenuItemClick(item.name)}
@@ -152,7 +176,7 @@ const Sidebar = ({ selectedTab, setSelectedTab, currentUploadPage }) => {
       <div>
         <IconHeader />
         <div className="w-full mt-6">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <button
               key={item.name}
               onClick={() => setSelectedTab(item.name)}
