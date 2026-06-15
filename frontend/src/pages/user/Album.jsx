@@ -481,22 +481,37 @@ export default function Album() {
     );
   }
 
+  const albumSlug = album?.slug || albumId;
+  const canonicalUrl = `https://musicreset.com/album/${albumSlug}`;
+
   return (
     <>
       <PageSEO
         title={`Album: ${album.title} by ${artistName} | Reset Music`}
         description={`Access the album '${album.title}' by ${artistName}. Stream all ${songs.length} songs.`}
-        canonicalUrl={`https://musicreset.com/album/${albumId}`}
+        canonicalUrl={canonicalUrl}
+        ogUrl={canonicalUrl}
+        twitterImage={album.coverImage}
         structuredData={{
           "@context": "https://schema.org",
           "@type": "MusicAlbum",
-          name: album.title,
-          description: album.description,
-          image: album.coverImage,
-          url: `https://musicreset.com/album/${albumId}`,
-          byArtist: { "@type": "MusicGroup", name: artistName },
-          numTracks: songs.length,
-          datePublished: album.releaseDate,
+          "name": album.title,
+          "description": album.description || `Listen to '${album.title}' by ${artistName} on Reset Music.`,
+          "image": album.coverImage,
+          "url": canonicalUrl,
+          "byArtist": { 
+            "@type": "MusicGroup", 
+            "name": artistName,
+            "url": getArtistSlug() ? `https://musicreset.com/artist/${getArtistSlug()}` : undefined
+          },
+          "numTracks": songs.length,
+          "datePublished": album.releaseDate,
+          "track": songs.map((s) => ({
+            "@type": "MusicRecording",
+            "name": s.title,
+            "url": `https://musicreset.com/song/${s.slug || s._id}`,
+            "duration": s.duration ? `PT${Math.floor(s.duration / 60)}M${Math.floor(s.duration % 60)}S` : undefined,
+          }))
         }}
         noIndex={false}
       />

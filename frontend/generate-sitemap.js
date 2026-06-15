@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 
 // ✅ CONFIG
 const FRONTEND_URL = "https://musicreset.com";
-const BACKEND_URL = "https://api2.musicreset.com";
+const BACKEND_URL = "https://api.musicreset.com";
 
 // ─────────────────────────────────────────────
 // 📌 STATIC PAGES

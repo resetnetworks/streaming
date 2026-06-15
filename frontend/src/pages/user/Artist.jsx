@@ -253,6 +253,8 @@ const handlePaymentMethodSelect = async (gateway, currencyInfo) => {
 
   const artistSlug = artist?.slug || artist?._id;
   const canonicalUrl = `https://musicreset.com/artist/${artistSlug}`;
+  const artistBio = artist.bio || artist.biography || `${artist.name} is an artist on Reset Music Streaming.`;
+  const artistImg = artist.profileImage || artist.image || "https://musicreset.com/images/home.png";
 
   return (
     <>
@@ -260,16 +262,21 @@ const handlePaymentMethodSelect = async (gateway, currencyInfo) => {
         title={`${artist?.name} – Reset Music Streaming Artist Profile`}
         description={`Explore the artist profile of ${artist.name} on Reset Music Streaming. Access exclusive music, albums, singles, and subscription features.`}
         canonicalUrl={canonicalUrl}
+        ogUrl={canonicalUrl}
+        twitterImage={artistImg}
         structuredData={{
           "@context": "https://schema.org",
           "@type": "MusicGroup",
-          name: artist.name,
-          description:
-            artist.biography ||
-            "Music artist profile on Reset Music streaming platform.",
-          url: canonicalUrl,
-          image: artist.image || null,
-          sameAs: artist.socialLinks || [],
+          "name": artist.name,
+          "description": artistBio,
+          "url": canonicalUrl,
+          "image": artistImg,
+          "genre": artist.genres || artist.genre || [],
+          "sameAs": artist.socialLinks || [],
+          "homeLocation": artist.location ? {
+            "@type": "Place",
+            "name": artist.location + (artist.country ? `, ${artist.country}` : "")
+          } : undefined
         }}
         noIndex={false}
       />

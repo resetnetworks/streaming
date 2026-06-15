@@ -9,6 +9,7 @@ import { IoIosShareAlt } from "react-icons/io";
 import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import { toast } from "sonner";
 
+import PageSEO from "../../components/PageSeo/PageSEO";
 import UserHeader from "../../components/user/UserHeader";
 import ShareDropdown from "../../components/user/ShareDropdown";
 import RecentPlays from "../../components/user/RecentPlays";
@@ -463,8 +464,54 @@ export default function Song() {
     );
   }
 
+  const artistName = song?.artist?.name || song?.singer || "Unknown Artist";
+  const songSlug = song?.slug || song?._id || songId;
+  const canonicalUrl = `https://musicreset.com/song/${songSlug}`;
+
+  const formatISO8601Duration = (seconds) => {
+    if (!seconds) return "PT0S";
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    let duration = "PT";
+    if (hrs > 0) duration += `${hrs}H`;
+    if (mins > 0) duration += `${mins}M`;
+    if (secs > 0 || duration === "PT") duration += `${secs}S`;
+    return duration;
+  };
+
   return (
     <>
+      <PageSEO
+        title={`Track: ${song.title} by ${artistName} | Reset Music`}
+        description={`Stream the track '${song.title}' by ${artistName} on Reset Music Streaming. Access detailed credits, lyrics, and subscription options.`}
+        canonicalUrl={canonicalUrl}
+        ogUrl={canonicalUrl}
+        twitterTitle={`${song.title} by ${artistName} | Reset Music`}
+        twitterDescription={`Stream the track '${song.title}' by ${artistName} on Reset Music.`}
+        twitterImage={song.coverImage || song.album?.coverImage}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "MusicRecording",
+          "name": song.title,
+          "description": song.description || `Listen to '${song.title}' by ${artistName} on Reset Music.`,
+          "image": song.coverImage || song.album?.coverImage || "https://musicreset.com/images/home.png",
+          "url": canonicalUrl,
+          "datePublished": song.releaseDate,
+          "duration": formatISO8601Duration(song.duration),
+          "byArtist": {
+            "@type": "MusicGroup",
+            "name": artistName,
+            "url": song?.artist?.slug ? `https://musicreset.com/artist/${song.artist.slug}` : undefined,
+          },
+          "inAlbum": song?.album?.title ? {
+            "@type": "MusicAlbum",
+            "name": song.album.title,
+            "url": song?.album?.slug ? `https://musicreset.com/album/${song.album.slug}` : undefined,
+          } : undefined,
+        }}
+        noIndex={false}
+      />
       <UserHeader />
       <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
         <div className="min-h-screen text-white sm:px-8 px-4 pt-10 pb-8 relative">
