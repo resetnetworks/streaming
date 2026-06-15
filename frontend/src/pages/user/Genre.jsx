@@ -7,6 +7,7 @@ import { setSelectedSong, play } from "../../features/playback/playerSlice";
 import { hasArtistSubscriptionInPurchaseHistory } from "../../utills/subscriptions";
 import { useGenreSongs } from "../../hooks/api/useSongs";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
+import PageSEO from "../../components/PageSeo/PageSEO";
 import UserHeader from "../../components/user/UserHeader";
 import SongList from "../../components/user/SongList";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
@@ -139,6 +140,22 @@ const GenrePage = () => {
 
   return (
     <>
+      <PageSEO
+        title={`Discover ${headerLabel} Music | Reset Music`}
+        description={`Stream the best ${headerLabel} music tracks, songs, and albums on Reset Music Streaming.`}
+        canonicalUrl={`https://musicreset.com/genre/${rawParam}`}
+        ogUrl={`https://musicreset.com/genre/${rawParam}`}
+        twitterImage={genreImage}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": `Reset Music: ${headerLabel} Genre`,
+          "description": `Discover and stream ${headerLabel} tracks on Reset Music.`,
+          "url": `https://musicreset.com/genre/${rawParam}`,
+          "image": genreImage,
+        }}
+        noIndex={false}
+      />
       <UserHeader />
 
       {/* Genre header */}
