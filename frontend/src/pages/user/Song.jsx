@@ -465,7 +465,7 @@ export default function Song() {
   }
 
   const artistName = song?.artist?.name || song?.singer || "Unknown Artist";
-  const songSlug = song?.slug || song?._id || songId;
+  const songSlug = song?.slug || song?._id || song?.id || songId;
   const canonicalUrl = `https://musicreset.com/song/${songSlug}`;
 
   const formatISO8601Duration = (seconds) => {
@@ -502,12 +502,20 @@ export default function Song() {
           "byArtist": {
             "@type": "MusicGroup",
             "name": artistName,
-            "url": song?.artist?.slug ? `https://musicreset.com/artist/${song.artist.slug}` : undefined,
+            "url": song?.artist?.slug 
+              ? `https://musicreset.com/artist/${song.artist.slug}` 
+              : (song?.artist?._id || song?.artist?.id) 
+                ? `https://musicreset.com/artist/${song.artist._id || song.artist.id}` 
+                : undefined,
           },
           "inAlbum": song?.album?.title ? {
             "@type": "MusicAlbum",
             "name": song.album.title,
-            "url": song?.album?.slug ? `https://musicreset.com/album/${song.album.slug}` : undefined,
+            "url": song?.album?.slug 
+              ? `https://musicreset.com/album/${song.album.slug}` 
+              : (song?.album?._id || song?.album?.id)
+                ? `https://musicreset.com/album/${song.album._id || song.album.id}` 
+                : undefined,
           } : undefined,
         }}
         noIndex={false}

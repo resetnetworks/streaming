@@ -251,7 +251,7 @@ const handlePaymentMethodSelect = async (gateway, currencyInfo) => {
 
   if (!isArtistLoading && !artist) return null;
 
-  const artistSlug = artist?.slug || artist?._id;
+  const artistSlug = artist?.slug || artist?._id || artist?.id;
   const canonicalUrl = `https://musicreset.com/artist/${artistSlug}`;
   const artistBio = artist.bio || artist.biography || `${artist.name} is an artist on Reset Music Streaming.`;
   const artistImg = artist.profileImage || artist.image || "https://musicreset.com/images/home.png";
