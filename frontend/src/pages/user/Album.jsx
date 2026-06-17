@@ -509,7 +509,7 @@ export default function Album() {
           "track": songs.map((s) => ({
             "@type": "MusicRecording",
             "name": s.title,
-            "url": `https://musicreset.com/song/${s.slug || s._id}`,
+            "url": `https://musicreset.com/song/${s.slug || s._id || s.id}`,
             "duration": s.duration ? `PT${Math.floor(s.duration / 60)}M${Math.floor(s.duration % 60)}S` : undefined,
           }))
         }}
