@@ -4,10 +4,10 @@ import { assets } from "../../../assets/assets";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-  { href: "/home",     text: "Home",    type: "route" },
-  { href: "/artists",  text: "Artists", type: "route" },
-  { href: "/albums",   text: "Albums",  type: "route" },
-  { href: "/about-us", text: "About",   type: "route" },
+  { href: "/home", text: "Home", type: "route" },
+  { href: "/artists", text: "Artists", type: "route" },
+  { href: "/albums", text: "Albums", type: "route" },
+  { href: "/about-us", text: "About", type: "route" },
 ];
 
 // ─── Spotlight Nav ─────────────────────────────────────────────────
@@ -146,7 +146,7 @@ const Header = () => {
             onClick={() => navigate("/")}
           >
             <span className="text-xl font-bold text-white ml-2 tracking-wider">
-              resetmusic
+              Reset Music
             </span>
           </motion.div>
 

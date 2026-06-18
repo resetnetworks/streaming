@@ -15,6 +15,13 @@ export default async function handler(req, res) {
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   const pageUrl = `${protocol}://${host}/${type}/${id}`;
 
+  const cleanText = (text, maxLen) => {
+    if (!text) return "";
+    const cleaned = text.replace(/\s+/g, ' ').trim();
+    if (cleaned.length <= maxLen) return cleaned;
+    return cleaned.slice(0, maxLen - 3) + "...";
+  };
+
   try {
     if (type === 'song' && id) {
       const apiRes = await fetch(`${BACKEND_URL}/api/songs/${id}`);
@@ -22,8 +29,8 @@ export default async function handler(req, res) {
         const data = await apiRes.json();
         const song = data.song || data;
         if (song && song.title) {
-          title = `${song.title} by ${song.artist?.name || song.singer || 'Unknown'} | Reset Music`;
-          description = song.description || `Listen to '${song.title}' on Reset Music.`;
+          title = `${song.title} by ${song.artist?.name || song.singer || 'Unknown'}`;
+          description = cleanText(song.description, 120) || `Listen to '${song.title}' on Reset Music.`;
           image = song.coverImage || song.album?.coverImage || image;
           pageType = "music.song";
         }
@@ -35,8 +42,8 @@ export default async function handler(req, res) {
         const album = data.data || data.album || data;
         if (album && album.title) {
           const artistName = (album.artist && typeof album.artist === 'object') ? album.artist.name : 'Unknown Artist';
-          title = `Album: ${album.title} by ${artistName} | Reset Music`;
-          description = album.description || `Listen to '${album.title}' on Reset Music.`;
+          title = `${album.title} by ${artistName}`;
+          description = cleanText(album.description, 120) || `Listen to '${album.title}' on Reset Music.`;
           image = album.coverImage || image;
           pageType = "music.album";
         }
@@ -47,8 +54,8 @@ export default async function handler(req, res) {
         const data = await apiRes.json();
         const artist = data.data || data.artist || data;
         if (artist && artist.name) {
-          title = `${artist.name} – Reset Music Streaming Artist Profile`;
-          description = artist.bio || artist.biography || `Explore exclusive music, albums, and singles of ${artist.name} on Reset Music.`;
+          title = `${artist.name} on Reset Music`;
+          description = cleanText(artist.bio || artist.biography, 120) || `Explore exclusive music, albums, and singles of ${artist.name} on Reset Music.`;
           image = artist.profileImage || artist.image || image;
           pageType = "profile";
         }
@@ -65,6 +72,7 @@ export default async function handler(req, res) {
   <meta charset="utf-8">
   <title>${title}</title>
   <meta name="description" content="${description}">
+  <meta property="og:site_name" content="Reset Music">
   <meta property="og:type" content="${pageType}">
   <meta property="og:url" content="${pageUrl}">
   <meta property="og:title" content="${title}">
