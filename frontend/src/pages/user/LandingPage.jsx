@@ -24,7 +24,13 @@ const LandingPage = () => {
 
   return (
     <>
-      <PageSEO />
+      <PageSEO
+        title="Reset Music – Ambient & Electronic Music Streaming Platform"
+        description="Discover, stream, and purchase high-quality ambient, electronic, classical, and experimental music on Reset Music. Built for next-generation sound designers, musicians, and audiophiles."
+        canonicalUrl="https://musicreset.com/"
+        ogUrl="https://musicreset.com/"
+        twitterImage="https://musicreset.com/og-image-1200x630.jpg"
+      />
       <div ref={scrollContainerRef} className="landing-page-container">
         <Header />
 
