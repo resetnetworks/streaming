@@ -3,6 +3,45 @@
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
     {
+      "source": "/song/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": {
+            "re": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|twitterbot|linkedinbot|telegrambot|discordbot|slackbot|applebot).*"
+          }
+        }
+      ],
+      "destination": "/api/share?type=song&id=:id"
+    },
+    {
+      "source": "/album/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": {
+            "re": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|twitterbot|linkedinbot|telegrambot|discordbot|slackbot|applebot).*"
+          }
+        }
+      ],
+      "destination": "/api/share?type=album&id=:id"
+    },
+    {
+      "source": "/artist/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": {
+            "re": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|twitterbot|linkedinbot|telegrambot|discordbot|slackbot|applebot).*"
+          }
+        }
+      ],
+      "destination": "/api/share?type=artist&id=:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
