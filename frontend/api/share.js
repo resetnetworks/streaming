@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       const apiRes = await fetch(`${BACKEND_URL}/api/albums/${id}`);
       if (apiRes.ok) {
         const data = await apiRes.json();
-        const album = data.album || data;
+        const album = data.data || data.album || data;
         if (album && album.title) {
           const artistName = (album.artist && typeof album.artist === 'object') ? album.artist.name : 'Unknown Artist';
           title = `Album: ${album.title} by ${artistName} | Reset Music`;
