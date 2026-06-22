@@ -20,8 +20,15 @@ import { getAvatarColor } from "../../utills/helperFunctions";
 import { getMyArtistApplication } from "../../features/artistApplications/artistApplicationSlice";
 import { forceLogout } from "../../utills/axiosInstance";
 import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+  useMarkNotificationsRead,
+} from "../../hooks/api/useNotifications";
 
 const UserHeader = () => {
+  const queryClient = useQueryClient();
   const user = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const { myApplication, fetchLoading } = useSelector(
@@ -39,6 +46,18 @@ const UserHeader = () => {
   const { data: workspaces = [] } = useMyWorkspaces({
     enabled: !!isAuthenticated,
   });
+
+  // Notification Hooks
+  const { data: countData } = useUnreadNotificationCount({
+    enabled: !!isAuthenticated,
+  });
+  const { data: listData, isLoading: notificationsLoading } = useNotifications(20, {
+    enabled: !!isAuthenticated && notificationsOpen,
+  });
+  const { mutate: markAllRead } = useMarkNotificationsRead();
+
+  const unreadCount = countData?.count || 0;
+  const notifications = listData?.notifications || [];
 
   const isHomePage = location.pathname === "/home";
   const hasArtistPendingRole = user?.role === "artist-pending";
@@ -63,6 +82,16 @@ const UserHeader = () => {
     return () => document.removeEventListener('mousedown', handleNotificationClickOutside);
   }, [notificationsOpen]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Invalidate notifications with a slight delay to capture SQS Lambda execution on login/signup
+      const timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, queryClient]);
+
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -72,19 +101,16 @@ const UserHeader = () => {
 
   const handleLogout = async () => {
     setOpen(false);
+    queryClient.clear(); // Clear React Query cache on logout to prevent state leakage
     await forceLogout()
     await dispatch(logoutUser());
     toast.success("Logged out successfully");
   };
 
-  const handleNotificationClick = async () => {
-    setNotificationsOpen(true);
-    if (isAuthenticated && !myApplication) {
-      try {
-        await dispatch(getMyArtistApplication()).unwrap();
-      } catch (error) {
-        console.error("Failed to fetch artist application:", error);
-      }
+  const handleNotificationClick = () => {
+    setNotificationsOpen((prev) => !prev);
+    if (!notificationsOpen && unreadCount > 0) {
+      markAllRead();
     }
   };
 
@@ -245,14 +271,12 @@ const UserHeader = () => {
             <button
               className="relative p-2 text-gray-400 hover:text-white transition-colors"
               onClick={handleNotificationClick}
-              disabled={fetchLoading}
             >
               <FiBell className="text-xl" />
-              {hasArtistPendingRole && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-2 h-2 animate-pulse"></span>
-              )}
-              {fetchLoading && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-2 h-2 animate-pulse"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white">
+                  {unreadCount}
+                </span>
               )}
             </button>
           </div>
@@ -260,48 +284,64 @@ const UserHeader = () => {
 
         {/* Notification Modal */}
         {notificationsOpen && isAuthenticated && (
-          <div className="notification-modal-container absolute top-16 right-4 w-80 bg-gradient-to-b from-black to-gray-900 rounded-lg border border-blue-500 shadow-xl z-50">
-            <div className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-white">Application Status</h3>
+          <div className="notification-modal-container absolute top-16 right-4 w-80 bg-gradient-to-b from-black to-blue-950/95 rounded-2xl border border-blue-500/40 shadow-[0_0_15px_rgba(59,130,246,0.3)] backdrop-blur-md z-50 max-h-96 overflow-hidden flex flex-col font-['Jura']">
+            <div className="p-4 border-b border-blue-500/25 flex justify-between items-center bg-black/40">
+              <h3 className="text-sm font-bold text-white tracking-wider">Notifications</h3>
+              <div className="flex items-center gap-2.5">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={() => markAllRead()}
+                    className="text-[11px] text-[#4DB3FF] hover:underline"
+                  >
+                    Mark all read
+                  </button>
+                )}
                 <button
                   onClick={() => setNotificationsOpen(false)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-white text-xs"
                 >
                   ✕
                 </button>
               </div>
+            </div>
 
-              {fetchLoading ? (
+            <div className="flex-1 overflow-y-auto py-2 divide-y divide-blue-900/20">
+              {notificationsLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="text-gray-400 mt-2">Loading...</p>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4DB3FF] mx-auto"></div>
+                  <p className="text-gray-500 text-[11px] mt-2">Loading...</p>
                 </div>
-              ) : myApplication?.adminNotes ? (
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-2">Admin Notes:</h4>
-                  <p className="text-gray-300 text-sm">{myApplication.adminNotes}</p>
-                  {myApplication.status && (
-                    <div className={`mt-3 inline-block px-3 py-1 rounded-full text-xs font-medium ${myApplication.status === 'approved'
-                      ? 'bg-green-900 text-green-300'
-                      : myApplication.status === 'rejected'
-                        ? 'bg-red-900 text-red-300'
-                        : 'bg-yellow-900 text-yellow-300'
-                      }`}>
-                      Status: {myApplication.status}
-                    </div>
-                  )}
+              ) : notifications.length === 0 ? (
+                <div className="text-center py-8 px-4">
+                  <FiBell className="text-3xl text-gray-700 mx-auto mb-2" />
+                  <p className="text-gray-500 text-xs">No notifications yet</p>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <FiBell className="text-4xl text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No application notes available</p>
-                  {hasArtistPendingRole && (
-                    <p className="text-yellow-400 text-sm mt-2">
-                      Your application is under review. You'll get updates here.
-                    </p>
-                  )}
-                </div>
+                notifications.map((n) => (
+                  <div
+                    key={n._id}
+                    className={`px-5 py-3.5 flex flex-col gap-1 transition-all cursor-pointer border-b border-blue-900/10 font-sans ${
+                      !n.isRead
+                        ? "bg-blue-950/40 hover:bg-blue-900/30 border-l-[3px] border-[#4DB3FF]"
+                        : "hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    <span className="text-[13px] font-bold text-white tracking-wide">
+                      {n.title}
+                    </span>
+                    <span className="text-xs text-gray-300 leading-relaxed font-normal">
+                      {n.body}
+                    </span>
+                    <span className="text-[10px] text-gray-500 mt-1 font-medium">
+                      {new Date(n.createdAt).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                ))
               )}
             </div>
           </div>

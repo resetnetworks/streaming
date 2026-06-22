@@ -159,6 +159,12 @@ export const useCreateSong = () => {
       queryClient.invalidateQueries({
         queryKey: songKeys.singlesArtist(song.artist),
       });
+
+      // Invalidate notifications query to load the new upload notification
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 2000);
     },
   });
 };
