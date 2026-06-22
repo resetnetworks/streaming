@@ -139,6 +139,11 @@ export const useCreateAlbum = () => {
         });
       }
       
+      // Invalidate notifications query to load the new upload notification
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 2000);
     },
   });
 };
