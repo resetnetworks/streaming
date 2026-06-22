@@ -27,7 +27,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
   const countryOptions = useMemo(() => {
     return sortedCountries.map((country) => (
       <option key={country.code} value={country.code}>
-        {country.code} - {country.name}
+        {country.name} ({country.code})
       </option>
     ));
   }, [sortedCountries]);
@@ -211,7 +211,7 @@ const validateForm = () => {
                 {/* Country Selection - Optimized */}
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Country Code (2 letters) *
+                    Country *
                   </label>
                   <div className="relative">
                     <select
@@ -223,7 +223,7 @@ const validateForm = () => {
                       aria-invalid={!!errors.country}
                       aria-describedby={errors.country ? "country-error" : undefined}
                     >
-                      <option value="">Select Country Code</option>
+                      <option value="">Select Country</option>
                       {countryOptions}
                     </select>
                     <MdPublic className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -234,7 +234,7 @@ const validateForm = () => {
                     </div>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Use 2-letter ISO country code
+                    Select your country of residence
                   </p>
                   {errors.country && (
                     <p id="country-error" className="text-red-500 text-sm mt-1">{errors.country}</p>
