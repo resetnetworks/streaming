@@ -5,60 +5,62 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import UserHeader from "../../components/user/UserHeader";
 import RecentPlays from "../../components/user/RecentPlays";
 import AlbumCard from "../../components/user/AlbumCard";
-import {
-  fetchUnifiedSearchResults,
-  clearSearchResults,
-} from "../../features/search/searchSlice";
+import { useSearch } from "../../hooks/api/useSearch";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 import { play, pause, setSelectedSong } from "../../features/playback/playerSlice";
-
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
-};
 
 const Search = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
-  const debouncedQuery = useDebounce(query, 400);
+  const [searchQuery, setSearchQuery] = useState(query);
 
-  const { results, loading, error } = useSelector((state) => state.search);
+  // Debounce search typing
+  useEffect(() => {
+    const handler = setTimeout(() => setSearchQuery(query), 400);
+    return () => clearTimeout(handler);
+  }, [query]);
+
+  // Fetch results via React Query
+  const { data, isLoading, error: queryError } = useSearch(searchQuery);
+
+  const results = data?.results || { artists: [], songs: [], albums: [] };
+  const loading = isLoading && searchQuery.trim() !== "";
+  const error = queryError ? (queryError.response?.data?.message || "Search failed") : null;
+
   const currentUser = useSelector((state) => state.auth.user); // may still be useful for UI
   const currentSong = useSelector((state) => state.player?.currentSong);
 
   const { isSongPlaying, isSongSelected, pausePlayback, resumePlayback } =
     usePlaybackControl();
 
+  // Sync URL query change (e.g. back button)
   useEffect(() => {
-    const urlQuery = searchParams.get("q");
-    if (urlQuery && urlQuery !== query) setQuery(urlQuery);
+    const urlQuery = searchParams.get("q") || "";
+    if (urlQuery !== query) {
+      setQuery(urlQuery);
+      setSearchQuery(urlQuery);
+    }
   }, [searchParams]);
 
+  // Sync searchQuery to URL search parameters
   useEffect(() => {
-    if (debouncedQuery.trim() !== "") {
-      setSearchParams({ q: debouncedQuery }, { replace: true });
-      dispatch(fetchUnifiedSearchResults(debouncedQuery));
+    if (searchQuery.trim() !== "") {
+      setSearchParams({ q: searchQuery }, { replace: true });
     } else {
       setSearchParams({}, { replace: true });
-      dispatch(clearSearchResults());
     }
-  }, [debouncedQuery, setSearchParams, dispatch]);
+  }, [searchQuery, setSearchParams]);
 
   const handleSearch = useCallback(() => {
+    setSearchQuery(query);
     if (query.trim() !== "") {
       setSearchParams({ q: query });
-      dispatch(fetchUnifiedSearchResults(query));
     } else {
       setSearchParams({});
-      dispatch(clearSearchResults());
     }
-  }, [query, setSearchParams, dispatch]);
+  }, [query, setSearchParams]);
 
   const handleInputChange = (e) => setQuery(e.target.value);
 
@@ -117,7 +119,7 @@ const Search = () => {
             </div>
           </div>
 
-          {query && query !== debouncedQuery && (
+          {query && query !== searchQuery && (
             <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
               <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full"></div>
               Searching...
@@ -199,11 +201,11 @@ const Search = () => {
               {results?.songs?.length === 0 &&
                 results?.artists?.length === 0 &&
                 results?.albums?.length === 0 &&
-                debouncedQuery.trim() !== "" && (
+                searchQuery.trim() !== "" && (
                   <div className="w-full text-center py-20">
                     <div className="text-gray-400 space-y-2">
                       <FiSearch className="mx-auto text-4xl mb-4 text-gray-500" />
-                      <p className="text-lg">No results found for "{debouncedQuery}"</p>
+                      <p className="text-lg">No results found for "{searchQuery}"</p>
                       <p className="text-sm text-gray-500">Try different keywords or check your spelling</p>
                     </div>
                   </div>
