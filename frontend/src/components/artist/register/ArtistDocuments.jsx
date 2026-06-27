@@ -1,16 +1,9 @@
 // src/components/artist/register/ArtistDocuments.jsx
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSubmitApplication } from '../../../hooks/api/useArtistApplications';
+import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
 import { toast } from 'sonner';
 import { MdKeyboardDoubleArrowLeft, MdLink } from "react-icons/md";
-import { 
-  submitArtistApplication,
-  addDocument,
-  removeDocument,
-  addSample,
-  removeSample,
-  clearSubmitState
-} from '../../../features/artistApplications/artistApplicationSlice';
 
 const DOCUMENT_TYPES = {
   GOV_ID: 'gov_id',
@@ -21,8 +14,18 @@ const DOCUMENT_TYPES = {
 };
 
 const ArtistDocuments = ({ prevStep, submitForm }) => {
-  const dispatch = useDispatch();
-  const { formData, submitLoading, submitError } = useSelector((state) => state.artistApplication);
+  const { 
+    formData, 
+    addDocument, 
+    removeDocument, 
+    addSample, 
+    removeSample, 
+    clearFormData 
+  } = React.useContext(ArtistApplicationFormContext);
+
+  const submitApplicationMutation = useSubmitApplication();
+  const submitLoading = submitApplicationMutation.isLoading;
+  const submitError = submitApplicationMutation.error?.message;
 
   const [selectedDocType, setSelectedDocType] = useState(DOCUMENT_TYPES.GOV_ID);
   const [errors, setErrors] = useState({});
@@ -67,7 +70,7 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
         file: file
       };
       
-      dispatch(addDocument(document));
+      addDocument(document);
     });
 
     e.target.value = '';
@@ -78,19 +81,19 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
     if (doc && doc.previewUrl) {
       URL.revokeObjectURL(doc.previewUrl);
     }
-    dispatch(removeDocument(index));
+    removeDocument(index);
   };
 
   const handleAddSample = () => {
-   if (samples.length >= 1) {
-  toast.error("Only one sample track is allowed");
-  return;
-}
+    if (samples.length >= 1) {
+      toast.error("Only one sample track is allowed");
+      return;
+    }
 
-if (!sampleUrl.trim()) {
-  toast.error('Please enter a valid URL');
-  return;
-}
+    if (!sampleUrl.trim()) {
+      toast.error('Please enter a valid URL');
+      return;
+    }
 
     try {
       const url = new URL(sampleUrl);
@@ -102,7 +105,7 @@ if (!sampleUrl.trim()) {
         addedAt: new Date().toISOString()
       };
       
-      dispatch(addSample(sample));
+      addSample(sample);
       setSampleUrl('');
       setSampleTitle('');
       toast.success('Sample added successfully!');
@@ -112,7 +115,7 @@ if (!sampleUrl.trim()) {
   };
 
   const handleRemoveSample = (index) => {
-    dispatch(removeSample(index));
+    removeSample(index);
   };
 
   const validateForm = () => {
@@ -184,7 +187,7 @@ if (!sampleUrl.trim()) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    dispatch(clearSubmitState());
+    submitApplicationMutation.reset();
     
     if (!validateForm()) {
       const firstError = Object.keys(errors)[0];
@@ -197,33 +200,31 @@ if (!sampleUrl.trim()) {
     try {
       const formDataToSend = prepareFormDataForSubmission();
       
-      const result = await dispatch(submitArtistApplication(formDataToSend)).unwrap();
-      
-      toast.success("Artist application submitted successfully!");
+      await submitApplicationMutation.mutateAsync(formDataToSend);
       
       // Clean up preview URLs
       documents.forEach(doc => {
         if (doc.previewUrl) URL.revokeObjectURL(doc.previewUrl);
       });
       
+      clearFormData();
       submitForm();
       
     } catch (error) {
       console.error('Submission error:', error);
-      if (typeof error === 'string') {
-        if (error.includes('Cast to Embedded failed for value')) {
+      const errMsg = error?.response?.data?.message || error?.message || "";
+      if (typeof errMsg === 'string') {
+        if (errMsg.includes('Cast to Embedded failed for value')) {
           toast.error("Data format error. Please check your information.");
-        } else if (error.includes('country')) {
+        } else if (errMsg.includes('country')) {
           toast.error("Invalid country code. Please select a valid 2-letter country code.");
-        } else if (error.includes('stageName')) {
+        } else if (errMsg.includes('stageName')) {
           toast.error("Stage Name is required. Please enter your stage name.");
-        } else if (error.includes('file')) {
+        } else if (errMsg.includes('file')) {
           toast.error("File upload error. Please check file sizes and formats.");
         } else {
-          toast.error(error || "Failed to submit application. Please try again.");
+          toast.error(errMsg || "Failed to submit application. Please try again.");
         }
-      } else if (error?.message) {
-        toast.error(error.message || "Failed to submit application. Please try again.");
       } else {
         toast.error("Failed to submit application. Please try again.");
       }

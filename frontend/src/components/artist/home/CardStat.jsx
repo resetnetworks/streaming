@@ -8,7 +8,7 @@ const CardStat = ({ label = "Views", value = "750k" }) => (
       <div className="text">{value}</div>
     </div>
     
-    <style jsx="true">{`
+    <style>{`
       .card-container {
         --card-width: 191px;
         --card-height: 110px;

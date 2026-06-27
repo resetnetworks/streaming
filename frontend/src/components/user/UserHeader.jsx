@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { selectCurrentUser } from "../../features/auth/authSelectors";
 import { logoutUser } from "../../features/auth/authSlice";
 import { getAvatarColor } from "../../utills/helperFunctions";
-import { getMyArtistApplication } from "../../features/artistApplications/artistApplicationSlice";
 import { forceLogout } from "../../utills/axiosInstance";
 import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,9 +30,6 @@ const UserHeader = () => {
   const queryClient = useQueryClient();
   const user = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const { myApplication, fetchLoading } = useSelector(
-    (state) => state.artistApplication
-  );
 
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);

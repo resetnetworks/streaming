@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { FaSync, FaTimes, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaClock, FaBan } from 'react-icons/fa';
-
-import { updateApplicationStatusForAdmin, clearStatusUpdateState } from '../../../features/admin/artistApplicationAdminSlice';
-import { 
-  selectStatusUpdateLoading, 
-  selectStatusUpdateError,
-  selectStatusUpdateSuccess
-} from '../../../features/admin/artistApplicationAdminSelectors';
+import { FaSync, FaTimes, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaClock } from 'react-icons/fa';
+import {
+  useAdminApproveApplication,
+  useAdminRejectApplication,
+  useAdminRequestMoreInfo,
+} from '../../../hooks/api/useAdminArtistApplications';
 
 const StatusUpdateModal = ({ 
   applicationId, 
@@ -16,8 +13,6 @@ const StatusUpdateModal = ({
   onClose, 
   onSuccess 
 }) => {
-  
-  const dispatch = useDispatch();
   const [statusUpdateData, setStatusUpdateData] = useState({
     status: '',
     reason: '',
@@ -25,9 +20,25 @@ const StatusUpdateModal = ({
   });
   const [validationError, setValidationError] = useState('');
   
-  const statusUpdateLoading = useSelector(selectStatusUpdateLoading);
-  const statusUpdateError = useSelector(selectStatusUpdateError);
-  const statusUpdateSuccess = useSelector(selectStatusUpdateSuccess);
+  const approveMutation = useAdminApproveApplication();
+  const rejectMutation = useAdminRejectApplication();
+  const requestMoreInfoMutation = useAdminRequestMoreInfo();
+
+  const statusUpdateLoading = 
+    approveMutation.isLoading || 
+    rejectMutation.isLoading || 
+    requestMoreInfoMutation.isLoading;
+
+  const statusUpdateError = 
+    approveMutation.error?.response?.data?.message || approveMutation.error?.message ||
+    rejectMutation.error?.response?.data?.message || rejectMutation.error?.message ||
+    requestMoreInfoMutation.error?.response?.data?.message || requestMoreInfoMutation.error?.message ||
+    null;
+
+  const statusUpdateSuccess = 
+    approveMutation.isSuccess || 
+    rejectMutation.isSuccess || 
+    requestMoreInfoMutation.isSuccess;
 
   // Reset everything when modal opens
   useEffect(() => {
@@ -38,21 +49,21 @@ const StatusUpdateModal = ({
         adminNotes: ''
       });
       setValidationError('');
-      dispatch(clearStatusUpdateState());
     }
-  }, [isOpen, applicationId, currentStatus, dispatch]);
+  }, [isOpen, applicationId, currentStatus]);
 
-  // Handle success and close modal
-  useEffect(() => {
-    if (statusUpdateSuccess && isOpen) {
-      onSuccess?.();
-      handleClose();
-    }
-  }, [statusUpdateSuccess, isOpen, onSuccess]);
+  const handleClose = useCallback(() => {
+    setStatusUpdateData({
+      status: '',
+      reason: '',
+      adminNotes: ''
+    });
+    setValidationError('');
+    onClose();
+  }, [onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     setValidationError('');
     
     // Validation
@@ -72,32 +83,20 @@ const StatusUpdateModal = ({
     }
     
     try {
-      dispatch(clearStatusUpdateState());
-      
-      const result = await dispatch(updateApplicationStatusForAdmin({
-        applicationId,
-        ...statusUpdateData
-      }));
-            
-      if (result.type === 'artistApplicationAdmin/updateStatus/rejected') {
-        setValidationError('Failed to update status. Please try again.');
+      if (statusUpdateData.status === 'approved') {
+        await approveMutation.mutateAsync({ id: applicationId, notes: statusUpdateData.adminNotes });
+      } else if (statusUpdateData.status === 'rejected') {
+        await rejectMutation.mutateAsync({ id: applicationId, reason: statusUpdateData.reason || statusUpdateData.adminNotes });
+      } else if (statusUpdateData.status === 'needs_info') {
+        await requestMoreInfoMutation.mutateAsync({ id: applicationId, reason: statusUpdateData.reason });
       }
       
+      onSuccess?.();
+      handleClose();
     } catch (err) {
-      setValidationError(err.message || 'An unexpected error occurred');
+      setValidationError(err.response?.data?.message || err.message || 'An unexpected error occurred');
     }
   };
-
-  const handleClose = useCallback(() => {
-    setStatusUpdateData({
-      status: '',
-      reason: '',
-      adminNotes: ''
-    });
-    setValidationError('');
-    dispatch(clearStatusUpdateState());
-    onClose();
-  }, [dispatch, onClose]);
 
   if (!isOpen) {
     return null;
@@ -127,14 +126,6 @@ const StatusUpdateModal = ({
       description: 'Request additional information from applicant',
       color: 'bg-blue-600 hover:bg-blue-700',
       requiresNotes: true
-    },
-    { 
-      value: 'pending', 
-      label: 'Pending', 
-      icon: <FaClock />,
-      description: 'Mark as pending for later review',
-      color: 'bg-yellow-600 hover:bg-yellow-700',
-      requiresNotes: false
     },
   ];
 

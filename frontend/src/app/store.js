@@ -13,14 +13,8 @@ import artistsReducer from "../features/artists/artistsSlice";
 import albumsReducer from "../features/albums/albumsSlice";
 import paymentReducer from "../features/payments/userPaymentSlice";
 import payment from "../features/payments/paymentSlice";
-import streamReducer from "../features/stream/streamSlice";
-import adminPaymentReducer from "../features/payments/adminPaymentSlice";
-import adminPayoutsReducer from "../features/payments/adminPayoutsSlice";
-import artistApplicationReducer from '../features/artistApplications/artistApplicationSlice';
-import artistApplicationAdminReducer from '../features/admin/artistApplicationAdminSlice';
-import monetizationReducer from '../features/monetization/monetizationSlice';
 import artistDashboardReducer from "../features/artistDashboard/artistDashboardSlice";
-import artistRevenueReducer from "../features/artistDashboard/artistRevenueSlice";
+import monetizationReducer from '../features/monetization/monetizationSlice';
 
 // ========================
 // 🔐 PERSIST CONFIGS
@@ -56,13 +50,7 @@ const appReducer = combineReducers({
   artists: artistsReducer,
   albums: albumsReducer,
   userDashboard: paymentReducer,
-  stream: streamReducer,
   payment: payment,
-  artistRevenue: artistRevenueReducer,
-  adminPayouts: adminPayoutsReducer,
-  artistDashboardPayments: adminPaymentReducer,
-  artistApplication: artistApplicationReducer,
-  artistApplicationAdmin: artistApplicationAdminReducer,
   monetization: monetizationReducer,
 });
 
