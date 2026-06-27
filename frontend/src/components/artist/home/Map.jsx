@@ -109,7 +109,7 @@ const Map = () => {
           </MapContainer>
         </div>
 
-        <style jsx="true" global="true">{`
+        <style>{`
           .dynamic-marker {
             transition: all 0.3s ease;
           }
@@ -168,7 +168,7 @@ const Map = () => {
         </div>
       </div>
 
-      <style jsx="true" global="true">{`
+      <style>{`
         .dynamic-marker {
           transition: all 0.3s ease;
         }

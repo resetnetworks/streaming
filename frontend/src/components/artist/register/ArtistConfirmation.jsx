@@ -1,7 +1,7 @@
 // src/components/artist/register/ArtistConfirmation.jsx
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useMyApplication } from '../../../hooks/api/useArtistApplications';
 import { 
   MdCheckCircle, 
   MdOutlineVerified, 
@@ -12,22 +12,16 @@ import {
 } from 'react-icons/md';
 
 const ArtistConfirmation = ({ onReapply }) => {
-  const { 
-    formData, 
-    submittedApplication, 
-    myApplication 
-  } = useSelector((state) => state.artistApplication);
+  const myApplicationQuery = useMyApplication();
+  const application = myApplicationQuery.data;
 
   // Scroll to top when component loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-
-  // Determine which application to show
-  const application = submittedApplication || myApplication;
   
-  // If no application found (shouldn't happen if this component is shown)
-  if (!application && !formData) {
+  // If loading
+  if (myApplicationQuery.isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
@@ -39,10 +33,22 @@ const ArtistConfirmation = ({ onReapply }) => {
     );
   }
 
-  const applicationId = application?.id || `ART${Date.now().toString().slice(-6)}`;
+  // If no application found
+  if (!application) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-white">
+        <h2 className="text-xl font-bold mb-2">No Application Found</h2>
+        <p className="text-slate-400 text-sm">
+          We couldn't retrieve your artist application details.
+        </p>
+      </div>
+    );
+  }
+
+  const applicationId = application?._id || application?.id || `ART${Date.now().toString().slice(-6)}`;
   const submittedDate = application?.createdAt || new Date().toISOString();
   const status = application?.status || 'submitted';
-  const stageName = application?.stageName || formData?.stageName || "N/A";
+  const stageName = application?.stageName || "N/A";
 
   // Get status configuration
   const getStatusConfig = () => {

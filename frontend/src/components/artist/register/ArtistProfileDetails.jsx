@@ -1,18 +1,16 @@
 // src/components/artist/register/ArtistProfileDetails.jsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { MdPerson, MdPublic, MdLanguage, MdShare, MdDescription } from 'react-icons/md';
-import { useCallback } from 'react';
-import { 
-  updateField, 
-  updateApplicationFormData,
-  saveToLocalStorage
-} from '../../../features/artistApplications/artistApplicationSlice';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
 import { countries } from '../../../utills/countries';
+import { MdPerson, MdPublic, MdLanguage, MdShare, MdDescription } from 'react-icons/md';
 
 const ArtistProfileDetails = ({ nextStep, prevStep }) => {
-  const dispatch = useDispatch();
-  const { formData, isSaving } = useSelector((state) => state.artistApplication);
+  const { 
+    formData, 
+    isSaving, 
+    updateField, 
+    updateApplicationFormData 
+  } = React.useContext(ArtistApplicationFormContext);
 
   const [localProfileImage, setLocalProfileImage] = useState(formData.profileImage || '');
   const [stageName, setStageName] = useState(formData.stageName || '');
@@ -32,45 +30,12 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
     ));
   }, [sortedCountries]);
 
-  // Debounce saving to localStorage with optimized dependency array
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Only save if there's actual data
-      if (formData && Object.keys(formData).length > 0) {
-        dispatch(saveToLocalStorage());
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [formData, dispatch]);
-
   const handleStageNameChange = (value) => {
-  setStageName(value);
-  dispatch(updateField({ field: 'stageName', value }));
-};
+    setStageName(value);
+    updateField('stageName', value);
+  };
 
-  // Load from localStorage on component mount - optimized
-  useEffect(() => {
-    // Check if we need to load data
-    const shouldLoadData = !formData.stageName && !formData.country;
-    
-    if (shouldLoadData) {
-      const savedData = localStorage.getItem('artistApplicationData');
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          dispatch(updateApplicationFormData(parsedData));
-          if (parsedData.profileImage) {
-            setLocalProfileImage(parsedData.profileImage);
-          }
-        } catch (error) {
-          console.error('Error loading saved data:', error);
-        }
-      }
-    }
-  }, [dispatch, formData.stageName, formData.country]);
-
-  // Sync local image state with Redux
+  // Sync local image state with Context
   useEffect(() => {
     if (formData.profileImage) {
       setLocalProfileImage(formData.profileImage);
@@ -78,72 +43,72 @@ const ArtistProfileDetails = ({ nextStep, prevStep }) => {
   }, [formData.profileImage]);
 
   const handleChange = useCallback((field, value) => {
-    dispatch(updateField({ field, value }));
+    updateField(field, value);
     
     // Clear error for this field if it exists
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
-  }, [dispatch, errors]);
+  }, [updateField, errors]);
 
- const isValidURL = (url) => {
-  try {
-    const parsed = new URL(url);
-    return ["http:", "https:"].includes(parsed.protocol);
-  } catch {
-    return false;
-  }
-};
-
-const isValidSocialURL = (url) => {
-  const allowedDomains = [
-    "instagram.com",
-    "facebook.com",
-    "twitter.com",
-    "x.com",
-    "youtube.com",
-    "tiktok.com",
-    "linkedin.com"
-  ];
-
-  try {
-    const parsed = new URL(url);
-    return allowedDomains.some(domain => parsed.hostname.includes(domain));
-  } catch {
-    return false;
-  }
-};
-
-const validateForm = () => {
-  const newErrors = {};
-
-  if (!formData.stageName?.trim()) {
-    newErrors.stageName = 'Stage Name is required';
-  }
-
-  if (!formData.country) {
-    newErrors.country = 'Country is required';
-  }
-
-  // ✅ Website validation
-  if (formData.website) {
-    if (!isValidURL(formData.website)) {
-      newErrors.website = 'Enter a valid website URL (https://...)';
+  const isValidURL = (url) => {
+    try {
+      const parsed = new URL(url);
+      return ["http:", "https:"].includes(parsed.protocol);
+    } catch {
+      return false;
     }
-  }
+  };
 
-  // ✅ Social media validation
-  if (formData.socialMedia) {
-    if (!isValidURL(formData.socialMedia)) {
-      newErrors.socialMedia = 'Enter a valid URL';
-    } else if (!isValidSocialURL(formData.socialMedia)) {
-      newErrors.socialMedia = 'Only social media links allowed (Instagram, YouTube, etc.)';
+  const isValidSocialURL = (url) => {
+    const allowedDomains = [
+      "instagram.com",
+      "facebook.com",
+      "twitter.com",
+      "x.com",
+      "youtube.com",
+      "tiktok.com",
+      "linkedin.com"
+    ];
+
+    try {
+      const parsed = new URL(url);
+      return allowedDomains.some(domain => parsed.hostname.includes(domain));
+    } catch {
+      return false;
     }
-  }
+  };
 
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.stageName?.trim()) {
+      newErrors.stageName = 'Stage Name is required';
+    }
+
+    if (!formData.country) {
+      newErrors.country = 'Country is required';
+    }
+
+    // ✅ Website validation
+    if (formData.website) {
+      if (!isValidURL(formData.website)) {
+        newErrors.website = 'Enter a valid website URL (https://...)';
+      }
+    }
+
+    // ✅ Social media validation
+    if (formData.socialMedia) {
+      if (!isValidURL(formData.socialMedia)) {
+        newErrors.socialMedia = 'Enter a valid URL';
+      } else if (!isValidSocialURL(formData.socialMedia)) {
+        newErrors.socialMedia = 'Only social media links allowed (Instagram, YouTube, etc.)';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -161,8 +126,6 @@ const validateForm = () => {
       return;
     }
     
-    // Save to localStorage before proceeding
-    dispatch(saveToLocalStorage());
     nextStep();
   };
 

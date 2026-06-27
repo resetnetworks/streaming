@@ -6,25 +6,23 @@ import { usePlayer } from "../../hooks/usePlayer";
 import PlayerUI from "./player/PlayerUI";
 
 const Player = () => {
-  const streamError = useSelector((state) => state.stream.error);
-  const selectedSong = useSelector((state) => state.player.selectedSong);
-  
   const player = usePlayer();
-
+  const { streamError, selectedSong } = player;
+  
   // Handle stream errors
   useEffect(() => {
     if (
       streamError &&
-      selectedSong &&
-      streamError.songId === selectedSong._id
+      selectedSong
     ) {
+      const errorMessage = streamError.response?.data?.message || streamError.message || "Failed to load audio stream";
       const toastId = `stream-error-${selectedSong._id}`;
-      toast.warning(streamError.message, {
+      toast.warning(errorMessage, {
         id: toastId,
         duration: 1000,
       });
     }
-  }, [streamError?.songId]);
+  }, [streamError, selectedSong]);
 
   // Hidden video element for HLS
   return (

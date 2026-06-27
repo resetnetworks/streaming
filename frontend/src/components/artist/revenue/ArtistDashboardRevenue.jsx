@@ -1,13 +1,11 @@
 // src/components/artistDashboard/ArtistDashboardRevenue.jsx
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
 import {
-  getArtistBalance,
-  getArtistLedger,
-  getArtistPayouts,
-  requestPayout,
-  resetPayoutRequest
-} from '../../../features/artistDashboard/artistRevenueSlice';
+  useArtistBalance,
+  useArtistLedger,
+  useArtistPayouts,
+  useRequestPayout
+} from '../../../hooks/api/useArtistRevenue';
 import {
   MdAccountBalanceWallet,
   MdPayments,
@@ -30,20 +28,7 @@ import {
 import { FaPaypal } from 'react-icons/fa';
 
 const ArtistDashboardRevenue = () => {
-  const dispatch = useDispatch();
-  const {
-    balance,
-    ledger,
-    payouts,
-    payoutRequest
-  } = useSelector((state) => state.artistRevenue);
-
-  // State for payout request modal
-  const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutAmount, setPayoutAmount] = useState('');
-  const [paypalEmail, setPaypalEmail] = useState('');
-  
-  // State for ledger filters
+  // React Query Hooks
   const [ledgerPage, setLedgerPage] = useState(1);
   const [ledgerType, setLedgerType] = useState('all');
   const [dateRange, setDateRange] = useState({
@@ -51,16 +36,32 @@ const ArtistDashboardRevenue = () => {
     end: ''
   });
 
- // Currency formatter - Always show in USD with $ symbol
-const formatCurrency = (amount) => {
-  const numericAmount = parseFloat(amount) || 0;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(numericAmount);
-};
+  const balanceQuery = useArtistBalance();
+  const ledgerQuery = useArtistLedger({ 
+    page: ledgerPage, 
+    limit: 20,
+    type: ledgerType === 'all' ? undefined : ledgerType,
+    startDate: dateRange.start,
+    endDate: dateRange.end
+  });
+  const payoutsQuery = useArtistPayouts();
+  const requestPayoutMutation = useRequestPayout();
+
+  // State for payout request modal
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [paypalEmail, setPaypalEmail] = useState('');
+
+  // Currency formatter - Always show in USD with $ symbol
+  const formatCurrency = (amount) => {
+    const numericAmount = parseFloat(amount) || 0;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericAmount);
+  };
 
   // Date formatter
   const formatDate = (dateString) => {
@@ -70,25 +71,6 @@ const formatCurrency = (amount) => {
       day: 'numeric'
     });
   };
-
-  // Fetch initial data
-  useEffect(() => {
-    dispatch(getArtistBalance());
-    dispatch(getArtistLedger({ page: ledgerPage, limit: 20 }));
-    dispatch(getArtistPayouts());
-  }, [dispatch, ledgerPage]);
-
-  // Handle successful payout request
-  useEffect(() => {
-    if (payoutRequest.success) {
-      setShowPayoutModal(false);
-      setPayoutAmount('');
-      setPaypalEmail('');
-      dispatch(getArtistBalance());
-      dispatch(getArtistPayouts());
-      setTimeout(() => dispatch(resetPayoutRequest()), 3000);
-    }
-  }, [payoutRequest.success, dispatch]);
 
   // Handle payout request submission
   const handlePayoutRequest = (e) => {
@@ -104,23 +86,24 @@ const formatCurrency = (amount) => {
       return;
     }
     
-    if (balance.data?.availableBalance && amount > balance.data.availableBalance) {
+    const availableBalance = balanceQuery.data?.balance?.availableBalance || 0;
+    if (amount > availableBalance) {
       alert('Amount exceeds available balance');
       return;
     }
     
-    dispatch(requestPayout({ amount, paypalEmail }));
+    requestPayoutMutation.mutate({ amount, paypalEmail }, {
+      onSuccess: () => {
+        setShowPayoutModal(false);
+        setPayoutAmount('');
+        setPaypalEmail('');
+      }
+    });
   };
 
   // Handle ledger filter changes
   const handleFilterChange = () => {
-    dispatch(getArtistLedger({ 
-      page: 1, 
-      limit: 20,
-      type: ledgerType === 'all' ? undefined : ledgerType,
-      startDate: dateRange.start,
-      endDate: dateRange.end
-    }));
+    ledgerQuery.refetch();
     setLedgerPage(1);
   };
 
@@ -128,8 +111,13 @@ const formatCurrency = (amount) => {
   const resetFilters = () => {
     setLedgerType('all');
     setDateRange({ start: '', end: '' });
-    dispatch(getArtistLedger({ page: 1, limit: 20 }));
     setLedgerPage(1);
+  };
+
+  const handleRefresh = () => {
+    balanceQuery.refetch();
+    ledgerQuery.refetch();
+    payoutsQuery.refetch();
   };
 
   return (
@@ -139,14 +127,10 @@ const formatCurrency = (amount) => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-white">Revenue Dashboard</h1>
         <button
-          onClick={() => {
-            dispatch(getArtistBalance());
-            dispatch(getArtistLedger({ page: ledgerPage, limit: 20 }));
-            dispatch(getArtistPayouts());
-          }}
+          onClick={handleRefresh}
           className="flex items-center gap-2 text-gray-200 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
         >
-          <MdRefresh className={balance.loading || ledger.loading ? 'animate-spin' : ''} />
+          <MdRefresh className={balanceQuery.isLoading || ledgerQuery.isLoading ? 'animate-spin' : ''} />
           Refresh
         </button>
       </div>
@@ -161,7 +145,7 @@ const formatCurrency = (amount) => {
           <div className="mb-2">
             <div className="text-gray-400 text-sm">Available Balance</div>
             <div className="text-2xl md:text-3xl font-bold text-white">
-              {balance.loading ? '...' : formatCurrency(balance.data?.availableBalance || 0)}
+              {balanceQuery.isLoading ? '...' : formatCurrency(balanceQuery.data?.balance?.availableBalance || 0)}
             </div>
           </div>
           <div className="text-sm text-green-400 flex items-center gap-1">
@@ -178,7 +162,7 @@ const formatCurrency = (amount) => {
           <div className="mb-2">
             <div className="text-gray-400 text-sm">Total Earned</div>
             <div className="text-2xl md:text-3xl font-bold text-white">
-              {balance.loading ? '...' : formatCurrency(balance.data?.totalEarned || 0)}
+              {balanceQuery.isLoading ? '...' : formatCurrency(balanceQuery.data?.balance?.totalEarned || 0)}
             </div>
           </div>
           <div className="text-sm" style={{ color: '#4DB3FF' }}>Lifetime earnings</div>
@@ -192,7 +176,7 @@ const formatCurrency = (amount) => {
           <div className="mb-2">
             <div className="text-gray-400 text-sm">Total Paid Out</div>
             <div className="text-2xl md:text-3xl font-bold text-white">
-              {balance.loading ? '...' : formatCurrency(balance.data?.totalPaidOut || 0)}
+              {balanceQuery.isLoading ? '...' : formatCurrency(balanceQuery.data?.balance?.totalPaidOut || 0)}
             </div>
           </div>
           <div className="text-sm text-purple-400">Processed payments</div>
@@ -209,17 +193,17 @@ const formatCurrency = (amount) => {
           </div>
           <button
             onClick={() => setShowPayoutModal(true)}
-            disabled={!balance.data?.availableBalance || balance.data?.availableBalance <= 0}
+            disabled={!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0}
             className={`w-full py-2 px-4 rounded-lg flex text-white items-center justify-center gap-2 transition-all ${
-  !balance.data?.availableBalance || balance.data?.availableBalance <= 0
-    ? 'bg-gray-700 cursor-not-allowed'
-    : ''
-}`}
-style={
-  !balance.data?.availableBalance || balance.data?.availableBalance <= 0
-    ? {}
-    : { background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3B82F6 100%)' }
-}
+              (!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0)
+                ? 'bg-gray-700 cursor-not-allowed'
+                : ''
+            }`}
+            style={
+              (!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0)
+                ? {}
+                : { background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3B82F6 100%)' }
+            }
           >
             <FaPaypal />
             Request Payout
@@ -239,16 +223,16 @@ style={
           </div>
           
           <div className="overflow-x-auto">
-            {ledger.loading ? (
+            {ledgerQuery.isLoading ? (
               <div className="p-8 text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
               </div>
-            ) : ledger.error ? (
+            ) : ledgerQuery.error ? (
               <div className="p-4 text-center text-red-400">
                 <MdError className="inline-block text-xl mb-2" />
-                <p>{ledger.error}</p>
+                <p>{ledgerQuery.error?.message || "Failed to load transactions ledger"}</p>
               </div>
-            ) : ledger.items.length === 0 ? (
+            ) : (ledgerQuery.data?.ledger || []).length === 0 ? (
               <div className="p-8 text-center text-gray-400">
                 No transactions found
               </div>
@@ -263,7 +247,7 @@ style={
                   </tr>
                 </thead>
                 <tbody>
-                  {ledger.items.map((item, index) => (
+                  {(ledgerQuery.data?.ledger || []).map((item, index) => (
                     <tr key={index} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
                       <td className="p-4 text-gray-300">{formatDate(item.createdAt)}</td>
                       <td className="p-4">
@@ -275,7 +259,7 @@ style={
                           item.type === 'credit' ? 'text-green-400' : 'text-red-400'
                         }`}>
                           {item.type === 'credit' ? <MdArrowUpward /> : <MdArrowDownward />}
-                          {formatCurrency(item.amountUSD )}
+                          {formatCurrency(item.amountUSD || item.amount)}
                         </div>
                       </td>
                       <td className="p-4">
@@ -295,11 +279,11 @@ style={
           </div>
           
           {/* Pagination */}
-          {ledger.items.length > 0 && (
+          {(ledgerQuery.data?.ledger || []).length > 0 && (
             <div className="p-4 border-t border-gray-800 flex justify-between items-center">
               <button
                 onClick={() => setLedgerPage(prev => Math.max(1, prev - 1))}
-                disabled={ledgerPage === 1 || ledger.loading}
+                disabled={ledgerPage === 1 || ledgerQuery.isLoading}
                 className="px-4 py-2 text-gray-100 bg-gray-800 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
@@ -307,7 +291,7 @@ style={
               <span className="text-gray-400">Page {ledgerPage}</span>
               <button
                 onClick={() => setLedgerPage(prev => prev + 1)}
-                disabled={ledger.loading || ledger.items.length < 20}
+                disabled={ledgerQuery.isLoading || (ledgerQuery.data?.ledger || []).length < 20}
                 className="px-4 py-2 text-gray-100 bg-gray-800 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
@@ -326,16 +310,16 @@ style={
           </div>
           
           <div className="overflow-x-auto">
-            {payouts.loading ? (
+            {payoutsQuery.isLoading ? (
               <div className="p-8 text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
               </div>
-            ) : payouts.error ? (
+            ) : payoutsQuery.error ? (
               <div className="p-4 text-center text-red-400">
                 <MdError className="inline-block text-xl mb-2" />
-                <p>{payouts.error}</p>
+                <p>{payoutsQuery.error?.message || "Failed to load payouts history"}</p>
               </div>
-            ) : payouts.items.length === 0 ? (
+            ) : (payoutsQuery.data?.payouts || []).length === 0 ? (
               <div className="p-8 text-center text-gray-400">
                 No payout history available
               </div>
@@ -350,7 +334,7 @@ style={
                   </tr>
                 </thead>
                 <tbody>
-                  {payouts.items.map((payout, index) => (
+                  {(payoutsQuery.data?.payouts || []).map((payout, index) => (
                     <tr key={index} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
                       <td className="p-4 text-gray-300">{formatDate(payout.createdAt)}</td>
                       <td className="p-4 text-white font-medium">{formatCurrency(payout.amount)}</td>
@@ -404,7 +388,7 @@ style={
                   <span className="text-sm" style={{ color: '#4DB3FF' }}>Available Balance</span>
                 </div>
                 <div className="text-2xl font-bold text-white">
-                  {formatCurrency(balance.data?.availableBalance || 0)}
+                  {formatCurrency(balanceQuery.data?.balance?.availableBalance || 0)}
                 </div>
               </div>
               
@@ -419,7 +403,7 @@ style={
                     onChange={(e) => setPayoutAmount(e.target.value)}
                     placeholder="Enter amount"
                     min="1"
-                    max={balance.data?.availableBalance || 0}
+                    max={balanceQuery.data?.balance?.availableBalance || 0}
                     step="0.01"
                     className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -446,8 +430,6 @@ style={
                 </div>
               </div>
               
-
-              
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
@@ -459,13 +441,13 @@ style={
                 </button>
                 <button
                   type="submit"
-                  disabled={payoutRequest.loading || !payoutAmount || !paypalEmail}
+                  disabled={requestPayoutMutation.isLoading || !payoutAmount || !paypalEmail}
                   className="flex-1 px-4 py-3 text-white rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)'
                   }}
                 >
-                  {payoutRequest.loading ? (
+                  {requestPayoutMutation.isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       Processing...

@@ -1,5 +1,4 @@
-// src/pages/ArtistRegister.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import IconHeader from "../../components/user/IconHeader";
 import ProgressTracker from '../../components/artist/register/ProgressTracker';
@@ -8,80 +7,216 @@ import ArtistProfileDetails from '../../components/artist/register/ArtistProfile
 import ArtistDocuments from '../../components/artist/register/ArtistDocuments';
 import ArtistConfirmation from '../../components/artist/register/ArtistConfirmation';
 import PageSEO from "../../components/PageSeo/PageSEO";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { selectIsAuthenticated, selectCurrentUser } from "../../features/auth/authSelectors";
-import { 
-  getMyArtistApplication, 
-  clearMyApplication,
-  checkIfUserIsArtist 
-} from "../../features/artistApplications/artistApplicationSlice";
+import { useMyApplication, useCheckUserArtistRole } from "../../hooks/api/useArtistApplications";
+
+export const ArtistApplicationFormContext = React.createContext();
 
 const ArtistRegister = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
-  const dispatch = useDispatch();
-  
-  // Get application data from Redux
-  const { 
-    myApplication, 
-    fetchLoading, 
-    fetchError,
-    submittedApplication,
-    isUserArtist,
-    userCheckLoading,
-    userCheckError
-  } = useSelector((state) => state.artistApplication);
-  
+
+  // React Query queries
+  const myApplicationQuery = useMyApplication({ enabled: isAuthenticated });
+  const userRoleQuery = useCheckUserArtistRole({ enabled: isAuthenticated });
+
+  const myApplication = myApplicationQuery.data;
+  const fetchLoading = myApplicationQuery.isLoading;
+  const fetchError = myApplicationQuery.error?.message;
+  const isUserArtist = userRoleQuery.data?.isArtist;
+  const userCheckLoading = userRoleQuery.isLoading;
+
   const [currentStep, setCurrentStep] = useState(0);
   const [showExistingApplication, setShowExistingApplication] = useState(false);
   const [skipApplicationCheck, setSkipApplicationCheck] = useState(false);
 
+  // Draft form state management
+  const [formData, setFormData] = useState(() => {
+    try {
+      const savedData = localStorage.getItem('artistApplicationData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (parsedData.lastSaved) {
+          const savedTime = new Date(parsedData.lastSaved);
+          const now = new Date();
+          const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
+          if (hoursDiff > 24) {
+            localStorage.removeItem('artistApplicationData');
+          } else {
+            return {
+              stageName: '',
+              country: '',
+              website: '',
+              socialMedia: '',
+              bio: '',
+              profileImage: null,
+              firstName: '',
+              lastName: '',
+              email: '',
+              ...parsedData,
+              documents: parsedData.documents || [],
+              samples: parsedData.samples || []
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing artistApplicationData:', e);
+    }
+    return {
+      stageName: '',
+      country: '',
+      website: '',
+      socialMedia: '',
+      bio: '',
+      profileImage: null,
+      documents: [],
+      samples: [],
+      firstName: '',
+      lastName: '',
+      email: '',
+    };
+  });
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const updateApplicationFormData = useCallback((data) => {
+    setFormData(prev => ({
+      ...prev,
+      ...data,
+      documents: data.documents || prev.documents || [],
+      samples: data.samples || prev.samples || []
+    }));
+  }, []);
+
+  const updateField = useCallback((field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  const addDocument = useCallback((doc) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: [...(prev.documents || []), doc]
+    }));
+  }, []);
+
+  const removeDocument = useCallback((index) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: (prev.documents || []).filter((_, idx) => idx !== index)
+    }));
+  }, []);
+
+  const addSample = useCallback((sample) => {
+    setFormData(prev => ({
+      ...prev,
+      samples: [...(prev.samples || []), sample]
+    }));
+  }, []);
+
+  const removeSample = useCallback((index) => {
+    setFormData(prev => ({
+      ...prev,
+      samples: (prev.samples || []).filter((_, idx) => idx !== index)
+    }));
+  }, []);
+
+  const clearFormData = useCallback(() => {
+    setFormData({
+      stageName: '',
+      country: '',
+      website: '',
+      socialMedia: '',
+      bio: '',
+      profileImage: null,
+      documents: [],
+      samples: [],
+      firstName: '',
+      lastName: '',
+      email: '',
+    });
+    localStorage.removeItem('artistApplicationData');
+  }, []);
+
+  // Debounced LocalStorage save function
+  const saveToLocalStorage = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const dataToSave = {
+        ...formData,
+        documents: formData.documents || [],
+        samples: formData.samples || []
+      };
+
+      if (formData.profileImageFile instanceof File) {
+        const convertFileToBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+          });
+        };
+        try {
+          const base64 = await convertFileToBase64(formData.profileImageFile);
+          dataToSave.profileImage = base64;
+        } catch (error) {
+          console.error('Error converting image to base64:', error);
+        }
+        delete dataToSave.profileImageFile;
+      }
+
+      dataToSave.lastSaved = new Date().toISOString();
+      localStorage.setItem('artistApplicationData', JSON.stringify(dataToSave));
+    } catch (e) {
+      console.error('Error saving to localStorage:', e);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [formData]);
+
+  // Trigger auto-save debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData && Object.keys(formData).length > 0) {
+        saveToLocalStorage();
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [formData, saveToLocalStorage]);
+
   // Check if user is already an artist on component mount
   useEffect(() => {
     if (isAuthenticated && user) {
-      // First check if user already has artist role
-      dispatch(checkIfUserIsArtist()).then((result) => {
-        if (result.payload?.isArtist) {
-          // If user is already artist, skip application check
-          setSkipApplicationCheck(true);
-          setShowExistingApplication(false);
-          
-        } else {
-          // If not artist, fetch application if exists
-          dispatch(getMyArtistApplication());
-        }
-      });
-    } else {
-      // Clear any existing application data if user logs out
-      dispatch(clearMyApplication());
+      if (isUserArtist) {
+        setSkipApplicationCheck(true);
+        setShowExistingApplication(false);
+      }
     }
-  }, [dispatch, isAuthenticated]);
+  }, [isAuthenticated, user, isUserArtist]);
 
   // Check if user already has an application
   useEffect(() => {
     if (skipApplicationCheck) {
-      // Skip application check if user is already artist
       return;
     }
 
-    if (!fetchLoading && !userCheckLoading && (myApplication || submittedApplication)) {
-      const existingApp = submittedApplication || myApplication;
-      
-      // If application exists and is not rejected, show confirmation page
-      if (existingApp && existingApp.status !== 'rejected') {
+    if (!fetchLoading && !userCheckLoading && myApplication) {
+      if (myApplication.status !== 'rejected') {
         setShowExistingApplication(true);
         setCurrentStep(3); // Go directly to confirmation step
-      } 
-      // If rejected, allow re-application (stay on form)
-      else if (existingApp?.status === 'rejected') {
+      } else if (myApplication.status === 'rejected') {
         setShowExistingApplication(false);
-        // User can re-apply, start from step 1 if authenticated
         if (isAuthenticated) {
           setCurrentStep(1);
         }
       }
     }
-  }, [myApplication, submittedApplication, fetchLoading, isAuthenticated, skipApplicationCheck, userCheckLoading]);
+  }, [myApplication, fetchLoading, isAuthenticated, skipApplicationCheck, userCheckLoading]);
 
   // Set initial step based on authentication status
   useEffect(() => {
@@ -191,13 +326,13 @@ const ArtistRegister = () => {
     }
 
     // Show error if fetching failed (but not for "no application found" case)
-    if (fetchError && !fetchError.includes('No artist application') && !showExistingApplication) {
+    if (myApplicationQuery.error && !myApplicationQuery.error?.message?.includes('No artist application') && !showExistingApplication) {
       return (
         <div className="max-w-[90%] mx-auto mt-8 p-6 bg-red-500/10 border border-red-500/20 rounded-lg">
           <h2 className="text-xl font-bold text-red-400 mb-2">Error Loading Data</h2>
-          <p className="text-red-300 mb-4">{fetchError}</p>
+          <p className="text-red-300 mb-4">{myApplicationQuery.error?.message}</p>
           <button
-            onClick={() => dispatch(getMyArtistApplication())}
+            onClick={() => myApplicationQuery.refetch()}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
           >
             Retry
@@ -256,7 +391,7 @@ const ArtistRegister = () => {
   };
 
   // Don't show progress tracker if showing existing application or user is already artist
-  const showProgressTracker = !showExistingApplication && !fetchLoading && !fetchError && !isUserArtist;
+  const showProgressTracker = !showExistingApplication && !fetchLoading && !myApplicationQuery.error && !isUserArtist;
 
   return (
     <>
@@ -274,7 +409,17 @@ const ArtistRegister = () => {
         noIndex={true}
       />
 
-      <>
+      <ArtistApplicationFormContext.Provider value={{
+        formData,
+        isSaving,
+        updateApplicationFormData,
+        updateField,
+        addDocument,
+        removeDocument,
+        addSample,
+        removeSample,
+        clearFormData
+      }}>
         <IconHeader />
         <section className='text-white px-4'>
           <h1 className="text-4xl text-center mt-4 md:mt-10">
@@ -287,7 +432,7 @@ const ArtistRegister = () => {
 
           {renderCurrentStep()}
         </section>
-      </>
+      </ArtistApplicationFormContext.Provider>
     </>
   );
 };

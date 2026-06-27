@@ -7,11 +7,12 @@ import { validators } from '../../../utills/validators';
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from '../../../features/auth/authSlice';
-import { updateApplicationFormData } from '../../../features/artistApplications/artistApplicationSlice';
+import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
 
 const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
+  const { updateApplicationFormData } = React.useContext(ArtistApplicationFormContext);
 
   // Local state for form data
   const [formData, setFormData] = useState({
@@ -128,12 +129,12 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
 
       toast.success("Account created! Continuing to artist application...");
 
-      // Store basic user info in artist application Redux store
-      dispatch(updateApplicationFormData({
+      // Store basic user info in artist application Context
+      updateApplicationFormData({
         firstName: formData.firstName,
         lastName: '',
         email: formData.email,
-      }));
+      });
 
       // Call parent callback with user data
       if (onRegistrationSuccess) {
