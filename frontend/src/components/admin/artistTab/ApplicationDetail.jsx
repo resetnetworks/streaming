@@ -1,85 +1,27 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { FaTrash, FaEdit, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCalendarAlt, FaMusic, FaUserAlt, FaFileAlt } from 'react-icons/fa';
+import { FaEdit, FaEnvelope, FaCalendarAlt, FaUserAlt, FaFileAlt } from 'react-icons/fa';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-
-import { 
-  getArtistApplicationById,
-  deleteArtistApplication,
-  clearCurrentApplication
-} from '../../../features/admin/artistApplicationAdminSlice';
-import {
-  selectCurrentArtistApplication,
-  selectCurrentApplicationLoading,
-  selectDeleteLoading,
-  selectDeleteSuccess,
-  selectDeleteError,
-  selectStatusUpdateSuccess,
-  selectStatusUpdateError,
-  // Applications list से भी डेटा चेक करने के लिए
-  selectArtistApplicationsAdmin
-} from '../../../features/admin/artistApplicationAdminSelectors';
+import { useAdminApplication } from '../../../hooks/api/useAdminArtistApplications';
 import StatusBadge from './StatusBadge';
 import ApplicationTabs from './ApplicationTabs';
 
 const ApplicationDetail = ({ 
   applicationId, 
+  applications = [],
   onBack, 
   onOpenStatusModal, 
   onOpenNotesModal 
 }) => {
-  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('overview');
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
-  const currentApplication = useSelector(selectCurrentArtistApplication);
-  const currentAppLoading = useSelector(selectCurrentApplicationLoading);
-  const deleteLoading = useSelector(selectDeleteLoading);
-  const deleteSuccess = useSelector(selectDeleteSuccess);
-  const deleteError = useSelector(selectDeleteError);
-  const statusUpdateSuccess = useSelector(selectStatusUpdateSuccess);
-  const statusUpdateError = useSelector(selectStatusUpdateError);
-  
-  // Applications list से डेटा लें
-  const applications = useSelector(selectArtistApplicationsAdmin);
+  const { data: currentApplication, isLoading: currentAppLoading } = useAdminApplication(applicationId);
 
-  // Load application details
-  useEffect(() => {
-    if (applicationId) {
-      dispatch(getArtistApplicationById(applicationId));
-    }
-
-    return () => {
-      dispatch(clearCurrentApplication());
-    };
-  }, [dispatch, applicationId]);
-
-  // Handle success alerts
-  useEffect(() => {
-    if (deleteSuccess || statusUpdateSuccess) {
-      setShowSuccessAlert(true);
-      const timer = setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [deleteSuccess, statusUpdateSuccess]);
-
-  // Handle delete application
-  const handleDeleteApplication = async () => {
-    if (!applicationId) {
-      return;
-    }
-    
-    if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
-      setIsDeleting(true);
-      await dispatch(deleteArtistApplication(applicationId));
-      setIsDeleting(false);
-    }
-  };
+  // Since status updates happen in a modal and trigger query cache invalidation,
+  // we don't need statusUpdateSuccess Redux selectors.
+  const statusUpdateSuccess = false; 
+  const statusUpdateError = null;
 
   // Loading state
   if (currentAppLoading && !currentApplication) {
@@ -137,19 +79,19 @@ const ApplicationDetail = ({
           <div className="flex items-center gap-3">
             <FaEdit className="text-green-400" />
             <p className="text-green-400">
-              {deleteSuccess ? 'Application deleted successfully!' : 'Status updated successfully!'}
+              Status updated successfully!
             </p>
           </div>
         </div>
       )}
       
       {/* Error Alert */}
-      {(deleteError || statusUpdateError) && (
+      {statusUpdateError && (
         <div className="bg-red-900/20 border border-red-700/50 p-4">
           <div className="flex items-center gap-3">
             <FaFileAlt className="text-red-400" />
             <p className="text-red-400">
-              {deleteError || statusUpdateError}
+              {statusUpdateError}
             </p>
           </div>
         </div>
@@ -174,14 +116,6 @@ const ApplicationDetail = ({
         
         <div className="flex items-center gap-3">
           <StatusBadge status={applicationToDisplay.status} size="lg" />
-          <button
-            onClick={handleDeleteApplication}
-            disabled={deleteLoading || isDeleting}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FaTrash /> 
-            {deleteLoading || isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
         </div>
       </div>
 
@@ -212,12 +146,6 @@ const ApplicationDetail = ({
             </div>
             
             <div className="flex flex-col gap-3 min-w-[200px]">
-              <button
-                onClick={onOpenNotesModal}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
-              >
-                <FaEdit /> Add Note
-              </button>
               <button
                 onClick={() => {
                   onOpenStatusModal();

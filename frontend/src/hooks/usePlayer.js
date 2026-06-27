@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Hls from "hls.js";
-import { fetchStreamUrl } from "../features/stream/streamSlice";
+import { useSongStreamUrl } from "./api/useStreamUrl";
 import { toast } from "sonner";
 import {
   setSelectedSong,
@@ -47,10 +47,12 @@ export const usePlayer = () => {
   const currentTime = useSelector((state) => state.player.currentTime);
   const duration = useSelector((state) => state.player.duration);
   const volume = useSelector((state) => state.player.volume);
-  const streamUrls = useSelector((state) => state.stream.urls);
-  const streamLoading = useSelector((state) => state.stream.loading);
-  const streamError = useSelector((state) => state.stream.error);
   const currentUser = useSelector((state) => state.auth.user);
+
+  const { data: streamData, isLoading: streamLoading, error: streamError } = useSongStreamUrl(
+    selectedSong?._id,
+    { enabled: !!selectedSong?._id }
+  );
   const repeatMode = useSelector((state) => state.player.repeatMode);
   const shuffleMode = useSelector((state) => state.player.shuffleMode);
   const likeMutation = useLikeSong();
@@ -101,16 +103,10 @@ export const usePlayer = () => {
     }
   }, [currentSong?._id, playbackContext.type, playbackContextSongs, queue.upcoming.length, dispatch]);
 
-  useEffect(() => {
-    if (selectedSong && !streamUrls[selectedSong._id]) {
-      dispatch(fetchStreamUrl(selectedSong._id));
-    }
-  }, [selectedSong, streamUrls, dispatch]);
-
   // Main player initialisation effect
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !selectedSong || !streamUrls[selectedSong._id]) return;
+    if (!video || !selectedSong || !streamData?.url) return;
 
     const initPlayer = async () => {
       try {
@@ -124,7 +120,7 @@ export const usePlayer = () => {
           hlsRef.current = null;
         }
 
-        const streamUrl = streamUrls[selectedSong._id]?.url;
+        const streamUrl = streamData?.url;
         const mediaUrl = `${streamUrl}?nocache=${Date.now()}`;
 
         const getAdaptiveBuffer = () => {
@@ -279,7 +275,7 @@ export const usePlayer = () => {
         video.oncanplaythrough = null;
       }
     };
-  }, [selectedSong, streamUrls]);
+  }, [selectedSong, streamData]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -365,6 +361,12 @@ export const usePlayer = () => {
       dispatch(setSelectedSong(playbackContextSongs[nextIndex]));
       dispatch(play());
       return;
+    }
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+      dispatch(setCurrentTime(0));
     }
     dispatch(pause());
   }, [shuffleMode, playbackContext?.type, playbackContextSongs, selectedSong?._id, repeatMode, dispatch]);
@@ -472,7 +474,7 @@ export const usePlayer = () => {
   }, [handleTogglePlay, dispatch]);
 
   const isPreview = selectedSong
-    ? (streamUrls[selectedSong._id]?.isPreview ?? false)
+    ? (streamData?.isPreview ?? false)
     : false;
 
   const isPlayerLoading = streamLoading || isLoading;

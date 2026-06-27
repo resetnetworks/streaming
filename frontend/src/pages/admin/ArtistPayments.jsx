@@ -1,33 +1,27 @@
 // src/pages/ArtistPayments.jsx
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import {
-  fetchArtistTransactions,
-  fetchArtistRevenue,
-  fetchSubscriberCount,
-} from '../../features/payments/adminPaymentSlice';
-import { SiVelog } from 'react-icons/si';
+  useArtistTransactions,
+  useArtistSubscriberCount,
+  useArtistRevenueSummary,
+} from '../../hooks/api/useAdminPayments';
 
 const ArtistPayments = () => {
-  const dispatch = useDispatch();
   const { artistId } = useParams();
 
-  const {
-    transactions,
-    revenueBreakdown,
-    subscriberCount,
-    totalRevenue,
-    loading,
-    error,
-  } = useSelector((state) => state.artistDashboard);
+  const { data: transactions = [], isLoading: loadingTxn, error: errorTxn } = useArtistTransactions({ artistId });
+  const { data: subscriberData, isLoading: loadingSub, error: errorSub } = useArtistSubscriberCount(artistId);
+  const { data: revenueData, isLoading: loadingRev, error: errorRev } = useArtistRevenueSummary(artistId);
 
-  useEffect(() => {
-    if (!artistId) return;
-    dispatch(fetchArtistTransactions({ artistId }));
-    dispatch(fetchArtistRevenue(artistId));
-    dispatch(fetchSubscriberCount(artistId));
-  }, [dispatch, artistId]);
+  const loading = loadingTxn || loadingSub || loadingRev;
+  const error = (errorTxn?.response?.data?.message || errorTxn?.message) ||
+                (errorSub?.response?.data?.message || errorSub?.message) ||
+                (errorRev?.response?.data?.message || errorRev?.message) ||
+                null;
+
+  const subscriberCount = subscriberData?.activeSubscribers || 0;
+  const revenueBreakdown = revenueData?.revenue || { songRevenue: 0, albumRevenue: 0, subscriptionRevenue: 0, totalRevenue: 0 };
+  const totalRevenue = revenueBreakdown?.totalRevenue || 0;
 
   // ✅ Safe filter with null checks
   const paidTransactions = transactions?.filter((txn) => 

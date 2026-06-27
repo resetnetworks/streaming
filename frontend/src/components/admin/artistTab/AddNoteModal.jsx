@@ -1,29 +1,27 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { FaSync, FaTimes } from 'react-icons/fa';
-
-import { addAdminNote } from '../../../features/admin/artistApplicationAdminSlice';
-import { selectNoteLoading } from '../../../features/admin/artistApplicationAdminSelectors';
+import { useAdminAddApplicationNote } from '../../../hooks/api/useAdminArtistApplications';
 
 const AddNoteModal = ({ applicationId, isOpen, onClose, onSuccess }) => {
-  const dispatch = useDispatch();
   const [note, setNote] = useState('');
-  const noteLoading = useSelector(selectNoteLoading);
+  const addNoteMutation = useAdminAddApplicationNote();
+  const noteLoading = addNoteMutation.isLoading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!applicationId || !note.trim()) return;
     
-    const result = await dispatch(addAdminNote({
-      applicationId,
-      note: note.trim()
-    }));
-    
-    if (result.type === 'artistApplicationAdmin/addNote/fulfilled') {
+    try {
+      await addNoteMutation.mutateAsync({
+        id: applicationId,
+        note: note.trim()
+      });
       setNote('');
       onSuccess && onSuccess();
       onClose();
+    } catch (err) {
+      // Error is already toast-notified inside the hook
     }
   };
 

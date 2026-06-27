@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  getPendingPayouts,
-  markPayoutAsPaid,
-  resetMarkPaid
-} from '../../features/payments/adminPayoutsSlice';
+import { usePendingPayouts, useMarkPayoutAsPaid } from '../../hooks/api/useAdminPayouts';
 import {
   FaCheckCircle,
   FaSync,
   FaWallet,
-  FaEye,
   FaCalendarAlt,
   FaUser,
   FaEnvelope,
@@ -19,57 +13,49 @@ import {
 } from 'react-icons/fa';
 
 const AdminPaymentRequests = () => {
-  const dispatch = useDispatch();
   const [selectedPayout, setSelectedPayout] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Get data from Redux store
-  const {
-    pendingPayouts: { items: payouts, count, loading, error },
-    markPaid: { loading: markLoading, success: markSuccess, error: markError }
-  } = useSelector((state) => state.adminPayouts);
+  // Fetch pending payouts using React Query
+  const { data: responseData, isLoading: loading, error: queryError, refetch } = usePendingPayouts('requested');
+  const markPaidMutation = useMarkPayoutAsPaid();
 
-  // Fetch pending payouts on component mount
+  const payouts = responseData?.payouts || [];
+  const count = responseData?.count || 0;
+  const error = queryError ? (queryError.response?.data?.message || queryError.message || 'Failed to load payouts') : null;
+  const markLoading = markPaidMutation.isLoading;
+
+  // Handle general error messages
   useEffect(() => {
-    dispatch(getPendingPayouts({ status: 'requested' }));
-  }, [dispatch]);
-
-  // Handle success and error messages
-  useEffect(() => {
-    if (markSuccess) {
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      dispatch(resetMarkPaid());
-    }
-
-    if (markError) {
-      setErrorMessage(markError);
-      setTimeout(() => setErrorMessage(''), 3000);
-    }
-
     if (error) {
       setErrorMessage(error);
-      setTimeout(() => setErrorMessage(''), 3000);
+      const timer = setTimeout(() => setErrorMessage(''), 3000);
+      return () => clearTimeout(timer);
     }
-  }, [markSuccess, markError, error, dispatch]);
+  }, [error]);
 
   const handleMarkAsPaid = (payout) => {
     setSelectedPayout(payout);
     setShowConfirm(true);
   };
 
-  const confirmMarkAsPaid = () => {
+  const confirmMarkAsPaid = async () => {
     if (selectedPayout) {
-      dispatch(markPayoutAsPaid(selectedPayout._id));
-      setShowConfirm(false);
-      setSelectedPayout(null);
+      try {
+        await markPaidMutation.mutateAsync(selectedPayout._id);
+      } catch (err) {
+        setErrorMessage(err.response?.data?.message || err.message || 'Failed to process payout');
+        setTimeout(() => setErrorMessage(''), 3000);
+      } finally {
+        setShowConfirm(false);
+        setSelectedPayout(null);
+      }
     }
   };
 
   const handleRefresh = () => {
-    dispatch(getPendingPayouts({ status: 'requested' }));
+    refetch();
   };
 
   // Format date
@@ -83,16 +69,6 @@ const AdminPaymentRequests = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-6">
-
-      {/* Success Alert */}
-      {showSuccess && (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in">
-          <div className="bg-green-900/90 border border-green-700 text-green-100 px-4 py-3 rounded-lg shadow-lg flex items-center backdrop-blur-sm">
-            <FaCheckCircle className="mr-2 text-green-300" />
-            <span className="font-medium">Payout marked as paid successfully!</span>
-          </div>
-        </div>
-      )}
 
       {/* Error Alert */}
       {errorMessage && (
@@ -346,7 +322,7 @@ const AdminPaymentRequests = () => {
       )}
 
       {/* Add fade-in animation to CSS */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }

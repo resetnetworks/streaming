@@ -1,34 +1,12 @@
 // src/components/admin/artistTab/Artists.jsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-// Redux imports
-import {
-  listArtistApplicationsForAdmin,
-  clearApplicationsList,
-  clearCurrentApplication,
-  setFilters,
-  clearFilters,
-  markForRefresh,
-  resetRefreshFlag
-} from '../../features/admin/artistApplicationAdminSlice';
-
-import {
-  selectArtistApplicationsAdmin,
-  selectArtistApplicationsLoading,
-  selectArtistApplicationsError,
-  selectApplicationPagination,
-  selectApplicationFilters,
-  selectApplicationStats,
-  selectShouldRefreshApplications,
-  selectStatusUpdateLoading,
-  selectStatusUpdateError
-} from '../../features/admin/artistApplicationAdminSelectors';
+// TanStack React Query imports
+import { useAdminApplications } from '../../hooks/api/useAdminArtistApplications';
 
 // Component imports
 import AdminArtistHeader from '../../components/admin/artistTab/AdminArtistHeader';
-import AdminArtistStatusFilters from '../../components/admin/artistTab/AdminArtistStatusFilters';
 import AdminArtistApplicationsTable from '../../components/admin/artistTab/AdminArtistApplicationsTable';
 import ApplicationDetail from '../../components/admin/artistTab/ApplicationDetail';
 import StatusUpdateModal from '../../components/admin/artistTab/StatusUpdateModal';
@@ -36,7 +14,6 @@ import AddNoteModal from '../../components/admin/artistTab/AddNoteModal';
 import AlertNotification from '../../components/admin/artistTab/AlertNotification';
 
 const Artists = () => {
-  const dispatch = useDispatch();
   const [viewMode, setViewMode] = useState('list');
   const [selectedApplicationId, setSelectedApplicationId] = useState(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -46,70 +23,34 @@ const Artists = () => {
   // Search and filter states
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Selectors
-  const applications = useSelector(selectArtistApplicationsAdmin);
-  const loading = useSelector(selectArtistApplicationsLoading);
-  const error = useSelector(selectArtistApplicationsError);
-  const pagination = useSelector(selectApplicationPagination);
-  const filters = useSelector(selectApplicationFilters);
-  const shouldRefresh = useSelector(selectShouldRefreshApplications);
-  const statusUpdateLoading = useSelector(selectStatusUpdateLoading);
-  const statusUpdateError = useSelector(selectStatusUpdateError);
-
-  const isMountedRef = useRef(true);
-
-  // Fetch applications from backend
-  const fetchApplications = useCallback((newFilters = {}) => {
-    const params = {
-      page: newFilters.page || pagination.page,
-      limit: pagination.limit,
-      status: statusFilter !== 'all' ? statusFilter : undefined,
-      search: searchInput || undefined,
-      ...newFilters
-    };
-    
-    dispatch(listArtistApplicationsForAdmin(params));
-  }, [dispatch, pagination.page, pagination.limit, statusFilter, searchInput]);
-
-  // Initial load and refresh
-  useEffect(() => {
-    if (!isMountedRef.current) return;
-    
-    if (shouldRefresh || applications.length === 0) {
-      fetchApplications();
-      dispatch(resetRefreshFlag());
-    }
-    
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [shouldRefresh, dispatch, fetchApplications, applications.length]);
-
-  // Handle search with debounce
+  // Handle search input debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchInput !== filters.search) {
-        dispatch(setFilters({ search: searchInput, page: 1 }));
-        fetchApplications({ page: 1 });
-      }
+      setDebouncedSearch(searchInput);
+      setPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchInput, filters.search, dispatch, fetchApplications]);
+  }, [searchInput]);
 
-  // Handle status filter change
-  useEffect(() => {
-    if (statusFilter !== filters.status) {
-      dispatch(setFilters({ status: statusFilter, page: 1 }));
-      fetchApplications({ page: 1 });
-    }
-  }, [statusFilter, filters.status, dispatch, fetchApplications]);
+  // Fetch applications using React Query
+  const { data: responseData, isLoading: loading, error: queryError, refetch } = useAdminApplications({
+    page,
+    limit: 20,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    search: debouncedSearch || undefined,
+  });
+
+  const applications = responseData?.data?.applications || [];
+  const pagination = responseData?.data?.pagination || { page: 1, limit: 20, totalPages: 1, totalApplications: 0 };
+  const error = queryError ? (queryError.response?.data?.message || queryError.message || 'Failed to load applications') : null;
 
   // Handle page change
   const handlePageChange = (newPage) => {
-    dispatch(setFilters({ page: newPage }));
-    fetchApplications({ page: newPage });
+    setPage(newPage);
   };
 
   // View details
@@ -123,21 +64,18 @@ const Artists = () => {
     setViewMode('list');
     setSelectedApplicationId(null);
     setSelectedAppForModal(null);
-    dispatch(clearCurrentApplication());
   };
 
   // Refresh data
   const handleRefresh = () => {
-    dispatch(markForRefresh());
-    fetchApplications();
+    refetch();
   };
 
   // Clear all filters
   const handleClearFilters = () => {
     setSearchInput('');
     setStatusFilter('all');
-    dispatch(clearFilters());
-    fetchApplications({ page: 1 });
+    setPage(1);
   };
 
   // Open status modal
@@ -149,24 +87,11 @@ const Artists = () => {
 
   // Handle status update success
   const handleStatusUpdateSuccess = () => {
-    toast.success('Status updated successfully');
     setIsStatusModalOpen(false);
     setSelectedAppForModal(null);
-    
-    // Refresh current view
-    if (viewMode === 'detail') {
-      dispatch(clearCurrentApplication());
-    } else {
-      fetchApplications();
-    }
+    setIsNotesModalOpen(false);
+    refetch();
   };
-
-  // Handle error alerts
-  useEffect(() => {
-    if (statusUpdateError) {
-      toast.error(statusUpdateError);
-    }
-  }, [statusUpdateError]);
 
   return (
     <div className="p-4 md:p-6">
@@ -203,6 +128,7 @@ const Artists = () => {
       ) : (
         <ApplicationDetail
           applicationId={selectedApplicationId}
+          applications={applications}
           onBack={handleBackToList}
           onOpenStatusModal={() => {
             if (selectedApplicationId) {
