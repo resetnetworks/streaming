@@ -7,7 +7,6 @@ import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 import authReducer from '../features/auth/authSlice';
 import songReducer from '../features/songs/songSlice';
 import artistSongsReducer from '../features/artistSong/artistSongSlice';
-import artistAlbumsReducer from '../features/artistAlbums/artistAlbumsSlice';
 import playerReducer from '../features/playback/playerSlice';
 import artistsReducer from "../features/artists/artistsSlice";
 import paymentReducer from "../features/payments/userPaymentSlice";
@@ -42,7 +41,6 @@ const appReducer = combineReducers({
   auth: authReducer,
   songs: songReducer,
   artistSongs: artistSongsReducer,
-  artistAlbums: artistAlbumsReducer,
   player: persistReducer(playerPersistConfig, playerReducer),
   artists: artistsReducer,
   userDashboard: paymentReducer,

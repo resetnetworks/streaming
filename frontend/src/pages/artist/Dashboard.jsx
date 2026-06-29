@@ -10,7 +10,6 @@ import SingleUpload from "./SingleUpload";
 import AlbumUpload from "./AlbumUpload";
 import MixUpload from "./MixUpload";
 import { useDispatch } from "react-redux";
-import { resetAllAlbumState } from "../../features/artistAlbums/artistAlbumsSlice";
 import { resetUploadState } from "../../features/artistSong/artistSongSlice";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
@@ -168,7 +167,6 @@ export default function Dashboard() {
       setShowUploadModal(true);
     } else {
       setCurrentUploadPage(type);
-      dispatch(resetAllAlbumState());
       dispatch(resetUploadState());
     }
   };
@@ -180,7 +178,6 @@ export default function Dashboard() {
         "Are you sure you want to cancel? Any unsaved progress will be lost."
       );
       if (!confirmed) return;
-      dispatch(resetAllAlbumState());
       dispatch(resetUploadState());
     } else {
       dispatch(resetUploadState());
@@ -196,7 +193,6 @@ export default function Dashboard() {
    * Navigates to the uploads tab and signals which sub-tab to activate.
    */
   const handleUploadComplete = (uploadType) => {
-    dispatch(resetAllAlbumState());
     dispatch(resetUploadState());
     setCurrentUploadPage(null);
     setSelectedTab("uploads");
@@ -346,7 +342,6 @@ export default function Dashboard() {
                   onClick={() => {
                     setShowUploadModal(false);
                     setCurrentUploadPage("album");
-                    dispatch(resetAllAlbumState());
                   }}
                   className="w-full p-6 border-2 border-purple-700 rounded-xl hover:border-purple-500 hover:bg-purple-900/10 transition-all text-left"
                 >
