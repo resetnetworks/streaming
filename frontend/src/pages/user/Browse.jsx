@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSongs } from "../../features/songs/songSlice";
-import { fetchAllArtists } from "../../features/artists/artistsSlice";
 import { useNavigate } from "react-router-dom";
+import { useAllArtists } from "../../hooks/api/useArtists";
 import {
   selectAllSongs,
   selectSongsStatus,
@@ -23,7 +23,7 @@ const Browse = () => {
   const songs = useSelector(selectAllSongs);
   const status = useSelector(selectSongsStatus);
   const selectedSong = useSelector((state) => state.player.selectedSong);
-  const artists = useSelector((state) => state.artists.allArtists);
+  const { data: artists = [] } = useAllArtists();
   const totalPages = useSelector(selectTotalPages);
 
   const [randomArtist, setRandomArtist] = useState(null);
@@ -48,9 +48,7 @@ const Browse = () => {
   const similarScrollRef = useRef(null);
   const trendingScrollRef = useRef(null);
 
-  useEffect(() => {
-    dispatch(fetchAllArtists());
-  }, [dispatch]);
+
 
   useEffect(() => {
     dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {

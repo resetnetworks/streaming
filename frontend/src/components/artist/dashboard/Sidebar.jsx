@@ -5,8 +5,8 @@ import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers } from
 import { FiMusic } from "react-icons/fi";
 import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchArtistProfile } from "../../../features/artists/artistsSlice";
+import { useSelector } from "react-redux";
+import { useArtistProfile } from "../../../hooks/api/useArtists";
 import { useMyWorkspaces } from "../../../hooks/api/useWorkspace";
 
 const menuItems = [
@@ -19,7 +19,6 @@ const menuItems = [
 ];
 
 const Sidebar = ({ selectedTab, setSelectedTab }) => {
-  const dispatch = useDispatch();
   const { data: workspaces = [] } = useMyWorkspaces();
   const activeWorkspace = React.useMemo(() => {
     if (!workspaces || workspaces.length === 0) return null;
@@ -43,13 +42,9 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
     return hasPermission(item.permission);
   });
 
-  useEffect(() => {
-    dispatch(fetchArtistProfile());
-  }, [dispatch]);
-  
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const { artistProfile } = useSelector((state) => state.artists);
+  const { data: artistProfile } = useArtistProfile();
   const imageUrl = artistProfile?.profileImage;
   const artistName = artistProfile?.name;
 
