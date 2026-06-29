@@ -10,10 +10,8 @@ import artistSongsReducer from '../features/artistSong/artistSongSlice';
 import artistAlbumsReducer from '../features/artistAlbums/artistAlbumsSlice';
 import playerReducer from '../features/playback/playerSlice';
 import artistsReducer from "../features/artists/artistsSlice";
-import albumsReducer from "../features/albums/albumsSlice";
 import paymentReducer from "../features/payments/userPaymentSlice";
 import payment from "../features/payments/paymentSlice";
-import artistDashboardReducer from "../features/artistDashboard/artistDashboardSlice";
 import monetizationReducer from '../features/monetization/monetizationSlice';
 
 // ========================
@@ -45,10 +43,8 @@ const appReducer = combineReducers({
   songs: songReducer,
   artistSongs: artistSongsReducer,
   artistAlbums: artistAlbumsReducer,
-  artistDashboard: artistDashboardReducer,
   player: persistReducer(playerPersistConfig, playerReducer),
   artists: artistsReducer,
-  albums: albumsReducer,
   userDashboard: paymentReducer,
   payment: payment,
   monetization: monetizationReducer,
