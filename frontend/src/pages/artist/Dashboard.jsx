@@ -10,7 +10,6 @@ import SingleUpload from "./SingleUpload";
 import AlbumUpload from "./AlbumUpload";
 import MixUpload from "./MixUpload";
 import { useDispatch } from "react-redux";
-import { resetUploadState } from "../../features/artistSong/artistSongSlice";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
 import { useQueryClient } from "@tanstack/react-query";
@@ -167,7 +166,6 @@ export default function Dashboard() {
       setShowUploadModal(true);
     } else {
       setCurrentUploadPage(type);
-      dispatch(resetUploadState());
     }
   };
 
@@ -178,9 +176,6 @@ export default function Dashboard() {
         "Are you sure you want to cancel? Any unsaved progress will be lost."
       );
       if (!confirmed) return;
-      dispatch(resetUploadState());
-    } else {
-      dispatch(resetUploadState());
     }
 
     setCurrentUploadPage(null);
@@ -193,7 +188,6 @@ export default function Dashboard() {
    * Navigates to the uploads tab and signals which sub-tab to activate.
    */
   const handleUploadComplete = (uploadType) => {
-    dispatch(resetUploadState());
     setCurrentUploadPage(null);
     setSelectedTab("uploads");
     // "single" and "mix" both belong to the "songs" tab
