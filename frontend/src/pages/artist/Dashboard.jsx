@@ -28,13 +28,20 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { data: workspaces = [] } = useMyWorkspaces();
   const activeWorkspace = React.useMemo(() => {
-    if (!workspaces || workspaces.length === 0) return null;
+    if (!workspaces || workspaces.length === 0) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("activeWorkspaceId");
+      }
+      return null;
+    }
+    let selected = workspaces[0];
     if (typeof window !== "undefined") {
       const savedId = localStorage.getItem("activeWorkspaceId");
       const matched = workspaces.find((w) => w.workspaceId === savedId);
-      if (matched) return matched;
+      if (matched) selected = matched;
+      localStorage.setItem("activeWorkspaceId", selected.workspaceId);
     }
-    return workspaces[0];
+    return selected;
   }, [workspaces]);
 
   // Restore last active tab from localStorage, default to "profile"
@@ -71,16 +78,7 @@ export default function Dashboard() {
     }
   }, [selectedTab]);
 
-  // Persist active workspace ID to localStorage for axios headers
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (activeWorkspace?.workspaceId) {
-        localStorage.setItem("activeWorkspaceId", activeWorkspace.workspaceId);
-      } else {
-        localStorage.removeItem("activeWorkspaceId");
-      }
-    }
-  }, [activeWorkspace]);
+
 
   // Persist upload page so refresh doesn't lose progress
   useEffect(() => {
@@ -260,6 +258,10 @@ export default function Dashboard() {
           onTabConsumed={() => setUploadedTabToShow(null)}
         />
       );
+    }
+
+    if (selectedTab === "profile") {
+       return <ProfileComponent workspace={activeWorkspace} />;
     }
 
     if (selectedTab === "team") {

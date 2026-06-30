@@ -47,6 +47,7 @@ const queryClient = new QueryClient({
 
 window.store = store;        
 window.__PERSISTOR__ = persistor;
+window.queryClient = queryClient;
 
 /* -------------------- APP RENDER -------------------- */
 createRoot(document.getElementById("root")).render(

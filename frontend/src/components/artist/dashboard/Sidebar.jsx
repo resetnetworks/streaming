@@ -44,7 +44,7 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
 
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const { data: artistProfile } = useArtistProfile();
+  const { data: artistProfile } = useArtistProfile(activeWorkspace?.workspaceId);
   const imageUrl = artistProfile?.profileImage;
   const artistName = artistProfile?.name;
 

@@ -2,12 +2,12 @@ import React from 'react'
 import ProfileHeroSection from './ProfileHeroSection'
 import ProfileDetailSection from './ProfileDetailSection'
 
-const ProfileComponent = () => {
+const ProfileComponent = ({ workspace }) => {
 
   return (
       <>
-      <ProfileHeroSection />
-      <ProfileDetailSection />
+      <ProfileHeroSection workspace={workspace} />
+      <ProfileDetailSection workspace={workspace} />
       </>
       
   )
