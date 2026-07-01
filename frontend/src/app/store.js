@@ -5,9 +5,7 @@ import { persistReducer, persistStore } from 'redux-persist';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import authReducer from '../features/auth/authSlice';
-import songReducer from '../features/songs/songSlice';
 import playerReducer from '../features/playback/playerSlice';
-import paymentReducer from "../features/payments/userPaymentSlice";
 import payment from "../features/payments/paymentSlice";
 import monetizationReducer from '../features/monetization/monetizationSlice';
 
@@ -23,11 +21,11 @@ const playerPersistConfig = {
   stateReconciler: autoMergeLevel2,
 };
 
-// ✅ Root persist config (auth + songs only)
+// ✅ Root persist config (auth only)
 const rootPersistConfig = {
   key: 'root',
   storage,
-  whitelist: ['songs', 'auth'],
+  whitelist: ['auth'],
   blacklist: ['player'], // player handled separately
   stateReconciler: autoMergeLevel2,
 };
@@ -37,9 +35,7 @@ const rootPersistConfig = {
 // ========================
 const appReducer = combineReducers({
   auth: authReducer,
-  songs: songReducer,
   player: persistReducer(playerPersistConfig, playerReducer),
-  userDashboard: paymentReducer,
   payment: payment,
   monetization: monetizationReducer,
 });

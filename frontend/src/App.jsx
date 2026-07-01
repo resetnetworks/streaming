@@ -23,16 +23,10 @@ import {
   PublicRoute,
 } from "./components/RouteGuards";
 
-// ✅ NEW: Import player actions and selectors
 import { 
   setRandomDefaultFromSongs, 
   loadDefaultSongFromStorage 
 } from "./features/playback/playerSlice";
-import { 
-  selectAllSongs, 
-  selectShouldInitializeDefault,
-  selectAvailableSongsForDefault 
-} from "./features/songs/songSelectors";
 
 import * as Pages from "./routes/LazyRoutes";
 
@@ -41,11 +35,6 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
   const [initialLoad, setInitialLoad] = useState(true);
-
-  // ✅ NEW: Selectors for default song initialization
-  const allSongs = useSelector(selectAllSongs);
-  const shouldInitializeDefault = useSelector(selectShouldInitializeDefault);
-  const availableSongsCollections = useSelector(selectAvailableSongsForDefault);
 
   useEffect(() => {
   sessionStorage.removeItem("lazy-reloaded");
@@ -129,25 +118,16 @@ useEffect(() => {
 
 
 
-  // ✅ NEW: Initialize default song on app start
-useEffect(() => {
-  if (isAuthenticated && !initialLoad) {
-    try {
-      dispatch(loadDefaultSongFromStorage());
-
-      if (shouldInitializeDefault && availableSongsCollections.length > 0) {
-        const allAvailableSongs =
-          availableSongsCollections.flatMap(c => c.songs);
-
-        if (allAvailableSongs.length > 0) {
-          dispatch(setRandomDefaultFromSongs(allAvailableSongs));
-        }
+  // ✅ Initialize default song on app start
+  useEffect(() => {
+    if (isAuthenticated && !initialLoad) {
+      try {
+        dispatch(loadDefaultSongFromStorage());
+      } catch (error) {
+        Sentry.captureException(error);
       }
-    } catch (error) {
-      Sentry.captureException(error);
     }
-  }
-}, [isAuthenticated, initialLoad, shouldInitializeDefault, availableSongsCollections]);
+  }, [isAuthenticated, initialLoad, dispatch]);
 
 
   // 🔐 Disable Right Click & Inspect Shortcut
