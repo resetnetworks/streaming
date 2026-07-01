@@ -23,16 +23,10 @@ import {
   PublicRoute,
 } from "./components/RouteGuards";
 
-// ✅ NEW: Import player actions and selectors
 import { 
   setRandomDefaultFromSongs, 
   loadDefaultSongFromStorage 
 } from "./features/playback/playerSlice";
-import { 
-  selectAllSongs, 
-  selectShouldInitializeDefault,
-  selectAvailableSongsForDefault 
-} from "./features/songs/songSelectors";
 
 import * as Pages from "./routes/LazyRoutes";
 
@@ -42,112 +36,45 @@ function App() {
   const user = useSelector(selectCurrentUser);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // ✅ NEW: Selectors for default song initialization
-  const allSongs = useSelector(selectAllSongs);
-  const shouldInitializeDefault = useSelector(selectShouldInitializeDefault);
-  const availableSongsCollections = useSelector(selectAvailableSongsForDefault);
-
   useEffect(() => {
   sessionStorage.removeItem("lazy-reloaded");
 }, []);
 
 useEffect(() => {
-  if (!isAuthenticated) {
-    const token = localStorage.getItem("token") || getTokenFromCookie();
-    
-    if (token) {
-      dispatch(getMyProfile())
-        .unwrap()
-        .catch((error) => {
-          Sentry.captureException(error);
-        })
-        .finally(() => setInitialLoad(false));
-    } else {
-      // ❌ Yahan sirf setInitialLoad nahi, user bhi clear karo
-      setInitialLoad(false);
-    }
-  } else {
-    // ✅ Authenticated hai toh backend se verify karo
-    dispatch(getMyProfile())
-      .unwrap()
-      .catch((error) => {
+  // Always verify authentication status with backend on startup to check if a valid HttpOnly session cookie exists
+  dispatch(getMyProfile())
+    .unwrap()
+    .then((userData) => {
+      if (userData?._id) {
+        Sentry.setUser({
+          id: userData._id,
+          email: userData.email,
+          username: userData.name,
+        });
+        Sentry.setTag("role", userData.role);
+      }
+    })
+    .catch((error) => {
+      // It is normal to fail with 401 if the user is a guest
+      if (error?.status !== 401 && error !== "Unauthorized") {
         Sentry.captureException(error);
-      })
-      .finally(() => setInitialLoad(false));
-  }
-}, [dispatch]); // isAuthenticated dependency hata do
-
-const getTokenFromCookie = () => {
-  const cookies = document.cookie.split('; ');
-  const tokenCookie = cookies.find(c => c.startsWith('token='));
-  return tokenCookie ? tokenCookie.split('=')[1] : null;
-};
-
-useEffect(() => {
-  if (!isAuthenticated) {
-    const token = localStorage.getItem("token") || getTokenFromCookie();
-    if (token) {
-      dispatch(getMyProfile())
-        .unwrap()
-        .then((userData) => {
-          // ✅ Profile milte hi Sentry set karo, effect ka wait mat karo
-          if (userData?._id) {
-            Sentry.setUser({
-              id: userData._id,
-              email: userData.email,
-              username: userData.name,
-            });
-            Sentry.setTag("role", userData.role);
-          }
-        })
-        .catch((error) => {
-          Sentry.captureException(error);
-        })
-        .finally(() => setInitialLoad(false));
-    } else {
-      setInitialLoad(false);
-    }
-  } else {
-    dispatch(getMyProfile())
-      .unwrap()
-      .then((userData) => {
-        if (userData?._id) {
-          Sentry.setUser({
-            id: userData._id,
-            email: userData.email,
-            username: userData.name,
-          });
-          Sentry.setTag("role", userData.role);
-        }
-      })
-      .catch((error) => {
-        Sentry.captureException(error);
-      })
-      .finally(() => setInitialLoad(false));
-  }
+      }
+    })
+    .finally(() => setInitialLoad(false));
 }, [dispatch]);
 
 
 
-  // ✅ NEW: Initialize default song on app start
-useEffect(() => {
-  if (isAuthenticated && !initialLoad) {
-    try {
-      dispatch(loadDefaultSongFromStorage());
-
-      if (shouldInitializeDefault && availableSongsCollections.length > 0) {
-        const allAvailableSongs =
-          availableSongsCollections.flatMap(c => c.songs);
-
-        if (allAvailableSongs.length > 0) {
-          dispatch(setRandomDefaultFromSongs(allAvailableSongs));
-        }
+  // ✅ Initialize default song on app start
+  useEffect(() => {
+    if (isAuthenticated && !initialLoad) {
+      try {
+        dispatch(loadDefaultSongFromStorage());
+      } catch (error) {
+        Sentry.captureException(error);
       }
-    } catch (error) {
-      Sentry.captureException(error);
     }
-  }
-}, [isAuthenticated, initialLoad, shouldInitializeDefault, availableSongsCollections]);
+  }, [isAuthenticated, initialLoad, dispatch]);
 
 
   // 🔐 Disable Right Click & Inspect Shortcut
@@ -379,7 +306,7 @@ useEffect(() => {
             />
           </Routes>      
         </Suspense>
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="top-center" closeButton />
         <RoleUpdateModal />
       </BrowserRouter>
 

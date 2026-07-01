@@ -20,7 +20,6 @@ import {
   setShuffleMode,
 } from "../features/playback/playerSlice";
 import {
-  selectAllSongs,
   selectSelectedSong,
   selectDefaultSong,
   selectDisplaySong,
@@ -28,13 +27,13 @@ import {
   selectHasPersistentDefault,
   selectPlaybackContext,
   selectPlaybackContextSongs,
-} from "../features/songs/songSelectors";
+} from "../features/playback/playerSelectors";
 import { useLikeSong, useLikedSongs } from "./api/useSongs";
 
 export const usePlayer = () => {
   const dispatch = useDispatch();
 
-  const songs = useSelector(selectAllSongs);
+  const songs = [];
   const selectedSong = useSelector(selectSelectedSong);
   const defaultSong = useSelector(selectDefaultSong);
   const displaySong = useSelector(selectDisplaySong);

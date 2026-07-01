@@ -7,10 +7,11 @@ export const artistDashboardKeys = {
   profile: () => [...artistDashboardKeys.all, "profile"],
 };
 
-export const useArtistProfile = (options = {}) => {
+export const useArtistProfile = (workspaceId, options = {}) => {
   return useQuery({
-    queryKey: artistDashboardKeys.profile(),
-    queryFn: artistDashboardApi.fetchDashboardProfile,
+    queryKey: [...artistDashboardKeys.profile(), workspaceId],
+    queryFn: () => artistDashboardApi.fetchDashboardProfile(workspaceId),
+    enabled: !!workspaceId,
     staleTime: 5 * 60 * 1000,
     ...options,
   });

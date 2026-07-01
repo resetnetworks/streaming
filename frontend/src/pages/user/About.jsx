@@ -15,7 +15,7 @@ const About = () => {
     {
       icon: FiHeadphones,
       title: "Listening Experience",
-      description: "We offer an ever-growing library of tracks, albums, and curated playlists across genres—whether you're into indie, electronic, rock, hip-hop, or ambient explorations, Reset Music has something for every mood."
+      description: "We offer an ever-growing library of tracks, albums, and curated playlists across genres—whether you're into indie, Ambient, IDM, Techno, Drone, Cinematic and Experimental Reset Music has something for every mood."
     },
     {
       icon: FiMic,

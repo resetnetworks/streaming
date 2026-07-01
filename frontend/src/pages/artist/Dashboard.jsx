@@ -10,8 +10,6 @@ import SingleUpload from "./SingleUpload";
 import AlbumUpload from "./AlbumUpload";
 import MixUpload from "./MixUpload";
 import { useDispatch } from "react-redux";
-import { resetAllAlbumState } from "../../features/artistAlbums/artistAlbumsSlice";
-import { resetUploadState } from "../../features/artistSong/artistSongSlice";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,13 +28,20 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { data: workspaces = [] } = useMyWorkspaces();
   const activeWorkspace = React.useMemo(() => {
-    if (!workspaces || workspaces.length === 0) return null;
+    if (!workspaces || workspaces.length === 0) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("activeWorkspaceId");
+      }
+      return null;
+    }
+    let selected = workspaces[0];
     if (typeof window !== "undefined") {
       const savedId = localStorage.getItem("activeWorkspaceId");
       const matched = workspaces.find((w) => w.workspaceId === savedId);
-      if (matched) return matched;
+      if (matched) selected = matched;
+      localStorage.setItem("activeWorkspaceId", selected.workspaceId);
     }
-    return workspaces[0];
+    return selected;
   }, [workspaces]);
 
   // Restore last active tab from localStorage, default to "profile"
@@ -73,16 +78,7 @@ export default function Dashboard() {
     }
   }, [selectedTab]);
 
-  // Persist active workspace ID to localStorage for axios headers
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (activeWorkspace?.workspaceId) {
-        localStorage.setItem("activeWorkspaceId", activeWorkspace.workspaceId);
-      } else {
-        localStorage.removeItem("activeWorkspaceId");
-      }
-    }
-  }, [activeWorkspace]);
+
 
   // Persist upload page so refresh doesn't lose progress
   useEffect(() => {
@@ -168,8 +164,6 @@ export default function Dashboard() {
       setShowUploadModal(true);
     } else {
       setCurrentUploadPage(type);
-      dispatch(resetAllAlbumState());
-      dispatch(resetUploadState());
     }
   };
 
@@ -180,10 +174,6 @@ export default function Dashboard() {
         "Are you sure you want to cancel? Any unsaved progress will be lost."
       );
       if (!confirmed) return;
-      dispatch(resetAllAlbumState());
-      dispatch(resetUploadState());
-    } else {
-      dispatch(resetUploadState());
     }
 
     setCurrentUploadPage(null);
@@ -196,8 +186,6 @@ export default function Dashboard() {
    * Navigates to the uploads tab and signals which sub-tab to activate.
    */
   const handleUploadComplete = (uploadType) => {
-    dispatch(resetAllAlbumState());
-    dispatch(resetUploadState());
     setCurrentUploadPage(null);
     setSelectedTab("uploads");
     // "single" and "mix" both belong to the "songs" tab
@@ -270,6 +258,10 @@ export default function Dashboard() {
           onTabConsumed={() => setUploadedTabToShow(null)}
         />
       );
+    }
+
+    if (selectedTab === "profile") {
+       return <ProfileComponent workspace={activeWorkspace} />;
     }
 
     if (selectedTab === "team") {
@@ -346,7 +338,6 @@ export default function Dashboard() {
                   onClick={() => {
                     setShowUploadModal(false);
                     setCurrentUploadPage("album");
-                    dispatch(resetAllAlbumState());
                   }}
                   className="w-full p-6 border-2 border-purple-700 rounded-xl hover:border-purple-500 hover:bg-purple-900/10 transition-all text-left"
                 >

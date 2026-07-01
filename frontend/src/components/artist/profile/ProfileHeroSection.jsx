@@ -13,10 +13,11 @@ import { logoutUser } from "../../../features/auth/authSlice";
 import { useDispatch } from "react-redux";
 import { forceLogout } from "../../../utills/axiosInstance";
 
-const ProfileHeroSection = () => {
+const ProfileHeroSection = ({ workspace }) => {
   const navigate = useNavigate();
+  const workspaceId = workspace?.workspaceId;
   
-  const { data: artistProfile, isLoading, refetch } = useArtistProfile();
+  const { data: artistProfile, isLoading, refetch } = useArtistProfile(workspaceId);
   const {
   uploadArtistImage,
   isArtistImageUploading: isUploading

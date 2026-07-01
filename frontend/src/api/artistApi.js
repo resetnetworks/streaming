@@ -54,8 +54,10 @@ export const artistApi = {
   },
 
   // Get artist's own profile
-  fetchProfile: async () => {
-    const res = await axios.get("/artists/profile/me");
+  fetchProfile: async (workspaceId) => {
+    const res = await axios.get("/artists/profile/me", {
+      headers: workspaceId ? { "x-workspace-id": workspaceId } : {},
+    });
     return res.data.data;
   },
 

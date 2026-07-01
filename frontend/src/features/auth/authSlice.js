@@ -64,6 +64,9 @@ const clearAuthFromLocal = () => {
   localStorage.removeItem('persist:player');
   localStorage.clear();
   sessionStorage.clear();
+  if (typeof window !== 'undefined' && window.queryClient) {
+    window.queryClient.clear();
+  }
 };
 
 // ====================
@@ -263,17 +266,19 @@ export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
 export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
     const res = await axios.post("/users/logout");
-    
-    // Clear all persist data
-    if (typeof window !== 'undefined' && window.__PERSISTOR__) {
-      await window.__PERSISTOR__.purge();
-      await window.__PERSISTOR__.flush();
-    }
-    clearAuthFromLocal();
-    delete axios.defaults.headers.common["Authorization"];
     return res.data.message;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+  } finally {
+    // ALWAYS clear all local data on logout, even if API call fails!
+    if (typeof window !== 'undefined' && window.__PERSISTOR__) {
+      try {
+        await window.__PERSISTOR__.purge();
+        await window.__PERSISTOR__.flush();
+      } catch (e) {}
+    }
+    clearAuthFromLocal();
+    delete axios.defaults.headers.common["Authorization"];
   }
 });
 
