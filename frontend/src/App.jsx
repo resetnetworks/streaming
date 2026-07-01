@@ -41,79 +41,26 @@ function App() {
 }, []);
 
 useEffect(() => {
-  if (!isAuthenticated) {
-    const token = localStorage.getItem("token") || getTokenFromCookie();
-    
-    if (token) {
-      dispatch(getMyProfile())
-        .unwrap()
-        .catch((error) => {
-          Sentry.captureException(error);
-        })
-        .finally(() => setInitialLoad(false));
-    } else {
-      // ❌ Yahan sirf setInitialLoad nahi, user bhi clear karo
-      setInitialLoad(false);
-    }
-  } else {
-    // ✅ Authenticated hai toh backend se verify karo
-    dispatch(getMyProfile())
-      .unwrap()
-      .catch((error) => {
+  // Always verify authentication status with backend on startup to check if a valid HttpOnly session cookie exists
+  dispatch(getMyProfile())
+    .unwrap()
+    .then((userData) => {
+      if (userData?._id) {
+        Sentry.setUser({
+          id: userData._id,
+          email: userData.email,
+          username: userData.name,
+        });
+        Sentry.setTag("role", userData.role);
+      }
+    })
+    .catch((error) => {
+      // It is normal to fail with 401 if the user is a guest
+      if (error?.status !== 401 && error !== "Unauthorized") {
         Sentry.captureException(error);
-      })
-      .finally(() => setInitialLoad(false));
-  }
-}, [dispatch]); // isAuthenticated dependency hata do
-
-const getTokenFromCookie = () => {
-  const cookies = document.cookie.split('; ');
-  const tokenCookie = cookies.find(c => c.startsWith('token='));
-  return tokenCookie ? tokenCookie.split('=')[1] : null;
-};
-
-useEffect(() => {
-  if (!isAuthenticated) {
-    const token = localStorage.getItem("token") || getTokenFromCookie();
-    if (token) {
-      dispatch(getMyProfile())
-        .unwrap()
-        .then((userData) => {
-          // ✅ Profile milte hi Sentry set karo, effect ka wait mat karo
-          if (userData?._id) {
-            Sentry.setUser({
-              id: userData._id,
-              email: userData.email,
-              username: userData.name,
-            });
-            Sentry.setTag("role", userData.role);
-          }
-        })
-        .catch((error) => {
-          Sentry.captureException(error);
-        })
-        .finally(() => setInitialLoad(false));
-    } else {
-      setInitialLoad(false);
-    }
-  } else {
-    dispatch(getMyProfile())
-      .unwrap()
-      .then((userData) => {
-        if (userData?._id) {
-          Sentry.setUser({
-            id: userData._id,
-            email: userData.email,
-            username: userData.name,
-          });
-          Sentry.setTag("role", userData.role);
-        }
-      })
-      .catch((error) => {
-        Sentry.captureException(error);
-      })
-      .finally(() => setInitialLoad(false));
-  }
+      }
+    })
+    .finally(() => setInitialLoad(false));
 }, [dispatch]);
 
 
