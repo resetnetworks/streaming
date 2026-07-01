@@ -204,7 +204,7 @@ const HeroSection = () => {
       style={{ background: "#020216" }}
     >
       {/* Background orbs */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{ transform: "translateZ(0)", willChange: "transform" }}
       >
