@@ -128,8 +128,8 @@ The Artist retains all ownership of the Content, subject only to the rights gran
     {
       id: "platform-fees-payouts",
       title: "3. Platform Fees and Payouts",
-      content: `RESET NETWORKS is entitled to a 15% platform fee on all Net Revenue generated from the Artist's Content.
-The remaining 85% of Net Revenue is remitted to the Artist within 15 days of each monthly accounting cycle.
+      content: `RESET NETWORKS is entitled to a 15% platform fee on any transactions generated from the Artist's Content.
+The remaining 85% of Net Revenue is remitted to the Artist upon requesting a payout. Payouts must be requested manually by the Artist and will be processed accordingly.
 Payments are made via bank transfer, PayPal, or other designated modes.
 RESET NETWORKS may withhold or adjust payouts for fraudulent, disputed, or refunded transactions.
 All payouts are subject to applicable taxes and regulatory deductions.`,
@@ -367,22 +367,20 @@ Digital acceptance through the Platform constitutes binding consent.`,
                   <div className="flex gap-2">
                     <button
                       onClick={() => setActiveTab("user")}
-                      className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                        activeTab === "user"
+                      className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${activeTab === "user"
                           ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                           : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-                      }`}
+                        }`}
                     >
                       <FiUser className="w-4 h-4" />
                       User Terms
                     </button>
                     <button
                       onClick={() => setActiveTab("artist")}
-                      className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${
-                        activeTab === "artist"
+                      className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-300 ${activeTab === "artist"
                           ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
                           : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-                      }`}
+                        }`}
                     >
                       <FiMic className="w-4 h-4" />
                       Artist Terms
@@ -437,11 +435,10 @@ Digital acceptance through the Platform constitutes binding consent.`,
               {/* Tab Indicator */}
               <div className="mb-8">
                 <div
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                    activeTab === "user"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${activeTab === "user"
                       ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
                       : "bg-purple-600/20 text-purple-300 border border-purple-500/30"
-                  }`}
+                    }`}
                 >
                   {activeTab === "user" ? (
                     <>
@@ -496,15 +493,14 @@ Digital acceptance through the Platform constitutes binding consent.`,
                     >
                       <div className="flex items-center justify-between">
                         <h3
-                          className={`text-xl font-semibold transition-colors ${
-                            activeTab === "user" &&
-                            section.title === "B. Payments, Taxes, and Refunds"
+                          className={`text-xl font-semibold transition-colors ${activeTab === "user" &&
+                              section.title === "B. Payments, Taxes, and Refunds"
                               ? "text-blue-400"
                               : activeTab === "artist" &&
                                 section.title === "3. Platform Fees and Payouts"
-                              ? "text-purple-400"
-                              : "text-white group-hover:text-blue-300"
-                          }`}
+                                ? "text-purple-400"
+                                : "text-white group-hover:text-blue-300"
+                            }`}
                         >
                           {section.title}
                         </h3>
@@ -533,11 +529,10 @@ Digital acceptance through the Platform constitutes binding consent.`,
                                   {paragraph.startsWith("•") ? (
                                     <span className="flex items-start gap-3">
                                       <span
-                                        className={`mt-2 ${
-                                          activeTab === "user"
+                                        className={`mt-2 ${activeTab === "user"
                                             ? "text-blue-400"
                                             : "text-purple-400"
-                                        }`}
+                                          }`}
                                       >
                                         •
                                       </span>
@@ -560,11 +555,10 @@ Digital acceptance through the Platform constitutes binding consent.`,
 
               {/* Contact Information */}
               <div
-                className={`mt-12 rounded-2xl border p-8 ${
-                  activeTab === "user"
+                className={`mt-12 rounded-2xl border p-8 ${activeTab === "user"
                     ? "bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/20"
                     : "bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500/20"
-                }`}
+                  }`}
               >
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white">
@@ -591,46 +585,41 @@ Digital acceptance through the Platform constitutes binding consent.`,
 
               {/* Agreement Acknowledgment */}
               <div
-                className={`mt-8 rounded-2xl p-6 ${
-                  activeTab === "user"
+                className={`mt-8 rounded-2xl p-6 ${activeTab === "user"
                     ? "bg-amber-900/20 border border-amber-500/30"
                     : "bg-purple-900/20 border border-purple-500/30"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-4">
                   <div
-                    className={`p-2 rounded-lg ${
-                      activeTab === "user"
+                    className={`p-2 rounded-lg ${activeTab === "user"
                         ? "bg-amber-500/20"
                         : "bg-purple-500/20"
-                    }`}
+                      }`}
                   >
                     <FiShield
-                      className={`w-5 h-5 ${
-                        activeTab === "user"
+                      className={`w-5 h-5 ${activeTab === "user"
                           ? "text-amber-400"
                           : "text-purple-400"
-                      }`}
+                        }`}
                     />
                   </div>
                   <div>
                     <h4
-                      className={`font-semibold mb-2 ${
-                        activeTab === "user"
+                      className={`font-semibold mb-2 ${activeTab === "user"
                           ? "text-amber-300"
                           : "text-purple-300"
-                      }`}
+                        }`}
                     >
                       {activeTab === "user"
                         ? "By using Reset Music, you acknowledge that:"
                         : "By uploading content to Reset Music, you acknowledge that:"}
                     </h4>
                     <ul
-                      className={`text-sm space-y-1 ${
-                        activeTab === "user"
+                      className={`text-sm space-y-1 ${activeTab === "user"
                           ? "text-amber-200/80"
                           : "text-purple-200/80"
-                      }`}
+                        }`}
                     >
                       {activeTab === "user" ? (
                         <>
