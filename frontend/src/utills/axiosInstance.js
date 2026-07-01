@@ -28,7 +28,7 @@ const clearAllCookies = () => {
 const clearAllAuthData = async () => {
   try {
     if (window.queryClient) {
-      window.queryClient.clear();
+      window.queryClient.resetQueries();
     }
     if (window.__PERSISTOR__) {
       await window.__PERSISTOR__.purge();
