@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { FiMapPin } from "react-icons/fi";
 import { toast } from "sonner";
 import axiosInstance from "../../../utills/axiosInstance";
-import { fetchSubscriberCount } from "../../../features/artists/artistsSlice";
-import { fetchUserSubscriptions } from "../../../features/payments/userPaymentSlice";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUserSubscriptions, userDashboardKeys } from "../../../hooks/api/useUserDashboard";
+import { artistKeys } from "../../../hooks/api/useArtists";
 
 const cycleLabel = (c) => {
   switch (c) {
@@ -48,16 +49,15 @@ const ArtistAboutSection = ({
   setSubscriptionLoading,
   currentUser, 
 }) => {
-  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const artistColor = getArtistColor(artist?.name);
   const [showFullBio, setShowFullBio] = useState(false);
 
-  const userSubscriptions = useSelector(
-    (state) => state.userDashboard.subscriptions || [],
-  );
+  const { data: subscriptionsData } = useUserSubscriptions();
+  const userSubscriptions = subscriptionsData?.subscriptions || [];
 
   const isSubscribed = userSubscriptions.some(
-    (sub) => sub.artist?.slug === artistId,
+    (sub) => sub.artist?.slug === artistId || sub.artist?._id === artistId || sub.artist?._id === artist?._id || sub.artist?.slug === artist?.slug
   );
 
   const availableCycles = useMemo(() => {
@@ -102,8 +102,8 @@ const ArtistAboutSection = ({
       setSubscriptionLoading(true);
       try {
         await axiosInstance.delete(`/subscriptions/artist/${artist._id}`);
-        dispatch(fetchUserSubscriptions());
-        dispatch(fetchSubscriberCount(artist._id));
+        queryClient.invalidateQueries({ queryKey: userDashboardKeys.subscriptions() });
+        queryClient.invalidateQueries({ queryKey: artistKeys.subscriberCount(artist._id) });
         toast.success(`Unsubscribed from ${artist.name}`);
       } catch (error) {
         console.error("Unsubscribe error:", error);

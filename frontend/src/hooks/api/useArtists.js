@@ -74,11 +74,13 @@ export const useArtist = (id) => {
 };
 
 // Get artist's own profile
-export const useArtistProfile = () => {
+export const useArtistProfile = (workspaceId, options = {}) => {
   return useQuery({
-    queryKey: artistKeys.profile(),
-    queryFn: artistApi.fetchProfile,
+    queryKey: [...artistKeys.profile(), workspaceId],
+    queryFn: () => artistApi.fetchProfile(workspaceId),
+    enabled: !!workspaceId,
     staleTime: 2 * 60 * 1000,
+    ...options,
   });
 };
 

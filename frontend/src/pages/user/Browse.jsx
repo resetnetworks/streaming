@@ -1,13 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllSongs } from "../../features/songs/songSlice";
-import { fetchAllArtists } from "../../features/artists/artistsSlice";
 import { useNavigate } from "react-router-dom";
-import {
-  selectAllSongs,
-  selectSongsStatus,
-  selectTotalPages,
-} from "../../features/songs/songSelectors";
+import { useAllArtists } from "../../hooks/api/useArtists";
+import { useQuery } from "@tanstack/react-query";
+import { songApi } from "../../api/songApi";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
 import UserHeader from "../../components/UserHeader";
 import RecentPlays from "../../components/RecentPlays";
@@ -20,11 +16,8 @@ import "react-loading-skeleton/dist/skeleton.css";
 
 const Browse = () => {
   const dispatch = useDispatch();
-  const songs = useSelector(selectAllSongs);
-  const status = useSelector(selectSongsStatus);
   const selectedSong = useSelector((state) => state.player.selectedSong);
-  const artists = useSelector((state) => state.artists.allArtists);
-  const totalPages = useSelector(selectTotalPages);
+  const { data: artists = [] } = useAllArtists();
 
   const [randomArtist, setRandomArtist] = useState(null);
   const [recentPage, setRecentPage] = useState(1);
@@ -48,61 +41,62 @@ const Browse = () => {
   const similarScrollRef = useRef(null);
   const trendingScrollRef = useRef(null);
 
-  useEffect(() => {
-    dispatch(fetchAllArtists());
-  }, [dispatch]);
+
+
+  const { data: recentSongsData, isLoading: recentLoading } = useQuery({
+    queryKey: ["songs", "recent", recentPage],
+    queryFn: () => songApi.fetchAll({ page: recentPage, limit: 10 }),
+    keepPreviousData: true,
+  });
+
+  const { data: trendingSongsData, isLoading: trendingLoading } = useQuery({
+    queryKey: ["songs", "trending", trendingPage],
+    queryFn: () => songApi.fetchAll({ page: trendingPage, limit: 20 }),
+    keepPreviousData: true,
+  });
+
+  const { data: similarSongsData, isLoading: similarLoading } = useQuery({
+    queryKey: ["songs", "similar", randomArtist?._id, similarPage],
+    queryFn: () => songApi.fetchAll({ page: similarPage, limit: 10 }),
+    keepPreviousData: true,
+  });
 
   useEffect(() => {
-    dispatch(fetchAllSongs({ type: "recent", page: recentPage, limit: 10 })).then((res) => {
-      if (res.payload?.songs) {
-        setRecentSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
-      }
-    });
-  }, [dispatch, recentPage]);
-
-  useEffect(() => {
-    dispatch(fetchAllSongs({ type: "trending", page: trendingPage, limit: 20 })).then((res) => {
-      if (res.payload?.songs) {
-        setTrendingSongs((prev) => {
-          const seen = new Set(prev.map((s) => s._id));
-          const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-          return [...prev, ...newSongs];
-        });
-      }
-    });
-  }, [dispatch, trendingPage]);
-
-  useEffect(() => {
-    if (randomArtist?._id) {
-      dispatch(
-        fetchAllSongs({
-          type: "similar",
-          artistId: randomArtist._id,
-          page: similarPage,
-          limit: 10,
-        })
-      ).then((res) => {
-        if (res.payload?.songs) {
-          setSimilarSongs((prev) => {
-            const seen = new Set(prev.map((s) => s._id));
-            const newSongs = res.payload.songs.filter((s) => !seen.has(s._id));
-            return [...prev, ...newSongs];
-          });
-        }
+    if (recentSongsData?.songs) {
+      setRecentSongs((prev) => {
+        const seen = new Set(prev.map((s) => s._id));
+        const newSongs = recentSongsData.songs.filter((s) => !seen.has(s._id));
+        return [...prev, ...newSongs];
       });
     }
-  }, [dispatch, similarPage, randomArtist]);
+  }, [recentSongsData]);
 
   useEffect(() => {
-    if (!randomArtist && songs.length > 0 && artists.length > 0) {
+    if (trendingSongsData?.songs) {
+      setTrendingSongs((prev) => {
+        const seen = new Set(prev.map((s) => s._id));
+        const newSongs = trendingSongsData.songs.filter((s) => !seen.has(s._id));
+        return [...prev, ...newSongs];
+      });
+    }
+  }, [trendingSongsData]);
+
+  useEffect(() => {
+    if (similarSongsData?.songs) {
+      setSimilarSongs((prev) => {
+        const seen = new Set(prev.map((s) => s._id));
+        const newSongs = similarSongsData.songs.filter((s) => !seen.has(s._id));
+        return [...prev, ...newSongs];
+      });
+    }
+  }, [similarSongsData]);
+
+  useEffect(() => {
+    if (!randomArtist && recentSongs.length > 0 && artists.length > 0) {
       const getValidArtist = () => {
         const shuffled = [...artists].sort(() => 0.5 - Math.random());
         for (let artist of shuffled) {
-          const hasSongs = songs.some(
+          const hasSongs = recentSongs.some(
             (song) => song.artist === artist._id || song.artist?._id === artist._id
           );
           if (hasSongs) return artist;
@@ -111,7 +105,7 @@ const Browse = () => {
       };
       setRandomArtist(getValidArtist());
     }
-  }, [songs, artists, randomArtist]);
+  }, [recentSongs, artists, randomArtist]);
 
   const handleScroll = (ref) => {
     if (ref.current) {
@@ -130,10 +124,10 @@ const Browse = () => {
     songColumns.push(trendingSongs.slice(i, i + chunkSize));
   }
 
-  const createObserverRef = (key, pageState, setPageState) =>
+  const createObserverRef = (key, pageState, setPageState, isLoading, totalPages = 1) =>
     useCallback(
       (node) => {
-        if (status === "loading") return;
+        if (isLoading) return;
         if (observerRefs[key].current) observerRefs[key].current.disconnect();
         observerRefs[key].current = new IntersectionObserver((entries) => {
           if (entries[0].isIntersecting && pageState < totalPages) {
@@ -142,12 +136,12 @@ const Browse = () => {
         });
         if (node) observerRefs[key].current.observe(node);
       },
-      [status, pageState, totalPages]
+      [isLoading, pageState, totalPages]
     );
 
-  const recentLastRef = createObserverRef("recent", recentPage, setRecentPage);
-  const similarLastRef = createObserverRef("similar", similarPage, setSimilarPage);
-  const trendingLastRef = createObserverRef("trending", trendingPage, setTrendingPage);
+  const recentLastRef = createObserverRef("recent", recentPage, setRecentPage, recentLoading, recentSongsData?.totalPages || 1);
+  const similarLastRef = createObserverRef("similar", similarPage, setSimilarPage, similarLoading, similarSongsData?.totalPages || 1);
+  const trendingLastRef = createObserverRef("trending", trendingPage, setTrendingPage, trendingLoading, trendingSongsData?.totalPages || 1);
 
   const genreData = [
     {
@@ -205,7 +199,7 @@ const Browse = () => {
             ref={recentScrollRef}
             className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
           >
-            {status === "loading" && recentSongs.length === 0 ? (
+            {recentLoading && recentSongs.length === 0 ? (
               [...Array(10)].map((_, idx) => (
                 <div
                   key={`recent-skeleton-${idx}`}
@@ -320,7 +314,7 @@ const Browse = () => {
                 ref={similarScrollRef}
                 className="flex gap-4 overflow-x-auto pb-2 no-scrollbar min-h-[160px]"
               >
-                {similarSongs.length === 0 && status === "loading" ? (
+                {similarSongs.length === 0 && similarLoading ? (
                   [...Array(10)].map((_, idx) => (
                     <div
                       key={`similar-loading-${idx}`}
@@ -360,7 +354,7 @@ const Browse = () => {
             className="w-full overflow-x-auto no-scrollbar min-h-[280px]"
           >
             <div className="flex md:gap-8 gap-32">
-              {status === "loading" && trendingSongs.length === 0 ? (
+              {trendingLoading && trendingSongs.length === 0 ? (
                 [...Array(5)].map((_, idx) => (
                   <div
                     key={`trending-skeleton-${idx}`}

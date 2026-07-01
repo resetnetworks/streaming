@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -13,12 +13,10 @@ import AllTracksSection from "../../components/user/Home/AllTracksSection";
 import SubscribeModal from "../../components/user/SubscribeModal";
 import MatchingGenreSection from "../../components/user/Home/MatchingGenreSection";
 import RoleUpdateModal from "../../components/user/RoleUpdateModal";
-import { fetchAllArtists, fetchRandomArtistWithSongs } from "../../features/artists/artistsSlice";
 import GenreSection from "../../components/user/Home/GenreSection";
 import ArtistSection from "../../components/user/Home/ArtistSection";
 
 const Home = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   
 
@@ -29,11 +27,6 @@ const Home = () => {
 
   const currentUser = useSelector((state) => state.auth.user);
 
-
-  useEffect(() => {
-    dispatch(fetchAllArtists());
-    dispatch(fetchRandomArtistWithSongs({ page: 1, limit: 10 }));
-  }, [dispatch]);
 
   useEffect(() => {
     const pendingToken = localStorage.getItem("pendingInviteToken");

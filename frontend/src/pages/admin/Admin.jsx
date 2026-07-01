@@ -1,9 +1,4 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-
-import {
-  selectAllArtists,
-} from '../../features/artists/artistsSelectors';
 
 import AdminLayout from './AdminLayout';
 import Dashboard from './Dashboard';
@@ -13,9 +8,6 @@ import AdminPaymentRequests from './AdminPaymentRequests';
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const artists = useSelector(selectAllArtists);
-
-
   const renderContent = () => {
     switch (activeTab) {
       case 'artists':
@@ -24,7 +16,7 @@ const Admin = () => {
       case 'payments':
         return <AdminPaymentRequests />;
       default:
-        return <Dashboard artists={artists} />;
+        return <Dashboard />;
     }
   };
 

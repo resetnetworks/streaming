@@ -3,8 +3,10 @@ import axios from "../utills/axiosInstance";
 
 export const artistDashboardApi = {
   // Get artist dashboard profile
-  fetchDashboardProfile: async () => {
-    const res = await axios.get("/artists/profile/me");
+  fetchDashboardProfile: async (workspaceId) => {
+    const res = await axios.get("/artists/profile/me", {
+      headers: workspaceId ? { "x-workspace-id": workspaceId } : {},
+    });
     return res.data.data;
   },
 

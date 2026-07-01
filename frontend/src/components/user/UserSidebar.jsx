@@ -10,8 +10,6 @@ import { FaShoppingCart } from "react-icons/fa";
 import Player from "./Player";
 
 import { useSelector } from "react-redux";
-import { selectAllSongs } from "../../features/songs/songSelectors.js"; // Adjust path as needed
-
 const menuItems = [
   { name: "home", icon: <RxDashboard />, path: "/home" },
   { name: "artists", icon: <FaRegUser />, path: "/artists" },
@@ -21,7 +19,6 @@ const menuItems = [
 ];
 
 const UserSidebar = () => {
-  const songs = useSelector(selectAllSongs);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {

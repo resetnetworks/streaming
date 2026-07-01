@@ -6,9 +6,10 @@ import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../features/auth/authSelectors";
 import ProfileEditForm from "./ProfileEditForm";
 
-const ProfileDetailSection = () => {
+const ProfileDetailSection = ({ workspace }) => {
   const user = useSelector(selectCurrentUser);
-  const { data: artistProfile, isLoading: profileLoading } = useArtistProfile();
+  const workspaceId = workspace?.workspaceId;
+  const { data: artistProfile, isLoading: profileLoading } = useArtistProfile(workspaceId);
   const { mutate: updateProfile, isLoading: isUpdating } = useUpdateArtistProfile();
   
   const [showEditForm, setShowEditForm] = useState(false);

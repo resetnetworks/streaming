@@ -545,3 +545,13 @@ input[type="range"].neon-range::-moz-range-thumb {
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
 }
+
+/* Sonner Toast: Standard right-aligned close button styling */
+[data-close-button] {
+  left: auto !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  position: absolute !important;
+  opacity: 1 !important;
+}
