@@ -306,7 +306,7 @@ useEffect(() => {
             />
           </Routes>      
         </Suspense>
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="top-center" closeButton />
         <RoleUpdateModal />
       </BrowserRouter>
 
