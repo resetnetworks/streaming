@@ -65,7 +65,7 @@ const clearAuthFromLocal = () => {
   localStorage.clear();
   sessionStorage.clear();
   if (typeof window !== 'undefined' && window.queryClient) {
-    window.queryClient.clear();
+    window.queryClient.resetQueries();
   }
 };
 

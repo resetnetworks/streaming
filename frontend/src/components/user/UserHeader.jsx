@@ -97,7 +97,7 @@ const UserHeader = () => {
 
   const handleLogout = async () => {
     setOpen(false);
-    queryClient.clear(); // Clear React Query cache on logout to prevent state leakage
+    queryClient.resetQueries(); // Reset and refetch React Query cache on logout to refresh public data
     await forceLogout()
     await dispatch(logoutUser());
     toast.success("Logged out successfully");
