@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState } from "react";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { useNavigate } from "react-router-dom";
 import { setSelectedSong, play } from "../../features/playback/playerSlice";
@@ -16,12 +16,6 @@ const Purchases = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
-  // यह state और ref वैसे ही रहेंगे (अप्रयुक्त को हटाया जा सकता है, पर कोड तोड़ने से बचने के लिए रखते हैं)
-  const [page, setPage] = useState(1);
-  const [, setLibrarySongs] = useState([]);
-  const recentScrollRef = useRef(null);
-  const observerRef = useRef();
-
   const {
     purchases,
     subscriptions,
@@ -36,27 +30,11 @@ const Purchases = () => {
   const albumsScrollRef = useRef(null);
 
   const selectedSong = useSelector((state) => state.player.selectedSong);
-  const allSongsStatus = useSelector((state) => state.songs.status);
-  const totalPages = useSelector((state) => state.songs.totalPages);
 
   const handlePlaySong = (song) => {
     dispatch(setSelectedSong(song));
     dispatch(play());
   };
-
-  const lastSongRef = useCallback(
-    (node) => {
-      if (allSongsStatus === "loading") return;
-      if (observerRef.current) observerRef.current.disconnect();
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && page < totalPages) {
-          setPage((prev) => prev + 1);
-        }
-      });
-      if (node) observerRef.current.observe(node);
-    },
-    [allSongsStatus, page, totalPages]
-  );
 
   const handleArtistsScroll = (direction = "right") => {
     if (!artistsScrollRef.current) return;
