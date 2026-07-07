@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { LuMaximize2, LuMinimize2 } from 'react-icons/lu';
 
 // Dynamic icon creator based on region importance
 const createIcon = (zoomLevel, importance = 'medium') => {
@@ -83,10 +84,11 @@ const Map = () => {
         <div className="relative w-full h-full">
           <button 
             onClick={handleCloseFullscreen}
-            className="absolute top-4 right-4 bg-white text-black rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-gray-200 transition-colors"
+            className="absolute top-4 right-4 bg-gray-900/80 hover:bg-gray-900 text-white rounded-lg p-2.5 shadow-lg border border-gray-700/50 hover:scale-105 transition-all duration-200 cursor-pointer"
             style={{ zIndex: 1000 }}
+            title="Exit Fullscreen"
           >
-            ✕
+            <LuMinimize2 className="w-5 h-5" />
           </button>
           <MapContainer 
             center={[23.61, 78.23]}
@@ -94,6 +96,8 @@ const Map = () => {
             className='w-full h-full'
             zoomControl={true}
             attributionControl={false}
+            scrollWheelZoom={true}
+            dragging={true}
           >
             <ZoomHandler onZoomChange={setZoomLevel} />
             <TileLayer
@@ -120,6 +124,7 @@ const Map = () => {
           
           .leaflet-container {
             background: transparent !important;
+            cursor: default !important;
           }
           
           .leaflet-control-attribution {
@@ -145,6 +150,9 @@ const Map = () => {
             className='w-full h-full rounded-[10px]'
             zoomControl={false}
             attributionControl={false}
+            scrollWheelZoom={true}
+            dragging={false}
+            doubleClickZoom={false}
           >
             <ZoomHandler onZoomChange={setZoomLevel} />
             <TileLayer
@@ -158,13 +166,6 @@ const Map = () => {
               />
             ))}
           </MapContainer>
-          
-          {/* Overlay with click hint */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-300">
-            <div className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-sm opacity-0 hover:opacity-100 transition-opacity duration-300">
-              Click to view fullscreen
-            </div>
-          </div>
         </div>
       </div>
 
@@ -179,6 +180,7 @@ const Map = () => {
         
         .leaflet-container {
           background: transparent !important;
+          cursor: pointer !important;
         }
         
         .leaflet-control-zoom {
