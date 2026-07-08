@@ -1,7 +1,7 @@
 import React from "react";
 import IconHeader from "../../user/IconHeader";
 import MobileNavBar from "../../user/MobileNavBar";
-import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers } from "react-icons/fa";
+import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers, FaAd } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
 import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
@@ -14,6 +14,7 @@ const menuItems = [
   { name: "uploads", icon: <FiMusic size={20} strokeWidth={1.5} />, permission: "uploadSong" },
   { name: "revenue", icon: <FaWallet size={20} />, permission: "viewPayments" },
   { name: "dashboard", icon: <RxDashboard size={20} />, permission: "viewAnalytics" },
+  { name: "adverts", icon: <FaAd size={20} />, permission: "viewAnalytics" },
   { name: "team", icon: <FaUsers size={20} />, permission: "manageTeam" },
   // { name: "insights", icon: <FaChartLine size={18} /> },
 ];

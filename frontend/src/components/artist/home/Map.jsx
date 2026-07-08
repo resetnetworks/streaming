@@ -137,10 +137,10 @@ const Map = () => {
 
   // Normal map component
   return (
-    <>
+    <div className="w-full px-1">
       <h2 className='text-white text-2xl mt-4 font-semibold'>top countries/regions</h2>
       <div 
-        className="mt-4 w-[90vw] h-[301px] rounded-[12px] p-[1px] bg-gradient-to-br from-white to-[#0c0d0d] cursor-pointer"
+        className="mt-4 w-full h-[301px] rounded-[12px] p-[1px] bg-gradient-to-br from-white to-[#0c0d0d] cursor-pointer"
         onClick={handleMapClick}
       >
         <div className="w-full h-full rounded-[10px] relative overflow-hidden bg-gradient-to-br from-[#1e293b] to-[#0f172a]">
@@ -191,7 +191,7 @@ const Map = () => {
           display: none !important;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 
