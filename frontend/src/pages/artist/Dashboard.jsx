@@ -15,12 +15,14 @@ import { getMyMonetizationSetupStatus } from "../../features/monetization/moneti
 import { useQueryClient } from "@tanstack/react-query";
 import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
 import TeamComponent from "../../components/artist/team/TeamComponent";
+import AdvertsComponent from "../../components/artist/adverts/AdvertsComponent";
 
 // Static tab components (no props needed)
 const tabComponents = {
   profile: <ProfileComponent />,
   dashboard: <HomeComponent />,
   revenue: <ArtistDashboardRevenue />,
+  adverts: <AdvertsComponent />,
 };
 
 export default function Dashboard() {
@@ -48,7 +50,7 @@ export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState(() => {
     if (typeof window !== "undefined") {
       const savedTab = localStorage.getItem("dashboardSelectedTab");
-      const validTabs = ["profile", "dashboard", "uploads", "revenue", "team"];
+      const validTabs = ["profile", "dashboard", "uploads", "revenue", "team", "adverts"];
       return validTabs.includes(savedTab) ? savedTab : "profile";
     }
     return "profile";

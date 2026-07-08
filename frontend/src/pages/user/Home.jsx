@@ -18,7 +18,7 @@ import ArtistSection from "../../components/user/Home/ArtistSection";
 
 const Home = () => {
   const navigate = useNavigate();
-  
+
 
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [modalArtist, setModalArtist] = useState(null);
@@ -57,42 +57,42 @@ const Home = () => {
 
   return (
     <>
-<PageSEO
-  title="Reset Music – Discover Tracks, Albums & Stream Effortlessly"
-  description="Stream new tracks, albums, and curated playlists. Discover featured artists and genres. Enjoy exclusive music as a Reset Music member."
-  canonicalUrl="https://musicreset.com/home"
-  structuredData={{
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Reset Music Home",
-    "description": "Protected streaming dashboard for Reset Music. Access tracks, albums, playlists, and featured artists as a registered member.",
-    "url": "https://musicreset.com/home",
-    "mainEntity": {
-      "@type": "WebApplication",
-      "name": "Reset Music Member Dashboard",
-      "applicationCategory": "Music Streaming",
-      "operatingSystem": "Web Browser",
-      "featureList": [
-        "Stream tracks and albums",
-        "Access curated playlists",
-        "Discover top genres",
-        "Manage music subscriptions",
-        "Personalized recommendations"
-      ]
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Reset Music",
-      "url": "https://musicreset.com/home"
-    },
-    "potentialAction": {
-      "@type": "ViewAction",
-      "target": "https://musicreset.com/",
-      "name": "Open Member Streaming Dashboard"
-    }
-  }}
-  noIndex={false}
-/>
+      <PageSEO
+        title="Reset Music – Discover Tracks, Albums & Stream Effortlessly"
+        description="Stream new tracks, albums, and curated playlists. Discover featured artists and genres. Enjoy exclusive music as a Reset Music member."
+        canonicalUrl="https://musicreset.com/home"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Reset Music Home",
+          "description": "Protected streaming dashboard for Reset Music. Access tracks, albums, playlists, and featured artists as a registered member.",
+          "url": "https://musicreset.com/home",
+          "mainEntity": {
+            "@type": "WebApplication",
+            "name": "Reset Music Member Dashboard",
+            "applicationCategory": "Music Streaming",
+            "operatingSystem": "Web Browser",
+            "featureList": [
+              "Stream tracks and albums",
+              "Access curated playlists",
+              "Discover top genres",
+              "Manage music subscriptions",
+              "Personalized recommendations"
+            ]
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Reset Music",
+            "url": "https://musicreset.com/home"
+          },
+          "potentialAction": {
+            "@type": "ViewAction",
+            "target": "https://musicreset.com/",
+            "name": "Open Member Streaming Dashboard"
+          }
+        }}
+        noIndex={false}
+      />
 
 
       <UserHeader />
