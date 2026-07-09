@@ -78,13 +78,6 @@ const Footer = () => {
                 Privacy Policy
               </Link>
               <Link
-                to="/careers"
-                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
-                style={{ fontFamily: "Jura" }}
-              >
-                Careers
-              </Link>
-              <Link
                 to="/data-deletion"
                 className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
                 style={{ fontFamily: "Jura" }}

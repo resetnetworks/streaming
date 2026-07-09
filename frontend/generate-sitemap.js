@@ -36,7 +36,6 @@ const staticPages = [
 
   { url: "/about-us", changefreq: "monthly", priority: 0.8 },
   { url: "/contact-us", changefreq: "monthly", priority: 0.7 },
-  { url: "/careers", changefreq: "weekly", priority: 0.6 },
 
   { url: "/privacy-policy", changefreq: "monthly", priority: 0.5 },
   { url: "/terms-and-conditions", changefreq: "monthly", priority: 0.5 },
