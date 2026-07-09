@@ -50,7 +50,6 @@ export const LandingPage = lazy(() => import("../pages/user/LandingPage"));
 export const TermsAndConditions = lazy(() => import("../pages/user/TermsAndConditions"));
 export const About = lazy(() => import("../pages/user/About"));
 export const CancellationRefundPolicy = lazy(() => import("../pages/user/CancellationRefundPolicy"));
-export const Career = lazy(() => import("../pages/user/Career"));
 export const ArtistDetails = lazy(() => import("../pages/user/ArtistDetails"));
 export const Song = lazy(() => import("../pages/user/Song"));
 export const ReportIssue = lazy(() => import("../pages/user/ReportIssue"));

@@ -126,7 +126,6 @@ useEffect(() => {
             <Route path="/contact-us" element={<Pages.Help />} />
             <Route path="/data-deletion" element={<Pages.DataDeletion />} />
             <Route path="/privacy-policy" element={<Pages.PrivacyPolicy />} />
-            <Route path="/careers" element={<Pages.Career />} />
             <Route path="/artist-details" element={<Pages.ArtistDetails />} />
             <Route path="/report-issue" element={<Pages.ReportIssue />} />
             <Route path="/accept-invite" element={<Pages.AcceptInvite />} />
