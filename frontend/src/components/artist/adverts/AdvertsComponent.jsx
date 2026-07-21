@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  MdCampaign, 
-  MdTrendingUp, 
-  MdMouse, 
-  MdShowChart, 
-  MdAttachMoney, 
-  MdAdd, 
-  MdSearch, 
-  MdImage, 
-  MdPlayArrow, 
-  MdPause, 
-  MdCloudUpload, 
+import {
+  MdCampaign,
+  MdTrendingUp,
+  MdMouse,
+  MdShowChart,
+  MdAttachMoney,
+  MdAdd,
+  MdSearch,
+  MdImage,
+  MdPlayArrow,
+  MdPause,
+  MdCloudUpload,
   MdArrowBack,
   MdInfo,
   MdAccountBalanceWallet,
@@ -323,7 +323,7 @@ const AdvertsComponent = () => {
   const toggleGenre = (genre) => {
     setForm(prev => {
       const exists = prev.genres.includes(genre);
-      const newGenres = exists 
+      const newGenres = exists
         ? prev.genres.filter(g => g !== genre)
         : [...prev.genres, genre];
       return { ...prev, genres: newGenres };
@@ -339,22 +339,7 @@ const AdvertsComponent = () => {
 
   return (
     <div className="p-4 md:p-6 font-jura select-none relative min-h-[500px]">
-      
-      {/* Glassmorphism Lock Overlay */}
-      <div className="absolute inset-0 bg-[#020216]/65 backdrop-blur-[6px] z-[999] flex flex-col items-center justify-center text-center p-6 select-none pointer-events-auto">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#3380FF]/20 to-[#4DB3FF]/20 border border-[#4DB3FF]/40 flex items-center justify-center mb-4 shadow-lg shadow-[#4DB3FF]/10 animate-pulse">
-          <svg className="w-8 h-8 text-[#4DB3FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <h3 className="text-white text-xl font-bold tracking-wider font-jura">Ad Campaign Manager in Development</h3>
-        <p className="text-gray-300 text-xs md:text-sm mt-2 max-w-sm font-medium leading-relaxed">
-          The frontend mockup is ready. Full wallet deposits and advertising campaigns will be unlocked once backend API integration is completed.
-        </p>
-        <span className="mt-4 px-3 py-1 bg-[#3380FF]/15 border border-[#3380FF]/30 text-[#4DB3FF] text-[10px] font-black uppercase tracking-widest rounded-full">
-          Mock View Mode Only
-        </span>
-      </div>
+
 
       {/* 1. Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -411,7 +396,7 @@ const AdvertsComponent = () => {
           >
             {/* 2. Symmetrical Row of 5 Small Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-              
+
               {/* Card 1: Prepaid Balance (Stripe Top Up) */}
               <div className="relative p-5 rounded-xl bg-gradient-to-br from-[#0F3272]/20 to-[#0A0A23] border border-[#4DB3FF]/30 hover:border-[#4DB3FF]/50 transition-all duration-300 shadow-md flex flex-col justify-between h-full min-h-[142px]">
                 <div className="absolute top-4 right-4">
@@ -462,7 +447,7 @@ const AdvertsComponent = () => {
               {/* Card 4: Micro Speedometer (Visibility Velocity) */}
               <div className="relative p-5 rounded-xl bg-[#0A0A23] border border-gray-800 hover:border-[#4DB3FF]/30 transition-all duration-300 shadow-md flex flex-col justify-between h-full min-h-[142px]">
                 <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Visibility Velocity</div>
-                
+
                 <div className="flex items-center justify-between gap-3 mt-1">
                   {/* Micro SVG Gauge */}
                   <div className="relative w-20 h-10 flex items-end justify-center overflow-hidden flex-shrink-0">
@@ -492,7 +477,7 @@ const AdvertsComponent = () => {
                         className="transition-all duration-1000 ease-out"
                       />
                     </svg>
-                    
+
                     <div className="absolute bottom-0 w-2 h-2 bg-white rounded-full border border-[#4DB3FF] shadow z-20"></div>
 
                     <motion.div
@@ -537,9 +522,8 @@ const AdvertsComponent = () => {
             <div className="flex border-b border-gray-800/80 mb-6">
               <button
                 onClick={() => setActiveSubTab("campaigns")}
-                className={`px-6 py-3 font-semibold text-sm transition-all cursor-pointer relative ${
-                  activeSubTab === "campaigns" ? "text-white" : "text-gray-400 hover:text-white"
-                }`}
+                className={`px-6 py-3 font-semibold text-sm transition-all cursor-pointer relative ${activeSubTab === "campaigns" ? "text-white" : "text-gray-400 hover:text-white"
+                  }`}
               >
                 My Campaigns
                 {activeSubTab === "campaigns" && (
@@ -548,9 +532,8 @@ const AdvertsComponent = () => {
               </button>
               <button
                 onClick={() => setActiveSubTab("wallet")}
-                className={`px-6 py-3 font-semibold text-sm transition-all cursor-pointer flex items-center gap-2 relative ${
-                  activeSubTab === "wallet" ? "text-white" : "text-gray-400 hover:text-white"
-                }`}
+                className={`px-6 py-3 font-semibold text-sm transition-all cursor-pointer flex items-center gap-2 relative ${activeSubTab === "wallet" ? "text-white" : "text-gray-400 hover:text-white"
+                  }`}
               >
                 <MdHistory />
                 Wallet Transaction Ledger
@@ -628,15 +611,14 @@ const AdvertsComponent = () => {
                                 <div className="text-xs text-[#4DB3FF]/70 mt-0.5">({ctr}%)</div>
                               </td>
                               <td className="py-4 px-6 text-center">
-                                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-widest ${
-                                  camp.status === "ACTIVE" 
-                                    ? "bg-green-900/40 text-green-400 border border-green-700/30" 
-                                    : camp.status === "PAUSED" 
-                                    ? "bg-amber-900/40 text-amber-400 border border-amber-700/30"
-                                    : camp.status === "PENDING_REVIEW"
-                                    ? "bg-blue-950/40 text-[#4DB3FF] border border-[#4DB3FF]/30"
-                                    : "bg-gray-800 text-gray-400 border border-gray-700/30"
-                                }`}>
+                                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-widest ${camp.status === "ACTIVE"
+                                    ? "bg-green-900/40 text-green-400 border border-green-700/30"
+                                    : camp.status === "PAUSED"
+                                      ? "bg-amber-900/40 text-amber-400 border border-amber-700/30"
+                                      : camp.status === "PENDING_REVIEW"
+                                        ? "bg-blue-950/40 text-[#4DB3FF] border border-[#4DB3FF]/30"
+                                        : "bg-gray-800 text-gray-400 border border-gray-700/30"
+                                  }`}>
                                   {camp.status}
                                 </span>
                               </td>
@@ -690,20 +672,18 @@ const AdvertsComponent = () => {
                               {tx.date}
                             </td>
                             <td className="py-4 px-6">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                tx.type === "DEPOSIT"
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${tx.type === "DEPOSIT"
                                   ? "bg-green-950/40 text-green-400 border border-green-700/30"
                                   : "bg-red-950/40 text-red-400 border border-red-700/30"
-                              }`}>
+                                }`}>
                                 {tx.type}
                               </span>
                             </td>
                             <td className="py-4 px-6 text-gray-200">
                               {tx.description}
                             </td>
-                            <td className={`py-4 px-6 text-right font-bold ${
-                              tx.amount > 0 ? "text-green-400" : "text-red-400"
-                            }`}>
+                            <td className={`py-4 px-6 text-right font-bold ${tx.amount > 0 ? "text-green-400" : "text-red-400"
+                              }`}>
                               {tx.amount > 0 ? `+${formatCurrency(tx.amount)}` : `${formatCurrency(tx.amount)}`}
                             </td>
                           </tr>
@@ -766,11 +746,10 @@ const AdvertsComponent = () => {
                   <button
                     type="button"
                     onClick={() => setForm(prev => ({ ...prev, type: "banner", assetFile: null, assetPreviewUrl: "" }))}
-                    className={`flex items-center justify-center gap-3 p-4 rounded-xl border text-sm font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${
-                      form.type === "banner"
+                    className={`flex items-center justify-center gap-3 p-4 rounded-xl border text-sm font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${form.type === "banner"
                         ? "bg-[#0f3272]/30 border-[#4DB3FF] text-[#4DB3FF] shadow-md shadow-[#4DB3FF]/10"
                         : "bg-[#020216] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
-                    }`}
+                      }`}
                   >
                     <MdImage className="text-xl" />
                     Display Banner Ad
@@ -778,11 +757,10 @@ const AdvertsComponent = () => {
                   <button
                     type="button"
                     onClick={() => setForm(prev => ({ ...prev, type: "featured", assetFile: null, assetPreviewUrl: "" }))}
-                    className={`flex items-center justify-center gap-3 p-4 rounded-xl border text-sm font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${
-                      form.type === "featured"
+                    className={`flex items-center justify-center gap-3 p-4 rounded-xl border text-sm font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${form.type === "featured"
                         ? "bg-[#0f3272]/30 border-[#4DB3FF] text-[#4DB3FF] shadow-md shadow-[#4DB3FF]/10"
                         : "bg-[#020216] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
-                    }`}
+                      }`}
                   >
                     <MdStar className="text-xl" />
                     Featured Priority Placement
@@ -793,7 +771,7 @@ const AdvertsComponent = () => {
               {/* Targeting */}
               <div className="space-y-4">
                 <label className="block text-gray-300 text-sm font-semibold">Audience Targeting</label>
-                
+
                 <div className="flex gap-4">
                   <label className="inline-flex items-center cursor-pointer">
                     <input
@@ -828,11 +806,10 @@ const AdvertsComponent = () => {
                             type="button"
                             key={genre}
                             onClick={() => toggleGenre(genre)}
-                            className={`text-xs font-semibold py-1.5 px-3 rounded-full border transition-all cursor-pointer ${
-                              selected 
-                                ? "bg-[#3380FF] border-[#4DB3FF] text-white" 
+                            className={`text-xs font-semibold py-1.5 px-3 rounded-full border transition-all cursor-pointer ${selected
+                                ? "bg-[#3380FF] border-[#4DB3FF] text-white"
                                 : "bg-gray-900 border-gray-700 text-gray-400 hover:text-gray-300"
-                            }`}
+                              }`}
                           >
                             {genre}
                           </button>
@@ -908,7 +885,7 @@ const AdvertsComponent = () => {
                 <label className="block text-gray-300 text-sm font-semibold mb-2">
                   Ad Asset Upload * ({form.type === "featured" ? "Promotional Cover Artwork" : "Banner Image JPG/PNG, 728x90"})
                 </label>
-                
+
                 <div className="relative border-2 border-dashed border-gray-700 hover:border-[#4DB3FF]/50 rounded-xl p-6 bg-[#020216] text-center transition-all">
                   <input
                     type="file"
@@ -916,7 +893,7 @@ const AdvertsComponent = () => {
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  
+
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <MdCloudUpload className="text-4xl text-gray-500" />
                     <p className="text-gray-300 text-sm font-semibold">
@@ -952,15 +929,14 @@ const AdvertsComponent = () => {
                 >
                   Cancel
                 </button>
-                
+
                 <button
                   type="submit"
                   disabled={form.budgetLimit && parseFloat(form.budgetLimit) > walletBalance}
-                  className={`px-8 py-2.5 rounded-lg text-white font-bold tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-sm active:scale-95 ${
-                    (form.budgetLimit && parseFloat(form.budgetLimit) > walletBalance)
+                  className={`px-8 py-2.5 rounded-lg text-white font-bold tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-sm active:scale-95 ${(form.budgetLimit && parseFloat(form.budgetLimit) > walletBalance)
                       ? "bg-gray-700 border-gray-600 opacity-50 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                   style={{
                     background: !(form.budgetLimit && parseFloat(form.budgetLimit) > walletBalance) ? "linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)" : "none",
                     border: !(form.budgetLimit && parseFloat(form.budgetLimit) > walletBalance) ? "1px solid rgba(77, 179, 255, 0.4)" : "none"
@@ -980,7 +956,7 @@ const AdvertsComponent = () => {
 
               {form.type === "featured" ? (
                 /* Featured Content Search Boost Mockup Card */
-                <div 
+                <div
                   className="rounded-2xl p-6 relative overflow-hidden shadow-2xl border transition-all"
                   style={{
                     background: "rgba(2, 2, 22, 0.25)",
@@ -1047,7 +1023,7 @@ const AdvertsComponent = () => {
                 </div>
               ) : (
                 /* Banner Ad Glassmorphism Card */
-                <div 
+                <div
                   className="rounded-2xl p-6 relative overflow-hidden shadow-2xl border transition-all"
                   style={{
                     background: "rgba(2, 2, 22, 0.25)",
@@ -1063,11 +1039,11 @@ const AdvertsComponent = () => {
 
                   {/* Main Leaderboard Banner Preview Box */}
                   <div className="w-full aspect-[728/90] rounded-lg border border-gray-800 bg-gradient-to-r from-[#0E1525] to-black flex items-center justify-between p-4 relative overflow-hidden">
-                    
+
                     {form.assetPreviewUrl ? (
-                      <img 
-                        src={form.assetPreviewUrl} 
-                        alt="Banner Preview" 
+                      <img
+                        src={form.assetPreviewUrl}
+                        alt="Banner Preview"
                         className="absolute inset-0 w-full h-full object-cover opacity-60"
                       />
                     ) : (
@@ -1087,8 +1063,8 @@ const AdvertsComponent = () => {
                       </div>
                     </div>
 
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="relative z-10 text-[9px] uppercase font-bold tracking-wider text-white px-3 py-1.5 rounded bg-[#3380FF] hover:bg-[#3380FF]/80 transition-colors pointer-events-none"
                     >
                       Listen Now
@@ -1122,8 +1098,8 @@ const AdvertsComponent = () => {
       {/* 5. Glowing Top Up Modal */}
       {showTopUpModal && (
         <div className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <form 
-            onSubmit={handleTopUpSubmit} 
+          <form
+            onSubmit={handleTopUpSubmit}
             className="w-full max-w-md bg-[#0A0A23] rounded-2xl border border-[#4DB3FF]/40 p-6 space-y-6 shadow-2xl relative"
           >
             <div>
@@ -1143,18 +1119,17 @@ const AdvertsComponent = () => {
             {/* Amount Selection */}
             <div>
               <label className="block text-gray-300 text-xs font-semibold mb-2 uppercase tracking-wider">Select / Enter Amount *</label>
-              
+
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {[50, 100, 250].map(amt => (
                   <button
                     key={amt}
                     type="button"
                     onClick={() => setTopUpAmount(String(amt))}
-                    className={`py-2 text-sm font-semibold rounded border transition-all cursor-pointer ${
-                      topUpAmount === String(amt)
+                    className={`py-2 text-sm font-semibold rounded border transition-all cursor-pointer ${topUpAmount === String(amt)
                         ? "bg-[#3380FF] border-[#4DB3FF] text-white"
                         : "bg-[#020216] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
-                    }`}
+                      }`}
                   >
                     {formatCurrency(amt)}
                   </button>
