@@ -9,6 +9,7 @@ import Topbar from "../../components/artist/dashboard/Topbar";
 import SingleUpload from "./SingleUpload";
 import AlbumUpload from "./AlbumUpload";
 import MixUpload from "./MixUpload";
+import ImportUpload from "./ImportUpload";
 import { useDispatch } from "react-redux";
 import MonetizationModal from "../../components/artist/monetization/MonitizationModal";
 import { getMyMonetizationSetupStatus } from "../../features/monetization/monetizationSlice";
@@ -248,6 +249,15 @@ export default function Dashboard() {
           onCancel={handleCancelUpload}
           onComplete={handleUploadComplete}
           onBatchProgress={handleBatchProgress}
+        />
+      );
+    }
+
+    if (currentUploadPage === "import") {
+      return (
+        <ImportUpload
+          onCancel={handleCancelUpload}
+          onComplete={handleUploadComplete}
         />
       );
     }

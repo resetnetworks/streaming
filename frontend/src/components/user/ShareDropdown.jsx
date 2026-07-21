@@ -22,9 +22,19 @@ import { toast } from "sonner";
 /* ─────────────────────────────────────────────
    ShareModal — opens when "Share" is clicked
 ───────────────────────────────────────────── */
-const ShareModal = ({ isOpen, onClose, url, songName, singerName }) => {
+const ShareModal = ({ isOpen, onClose, url, songName, singerName, text }) => {
   const shareUrl = url || window.location.href;
-  const shareText = `Listen to "${songName}" by ${singerName}`;
+  
+  let shareText = text;
+  if (!shareText) {
+    if (songName && singerName) {
+      shareText = `Listen to "${songName}" by ${singerName}`;
+    } else if (songName) {
+      shareText = `Listen to "${songName}"`;
+    } else {
+      shareText = "Listen on Reset Music";
+    }
+  }
 
   const platforms = [
     {
@@ -318,6 +328,9 @@ const ShareDropdown = ({
   artistSlug,
   albumSlug,
   shareUrl,
+  url,                  // Added fallback
+  title,                // Added fallback
+  text,                 // Added fallback
   onAddToQueue,
   onPlayNext,
   isPlayerContext = false,
@@ -424,9 +437,10 @@ const ShareDropdown = ({
           setShareModalOpen(false);
           onClose();
         }}
-        url={shareUrl}
-        songName={songName}
+        url={shareUrl || url}
+        songName={songName || title}
         singerName={singerName}
+        text={text}
         className="right-0"
       />
     </>
