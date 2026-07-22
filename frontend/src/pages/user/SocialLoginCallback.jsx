@@ -38,7 +38,10 @@ const SocialLoginCallback = () => {
         const hasGenres = user.preferredGenres && user.preferredGenres.length > 0;
         
         const pendingToken = localStorage.getItem("pendingInviteToken");
-        if (pendingToken) {
+        if (user?.role === "artist") {
+          toast.success(`Welcome back ${user.name}!`);
+          navigate("/artist/dashboard");
+        } else if (pendingToken) {
           localStorage.removeItem("pendingInviteToken");
           toast.success(`Welcome ${user.name}! Redirecting to accept invitation...`);
           navigate(`/accept-invite?token=${pendingToken}`);

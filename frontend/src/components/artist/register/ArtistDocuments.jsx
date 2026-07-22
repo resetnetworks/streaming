@@ -44,36 +44,43 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
       return;
     }
 
-    files.forEach(file => {
-      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-      const maxSize = 5 * 1024 * 1024;
-      
-      if (!validTypes.includes(file.type)) {
-        toast.error(`${file.name}: Invalid file type. Please upload PDF, JPG, or PNG files.`);
-        return;
-      }
-      
-      if (file.size > maxSize) {
-        toast.error(`${file.name}: File too large. Max size is 5MB.`);
-        return;
-      }
+    if (documents.length >= 1) {
+      toast.error("You can only upload one Government ID. Remove the existing one first.");
+      e.target.value = '';
+      return;
+    }
 
-      const previewUrl = URL.createObjectURL(file);
-      
-      const document = {
-        previewUrl,
-        filename: file.name,
-        size: file.size,
-        mimeType: file.type,
-        docType: selectedDocType,
-        uploadedAt: new Date().toISOString(),
-        file: file
-      };
-      
-      addDocument(document);
-    });
+    const file = files[0];
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    const maxSize = 5 * 1024 * 1024;
+    
+    if (!validTypes.includes(file.type)) {
+      toast.error(`${file.name}: Invalid file type. Please upload PDF, JPG, or PNG files.`);
+      e.target.value = '';
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      toast.error(`${file.name}: File too large. Max size is 5MB.`);
+      e.target.value = '';
+      return;
+    }
 
+    const previewUrl = URL.createObjectURL(file);
+    
+    const document = {
+      previewUrl,
+      filename: file.name,
+      size: file.size,
+      mimeType: file.type,
+      docType: DOCUMENT_TYPES.GOV_ID,
+      uploadedAt: new Date().toISOString(),
+      file: file
+    };
+    
+    addDocument(document);
     e.target.value = '';
+    toast.success('Government ID uploaded successfully!');
   };
 
   const handleRemoveDocument = (index) => {
@@ -130,7 +137,7 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
     }
     
     if (documents.length === 0) {
-      newErrors.documents = 'At least one document is required';
+      newErrors.documents = 'Government ID is required';
     }
     
     if (!termsAccepted) {
@@ -270,56 +277,58 @@ const ArtistDocuments = ({ prevStep, submitForm }) => {
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Document Type *
-              </label>
-              <select
-                className="input-login"
-                value={selectedDocType}
-                onChange={(e) => setSelectedDocType(e.target.value)}
-                required
-              >
-                <option value={DOCUMENT_TYPES.GOV_ID}>Government ID (Passport/Driver's License)</option>
-                <option value={DOCUMENT_TYPES.PROOF_OF_ADDRESS}>Proof of Address (Utility Bill/Bank Statement)</option>
-                <option value={DOCUMENT_TYPES.TAX_ID}>Tax ID (PAN/GSTIN)</option>
-                <option value={DOCUMENT_TYPES.PORTFOLIO}>Portfolio/Music Credentials</option>
-                <option value={DOCUMENT_TYPES.OTHER}>Other Document</option>
-              </select>
-              <p className="text-xs text-slate-500 mt-1">
-                Select the type of document you're uploading
-              </p>
-            </div>
-
             <div className="mb-8">
               <h3 className="text-xl font-semibold text-slate-300 mb-4">
-                Required Documents *
+                Government ID Verification *
               </h3>
               <p className="text-slate-400 text-sm mb-4">
-ID proof is required for secure payouts and to ensure authenticity against AI-generated content.
+                Please upload a valid Government ID (Passport, National ID, or Driver's License) to verify your identity. This is required for secure payouts and content authenticity.
               </p>
               
-              <label className="block relative border-2 border-dashed border-slate-600 rounded-xl p-8 text-center bg-slate-800/30 hover:border-slate-500 transition-colors cursor-pointer">
+              <label className={`block relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
+                documents.length > 0 
+                  ? 'border-blue-500 bg-blue-950/15 shadow-md shadow-blue-500/5' 
+                  : 'border-slate-600 bg-slate-800/30 hover:border-slate-500'
+              }`}>
                 <input
                   type="file"
-                  multiple
+                  multiple={false}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={handleFileUpload}
+                  disabled={documents.length >= 1}
                 />
                 <div className="space-y-3">
-                  <div className="mx-auto w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <p className="text-slate-400">
-                    Drop documents here or{' '}
-                    <span className="text-blue-400 underline">browse</span>
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    PDF, JPG, PNG files only. Max 5MB per file.
-                  </p>
+                  {documents.length > 0 ? (
+                    <>
+                      <div className="mx-auto w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center border border-blue-500/30">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-blue-300 font-semibold tracking-wide text-sm">
+                        ✓ Government ID Selected
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Remove the current document below to upload a new one
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mx-auto w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-slate-400">
+                        Drop Government ID here or{' '}
+                        <span className="text-blue-400 underline">browse</span>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        PDF, JPG, PNG files only. Max 5MB.
+                      </p>
+                    </>
+                  )}
                 </div>
               </label>
               
@@ -328,38 +337,58 @@ ID proof is required for secure payouts and to ensure authenticity against AI-ge
               )}
 
               {documents.length > 0 && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-3">
                     <h4 className="text-sm font-medium text-slate-300">
-                      Uploaded Documents ({documents.length})
+                      Uploaded ID
                     </h4>
                     <span className="text-xs text-slate-500">
-                      Total: {(totalDocSize / (1024 * 1024)).toFixed(2)} MB
+                      Size: {(totalDocSize / (1024 * 1024)).toFixed(2)} MB
                     </span>
                   </div>
-                  <div className="space-y-2">
-                    {documents.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <div>
-                            <span className="text-slate-300 text-sm block">{doc.filename}</span>
-                            <span className="text-xs text-slate-500">
-                              {(doc.size / 1024).toFixed(1)} KB • {doc.docType.replace('_', ' ')}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveDocument(index)}
-                          className="text-red-400 hover:text-red-300 text-sm"
+                  <div className="space-y-3">
+                    {documents.map((doc, index) => {
+                      const isImage = doc.mimeType?.startsWith('image/');
+                      return (
+                        <div 
+                          key={index} 
+                          className="flex items-center justify-between bg-slate-800/40 border border-slate-700/50 p-3.5 rounded-xl hover:border-slate-600 transition-all shadow-sm"
                         >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            {isImage && doc.previewUrl ? (
+                              <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-700 bg-slate-800 shrink-0">
+                                <img src={doc.previewUrl} alt="" className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <span className="text-slate-200 text-sm font-semibold block truncate pr-4">
+                                {doc.filename}
+                              </span>
+                              <span className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                <span>{(doc.size / 1024).toFixed(1)} KB</span>
+                                <span className="text-slate-600">•</span>
+                                <span className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[9px] uppercase tracking-wider font-bold text-slate-300">
+                                  Government ID
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDocument(index)}
+                            className="text-red-400 hover:text-red-300 text-xs font-semibold px-3 py-1.5 bg-red-950/20 border border-red-500/10 hover:border-red-500/30 rounded-lg transition-all"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -408,14 +437,16 @@ ID proof is required for secure payouts and to ensure authenticity against AI-ge
                   </h4>
                   <div className="space-y-2">
                     {samples.map((sample, index) => (
-                      <div key={index} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                          </svg>
-                          <div>
-                            <span className="text-slate-300 text-sm block">{sample.title}</span>
-                            <span className="text-xs text-slate-500 truncate max-w-xs block">
+                      <div key={index} className="flex items-center justify-between bg-slate-800/40 border border-slate-700/50 p-3.5 rounded-xl hover:border-slate-600 transition-all shadow-sm">
+                        <div className="flex items-center space-x-3.5 min-w-0">
+                          <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-slate-200 text-sm font-semibold block truncate pr-4">{sample.title}</span>
+                            <span className="text-xs text-slate-400 truncate max-w-xs block mt-0.5">
                               {sample.url}
                             </span>
                           </div>
@@ -423,7 +454,7 @@ ID proof is required for secure payouts and to ensure authenticity against AI-ge
                         <button
                           type="button"
                           onClick={() => handleRemoveSample(index)}
-                          className="text-red-400 hover:text-red-300 text-sm"
+                          className="text-red-400 hover:text-red-300 text-xs font-semibold px-3 py-1.5 bg-red-950/20 border border-red-500/10 hover:border-red-500/30 rounded-lg transition-all"
                         >
                           Remove
                         </button>

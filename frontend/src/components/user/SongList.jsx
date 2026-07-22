@@ -117,7 +117,7 @@ const SongList = ({
         <img
           src={img}
           alt=""
-          className={`md:w-10 md:h-10 w-8 h-8 rounded-lg object-cover ${isSelected ? "shadow-[0_0_5px_1px_#3380FF]" : ""
+          className={`md:w-10 md:h-10 w-8 h-8 rounded-none object-cover ${isSelected ? "shadow-[0_0_5px_1px_#3380FF]" : ""
             }`}
         />
         <div className="mx-4 max-w-[160px] md:max-w-[300px] lg:max-w-[400px]">

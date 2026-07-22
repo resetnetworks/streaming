@@ -495,7 +495,7 @@ export default function Song() {
           "@type": "MusicRecording",
           "name": song.title,
           "description": song.description || `Listen to '${song.title}' by ${artistName} on Reset Music.`,
-          "image": song.coverImage || song.album?.coverImage || "https://musicreset.com/images/home.png",
+          "image": song.coverImage || song.album?.coverImage || "https://musicreset.com/images/home.jpg",
           "url": canonicalUrl,
           "datePublished": song.releaseDate,
           "duration": formatISO8601Duration(song.duration),
@@ -535,7 +535,7 @@ export default function Song() {
                 <img
                   src={song?.coverImage || song?.album?.coverImage}
                   alt={`${song.title} cover`}
-                  className="w-full h-auto aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300 cursor-pointer"
+                  className="w-full h-auto aspect-square object-cover rounded-none shadow-2xl transition-all duration-300 cursor-pointer"
                   onClick={handleCoverClick}
                 />
               </div>

@@ -20,7 +20,7 @@ const AlbumCard = memo(({ album, onClick }) => {
       className="min-w-[140px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group"
       onClick={() => onClick(album)}
     >
-      <div className="relative h-32 w-32 md:h-44 md:w-44 rounded-lg overflow-hidden bg-gray-700/50">
+      <div className="relative h-32 w-32 md:h-44 md:w-44 rounded-none overflow-hidden bg-gray-700/50">
         {album?.songs[0]?.coverImage && !imageError ? (
           <>
             <img

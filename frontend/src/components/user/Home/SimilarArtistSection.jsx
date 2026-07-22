@@ -19,7 +19,7 @@ const AlbumCard = ({ album, onClick, artistName, type }) => {
       className="min-w-[140px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group p-2"
       onClick={() => onClick(album)}
     >
-      <div className="relative md:w-48 md:h-48 h-32 w-32 rounded-lg overflow-hidden bg-gray-700/50">
+      <div className="relative md:w-48 md:h-48 h-32 w-32 rounded-none overflow-hidden bg-gray-700/50">
         {album.coverImage && !imageError ? (
           <>
             <img

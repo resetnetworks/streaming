@@ -9,7 +9,7 @@ const AlbumCard = ({
   price,
 }) => {
   return (
-    <div className="md:w-56 w-44 flex-shrink-0 cursor-pointer rounded-lg overflow-hidden shadow-lg relative">
+    <div className="md:w-56 w-44 flex-shrink-0 cursor-pointer rounded-none overflow-hidden shadow-lg relative">
       <div className="relative" onClick={onClick}>
         <img
           src={image}
