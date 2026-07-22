@@ -69,8 +69,8 @@ const PageSEO = ({
 
       <meta property="og:title" content={finalTitle} />
       <meta property="og:description" content={finalDescription} />
-      <meta property="og:image" content={twitterImage || "https://musicreset.com/images/home.png"} />
-      <meta name="twitter:image" content={twitterImage || "https://musicreset.com/images/home.png"} />
+      <meta property="og:image" content={twitterImage || "https://musicreset.com/images/home.jpg"} />
+      <meta name="twitter:image" content={twitterImage || "https://musicreset.com/images/home.jpg"} />
 
       {/* Twitter Card Meta Tags */}
       <meta name="twitter:card" content="summary_large_image" />

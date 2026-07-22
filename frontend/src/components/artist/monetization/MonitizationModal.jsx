@@ -176,11 +176,11 @@ const MonetizationModal = ({
               {/* Header */}
               <div className={`pb-3.5 border-b border-white/10 relative z-10 flex flex-col mb-4 ${isMandatory ? "items-center text-center w-full" : "items-start"}`}>
                 <h2 className="text-lg font-bold text-white tracking-wide uppercase font-['Jura']">
-                  {isMandatory ? "Setup Required" : "Monetization"}
+                  {isMandatory ? "Unlock Dashboard" : "Monetization"}
                 </h2>
                 <p className="text-[11px] text-gray-400 mt-0.5 font-sans">
                   {isMandatory
-                    ? "Configure subscription pricing to access dashboard"
+                    ? "Set your fan subscription price to activate your dashboard"
                     : "Configure subscription options to start earning"}
                 </p>
               </div>
@@ -189,21 +189,21 @@ const MonetizationModal = ({
               <div className="space-y-4 relative z-10">
                 {/* Mandatory Warning */}
                 {isMandatory && (
-                  <div className="p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-lg text-center">
-                    <p className="text-yellow-400 font-semibold text-[10px] uppercase font-['Jura'] tracking-wider mb-0.5">
-                      Required Action
+                  <div className="p-3 bg-blue-500/5 border border-blue-500/15 rounded-lg text-center">
+                    <p className="text-[#4DB3FF] font-semibold text-[10px] uppercase font-['Jura'] tracking-wider mb-0.5">
+                      Set Your Fan Pricing
                     </p>
                     <p className="text-gray-300 text-[11px] font-sans leading-normal">
-                      Monetization must be configured before accessing dashboard features.
+                      Unlock your dashboard by specifying what <strong className="text-white">your fans/listeners</strong> will pay to subscribe to your music. <strong className="text-[#4DB3FF]">All subscription earnings go directly to you.</strong>
                     </p>
                   </div>
                 )}
 
                 {/* Main Instruction Paragraph */}
                 <div className="text-[11px] text-gray-300 leading-relaxed font-sans">
-                  Set a subscription price that best reflects the value you offer your fans. Subscription pricing cannot currently be edited once published, so please choose carefully.
+                  Choose a subscription price that best reflects the value you offer your listeners. Since pricing cannot currently be changed once published, please select a price carefully.
                   <span className="text-[10px] text-gray-500 mt-1 block leading-normal">
-                    We're working on adding pricing updates and will make this available soon.
+                    We are currently building features to allow you to update pricing in the future.
                   </span>
                 </div>
 

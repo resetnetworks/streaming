@@ -33,9 +33,13 @@ const Login = () => {
 
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then(() => {
+      .then((loggedUser) => {
         toast.success("Login successful");
-        navigate("/home");
+        if (loggedUser?.role === "artist") {
+          navigate("/artist/dashboard");
+        } else {
+          navigate("/home");
+        }
       })
       .catch((err) => {
         if (err?.response?.status === 429) {

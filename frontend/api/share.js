@@ -249,7 +249,7 @@ export default async function handler(req, res) {
   // Default fallback values
   let title = "Reset Music";
   let description = "Stream ambient, electronic, and experimental music on Reset Music.";
-  let image = "https://musicreset.com/images/home.png"; // Fallback og-image
+  let image = "https://musicreset.com/images/home.jpg"; // Fallback og-image
   let pageType = "website";
   const BACKEND_URL = "https://api.musicreset.com";
 

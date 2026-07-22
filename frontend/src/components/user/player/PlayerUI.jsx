@@ -22,14 +22,14 @@ const GhostPlayer = () => {
     <div className="player-wrapper">
       <div className="player-card w-[15.25rem] py-4 px-4 flex flex-col items-center relative">
         <div
-          className="absolute inset-0 z-10 rounded-xl pointer-events-none"
+          className="absolute inset-0 z-10 rounded-none pointer-events-none"
           style={{
             background: "rgba(0,0,0,0.35)",
             backdropFilter: "blur(1.5px)",
           }}
         />
 
-        <div className="w-full aspect-square overflow-hidden rounded-md bg-gray-700/60 relative">
+        <div className="w-full aspect-square overflow-hidden rounded-none bg-gray-700/60 relative">
           <div className="absolute inset-0 flex items-center justify-center">
             <svg className="w-12 h-12 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" />
@@ -70,7 +70,7 @@ const GhostPlayer = () => {
 
         <div className="gradiant-line mt-4 opacity-30" />
 
-        <div className="w-full rounded-md p-3 mt-4 relative text-white shadow-md bg-transparent overflow-hidden opacity-40">
+        <div className="w-full rounded-none p-3 mt-4 relative text-white shadow-md bg-transparent overflow-hidden opacity-40">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-sm font-semibold tracking-wide text-gray-500">playing next</h2>
             {open ? (
@@ -84,7 +84,7 @@ const GhostPlayer = () => {
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between p-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-gray-700/60" />
+                    <div className="w-10 h-10 rounded-none bg-gray-700/60" />
                     <div className="flex flex-col gap-1">
                       <div className="w-16 h-2 rounded bg-gray-600/40" />
                     </div>
@@ -184,7 +184,7 @@ const PlayerUI = ({
     <div className="player-wrapper">
       <div className="player-card max-w-[15.25rem] py-4 px-4 flex flex-col items-center">
         {/* Album Art */}
-        <div className="w-full aspect-square overflow-hidden rounded-md relative">
+        <div className="w-full aspect-square overflow-hidden rounded-none relative">
           <img
             src={currentSong?.coverImage}
             className={`w-full h-full object-cover ${isDisplayOnly ? "opacity-80" : ""}`}
@@ -408,7 +408,7 @@ const PlayerUI = ({
         <div className="gradiant-line mt-4" />
 
         {/* Next Songs Queue */}
-        <div className="w-full rounded-md p-3 mt-4 max-h-52 relative text-white shadow-md bg-transparent overflow-hidden">
+        <div className="w-full rounded-none p-3 mt-4 max-h-52 relative text-white shadow-md bg-transparent overflow-hidden">
           <div className="absolute inset-0 z-0 pointer-events-none before:content-[''] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.15)_0%,_transparent_60%)]" />
           <div className="relative z-10">
             <div
@@ -424,7 +424,7 @@ const PlayerUI = ({
                 {nextSongs.map((song) => (
                   <div
                     key={song._id}
-                    className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-md p-1 transition ${
+                    className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-none p-1 transition ${
                       song._id === selectedSong?._id ? "bg-blue-800/40" : ""
                     }`}
                     onClick={() => handleNextSongClick(song)}
@@ -433,7 +433,7 @@ const PlayerUI = ({
                       <img
                         src={song?.coverImage || "/images/placeholder.png"}
                         alt=""
-                        className="w-10 h-10 rounded-md object-cover"
+                        className="w-10 h-10 rounded-none object-cover"
                       />
                       <div className="flex flex-col text-left">
                         <span className="font-medium text-[13px]">
