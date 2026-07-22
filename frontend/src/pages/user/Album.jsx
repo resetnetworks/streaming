@@ -527,7 +527,7 @@ export default function Album() {
                 <img
                   src={album?.coverImage}
                   alt="Album Cover"
-                  className="w-full rounded-lg shadow-2xl object-cover aspect-square"
+                  className="w-full rounded-none shadow-2xl object-cover aspect-square"
                 />
               </div>
             </div>
@@ -788,7 +788,7 @@ export default function Album() {
                 <img
                   src={album?.coverImage}
                   alt="Album Cover"
-                  className="w-full aspect-square object-cover rounded-xl shadow-2xl transition-all duration-300"
+                  className="w-full aspect-square object-cover rounded-none shadow-2xl transition-all duration-300"
                 />
               </div>
 

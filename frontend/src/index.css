@@ -238,7 +238,7 @@ select option {
 .player-wrapper {
   display: inline-block;
   padding: 1px;
-  border-radius: 10px;
+  border-radius: 0px;
 
   /* Transparent gradient edge */
   background: radial-gradient(circle at center,
@@ -248,7 +248,7 @@ select option {
 
 .player-card {
   border: none;
-  border-radius: 10px;
+  border-radius: 0px;
   background: rgba(2, 2, 22, 0.15);
   /* light glass background */
   color: white;

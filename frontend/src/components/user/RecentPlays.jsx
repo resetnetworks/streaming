@@ -50,7 +50,7 @@ const RecentPlays = React.forwardRef(
         onClick={handleCardClick}
       >
         <div
-          className={`relative md:w-48 md:h-48 h-32 w-32 rounded-lg overflow-hidden 
+          className={`relative md:w-48 md:h-48 h-32 w-32 rounded-none overflow-hidden 
             ${isSelected ? "border-2 border-blue-500 shadow-[0_0_8px_1px_#3b82f6]" : ""}`}
         >
           <img

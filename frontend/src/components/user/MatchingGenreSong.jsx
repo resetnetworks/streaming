@@ -57,7 +57,7 @@ const handlePlayClick = (e) => {
         className="min-w-[140px] md:min-w-[160px] mx-1 flex-shrink-0 cursor-pointer group"
       >
         {/* Image wrapper */}
-        <div className={`relative h-32 w-32 md:h-44 md:w-44 rounded-lg overflow-hidden transition-all duration-300
+        <div className={`relative h-32 w-32 md:h-44 md:w-44 rounded-none overflow-hidden transition-all duration-300
           ${isSelected || isPlaying ? "border-2 border-blue-500 shadow-[0_0_8px_1px_#3b82f6]" : ""}`}
         >
           <img
