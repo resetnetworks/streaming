@@ -10,6 +10,7 @@ import PageSEO from "../../components/PageSeo/PageSEO";
 import { useSelector } from "react-redux";
 import { selectIsAuthenticated, selectCurrentUser } from "../../features/auth/authSelectors";
 import { useMyApplication, useCheckUserArtistRole } from "../../hooks/api/useArtistApplications";
+import Loader from "../../components/Loader";
 
 export const ArtistApplicationFormContext = React.createContext();
 
@@ -208,7 +209,7 @@ const ArtistRegister = () => {
     if (!fetchLoading && !userCheckLoading && myApplication) {
       if (myApplication.status !== 'rejected') {
         setShowExistingApplication(true);
-        setCurrentStep(3); // Go directly to confirmation step
+        setCurrentStep(2); // Go directly to confirmation step
       } else if (myApplication.status === 'rejected') {
         setShowExistingApplication(false);
         if (isAuthenticated) {
@@ -315,10 +316,9 @@ const ArtistRegister = () => {
     // Show loading while checking user status or application status
     if (userCheckLoading || (fetchLoading && !skipApplicationCheck)) {
       return (
-        <div className="min-h-[60vh] flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <h2 className="text-xl font-bold text-white mb-2">Loading...</h2>
-          <p className="text-slate-400 text-sm">
+        <div className="min-h-[50vh] flex flex-col items-center justify-center">
+          <Loader noBg={true} />
+          <p className="text-slate-400 text-sm mt-4">
             {userCheckLoading ? 'Checking your artist status...' : 'Checking your application status...'}
           </p>
         </div>
@@ -356,6 +356,7 @@ const ArtistRegister = () => {
         <ArtistProfileDetails 
           nextStep={nextStep} 
           prevStep={prevStep} 
+          submitForm={submitForm}
         />
       );
     }
@@ -372,16 +373,10 @@ const ArtistRegister = () => {
           <ArtistProfileDetails 
             nextStep={nextStep} 
             prevStep={prevStep} 
+            submitForm={submitForm}
           />
         );
       case 2:
-        return (
-          <ArtistDocuments 
-            prevStep={prevStep} 
-            submitForm={submitForm} 
-          />
-        );
-      case 3:
         return (
           <ArtistConfirmation />
         );
@@ -422,8 +417,8 @@ const ArtistRegister = () => {
       }}>
         <IconHeader />
         <section className='text-white px-4'>
-          <h1 className="text-4xl text-center mt-4 md:mt-10">
-            <span className="text-blue-700">sign up, </span>as an artist
+          <h1 className="text-4xl text-center mt-4 md:mt-10 font-['Jura'] uppercase tracking-wider font-extrabold bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+            sign up as an artist
           </h1>
 
           {showProgressTracker && (

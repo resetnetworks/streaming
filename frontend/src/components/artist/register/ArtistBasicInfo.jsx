@@ -147,15 +147,24 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
   };
 
   return (
-    <div className="text-white sm:mt-auto mb-auto flex flex-col justify-around items-center">
+    <div className="text-white sm:mt-auto mb-auto flex flex-col justify-around items-center w-full max-w-[650px] mx-auto mt-6">
       <form
-        className="md:w-[650px] w-[95vw] rounded-t-lg md:py-6 md:px-12 py-3 px-6 flex items-center flex-col border-b-[3px] border-blue-800 bg-gradient-to-br from-[#0a0a23] to-[#0d1b3f] mt-6"
+        className="w-full rounded-[24px] p-8 mt-4 flex flex-col items-center"
+        style={{
+          background: 'linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%)',
+          boxShadow: `
+            12px 12px 40px rgba(0,0,0,0.7),
+            -8px -8px 30px rgba(59,130,246,0.08),
+            inset 1px 1px 1px rgba(255,255,255,0.05),
+            0 0 0 1px rgba(59,130,246,0.1)
+          `,
+        }}
         onSubmit={handleSubmit}
         noValidate
       >
         {/* Artist Name Field */}
-        <div className="w-full mb-1">
-          <label htmlFor="firstName" className="md:text-xl text-lg">
+        <div className="w-full mb-2">
+          <label htmlFor="firstName" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
             full name
           </label>
         </div>
@@ -175,14 +184,14 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
         </div>
         {/* Show name error only after field is touched/blurred */}
         {touched.firstName && formErrors.name && (
-          <p className="text-red-500 text-left w-full text-sm mt-1">
+          <p className="text-red-500 text-left w-full text-xs mt-1">
             {formErrors.name}
           </p>
         )}
 
         {/* Email Field */}
-        <div className="w-full mt-5 mb-1">
-          <label htmlFor="email" className="md:text-xl text-lg">
+        <div className="w-full mt-5 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
             email
           </label>
         </div>
@@ -202,14 +211,14 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
         </div>
         {/* Show email error only after field is touched/blurred */}
         {touched.email && formErrors.email && (
-          <p className="text-red-500 text-left w-full text-sm mt-1">
+          <p className="text-red-500 text-left w-full text-xs mt-1">
             {formErrors.email}
           </p>
         )}
 
         {/* Password Field */}
-        <div className="w-full mt-5 mb-1">
-          <label htmlFor="password" className="md:text-xl text-lg">
+        <div className="w-full mt-5 mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
             password
           </label>
         </div>
@@ -237,28 +246,32 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
 
         {/* Password criteria — only shown after user starts typing in password field */}
         {passwordTouched && (
-          <div className="text-sm mt-2 w-full flex flex-wrap gap-2">
-            <span className={passwordCriteria.length ? "text-green-500" : "text-red-500"}>
+          <div className="text-xs mt-3 w-full flex flex-wrap gap-2 text-slate-400">
+            <span className={passwordCriteria.length ? "text-green-500" : (touched.password && formErrors.password ? "text-red-400" : "text-slate-400")}>
               At least 8 characters
             </span>
-            <span className={passwordCriteria.lowercase ? "text-green-500" : "text-red-500"}>
+            <span className={passwordCriteria.lowercase ? "text-green-500" : (touched.password && formErrors.password ? "text-red-400" : "text-slate-400")}>
               • Lowercase
             </span>
-            <span className={passwordCriteria.uppercase ? "text-green-500" : "text-red-500"}>
+            <span className={passwordCriteria.uppercase ? "text-green-500" : (touched.password && formErrors.password ? "text-red-400" : "text-slate-400")}>
               • Uppercase
             </span>
-            <span className={passwordCriteria.number ? "text-green-500" : "text-red-500"}>
+            <span className={passwordCriteria.number ? "text-green-500" : (touched.password && formErrors.password ? "text-red-400" : "text-slate-400")}>
               • Number
             </span>
-            <span className={passwordCriteria.symbol ? "text-green-500" : "text-red-500"}>
+            <span className={passwordCriteria.symbol ? "text-green-500" : (touched.password && formErrors.password ? "text-red-400" : "text-slate-400")}>
               • Symbol
             </span>
           </div>
         )}
 
-        <div className="button-wrapper mt-6 shadow-sm shadow-black">
+        <div className="w-full max-w-[380px] mt-9 flex justify-center">
           <button
-            className="custom-button"
+            className="w-full py-3 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95"
+            style={{
+              background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+              boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+            }}
             type="submit"
             disabled={loading}
           >
@@ -268,14 +281,15 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
       </form>
 
       <p
-        className={`mt-4 text-center px-4 ${
+        className={`mt-6 text-center text-slate-400 ${
           loading ? "pointer-events-none opacity-50" : ""
         }`}
       >
         Already have an account?{" "}
         <a
           href="/login"
-          className="text-blue-400 hover:text-blue-300 underline transition-colors duration-200"
+          className="no-underline hover:underline hover:text-white style={{ color: '#4DB3FF' }} transition-colors duration-200"
+          style={{ color: '#4DB3FF' }}
         >
           Sign In
         </a>

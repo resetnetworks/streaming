@@ -245,46 +245,33 @@ const FavouriteGen = () => {
 
   return (
     <>
-    <section className="min-h-screen w-full flex flex-col items-center text-white">
+    <section className="min-h-screen w-full flex flex-col items-center bg-[#020216] text-white px-4">
       <IconHeader />
 
-      <h1 className="md:text-4xl text-3xl text-center mt-6 px-2">
-        Choose favourite genres
-        <span className="text-blue-700"> (at least three)</span>
+      <h1 className="text-4xl text-center mt-6 px-2 font-['Jura'] uppercase tracking-wider font-extrabold bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+        Choose favourite genres <span className="text-slate-400 lowercase text-2xl font-normal tracking-normal">(at least three)</span>
       </h1>
 
-      {/* Selection Counter */}
-      <div className="mt-4 text-center">
-        <p className={`text-lg font-semibold ${selected.length >= 3 ? 'text-green-400' : 'text-yellow-400'}`}>
-          Selected: {selected.length} / 3 minimum
-          {selected.length < 3 && (
-            <span className="block text-sm text-gray-300 mt-1">
-              Choose {3 - selected.length} more to continue
-            </span>
-          )}
-        </p>
-      </div>
-
-      <div className="flex md:w-[80%] w-full justify-center gap-6 flex-wrap py-8">
+      <div className="flex md:w-[80%] w-full justify-center gap-6 flex-wrap py-8 mt-6">
         {tags.map((tag) => {
           const isSelected = selected.includes(tag.id);
           return (
             <div
               key={tag.id}
-              className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
+              className="flex flex-col items-center cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95"
               onClick={() => handleSelection(tag.id)}
             >
               <div
                 className={`relative w-40 h-40 rounded-full overflow-hidden border-2 transition-all duration-300 bg-center bg-cover
                 ${
                   isSelected
-                    ? "border-[#2400FF] shadow-[inset_0_0_30px_rgba(36,0,255,0.7),0_0_15px_rgba(36,0,255,0.5)]"
-                    : "border-gray-700 border-2 hover:border-gray-500"
+                    ? "border-[#3380FF] shadow-[inset_0_0_30px_rgba(51,128,255,0.4),0_0_15px_rgba(51,128,255,0.3)]"
+                    : "border-slate-800 hover:border-slate-600"
                 }`}
                 style={{ backgroundImage: `url(${tag.image})` }}
               >
                 {isSelected && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-[#2400FF] rounded-t-full w-20 h-10 flex items-center justify-center shadow-lg z-20">
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-[#3380FF] rounded-t-full w-20 h-10 flex items-center justify-center shadow-lg z-20">
                     <IoMdCheckmark className="text-white text-3xl" />
                   </div>
                 )}
@@ -295,13 +282,15 @@ const FavouriteGen = () => {
         })}
       </div>
 
-      <div className="button-wrapper my-9 shadow-sm shadow-black">
+      <div className="w-full max-w-[380px] my-9 flex justify-center">
         <button
           onClick={handleSubmit}
           disabled={selected.length < 3 || loading}
-          className={`custom-button transition-all duration-300 ${
-            selected.length < 3 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-          }`}
+          className="w-full py-3 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 flex items-center justify-center gap-2"
+          style={{
+            background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+            boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+          }}
           title={
             selected.length < 3 
               ? `Please select ${3 - selected.length} more genre${3 - selected.length === 1 ? '' : 's'}` 

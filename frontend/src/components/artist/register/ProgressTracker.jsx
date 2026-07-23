@@ -6,13 +6,12 @@ import { MdCheck, MdHourglassEmpty, MdPerson, MdAccountCircle, MdDescription, Md
  * @param {number} currentStep - The current active step (0, 1, 2, or 3)
  */
 const ProgressTracker = ({ currentStep }) => {
-  const STEPS = 4; // Now 4 steps including account confirmation
+  const STEPS = 3; // 3 steps: Basic Info, Profile & ID, and Confirmation
 
   // Step labels and icons
   const stepConfig = [
     { label: "Basic Info", icon: <MdPerson className="w-3 h-3" /> },
-    { label: "Profile", icon: <MdAccountCircle className="w-3 h-3" /> },
-    { label: "Account", icon: <MdDescription className="w-3 h-3" /> },
+    { label: "Profile & ID", icon: <MdAccountCircle className="w-3 h-3" /> },
     { label: "Confirmation", icon: <MdVerifiedUser className="w-3 h-3" /> }
   ];
 
@@ -100,7 +99,7 @@ const ProgressTracker = ({ currentStep }) => {
       </div>
       
       {/* Status Message */}
-      {currentStep === 3 && (
+      {currentStep === 2 && (
         <div className="text-center mt-4">
           <div className="inline-flex items-center gap-2 bg-blue-900/30 border border-blue-700/50 rounded-lg px-4 py-2">
             <MdHourglassEmpty className="md:w-5 md:h-5 w-8 h-8 text-blue-400 animate-pulse" />

@@ -252,7 +252,13 @@ const ArtistHeroSection = ({
                 <div className="flex items-center sm:gap-3 flex-wrap">
                   <div className="flex items-center mt-1 text-gray-300 sm:text-sm text-xs">
                     <FiMapPin className="mr-2 text-sm" style={{ color: '#4DB3FF' }} />
-                    <span>{artist?.location || "Unknown City"}</span>
+                    <span>
+                      {artist?.location ? (
+                        artist.country ? `${artist.location}, ${artist.country}` : artist.location
+                      ) : (
+                        artist?.country || "Unknown Location"
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-center mt-1 text-gray-300 text-sm">
                     <HiUsers className="mr-2 text-sm" style={{ color: '#4DB3FF' }} />

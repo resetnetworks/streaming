@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { handleSocialLoginSuccess } from "../../features/auth/authSlice"; // 🔥 Use the new thunk
 import { toast } from "sonner";
-
+import Loader from "../../components/Loader";
 
 const SocialLoginCallback = () => {
   const navigate = useNavigate();
@@ -13,12 +13,10 @@ const SocialLoginCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        
         // Get URL parameters from backend redirect
         const urlParams = new URLSearchParams(window.location.search);
         const isNewUser = urlParams.get('newUser') === 'true';
         const error = urlParams.get('error');
-
 
         // Check for authentication errors first
         if (error) {
@@ -27,17 +25,14 @@ const SocialLoginCallback = () => {
           return;
         }
         
-        
         // 🔥 FIXED: Use the proper social login thunk
         const result = await dispatch(handleSocialLoginSuccess({ isNewUser })).unwrap();
-        
         const { user } = result;
-        
         
         // Determine where to redirect based on user status
         const hasGenres = user.preferredGenres && user.preferredGenres.length > 0;
-        
         const pendingToken = localStorage.getItem("pendingInviteToken");
+        
         if (user?.role === "artist") {
           toast.success(`Welcome back ${user.name}!`);
           navigate("/artist/dashboard");
@@ -49,7 +44,6 @@ const SocialLoginCallback = () => {
           // New user or user without genres - go to genre selection
           localStorage.setItem("justRegistered", "true");
           localStorage.setItem("registrationTime", Date.now().toString());
-          
           toast.success(`Welcome ${user.name}! Please select your favorite genres.`);
           navigate("/genres");
         } else {
@@ -57,16 +51,13 @@ const SocialLoginCallback = () => {
           toast.success(`Welcome back ${user.name}!`);
           navigate("/");
         }
-        
       } catch (error) {
         toast.error("Login failed. Please try again.");
-        
         // Clean up any partial data
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.removeItem("justRegistered");
         localStorage.removeItem("registrationTime");
-        
         navigate("/login");
       }
     };
@@ -80,20 +71,11 @@ const SocialLoginCallback = () => {
   }, [dispatch, navigate]);
 
   return (
-    <>
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-white text-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-6"></div>
-        <h2 className="text-2xl font-semibold mb-2">Completing Social Login...</h2>
-        <p className="text-gray-300 mb-4">Please wait while we authenticate your account</p>
-        
-        <div className="mt-4 text-sm text-gray-400 space-y-1">
-          <p>Verifying credentials...</p>
-          <p>Fetching your profile data...</p>
-        </div>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#020216] text-white">
+      <div className="flex flex-col items-center justify-center p-8 rounded-[24px] max-w-[450px] w-full text-center">
+        <Loader />
       </div>
     </div>
-    </>
   );
 };
 

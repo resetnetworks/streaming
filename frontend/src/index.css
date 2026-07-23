@@ -23,19 +23,8 @@ body {
   min-height: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
-  background:
-    radial-gradient(circle at top right,
-      rgba(29, 78, 216, 0.18) 0%,
-      transparent 45%),
-    radial-gradient(circle at bottom left,
-      rgba(37, 99, 235, 0.12) 0%,
-      transparent 40%),
-    linear-gradient(135deg,
-      #000000 0%,
-      #020817 35%,
-      #071226 70%,
-      #0A1930 100%);
-  background-attachment: fixed;
+  background-color: #020216;
+  background: #020216;
   color: white;
 }
 

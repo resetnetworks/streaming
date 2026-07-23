@@ -17,23 +17,28 @@ export const useArtistProfile = (workspaceId, options = {}) => {
   });
 };
 
-export const useUpdateArtistProfile = () => {
+export const useUpdateArtistProfile = (workspaceId) => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: artistDashboardApi.updateProfile,
     onMutate: async (profileData) => {
-      await queryClient.cancelQueries({ queryKey: artistDashboardKeys.profile() });
-      
-      const previousProfile = queryClient.getQueryData(artistDashboardKeys.profile());
-      
+      await queryClient.cancelQueries({
+        queryKey: [...artistDashboardKeys.profile(), workspaceId]
+      });
+
+      const previousProfile =
+        queryClient.getQueryData(
+          [...artistDashboardKeys.profile(), workspaceId]
+        );
+
       if (previousProfile) {
-        queryClient.setQueryData(artistDashboardKeys.profile(), {
+        queryClient.setQueryData([...artistDashboardKeys.profile(), workspaceId], {
           ...previousProfile,
           ...profileData,
         });
       }
-      
+
       return { previousProfile };
     },
     onError: (err, variables, context) => {
@@ -42,14 +47,21 @@ export const useUpdateArtistProfile = () => {
       }
     },
     onSuccess: (updatedArtist) => {
-      queryClient.setQueryData(artistDashboardKeys.profile(), updatedArtist);
+      queryClient.setQueryData(
+        [...artistDashboardKeys.profile(), workspaceId],
+        updatedArtist
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: [...artistDashboardKeys.profile(), workspaceId]
+      });
     },
   });
 };
 
 export const useUpdateProfileImage = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: artistDashboardApi.updateProfileImage,
     onMutate: async (file) => {
@@ -69,7 +81,7 @@ export const useUpdateProfileImage = () => {
 
 export const useUpdateCoverImage = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: artistDashboardApi.updateCoverImage,
     onMutate: async (file) => {
@@ -89,22 +101,22 @@ export const useUpdateCoverImage = () => {
 
 export const useUpdateFullProfile = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ textData, profileImage, coverImage }) => 
+    mutationFn: ({ textData, profileImage, coverImage }) =>
       artistDashboardApi.updateProfileWithImages(textData, profileImage, coverImage),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: artistDashboardKeys.profile() });
-      
+
       const previousProfile = queryClient.getQueryData(artistDashboardKeys.profile());
-      
+
       if (previousProfile && variables.textData) {
         queryClient.setQueryData(artistDashboardKeys.profile(), {
           ...previousProfile,
           ...variables.textData,
         });
       }
-      
+
       return { previousProfile };
     },
     onError: (err, variables, context) => {
@@ -118,20 +130,20 @@ export const useUpdateFullProfile = () => {
   });
 };
 
-export const useArtistDashboardMutations = () => {
-  const updateProfile = useUpdateArtistProfile();
-  const updateProfileImage = useUpdateProfileImage();
-  const updateCoverImage = useUpdateCoverImage();
-  const updateFullProfile = useUpdateFullProfile();
-  
+export const useArtistDashboardMutations = (workspaceId) => {
+  const updateProfile = useUpdateArtistProfile(workspaceId);
+  const updateProfileImage = useUpdateProfileImage(workspaceId);
+  const updateCoverImage = useUpdateCoverImage(workspaceId);
+  const updateFullProfile = useUpdateFullProfile(workspaceId);
+
   return {
     updateProfile: updateProfile.mutate,
     updateProfileImage: updateProfileImage.mutate,
     updateCoverImage: updateCoverImage.mutate,
     updateFullProfile: updateFullProfile.mutate,
-    isLoading: updateProfile.isLoading || updateProfileImage.isLoading || 
-                updateCoverImage.isLoading || updateFullProfile.isLoading,
-    isError: updateProfile.isError || updateProfileImage.isError || 
-              updateCoverImage.isError || updateFullProfile.isError,
+    isLoading: updateProfile.isLoading || updateProfileImage.isLoading ||
+      updateCoverImage.isLoading || updateFullProfile.isLoading,
+    isError: updateProfile.isError || updateProfileImage.isError ||
+      updateCoverImage.isError || updateFullProfile.isError,
   };
 };
