@@ -428,7 +428,7 @@ const SongUploadStep = ({
       {/* File upload area */}
       <div
         onClick={triggerFileInput}
-        className="cursor-pointer border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-blue-500 transition-colors"
+        className="cursor-pointer border-2 border-dashed border-gray-700 rounded-xl p-5 text-center hover:border-blue-500 transition-colors"
       >
         <input
           type="file"
@@ -438,27 +438,27 @@ const SongUploadStep = ({
           multiple
           className="hidden"
         />
-        <div className="mb-4">
-          <div className="w-20 h-20 mx-auto rounded-full bg-blue-900/20 border-2 border-blue-500/30 flex items-center justify-center">
-            <FiUpload size={32} className="text-blue-400" />
+        <div className="mb-2">
+          <div className="w-12 h-12 mx-auto rounded-full bg-blue-900/20 border-2 border-blue-500/30 flex items-center justify-center">
+            <FiUpload size={22} className="text-blue-400" />
           </div>
         </div>
-        <h3 className="text-white text-xl mb-2">Select Songs for Album</h3>
-        <p className="text-gray-400 mb-6 max-w-md mx-auto">
+        <h3 className="text-white text-lg mb-1">Select Songs for Album</h3>
+        <p className="text-gray-400 text-xs mb-3.5 max-w-md mx-auto">
           Upload multiple audio files. You can drag to reorder before uploading.
         </p>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
           disabled={hasStartedUpload && isUploading}
-          className={`px-6 py-3 rounded-full font-medium inline-flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-full text-sm font-medium inline-flex items-center gap-2 ${
             hasStartedUpload && isUploading ? "bg-gray-700 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white"
           }`}
         >
-          <FiMusic size={18} />
+          <FiMusic size={16} />
           {hasStartedUpload && isUploading ? "Uploading..." : "Choose Audio Files"}
         </button>
-        <p className="text-gray-500 text-sm mt-4">
+        <p className="text-gray-500 text-xs mt-3">
           Selected: {selectedSongs.length} file{selectedSongs.length !== 1 ? "s" : ""}
         </p>
       </div>

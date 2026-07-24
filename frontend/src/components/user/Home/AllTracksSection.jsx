@@ -101,13 +101,9 @@ const onPlaySong = useCallback((song) => {
     }
   }, [isError, error]);
 
-    if(!isLoading && !isFetching && allSingles.length==0){
-     return (
-    <div className="text-gray-400 text-sm">
-      No songs available right now
-    </div>
-  );
-  }
+    if(!isLoading && !isFetching && allSingles.length === 0){
+      return null;
+    }
 
   // Grid columns for horizontal scroll
   const chunkSize = 5;

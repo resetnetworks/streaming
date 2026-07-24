@@ -12,7 +12,6 @@ import axios from "../../utills/axiosInstance";
 
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { validators } from "../../utills/validators";
-import { CircleGeometry } from "three/src/Three.Core.js";
 import IconHeader from "../../components/user/IconHeader";
 
 const Register = () => {
@@ -25,6 +24,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [formErrors, setFormErrors] = useState({});
+  const [showPasswordErrors, setShowPasswordErrors] = useState(false);
   const [justRegistered, setJustRegistered] = useState(false);
   const [passwordCriteria, setPasswordCriteria] = useState({
     length: false,
@@ -66,6 +66,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowPasswordErrors(true);
     const errors = validate();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -142,124 +143,153 @@ const Register = () => {
       />
 
       <>
-        <section className="w-full min-h-screen flex flex-col items-center">
-          <IconHeader/>
+      <section className="w-full min-h-screen flex flex-col items-center bg-[#020216] px-4">
+        <IconHeader />
 
-          <div className="text-white sm:mt-auto mt-0 mb-auto flex flex-col justify-around items-center">
-            <h1 className="text-4xl my-6">
-              <span style={{ color: '#4DB3FF' }}>sign up</span>, to musicreset
-            </h1>
+        <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center w-full max-w-[650px]">
+          <h1 className="text-4xl mb-6 font-['Jura'] uppercase tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+            sign up to musicreset
+          </h1>
 
-            <form
-              className="md:w-[650px] w-[95vw] rounded-t-lg md:py-6 md:px-12 py-3 px-6 flex items-center flex-col border-b-[3px] border-blue-800 bg-gradient-to-br from-[#0a0a23] to-[#0d1b3f]"
-              onSubmit={handleSubmit}
-              noValidate
-            >
-              {/* Name Field */}
-              <div className="w-full mb-1">
-                <label htmlFor="name" className="md:text-xl text-lg">name</label>
-              </div>
-              <div className="w-full relative">
-                <TbUserSquareRounded className="inside-icon" />
-                <input
-                  required
-                  type="text"
-                  id="name"
-                  className="input-login"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
-                  disabled={loading}
-                />
-              </div>
-              {formErrors.name && (
-                <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.name}</p>
-              )}
+          <form
+            className="w-full rounded-[24px] p-8 mt-4 flex flex-col items-center"
+            style={{
+              background: 'linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%)',
+              boxShadow: `
+                12px 12px 40px rgba(0,0,0,0.7),
+                -8px -8px 30px rgba(59,130,246,0.08),
+                inset 1px 1px 1px rgba(255,255,255,0.05),
+                0 0 0 1px rgba(59,130,246,0.1)
+              `,
+            }}
+            onSubmit={handleSubmit}
+            noValidate
+          >
+            {/* Name Field */}
+            <div className="w-full mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">name</label>
+            </div>
+            <div className="w-full relative">
+              <TbUserSquareRounded className="inside-icon" />
+              <input
+                required
+                type="text"
+                id="name"
+                className="input-login"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                disabled={loading}
+              />
+            </div>
+            {formErrors.name && (
+              <p className="text-red-500 text-left w-full text-xs mt-1">{formErrors.name}</p>
+            )}
 
-              {/* Email Field */}
-              <div className="w-full mt-5 mb-1">
-                <label htmlFor="email" className="md:text-xl text-lg">email</label>
-              </div>
-              <div className="w-full relative">
-                <MdOutlineEmail className="inside-icon" />
-                <input
-                  required
-                  type="email"
-                  id="email"
-                  className="input-login"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  disabled={loading}
-                />
-              </div>
-              {formErrors.email && (
-                <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.email}</p>
-              )}
+            {/* Email Field */}
+            <div className="w-full mt-5 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">email</label>
+            </div>
+            <div className="w-full relative">
+              <MdOutlineEmail className="inside-icon" />
+              <input
+                required
+                type="email"
+                id="email"
+                className="input-login"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                disabled={loading}
+              />
+            </div>
+            {formErrors.email && (
+              <p className="text-red-500 text-left w-full text-xs mt-1">{formErrors.email}</p>
+            )}
 
-              {/* Password Field */}
-              <div className="w-full mt-5 mb-1">
-                <label htmlFor="password" className="md:text-xl text-lg">password</label>
+            {/* Password Field */}
+            <div className="w-full mt-5 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">password</label>
+            </div>
+            <div className="w-full relative">
+              <TbLockPassword className="inside-icon" />
+              <input
+                required
+                type={showPassword ? "text" : "password"}
+                id="password"
+                className="input-login"
+                value={password}
+                onChange={handlePasswordChange}
+                placeholder="Create a strong password"
+                disabled={loading}
+              />
+              <div className="eye-icon" onClick={() => setShowPassword((prev) => !prev)} role="button">
+                {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
               </div>
-              <div className="w-full relative">
-                <TbLockPassword className="inside-icon" />
-                <input
-                  required
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  className="input-login"
-                  value={password}
-                  onChange={handlePasswordChange} // 🔥 UPDATED
-                  placeholder="Create a strong password"
-                  disabled={loading}
-                />
-                <div className="eye-icon" onClick={() => setShowPassword((prev) => !prev)} role="button">
-                  {showPassword ? <AiOutlineEye /> : <AiOutlineEyeInvisible />}
-                </div>
-              </div>
+            </div>
 
-              {/* Password criteria */}
-              <div className="text-sm mt-2 w-full flex flex-wrap gap-2">
-                <span className={passwordCriteria.length ? "text-green-500" : "text-red-500"}>At least 8 characters</span>
-                <span className={passwordCriteria.lowercase ? "text-green-500" : "text-red-500"}>• Lowercase</span>
-                <span className={passwordCriteria.uppercase ? "text-green-500" : "text-red-500"}>• Uppercase</span>
-                <span className={passwordCriteria.number ? "text-green-500" : "text-red-500"}>• Number</span>
-                <span className={passwordCriteria.symbol ? "text-green-500" : "text-red-500"}>• Symbol</span>
-              </div>
-              {formErrors.password && (
-                <p className="text-red-500 text-left w-full text-sm mt-1">{formErrors.password}</p>
-              )}
+            {/* Password criteria */}
+            <div className="text-xs mt-3 w-full flex flex-wrap gap-2 text-slate-400">
+              <span className={passwordCriteria.length ? "text-green-500" : (showPasswordErrors ? "text-red-400" : "text-slate-400")}>At least 8 characters</span>
+              <span className={passwordCriteria.lowercase ? "text-green-500" : (showPasswordErrors ? "text-red-400" : "text-slate-400")}>• Lowercase</span>
+              <span className={passwordCriteria.uppercase ? "text-green-500" : (showPasswordErrors ? "text-red-400" : "text-slate-400")}>• Uppercase</span>
+              <span className={passwordCriteria.number ? "text-green-500" : (showPasswordErrors ? "text-red-400" : "text-slate-400")}>• Number</span>
+              <span className={passwordCriteria.symbol ? "text-green-500" : (showPasswordErrors ? "text-red-400" : "text-slate-400")}>• Symbol</span>
+            </div>
+            {formErrors.password && (
+              <p className="text-red-500 text-left w-full text-xs mt-1">{formErrors.password}</p>
+            )}
 
-              <div className="button-wrapper mt-9 shadow-sm shadow-black">
-                <button className="custom-button" disabled={loading} type="submit">
-                  {loading ? "Registering..." : "Create Account"}
-                </button>
-              </div>
+            {/* Register Button */}
+            <div className="w-full max-w-[380px] mt-9 flex justify-center">
+              <button 
+                className="w-full py-3 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95"
+                style={{
+                  background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                  boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+                }}
+                disabled={loading}
+                type="submit"
+              >
+                {loading ? "Registering..." : "Create Account"}
+              </button>
+            </div>
 
-              <div className="flex items-center w-64 my-8">
-                <div className="flex-grow border-t border-gray-400"></div>
-                <span className="mx-4 text-white text-sm">Or Sign up With</span>
-                <div className="flex-grow border-t border-gray-400"></div>
-              </div>
+            {/* Or Sign Up With */}
+            <div className="flex items-center w-64 my-8">
+              <div className="flex-grow border-t border-gray-700"></div>
+              <span className="mx-4 text-slate-400 text-sm">Or Sign up With</span>
+              <div className="flex-grow border-t border-gray-700"></div>
+            </div>
 
-              <div className="flex justify-around items-center w-[15.3rem]">
-                <button
-                  onClick={googleRegister}
-                  type="button"
-                  disabled={loading}
-                  className={`w-full h-12 flex justify-center items-center rounded-lg bg-white transition-all hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <img src={assets.google_icon} alt="google_icon" className="w-8 h-8" />
-                </button>
-              </div>
-            </form>
+            {/* Social Icons */}
+            <div className="flex justify-around items-center w-full max-w-[380px]">
+              <button
+                onClick={googleRegister}
+                type="button"
+                disabled={loading}
+                className={`w-full h-12 rounded-lg flex justify-center items-center bg-white transition-all duration-300 hover:bg-slate-100 active:scale-95 ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                style={{
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                }}
+              >
+                <img src={assets.google_icon} alt="google_icon" className="w-6 h-6 mr-2" />
+                <span className="text-black font-semibold text-sm">Sign up with Google</span>
+              </button>
+            </div>
+          </form>
 
-            <p className={`mt-4 ${loading ? "pointer-events-none opacity-50" : ""}`}>
-              Already have an account?{" "}
-              <a href="/login" style={{ color: '#4DB3FF' }} className="underline">Login</a>
-            </p>
-          </div>
-        </section>
+          {/* Already have account */}
+          <p className={`mt-6 text-slate-400 ${loading ? "pointer-events-none opacity-50" : ""}`}>
+            Already have an account?{" "}
+            <a href="/login" style={{ color: '#4DB3FF' }} className="no-underline hover:underline hover:text-white transition-colors">
+              Login
+            </a>
+          </p>
+        </div>
+      </section>
       </>
     </>
   );

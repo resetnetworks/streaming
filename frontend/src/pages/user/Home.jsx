@@ -95,43 +95,47 @@ const Home = () => {
       />
 
 
-      <UserHeader />
-      <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
-        <div className="text-white px-4 py-2 flex flex-col gap-4">
+      <div className="relative overflow-hidden bg-[#020216] w-full min-h-screen">
+        <div className="relative z-10 w-full">
+          <UserHeader />
+          <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">
+            <div className="text-white px-4 py-2 flex flex-col gap-4 font-['Jura']">
 
-          {/* ✅ Updated AlbumsSection with proper loading states */}
-          <AlbumsSection />
+              {/* ✅ Updated AlbumsSection with proper loading states */}
+              <AlbumsSection />
 
-          <GenreSection />
+              <GenreSection />
 
-          <ArtistSection
-            title="Featured Artists"
-            currentUser={currentUser}
-            onNavigateArtist={navigateToArtistDirect}
-          />
+              <ArtistSection
+                title="Featured Artists"
+                currentUser={currentUser}
+                onNavigateArtist={navigateToArtistDirect}
+              />
 
-          {/* Matching Genre */}
-          {currentUser && (
-            <MatchingGenreSection
-            />
-          )}
+              {/* Matching Genre */}
+              {currentUser && (
+                <MatchingGenreSection
+                />
+              )}
 
-          <SimilarArtistSection
-          />
+              <SimilarArtistSection
+              />
 
-          <AllTracksSection
+              <AllTracksSection
+              />
+            </div>
+          </SkeletonTheme>
+
+          <SubscribeModal
+            open={subscribeModalOpen}
+            artist={modalArtist}
+            type={modalType}
+            itemData={modalData}
+            onClose={handleSubscribeModalClose}
+            onNavigate={handleNavigateToArtist}
           />
         </div>
-      </SkeletonTheme>
-
-      <SubscribeModal
-        open={subscribeModalOpen}
-        artist={modalArtist}
-        type={modalType}
-        itemData={modalData}
-        onClose={handleSubscribeModalClose}
-        onNavigate={handleNavigateToArtist}
-      />
+      </div>
     </>
   );
 };

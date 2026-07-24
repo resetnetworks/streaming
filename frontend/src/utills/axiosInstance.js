@@ -125,7 +125,11 @@ axiosInstance.interceptors.response.use(
 
     // ✅ NEW: ROLE_CHANGED — modal show karo, logout mat karo abhi
     if (status === 401 && code === "ROLE_CHANGED") {
-      if (window.store) {
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      const authPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
+      const isOnAuthPage = authPaths.some(path => currentPath.includes(path));
+
+      if (window.store && !isOnAuthPage) {
         try {
           const { setRoleUpdateModal } = await import("../features/auth/authSlice");
           window.store.dispatch(setRoleUpdateModal(true));
