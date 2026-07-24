@@ -303,8 +303,8 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
                       key={country.code}
                       onClick={() => selectCountry(country.code)}
                       className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${isSelected
-                          ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/20'
-                          : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                        ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/20'
+                        : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
                         }`}
                     >
                       <span>{country.name}</span>
@@ -325,7 +325,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
           <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
             Government ID <span className="text-red-500">*</span>
           </label>
-          <p className="text-slate-400 text-xs mt-1.5 leading-relaxed">
+          <p className="text-slate-300 text-sm  mt-1.5 leading-relaxed">
             Please upload a valid Government ID to verify your identity. ID proof is required for secure payouts and to ensure authenticity against AI-generated content.
           </p>
         </div>

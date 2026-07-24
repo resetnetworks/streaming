@@ -65,12 +65,12 @@ const StepCard = ({ step, index, isInView }) => (
     </svg>
 
     <div
-  className="absolute inset-x-6 bottom-[-14px] h-10 blur-2xl opacity-100"
-  style={{
-    background: "rgba(0,0,0,1)",
-    zIndex: -1,
-  }}
-/>
+      className="absolute inset-x-6 bottom-[-14px] h-10 blur-2xl opacity-100"
+      style={{
+        background: "rgba(0,0,0,1)",
+        zIndex: -1,
+      }}
+    />
 
     {/* Content */}
     <div className="relative px-6 py-5">
@@ -102,7 +102,7 @@ const LandingSections = () => {
       style={{ background: "#020216" }}
     >
       {/* Background glows */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{ transform: "translateZ(0)", willChange: "transform" }}
       >
@@ -186,17 +186,13 @@ const LandingSections = () => {
             <motion.button
               initial={{ opacity: 0, y: 15 }}
               animate={perkInView ? { opacity: 1, y: 0 } : {}}
-              whileHover={{
-                borderColor: "rgba(59,130,246,0.5)",
-                color: "#fff",
-              }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => navigate("/artist/register")}
               className="px-8 py-3.5 rounded-lg text-sm font-medium tracking-wide cursor-pointer"
               style={{
                 background: "transparent",
-                border: "1px solid rgba(255,255,255,0.15)",
-                color: "#D1D5DB",
+                border: "1px solid rgba(59,130,246,0.5)",
+                color: "#fff",
                 backdropFilter: "blur(8px)",
                 transition: "border-color 0.25s ease, color 0.25s ease",
               }}
