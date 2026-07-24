@@ -241,7 +241,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
             required
             type="text"
             name="stageName"
-            placeholder="e.g. Enter artist name"
+            placeholder="Enter your artist name"
             className="input-login pl-10"
             value={stageName}
             onChange={(e) => handleStageNameChange(e.target.value)}
@@ -259,7 +259,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
           </label>
         </div>
         <div className="w-full relative" ref={dropdownRef}>
-          <div 
+          <div
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="input-login pl-10 pr-10 flex items-center justify-between cursor-pointer select-none text-left min-h-[48px]"
           >
@@ -275,8 +275,8 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
               />
             ) : (
               <span className={formData.country ? "text-slate-200 text-sm" : "text-slate-400 text-sm"}>
-                {formData.country 
-                  ? (sortedCountries.find(c => c.code === formData.country)?.name || formData.country) 
+                {formData.country
+                  ? (sortedCountries.find(c => c.code === formData.country)?.name || formData.country)
                   : "Select Country"}
               </span>
             )}
@@ -302,11 +302,10 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
                     <div
                       key={country.code}
                       onClick={() => selectCountry(country.code)}
-                      className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${
-                        isSelected 
-                          ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/20' 
+                      className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${isSelected
+                          ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/20'
                           : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                      }`}
+                        }`}
                     >
                       <span>{country.name}</span>
                       <span className="text-xs opacity-50 uppercase">{country.code}</span>
@@ -339,21 +338,21 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
                   <p className="text-xs text-slate-400">Click to upload Government ID</p>
                   <p className="text-[10px] text-slate-500 mt-1">PDF, JPG, PNG files only. Max 5MB.</p>
                 </div>
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept=".pdf,image/jpeg,image/png,image/jpg" 
-                  onChange={handleFileUpload} 
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,image/jpeg,image/png,image/jpg"
+                  onChange={handleFileUpload}
                 />
               </label>
             ) : (
               <div className="flex flex-col gap-3 p-4 bg-slate-950/40 rounded-xl border border-slate-700/60 w-full">
                 {documents[0].mimeType?.startsWith('image/') && (
                   <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-700/80">
-                    <img 
-                      src={documents[0].previewUrl} 
-                      alt="ID Preview" 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={documents[0].previewUrl}
+                      alt="ID Preview"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 )}
@@ -399,7 +398,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
 
         {/* Actions Button (Back button removed) */}
         <div className="w-full max-w-[380px] mt-9 flex justify-center">
-          <button 
+          <button
             className="w-full py-3 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95"
             style={{
               background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',

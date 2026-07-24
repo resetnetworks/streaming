@@ -171,7 +171,7 @@ const ArtistAboutSection = ({
                         ✓ You are subscribed
                       </span>
                     ) : (
-                      "Subscribe for exclusive content"
+                      ""
                     )}
                   </p>
                   <p className="text-xs text-gray-400 mt-2 flex flex-wrap items-center gap-2">

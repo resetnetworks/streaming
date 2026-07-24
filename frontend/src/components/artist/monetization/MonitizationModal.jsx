@@ -176,13 +176,8 @@ const MonetizationModal = ({
               {/* Header */}
               <div className={`pb-3.5 border-b border-white/10 relative z-10 flex flex-col mb-4 ${isMandatory ? "items-center text-center w-full" : "items-start"}`}>
                 <h2 className="text-lg font-bold text-white tracking-wide uppercase font-['Jura']">
-                  {isMandatory ? "Unlock Dashboard" : "Monetization"}
+                  {isMandatory ? "Setup Your Dashboard" : "Monetization"}
                 </h2>
-                <p className="text-[11px] text-gray-400 mt-0.5 font-sans">
-                  {isMandatory
-                    ? "Set your fan subscription price to activate your dashboard"
-                    : "Configure subscription options to start earning"}
-                </p>
               </div>
 
               {/* Content wrapper */}
@@ -194,7 +189,7 @@ const MonetizationModal = ({
                       Set Your Fan Pricing
                     </p>
                     <p className="text-gray-300 text-[11px] font-sans leading-normal">
-                      Unlock your dashboard by specifying what <strong className="text-white">your fans/listeners</strong> will pay to subscribe to your music.
+                      Setup your dashboard by specifying what <strong className="text-white">your fans/listeners</strong> will pay to subscribe to your page.
                     </p>
                   </div>
                 )}

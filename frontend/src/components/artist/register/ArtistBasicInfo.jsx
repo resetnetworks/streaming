@@ -178,7 +178,7 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
             value={formData.firstName}
             onChange={(e) => handleChange("firstName", e.target.value)}
             onBlur={() => handleBlur("firstName")}
-            placeholder="Enter your artist name"
+            placeholder="Enter your full name"
             disabled={loading}
           />
         </div>
@@ -281,9 +281,8 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
       </form>
 
       <p
-        className={`mt-6 text-center text-slate-400 ${
-          loading ? "pointer-events-none opacity-50" : ""
-        }`}
+        className={`mt-6 text-center text-slate-400 ${loading ? "pointer-events-none opacity-50" : ""
+          }`}
       >
         Already have an account?{" "}
         <a
