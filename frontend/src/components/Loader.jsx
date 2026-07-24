@@ -1,8 +1,8 @@
 import React from "react";
 
-const Loader = () => {
+const Loader = ({ noBg = false }) => {
   return (
-    <div className="flex items-center justify-center w-full h-screen bg-black">
+    <div className={`flex items-center justify-center ${noBg ? "w-auto h-auto bg-transparent" : "w-full h-screen bg-[#020216]"}`}>
       <svg
         width="60"
         height="60"

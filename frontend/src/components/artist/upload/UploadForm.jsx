@@ -174,7 +174,7 @@ const UploadForm = ({
     if (selectedGenres.includes(genre)) {
       setSelectedGenres(selectedGenres.filter((g) => g !== genre));
     } else {
-      if (selectedGenres.length < 3) {
+      if (selectedGenres.length < 5) {
         setSelectedGenres([...selectedGenres, genre]);
       }
     }
@@ -975,10 +975,10 @@ const UploadForm = ({
       </h3>
       <div
         className={`text-sm font-medium ${
-          selectedGenres.length === 3 ? "text-amber-300" : "text-gray-300"
+          selectedGenres.length === 5 ? "text-amber-300" : "text-gray-300"
         }`}
       >
-        {selectedGenres.length}/3 selected
+        {selectedGenres.length}/5 selected
       </div>
     </div>
 
@@ -1011,12 +1011,12 @@ const UploadForm = ({
       onClick={openGenreModal}
       className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed rounded-lg font-medium transition-all
         ${
-          selectedGenres.length >= 3
+          selectedGenres.length >= 5
             ? "border-gray-600 text-gray-500 cursor-not-allowed"
             : "border-gray-500 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-gray-800/50 active:scale-[0.98]"
         }`}
       disabled={
-        selectedGenres.length >= 3 ||
+        selectedGenres.length >= 5 ||
         isSubmitting ||
         isUploadingAudio ||
         isUploadingCover
@@ -1025,13 +1025,13 @@ const UploadForm = ({
       <FiPlus
         size={18}
         className={
-          selectedGenres.length >= 3
+          selectedGenres.length >= 5
             ? "text-gray-500"
             : "text-gray-400 group-hover:text-blue-400 transition-colors"
         }
       />
       <span className="text-sm">
-        {selectedGenres.length >= 3
+        {selectedGenres.length >= 5
           ? "Maximum genres selected"
           : "Add Genres"}
       </span>
@@ -1039,7 +1039,7 @@ const UploadForm = ({
 
     {/* Helper text */}
     <p className="text-gray-300 text-xs">
-      Select up to 3 genres that best describe your music
+      Select up to 5 genres that best describe your music
     </p>
   </div>
       </div>
@@ -1051,7 +1051,7 @@ const UploadForm = ({
         selectedGenres={selectedGenres}
         onToggleGenre={toggleGenre}
         onClearAll={clearAllGenres}
-        maxSelections={3}
+        maxSelections={5}
       />
 
       {/* Submit Buttons */}

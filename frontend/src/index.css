@@ -23,19 +23,8 @@ body {
   min-height: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
-  background:
-    radial-gradient(circle at top right,
-      rgba(29, 78, 216, 0.18) 0%,
-      transparent 45%),
-    radial-gradient(circle at bottom left,
-      rgba(37, 99, 235, 0.12) 0%,
-      transparent 40%),
-    linear-gradient(135deg,
-      #000000 0%,
-      #020817 35%,
-      #071226 70%,
-      #0A1930 100%);
-  background-attachment: fixed;
+  background-color: #020216;
+  background: #020216;
   color: white;
 }
 
@@ -149,18 +138,19 @@ select option {
 .subscription-wrapper {
   display: inline-block;
   padding: 1px;
-  border-radius: 10px;
-  background: linear-gradient(131.43deg,
-      #ffffff7f 10.34%,
-      #eaeaea6d 20.21%,
-      #88b1ef00 72.19%,
-      #033baa00 94.16%);
+  border-radius: 24px;
+  background: transparent;
 }
 
 .subscription-card {
   border: none;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #020216 10.34%, #0d1b3f 70%);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%);
+  box-shadow: 
+    12px 12px 40px rgba(0,0,0,0.7),
+    -8px -8px 30px rgba(59,130,246,0.08),
+    inset 1px 1px 1px rgba(255,255,255,0.05),
+    0 0 0 1px rgba(59,130,246,0.1);
   color: white;
   font-size: 1.2rem;
   font-weight: 400;

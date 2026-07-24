@@ -103,21 +103,30 @@ description="Sign in to your Reset Music streaming account to access playlists, 
 />
 
       <>
-      <section className="w-full min-h-screen flex flex-col items-center">
+      <section className="w-full min-h-screen flex flex-col items-center bg-[#020216] px-4">
         <IconHeader />
 
-        <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center">
-          <h1 className="text-4xl mb-6">
-            <span style={{ color: '#4DB3FF' }}>login</span> to musicreset
+        <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center w-full max-w-[650px]">
+          <h1 className="text-4xl mb-6 font-['Jura'] uppercase tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+            login to musicreset
           </h1>
 
           <form
-            className="md:w-[650px] w-[95vw] rounded-t-lg md:py-6 md:px-12 py-3 px-6 flex items-center flex-col border-b-[3px] border-blue-800 bg-gradient-to-br from-[#0a0a23] to-[#0d1b3f]"
+            className="w-full rounded-[24px] p-8 mt-4 flex flex-col items-center"
+            style={{
+              background: 'linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%)',
+              boxShadow: `
+                12px 12px 40px rgba(0,0,0,0.7),
+                -8px -8px 30px rgba(59,130,246,0.08),
+                inset 1px 1px 1px rgba(255,255,255,0.05),
+                0 0 0 1px rgba(59,130,246,0.1)
+              `,
+            }}
             onSubmit={handleLogin}
           >
             {/* Email Field */}
-            <div className="w-full mb-1">
-              <label htmlFor="email" className="md:text-xl text-lg">email</label>
+            <div className="w-full mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">email</label>
             </div>
             <div className="w-full relative">
               <MdOutlineEmail className="inside-icon" />
@@ -133,8 +142,8 @@ description="Sign in to your Reset Music streaming account to access playlists, 
             </div>
 
             {/* Password Field */}
-            <div className="w-full mt-5 mb-1">
-              <label htmlFor="password" className="md:text-xl text-lg">password</label>
+            <div className="w-full mt-5 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 uppercase tracking-wider">password</label>
             </div>
             <div className="w-full relative">
               <TbLockPassword className="inside-icon" />
@@ -158,7 +167,7 @@ description="Sign in to your Reset Music streaming account to access playlists, 
             {/* Forgot Password */}
             <a
               href="/forgot-password"
-              className={`ml-auto mt-1 text-base sm:text-xl ${
+              className={`ml-auto mt-2 text-sm sm:text-base font-semibold text-[#4DB3FF] hover:underline ${
                 btnLoading ? "pointer-events-none opacity-50" : ""
               }`}
             >
@@ -166,39 +175,49 @@ description="Sign in to your Reset Music streaming account to access playlists, 
             </a>
 
             {/* Login Button */}
-            <div className="button-wrapper mt-9 cursor-pointer shadow-sm shadow-black">
-              <button className="custom-button" disabled={btnLoading}>
+            <div className="w-full max-w-[380px] mt-9 flex justify-center">
+              <button 
+                className="w-full py-3 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95"
+                style={{
+                  background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                  boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+                }}
+                disabled={btnLoading}
+              >
                 {btnLoading ? "Logging in..." : "Login"}
               </button>
             </div>
 
             {/* Or Sign In With */}
             <div className="flex items-center w-64 my-8">
-              <div className="flex-grow border-t border-gray-400"></div>
-              <span className="mx-4 text-white text-sm">Or Sign in With</span>
-              <div className="flex-grow border-t border-gray-400"></div>
+              <div className="flex-grow border-t border-gray-700"></div>
+              <span className="mx-4 text-slate-400 text-sm">Or Sign in With</span>
+              <div className="flex-grow border-t border-gray-700"></div>
             </div>
 
             {/* Social Icons */}
-            <div className="flex justify-around items-center w-[15.3rem]">
+            <div className="flex justify-around items-center w-full max-w-[380px]">
               <button
                 onClick={googleLogin}
                 type="button"
                 disabled={btnLoading}
-                className={`w-full h-12 rounded-lg flex justify-center items-center bg-white transition-all hover:scale-105 ${
+                className={`w-full h-12 rounded-lg flex justify-center items-center bg-white transition-all duration-300 hover:bg-slate-100 active:scale-95 ${
                   btnLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
+                style={{
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                }}
               >
-                <img src={assets.google_icon} alt="google_icon" className="w-8 h-8" />
+                <img src={assets.google_icon} alt="google_icon" className="w-6 h-6 mr-2" />
+                <span className="text-black font-semibold text-sm">Sign in with Google</span>
               </button>
-            
             </div>
           </form>
 
           {/* Register Link */}
-          <p className={`mt-4 ${btnLoading ? "pointer-events-none opacity-50" : ""}`}>
+          <p className={`mt-6 text-slate-400 ${btnLoading ? "pointer-events-none opacity-50" : ""}`}>
             Don't have an account?{" "}
-            <a href="/register" style={{ color: '#4DB3FF' }} className="underline">
+            <a href="/register" style={{ color: '#4DB3FF' }} className="no-underline hover:underline hover:text-white transition-colors">
               Create Account
             </a>
           </p>

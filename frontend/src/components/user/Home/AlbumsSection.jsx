@@ -186,6 +186,8 @@ const AlbumsSection = ({
                   artists={album?.artist?.name || "Various Artists"}
                   image={album?.coverImage || "/images/placeholder.png"}
                   onClick={() => navigate(`/album/${album?.slug}`)}
+                  songsCount={album?.songs?.length}
+                  artistSlug={album?.artist?.slug}
                 />
               </div>
             ))}

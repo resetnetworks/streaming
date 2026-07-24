@@ -342,7 +342,7 @@ const AdvertsComponent = () => {
 
       {/* Glassmorphism Lock Overlay */}
       <div className="absolute inset-0 bg-[#020216]/65 backdrop-blur-[6px] z-[999] flex flex-col items-center justify-center text-center p-6 select-none pointer-events-auto">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#3380FF]/20 to-[#4DB3FF]/20 border border-[#4DB3FF]/40 flex items-center justify-center mb-4 shadow-lg shadow-[#4DB3FF]/10 animate-pulse">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#3380FF]/20 to-[#4DB3FF]/20 border border-[#4DB3FF]/40 flex items-center justify-center mb-4 shadow-lg shadow-[#4DB3FF]/10">
           <svg className="w-8 h-8 text-[#4DB3FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
@@ -351,9 +351,6 @@ const AdvertsComponent = () => {
         <p className="text-gray-300 text-xs md:text-sm mt-2 max-w-sm font-medium leading-relaxed">
           The campaign creator mockup is ready. Custom audio ads and banner campaigns will be unlocked once backend API integration is completed.
         </p>
-        <span className="mt-4 px-3 py-1 bg-[#3380FF]/15 border border-[#3380FF]/30 text-[#4DB3FF] text-[10px] font-black uppercase tracking-widest rounded-full">
-          Mock View Mode Only
-        </span>
       </div>
 
       {/* 1. Page Header */}

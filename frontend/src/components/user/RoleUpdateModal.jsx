@@ -4,14 +4,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logoutUser, setRoleUpdateModal } from "../../features/auth/authSlice";
 import { forceLogout } from "../../utills/axiosInstance";
-import { selectRoleUpdateModalOpen } from "../../features/auth/authSelectors";
+import { selectRoleUpdateModalOpen, selectIsAuthenticated } from "../../features/auth/authSelectors";
 
 const RoleUpdateModal = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const open = useSelector(selectRoleUpdateModalOpen); // ✅ Redux se lo
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
-  if (!open) return null;
+  if (!open || !isAuthenticated) return null;
 
   const handleLogout = async () => {
     dispatch(setRoleUpdateModal(false)); // ✅ pehle modal band karo

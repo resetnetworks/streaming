@@ -6,20 +6,31 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 const Letter = memo(function Letter({ char, letterDuration }) {
   return (
     <motion.span
-      style={{ transformStyle: "preserve-3d", willChange: "transform, opacity" }}
+      style={{ 
+        transformStyle: "preserve-3d", 
+        willChange: "transform, opacity",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        transform: "translate3d(0,0,0) rotateX(0deg)",
+        WebkitTransform: "translate3d(0,0,0) rotateX(0deg)"
+      }}
       variants={{
-        initial: { rotateX: 90, y: 20, opacity: 0 },
+        initial: { rotateX: 90, y: 20, opacity: 0, translateZ: "0px", z: "0px" },
         animate: {
           rotateX: 0,
           y: 0,
           opacity: 1,
-          transition: { duration: letterDuration, ease: [0.2, 0.65, 0.3, 0.9] },
+          translateZ: "0px",
+          z: "0px",
+          transition: { duration: letterDuration, ease: [0.2, 0.65, 0.3, 0.9] }, // Restored original timing & ease curve
         },
         exit: {
           rotateX: -90,
           y: -20,
           opacity: 0,
-          transition: { duration: letterDuration * 0.67, ease: "easeIn" },
+          translateZ: "0px",
+          z: "0px",
+          transition: { duration: letterDuration * 0.67, ease: "easeIn" }, // Restored original timing & ease curve
         },
       }}
       className="inline-block hero-heading-letter"
@@ -39,7 +50,12 @@ const AnimatedWord = memo(function AnimatedWord({
   return (
     <motion.span
       className="inline-flex"
-      style={{ whiteSpace: "pre" }}
+      style={{ 
+        whiteSpace: "pre",
+        transform: "translate3d(0,0,0)",
+        WebkitTransform: "translate3d(0,0,0)",
+        willChange: "transform"
+      }}
       initial="initial"
       animate="animate"
       exit="exit"
@@ -76,8 +92,14 @@ function CyclingWord() {
 
   return (
     <span
-      className="inline-block relative"
-      style={{ perspective: "1000px", minWidth: "4ch" }}
+      className="inline-block relative animate-gpu"
+      style={{ 
+        perspective: "1000px", 
+        minWidth: "4ch",
+        transform: "translate3d(0,0,0)",
+        WebkitTransform: "translate3d(0,0,0)",
+        willChange: "transform"
+      }}
     >
       <AnimatePresence mode="wait">
         <AnimatedWord

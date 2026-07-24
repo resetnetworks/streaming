@@ -252,7 +252,13 @@ const ArtistHeroSection = ({
                 <div className="flex items-center sm:gap-3 flex-wrap">
                   <div className="flex items-center mt-1 text-gray-300 sm:text-sm text-xs">
                     <FiMapPin className="mr-2 text-sm" style={{ color: '#4DB3FF' }} />
-                    <span>{artist?.location || "Unknown City"}</span>
+                    <span>
+                      {artist?.location ? (
+                        artist.country ? `${artist.location}, ${artist.country}` : artist.location
+                      ) : (
+                        artist?.country || "Unknown Location"
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-center mt-1 text-gray-300 text-sm">
                     <HiUsers className="mr-2 text-sm" style={{ color: '#4DB3FF' }} />
@@ -285,9 +291,12 @@ const ArtistHeroSection = ({
                       id="artist-subscribe-btn"
                       onClick={handleSubscribeClick}
                       disabled={subscriptionLoading}
-                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md text-white
-                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90 hover:scale-105"}`}
-                      style={{ backgroundColor: '#3380FF' }}
+                      className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 text-white cursor-pointer active:scale-95
+                        ${subscriptionLoading ? "opacity-70 cursor-not-allowed" : "hover:brightness-110 shadow-md"}`}
+                      style={{ 
+                        background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                        boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+                      }}
                       title={currentCycle ? `Cycle: ${cycleLabel(currentCycle)}` : "Cycle unavailable"}
                     >
                       {subscriptionLoading ? "Processing..." : "Subscribe"}

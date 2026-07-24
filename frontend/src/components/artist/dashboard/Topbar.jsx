@@ -47,14 +47,14 @@ const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
         </div>
         {!currentUploadPage && (
           <div className="flex gap-4 items-center">
-            <div 
+            {/* <div 
               className="button-wrapper cursor-pointer"
               onClick={() => setShowImportModal(true)}
             >
               <button className="custom-button md:!w-32 sm:!w-24 !w-20 md:!text-[20px] !text-[12px] sm:!text-[14px] flex justify-center items-center">
                 import
               </button>
-            </div>
+            </div> */}
             <div 
               className="button-wrapper cursor-pointer"
               onClick={() => setShowUploadModal(true)}

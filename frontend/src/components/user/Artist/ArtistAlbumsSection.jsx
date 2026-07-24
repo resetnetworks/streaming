@@ -164,14 +164,15 @@ const getAlbumPriceDisplay = (album) => {
   return null;
 };
 
+  if (!albumsLoading && artistAlbums.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <div className="flex justify-between mt-6 px-6 text-lg text-white items-center">
         <h2>Albums</h2>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">
-            Page {artistAlbumPagination.page} of {artistAlbumPagination.totalPages}
-          </span>
           <LuSquareChevronLeft
             className="text-white cursor-pointer text-lg transition-colors"
             style={{}} 
