@@ -323,14 +323,16 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
                 <div>
                   <h3 className="text-white font-medium">{createdAlbum.title}</h3>
                   <p className="text-gray-400 text-sm">
-                    {createdAlbum.genre || "No genre"} • {createdAlbum.accessType}
+                    {Array.isArray(createdAlbum.genre) ? createdAlbum.genre.join(", ") : (createdAlbum.genre || "No genre")} • {createdAlbum.accessType}
                     {createdAlbum.accessType === "purchase-only" &&
                       createdAlbum.basePrice &&
                       ` • $${createdAlbum.basePrice.amount}`}
                   </p>
-                  <p className="text-gray-500 text-xs mt-1">
-                    {uploadedSongs.length} song{uploadedSongs.length !== 1 ? "s" : ""} uploaded
-                    {songsToUpload.length > 0 && ` of ${songsToUpload.length}`}
+                  <p className="text-gray-500 text-xs mt-2 flex items-center">
+                    <span className="bg-blue-500/10 text-[#4DB3FF] border border-[#4DB3FF]/20 px-2 py-0.5 rounded font-medium text-[10px] uppercase tracking-wider">
+                      {uploadedSongs.length} track{uploadedSongs.length !== 1 ? "s" : ""} uploaded
+                      {songsToUpload.length > 0 && ` of ${songsToUpload.length}`}
+                    </span>
                   </p>
                 </div>
               </div>

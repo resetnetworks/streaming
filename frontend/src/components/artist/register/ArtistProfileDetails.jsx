@@ -1,5 +1,4 @@
-// src/components/artist/register/ArtistProfileDetails.jsx
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSubmitApplication } from '../../../hooks/api/useArtistApplications';
 import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
 import { countries } from '../../../utills/countries';
@@ -30,11 +29,51 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
   const [errors, setErrors] = useState({});
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  const selectCountry = (code) => {
+    handleChange('country', code);
+    setIsDropdownOpen(false);
+    setSearchQuery("");
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+        setSearchQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isDropdownOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isDropdownOpen]);
+
   const documents = formData?.documents || [];
 
   const sortedCountries = useMemo(() => {
     return [...countries].sort((a, b) => a.name.localeCompare(b.name));
   }, []);
+
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery.trim()) return sortedCountries;
+    const query = searchQuery.toLowerCase();
+    return sortedCountries.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.code.toLowerCase().includes(query)
+    );
+  }, [sortedCountries, searchQuery]);
 
   const countryOptions = useMemo(() => {
     return sortedCountries.map((country) => (
@@ -192,9 +231,9 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
         noValidate
       >
         {/* Stage Name Field */}
-        <div className="w-full mb-2">
+        <div className="w-full mb-2 text-left">
           <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
-            Artist Name *
+            Artist Name <span className="text-red-500">*</span>
           </label>
         </div>
         <div className="w-full relative">
@@ -214,38 +253,82 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
         )}
 
         {/* Country Selection */}
-        <div className="w-full mt-5 mb-2">
+        <div className="w-full mt-5 mb-2 text-left">
           <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
-            Country *
+            Country <span className="text-red-500">*</span>
           </label>
         </div>
-        <div className="w-full relative">
-          <select
-            required
-            name="country"
-            className="input-login pl-10 appearance-none text-slate-300"
-            value={formData.country || ''}
-            onChange={(e) => handleChange('country', e.target.value)}
+        <div className="w-full relative" ref={dropdownRef}>
+          <div 
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="input-login pl-10 pr-10 flex items-center justify-between cursor-pointer select-none text-left min-h-[48px]"
           >
-            <option value="" className="text-black">Select Country</option>
-            {countryOptions}
-          </select>
-          <MdPublic className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+            {isDropdownOpen ? (
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search country..."
+                className="w-full bg-transparent text-white outline-none border-none p-0 text-sm placeholder-slate-500"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span className={formData.country ? "text-slate-200 text-sm" : "text-slate-400 text-sm"}>
+                {formData.country 
+                  ? (sortedCountries.find(c => c.code === formData.country)?.name || formData.country) 
+                  : "Select Country"}
+              </span>
+            )}
+          </div>
+          <MdPublic className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
           <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
+
+          {/* Custom Dropdown Overlay */}
+          {isDropdownOpen && (
+            <div className="absolute left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-[#0a0f24] border border-slate-700/80 rounded-xl z-50 shadow-2xl p-1.5 scrollbar-thin scrollbar-thumb-slate-700">
+              {filteredCountries.length === 0 ? (
+                <div className="text-slate-500 text-xs py-3 text-center">
+                  No countries found
+                </div>
+              ) : (
+                filteredCountries.map((country) => {
+                  const isSelected = formData.country === country.code;
+                  return (
+                    <div
+                      key={country.code}
+                      onClick={() => selectCountry(country.code)}
+                      className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm cursor-pointer transition-colors duration-150 ${
+                        isSelected 
+                          ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/20' 
+                          : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                      }`}
+                    >
+                      <span>{country.name}</span>
+                      <span className="text-xs opacity-50 uppercase">{country.code}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
         {errors.country && (
           <p className="text-red-500 text-xs text-left w-full mt-1">{errors.country}</p>
         )}
 
         {/* Government ID Document Upload */}
-        <div className="w-full mt-5 mb-2">
+        <div className="w-full mt-5 mb-2 text-left">
           <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
-            Government ID * (PDF, JPG, PNG)
+            Government ID <span className="text-red-500">*</span>
           </label>
+          <p className="text-slate-400 text-xs mt-1.5 leading-relaxed">
+            Please upload a valid Government ID to verify your identity. ID proof is required for secure payouts and to ensure authenticity against AI-generated content.
+          </p>
         </div>
         <div className="w-full relative">
           <div className="flex flex-col gap-3">
@@ -254,6 +337,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <MdFolderOpen className="w-8 h-8 text-slate-400 mb-2" />
                   <p className="text-xs text-slate-400">Click to upload Government ID</p>
+                  <p className="text-[10px] text-slate-500 mt-1">PDF, JPG, PNG files only. Max 5MB.</p>
                 </div>
                 <input 
                   type="file" 

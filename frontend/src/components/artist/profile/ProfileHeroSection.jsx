@@ -370,7 +370,11 @@ const ProfileHeroSection = ({ workspace }) => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-8 w-full sm:w-auto">
             <button 
               onClick={handleLogout}
-              className="bg-[#3380FF] text-white font-bold px-4 py-2 sm:px-6 sm:py-2.5 md:px-7 md:py-2.5 rounded-md transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-1.5 sm:gap-2 text-sm w-full sm:w-auto justify-center"
+              className="text-white font-bold px-5 py-2.5 rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95 flex items-center gap-1.5 sm:gap-2 text-sm w-full sm:w-auto justify-center cursor-pointer"
+              style={{
+                background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+              }}
             >
               <span>Logout</span>
               <IoLogOutOutline className="text-base" />

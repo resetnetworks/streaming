@@ -4,7 +4,6 @@ import IconHeader from "../../components/user/IconHeader";
 import ProgressTracker from '../../components/artist/register/ProgressTracker';
 import ArtistBasicInfo from '../../components/artist/register/ArtistBasicInfo';
 import ArtistProfileDetails from '../../components/artist/register/ArtistProfileDetails';
-import ArtistDocuments from '../../components/artist/register/ArtistDocuments';
 import ArtistConfirmation from '../../components/artist/register/ArtistConfirmation';
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { useSelector } from "react-redux";

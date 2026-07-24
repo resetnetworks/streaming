@@ -43,7 +43,10 @@ export const useS3Upload = () => {
       return artistData.data;
     },
     onSuccess: (updatedArtist) => {
-      queryClient.setQueryData(['artist-dashboard', 'profile'], updatedArtist);
+      queryClient.setQueriesData({ queryKey: ['artist-dashboard', 'profile'] }, (oldData) => {
+        return updatedArtist || oldData;
+      });
+      queryClient.invalidateQueries({ queryKey: ['artist-dashboard', 'profile'] });
       toast.success('Image updated successfully!');
     },
     onError: (error) => {

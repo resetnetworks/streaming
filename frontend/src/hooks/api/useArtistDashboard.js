@@ -17,43 +17,14 @@ export const useArtistProfile = (workspaceId, options = {}) => {
   });
 };
 
-export const useUpdateArtistProfile = (workspaceId) => {
+export const useUpdateArtistProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: artistDashboardApi.updateProfile,
-    onMutate: async (profileData) => {
-      await queryClient.cancelQueries({
-        queryKey: [...artistDashboardKeys.profile(), workspaceId]
-      });
-
-      const previousProfile =
-        queryClient.getQueryData(
-          [...artistDashboardKeys.profile(), workspaceId]
-        );
-
-      if (previousProfile) {
-        queryClient.setQueryData([...artistDashboardKeys.profile(), workspaceId], {
-          ...previousProfile,
-          ...profileData,
-        });
-      }
-
-      return { previousProfile };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previousProfile) {
-        queryClient.setQueryData(artistDashboardKeys.profile(), context.previousProfile);
-      }
-    },
     onSuccess: (updatedArtist) => {
-      queryClient.setQueryData(
-        [...artistDashboardKeys.profile(), workspaceId],
-        updatedArtist
-      );
-
       queryClient.invalidateQueries({
-        queryKey: [...artistDashboardKeys.profile(), workspaceId]
+        queryKey: artistDashboardKeys.profile()
       });
     },
   });
@@ -75,6 +46,7 @@ export const useUpdateProfileImage = () => {
     },
     onSuccess: (updatedArtist) => {
       queryClient.setQueryData(artistDashboardKeys.profile(), updatedArtist);
+      queryClient.invalidateQueries({ queryKey: artistDashboardKeys.profile() });
     },
   });
 };
@@ -95,6 +67,7 @@ export const useUpdateCoverImage = () => {
     },
     onSuccess: (updatedArtist) => {
       queryClient.setQueryData(artistDashboardKeys.profile(), updatedArtist);
+      queryClient.invalidateQueries({ queryKey: artistDashboardKeys.profile() });
     },
   });
 };
@@ -126,6 +99,7 @@ export const useUpdateFullProfile = () => {
     },
     onSuccess: (updatedArtist) => {
       queryClient.setQueryData(artistDashboardKeys.profile(), updatedArtist);
+      queryClient.invalidateQueries({ queryKey: artistDashboardKeys.profile() });
     },
   });
 };

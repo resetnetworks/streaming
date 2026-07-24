@@ -154,7 +154,7 @@ const MonetizationModal = ({
             className="subscription-wrapper md:w-[26rem] w-[90vw] max-w-md transition-all duration-300 shadow-2xl relative"
           >
             <div
-              className="relative subscription-card w-full text-left rounded-xl p-6 overflow-hidden"
+              className="relative subscription-card w-full text-left rounded-[24px] p-6 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Subtle background gradient overlay */}
@@ -194,7 +194,7 @@ const MonetizationModal = ({
                       Set Your Fan Pricing
                     </p>
                     <p className="text-gray-300 text-[11px] font-sans leading-normal">
-                      Unlock your dashboard by specifying what <strong className="text-white">your fans/listeners</strong> will pay to subscribe to your music. <strong className="text-[#4DB3FF]">All subscription earnings go directly to you.</strong>
+                      Unlock your dashboard by specifying what <strong className="text-white">your fans/listeners</strong> will pay to subscribe to your music.
                     </p>
                   </div>
                 )}
@@ -241,7 +241,7 @@ const MonetizationModal = ({
                             disabled={setupLoading}
                             required
                           />
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-mono text-[10px]">
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-semibold font-mono text-xs">
                             USD
                           </div>
                         </div>
@@ -323,15 +323,17 @@ const MonetizationModal = ({
                         Cancel
                       </button>
                     )}
-                    <div className="button-wrapper cursor-pointer">
-                      <button
-                        onClick={handleSubmit}
-                        disabled={setupLoading || !subscriptionPrice || statusLoading}
-                        className="custom-button !h-9 px-5 bg-gradient-to-r from-[#0F3272] via-[#1A5DB4] to-[#3380FF] hover:from-[#153e8a] hover:to-[#408eff] disabled:opacity-50 text-white font-semibold text-xs uppercase tracking-wider font-['Jura']"
-                      >
-                        {setupLoading ? "Processing..." : (isMandatory ? "Complete Setup" : "Setup")}
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleSubmit}
+                      disabled={setupLoading || !subscriptionPrice || statusLoading}
+                      className="py-2.5 px-14 text-xs font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95 disabled:opacity-50 uppercase tracking-wider font-['Jura'] cursor-pointer"
+                      style={{
+                        background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                        boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+                      }}
+                    >
+                      {setupLoading ? "Processing..." : (isMandatory ? "Complete Setup" : "Setup")}
+                    </button>
                   </div>
                 )}
               </div>

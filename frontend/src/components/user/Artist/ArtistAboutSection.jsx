@@ -132,24 +132,33 @@ const ArtistAboutSection = ({
                 {artist?.name || "Unknown"}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-gray-300 mb-2">
-              <FiMapPin style={{ color: '#4DB3FF' }} />
-              <span> {artist?.location || "Unknown Location"}
-                {artist?.country ? `, ${artist.country}` : ""}  </span>
-            </div>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              {displayedBio || "This artist has not provided a biography yet."}
-              {isLongBio && !showFullBio && "..."}
-              {isLongBio && (
-                <span
-                  onClick={() => setShowFullBio(!showFullBio)}
-                  className="ml-2 cursor-pointer hover:underline"
-                  style={{ color: '#4DB3FF' }}
-                >
-                  {showFullBio ? "show less" : "show more"}
+            {(artist?.location || artist?.country) && (
+              <div className="flex items-center gap-3 text-sm text-gray-300 mb-2">
+                <FiMapPin style={{ color: '#4DB3FF' }} />
+                <span>
+                  {artist?.location ? (
+                    artist.country ? `${artist.location}, ${artist.country}` : artist.location
+                  ) : (
+                    artist?.country || ""
+                  )}
                 </span>
-              )}
-            </p>
+              </div>
+            )}
+            {artist?.bio && (
+              <p className="text-sm text-gray-300 leading-relaxed">
+                {displayedBio}
+                {isLongBio && !showFullBio && "..."}
+                {isLongBio && (
+                  <span
+                    onClick={() => setShowFullBio(!showFullBio)}
+                    className="ml-2 cursor-pointer hover:underline"
+                    style={{ color: '#4DB3FF' }}
+                  >
+                    {showFullBio ? "show less" : "show more"}
+                  </span>
+                )}
+              </p>
+            )}
             <div className="mt-6 pt-4 border-t border-white/10">
               <h3 className="text-lg font-semibold mb-2" style={{ color: '#4DB3FF' }}>
                 Subscription Details
@@ -165,9 +174,14 @@ const ArtistAboutSection = ({
                       "Subscribe for exclusive content"
                     )}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    ${subscriptionPrice.toFixed(2)} per{" "}
-                    {cycleLabel(currentCycle)} • Cancel anytime
+                  <p className="text-xs text-gray-400 mt-2 flex flex-wrap items-center gap-2">
+                    <span className="text-white font-semibold">
+                      ${subscriptionPrice.toFixed(2)} / {cycleLabel(currentCycle)}
+                    </span>
+                    <span className="text-gray-600">•</span>
+                    <span className="bg-green-500/10 text-green-400 border border-green-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">
+                      Cancel anytime
+                    </span>
                   </p>
                 </div>
               </div>

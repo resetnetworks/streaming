@@ -44,7 +44,7 @@ const AlbumCard = ({
 
       <div className="w-full flex justify-between items-center bg-gray-800/40 md:p-4 p-3">
         {typeof finalSongsCount === "number" ? (
-          <span className="text-[10px] text-slate-200 flex-shrink-0 font-medium text-left">
+          <span className="text-[10px] text-white/60 flex-shrink-0 font-medium text-left">
             {finalSongsCount} {finalSongsCount === 1 ? "track" : "tracks"}
           </span>
         ) : (

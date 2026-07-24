@@ -435,6 +435,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.status = "succeeded";
         state.message = "Logged out successfully";
+        state.roleUpdateModalOpen = false;
       })
       .addCase(updatePreferredGenres.fulfilled, (state, action) => {
         if (state.user) {
