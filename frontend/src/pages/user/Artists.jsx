@@ -27,10 +27,10 @@ const Artists = () => {
   const prefetchNextPage = usePrefetchArtistsPage();
   // Extract data from response
   const artists = artistsData?.data || [];
-  const pagination = artistsData?.pagination || { 
-    page: currentPage, 
-    totalPages: 1, 
-    total: 0 
+  const pagination = artistsData?.pagination || {
+    page: currentPage,
+    totalPages: 1,
+    total: 0
   };
 
   // Navigation handler
@@ -124,14 +124,10 @@ const Artists = () => {
       <div className="min-h-screen">
         <div className="relative z-10 p-6">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <HiSpeakerWave className="w-8 h-8" style={{ color: '#4DB3FF' }} />
-              <h1 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #4DB3FF, #3380FF)' }}>
-                ARTISTS
-              </h1>
-              <FaMicrophone className="w-8 h-8" style={{ color: '#4DB3FF' }} />
-            </div>
-            <p className="text-gray-400 text-lg">Discover Amazing Artists</p>
+            <h1 className="text-4xl mb-3 font-['Jura'] uppercase tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+              Artists
+            </h1>
+            <p className="text-gray-400 text-sm font-medium">Discover our artist collection</p>
           </div>
 
           {error && (
@@ -216,8 +212,8 @@ const Artists = () => {
                         {/* Artist Info */}
                         <div className="text-center space-y-2">
                           <h3 className="text-white font-semibold text-sm truncate transition-colors"
-                            onMouseEnter={e => e.currentTarget.style.color='#4DB3FF'}
-                            onMouseLeave={e => e.currentTarget.style.color=''}
+                            onMouseEnter={e => e.currentTarget.style.color = '#4DB3FF'}
+                            onMouseLeave={e => e.currentTarget.style.color = ''}
                           >
                             {artist.name || "Unknown Artist"}
                           </h3>
@@ -248,11 +244,10 @@ const Artists = () => {
                     key={pageNum}
                     onClick={() => handlePageClick(pageNum)}
                     disabled={isPreviousData}
-                    className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${
-                      pageNum === pagination.page
+                    className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${pageNum === pagination.page
                         ? "text-white shadow-lg"
                         : "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50"
-                    }`}
+                      }`}
                     style={pageNum === pagination.page ? { backgroundColor: '#3380FF' } : {}}
                   >
                     {pageNum}
