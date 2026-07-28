@@ -28,13 +28,16 @@ Always wrap forms, success summaries, and main panels in a premium gradient card
 
 ## 2. Gradients & Action Elements
 
-### Primary Action Button Gradient
+### Primary & Action Button Pattern
 `background: linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)`
 - **Behavior & Hover**:
   - Remove zoom/scale animations on hover.
   - On hover, use: `hover:brightness-110` and `box-shadow: 0 0 15px rgba(51, 128, 255, 0.2)` glow effect.
   - On active click: `active:scale-95` transition.
-- **Where to use**: Main CTAs, Sign In, Register, Forgot Password, and "Submit Application" buttons.
+- **Shapes**: 
+  - `rounded-lg`: For large form submissions (Login, Register).
+  - `rounded-full` (Capsule): For inner-page action buttons (e.g., "View Artist", Play buttons, Profile actions).
+- **Where to use**: ALL primary CTAs and action buttons across the app, replacing flat solid colors to maintain a unified, premium look.
 
 ### Underlines & Links
 - Remove default underlines on redirection links (`no-underline`).

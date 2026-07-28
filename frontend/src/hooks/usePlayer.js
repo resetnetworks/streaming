@@ -210,7 +210,7 @@ export const usePlayer = () => {
           const repeat = repeatModeRef.current;
           if (repeat === "one") {
             video.currentTime = 0;
-            video.play().catch(() => {});
+            video.play().catch(() => { });
             return;
           }
           if (!shuffleMode && queueRef.current.upcoming.length > 0) {
@@ -463,7 +463,7 @@ export const usePlayer = () => {
       if (action === "pause") {
         if (video) { video.pause(); dispatch(pause()); }
       } else if (action === "play") {
-        if (video) { video.play().catch(() => {}); dispatch(play()); }
+        if (video) { video.play().catch(() => { }); dispatch(play()); }
       } else {
         handleTogglePlay();
       }
@@ -477,6 +477,51 @@ export const usePlayer = () => {
     : false;
 
   const isPlayerLoading = streamLoading || isLoading;
+
+  // Media Session API Setup for rich browser media notifications
+  useEffect(() => {
+    if ("mediaSession" in navigator && currentSong) {
+      // Helper to format slug (e.g. "manchester-orchestra-qtl1ju" -> "Manchester Orchestra")
+      const formatSlug = (slug) => {
+        if (!slug) return null;
+        const clean = slug.replace(/-[a-z0-9]{5,8}$/i, ''); // Remove trailing random ID
+        return clean.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      };
+
+      const artistName = currentSong.singer || currentSong.artist?.name || currentSong.artist || formatSlug(currentSong.artistSlug) || "Unknown Artist";
+      const albumName = currentSong.albumName || currentSong.album?.title || currentSong.album?.name || currentSong.album || formatSlug(currentSong.albumSlug) || "Reset Music";
+
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: currentSong.title || "Unknown Track",
+        artist: artistName,
+        album: albumName,
+        artwork: currentSong.coverImage ? [
+          { src: currentSong.coverImage, sizes: "96x96", type: "image/jpeg" },
+          { src: currentSong.coverImage, sizes: "128x128", type: "image/jpeg" },
+          { src: currentSong.coverImage, sizes: "192x192", type: "image/jpeg" },
+          { src: currentSong.coverImage, sizes: "256x256", type: "image/jpeg" },
+          { src: currentSong.coverImage, sizes: "384x384", type: "image/jpeg" },
+          { src: currentSong.coverImage, sizes: "512x512", type: "image/jpeg" }
+        ] : []
+      });
+
+      navigator.mediaSession.setActionHandler("play", handleTogglePlay);
+      navigator.mediaSession.setActionHandler("pause", handleTogglePlay);
+      navigator.mediaSession.setActionHandler("previoustrack", handlePrev);
+      navigator.mediaSession.setActionHandler("nexttrack", handleNext);
+      navigator.mediaSession.setActionHandler("seekto", (details) => {
+        if (details.seekTime !== undefined) {
+          handleSeekCommit(details.seekTime);
+        }
+      });
+    }
+  }, [currentSong, handleTogglePlay, handlePrev, handleNext, handleSeekCommit]);
+
+  useEffect(() => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : (isPlayerLoading ? "none" : "paused");
+    }
+  }, [isPlaying, isPlayerLoading]);
 
   return {
     videoRef,
