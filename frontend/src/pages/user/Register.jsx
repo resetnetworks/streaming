@@ -147,7 +147,7 @@ const Register = () => {
           <IconHeader />
 
           <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center w-full max-w-[650px]">
-            <h1 className="text-4xl mb-6 font-['Jura'] uppercase tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl mb-6 font-['Jura'] capitalize tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
               sign up to reset music
             </h1>
 
