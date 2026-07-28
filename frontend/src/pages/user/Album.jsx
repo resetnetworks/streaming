@@ -699,8 +699,11 @@ export default function Album() {
                     </span>
                     <button
                       onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                      className="px-4 py-2 text-white rounded-full font-semibold text-sm transition-all duration-200 shadow-md flex items-center gap-1.5"
-                      style={{ backgroundColor: '#3380FF' }}
+                      className="px-4 py-2 text-white rounded-full font-semibold text-sm transition-all duration-300 hover:brightness-110 active:scale-95 flex items-center gap-1.5"
+                      style={{
+                        background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                        boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+                      }}
                     >
                       <span>View Artist</span>
                       <svg
@@ -953,8 +956,11 @@ export default function Album() {
                       </span>
                       <button
                         onClick={() => navigate(`/artist/${getArtistSlug()}`)}
-                        className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 text-white rounded-full font-semibold transition-all duration-200 shadow-md flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
-                        style={{ backgroundColor: '#3380FF' }}
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 text-white rounded-full font-semibold transition-all duration-300 hover:brightness-110 active:scale-95 flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                        style={{
+                          background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                          boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
+                        }}
                       >
                         <span>View Artist</span>
                         <svg
