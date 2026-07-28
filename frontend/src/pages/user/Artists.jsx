@@ -124,7 +124,7 @@ const Artists = () => {
       <div className="min-h-screen">
         <div className="relative z-10 p-6">
           <div className="text-center mb-12">
-            <h1 className="text-4xl mb-3 font-['Jura'] uppercase tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl mb-3 font-['Jura'] capitalize tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
               Artists
             </h1>
             <p className="text-gray-400 text-sm font-medium">Discover our artist collection</p>
@@ -245,8 +245,8 @@ const Artists = () => {
                     onClick={() => handlePageClick(pageNum)}
                     disabled={isPreviousData}
                     className={`w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-300 ${pageNum === pagination.page
-                        ? "text-white shadow-lg"
-                        : "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50"
+                      ? "text-white shadow-lg"
+                      : "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 border border-gray-700/50"
                       }`}
                     style={pageNum === pagination.page ? { backgroundColor: '#3380FF' } : {}}
                   >
