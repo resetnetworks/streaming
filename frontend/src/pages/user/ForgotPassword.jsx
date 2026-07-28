@@ -39,7 +39,7 @@ const ForgotPassword = () => {
         <IconHeader />
 
         <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center w-full max-w-[650px]">
-          <h1 className="text-4xl mb-6 font-['Jura'] uppercase tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl mb-6 font-['Jura'] capitalize tracking-wider font-extrabold text-center bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
             forgot your password?
           </h1>
 
@@ -77,7 +77,7 @@ const ForgotPassword = () => {
 
             {/* Submit Button */}
             <div className="w-full max-w-[380px] mt-9 flex justify-center">
-              <button 
+              <button
                 className="w-full py-3 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95"
                 style={{
                   background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
