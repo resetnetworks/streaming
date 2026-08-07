@@ -680,9 +680,12 @@ export default function Album() {
                         disabled={processingPayment || paymentLoading}
                         className={`px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200 shadow-md ${processingPayment || paymentLoading
                           ? "bg-gray-500 cursor-not-allowed text-gray-300"
-                          : "text-white"
+                          : "text-white hover:brightness-110 active:scale-95"
                           }`}
-                        style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
+                        style={!(processingPayment || paymentLoading) ? { 
+                          background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                          boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)'
+                        } : {}}
                       >
                         {processingPayment || paymentLoading
                           ? "Processing..."
@@ -937,9 +940,12 @@ export default function Album() {
                           disabled={processingPayment || paymentLoading}
                           className={`px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-200 shadow-md text-sm sm:text-base ${processingPayment || paymentLoading
                             ? "bg-gray-500 cursor-not-allowed text-gray-300"
-                            : "text-white"
+                            : "text-white hover:brightness-110 active:scale-95"
                             }`}
-                          style={!(processingPayment || paymentLoading) ? { backgroundColor: '#3380FF' } : {}}
+                          style={!(processingPayment || paymentLoading) ? { 
+                            background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+                            boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)'
+                          } : {}}
                         >
                           {processingPayment || paymentLoading
                             ? "Processing..."

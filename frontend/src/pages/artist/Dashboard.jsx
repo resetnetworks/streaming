@@ -60,7 +60,8 @@ export default function Dashboard() {
   const [currentUploadPage, setCurrentUploadPage] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [_showBatchProgress, setShowBatchProgress] = useState(false);
-  const [_batchProgressData, setBatchProgressData] = useState(null);
+  const [batchProgressData, setBatchProgressData] = useState(null);
+  const [selectedDraftId, setSelectedDraftId] = useState(null);
 
   // After upload completes, signal UploadsComponent which tab to show
   const [uploadedTabToShow, setUploadedTabToShow] = useState(null);
@@ -180,7 +181,13 @@ export default function Dashboard() {
     }
 
     setCurrentUploadPage(null);
+    setSelectedDraftId(null);
     setShowUploadModal(false);
+  };
+
+  const handleDraftSelect = (draftId) => {
+    setSelectedDraftId(draftId);
+    setCurrentUploadPage("import");
   };
 
   /**
@@ -190,9 +197,14 @@ export default function Dashboard() {
    */
   const handleUploadComplete = (uploadType) => {
     setCurrentUploadPage(null);
+    setSelectedDraftId(null);
     setSelectedTab("uploads");
     // "single" and "mix" both belong to the "songs" tab
-    setUploadedTabToShow(uploadType === "album" ? "albums" : "songs");
+    if (uploadType === "drafts") {
+      setUploadedTabToShow("drafts");
+    } else {
+      setUploadedTabToShow(uploadType === "album" ? "albums" : "songs");
+    }
   };
 
   // Batch progress handlers for album multi-song uploads
@@ -258,6 +270,7 @@ export default function Dashboard() {
         <ImportUpload
           onCancel={handleCancelUpload}
           onComplete={handleUploadComplete}
+          draftId={selectedDraftId}
         />
       );
     }
@@ -268,6 +281,7 @@ export default function Dashboard() {
         <UploadsComponent
           defaultTab={uploadedTabToShow}
           onTabConsumed={() => setUploadedTabToShow(null)}
+          onDraftSelect={handleDraftSelect}
         />
       );
     }

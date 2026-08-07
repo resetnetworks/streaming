@@ -74,7 +74,7 @@ export const forceLogout = async () => {
   if (window.store) {
     try {
       window.store.dispatch({ type: 'auth/logout/fulfilled' });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const currentPath = window.location.pathname;
@@ -95,7 +95,7 @@ export const forceLogout = async () => {
 axiosInstance.interceptors.request.use(
   (config) => {
     if (isLoggingOut) return config;
-    
+
     // Inject active workspace ID if present in localStorage
     if (typeof window !== 'undefined') {
       const activeWorkspaceId = localStorage.getItem("activeWorkspaceId");
@@ -103,7 +103,7 @@ axiosInstance.interceptors.request.use(
         config.headers["x-workspace-id"] = activeWorkspaceId;
       }
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -123,19 +123,42 @@ axiosInstance.interceptors.response.use(
     const status = error.response?.status;
     const code = error.response?.data?.code; // ✅ NEW: code check karo
 
-    // ✅ NEW: ROLE_CHANGED — modal show karo, logout mat karo abhi
+    // ✅ NEW: ROLE_CHANGED — refresh session auto
     if (status === 401 && code === "ROLE_CHANGED") {
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-      const authPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
-      const isOnAuthPage = authPaths.some(path => currentPath.includes(path));
+      try {
+        const baseURL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+        // Extract the exact token that was used in the failed request
+        let tokenToRefresh = error.config.headers["Authorization"]?.replace("Bearer ", "");
+        if (!tokenToRefresh) {
+          tokenToRefresh = localStorage.getItem("token") || getTokenFromCookie();
+        }
 
-      if (window.store && !isOnAuthPage) {
-        try {
-          const { setRoleUpdateModal } = await import("../features/auth/authSlice");
+        const refreshResponse = await axios.post(`${baseURL}/users/refresh-session`, {}, {
+          withCredentials: true,
+          headers: tokenToRefresh ? { Authorization: `Bearer ${tokenToRefresh}` } : {}
+        });
+
+        const newToken = refreshResponse.data.token;
+        const updatedUser = refreshResponse.data.user;
+
+        if (newToken) {
+          localStorage.setItem("token", newToken);
+          error.config.headers["Authorization"] = `Bearer ${newToken}`;
+        }
+        
+        if (window.store && updatedUser) {
+          const { updateUserSession, setRoleUpdateModal } = await import("../features/auth/authSlice");
+          window.store.dispatch(updateUserSession(updatedUser));
           window.store.dispatch(setRoleUpdateModal(true));
-        } catch (e) {}
+        }
+
+        // retry the original request
+        return axiosInstance(error.config);
+      } catch (refreshError) {
+        // if refresh fails, fallback to force logout
+        await forceLogout();
+        return Promise.reject(refreshError);
       }
-      return Promise.reject(error); // ✅ aage propagate mat karo logout tak
     }
 
     // ✅ 401 — normal logout (ROLE_CHANGED wala upar handle ho gaya)
