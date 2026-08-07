@@ -1,11 +1,9 @@
 import React, { useState } from 'react'
 import { IoAddCircleSharp } from "react-icons/io5";
 import SelectUploadType from '../upload/SelectUploadType';
-import SelectImportType from '../upload/SelectImportType';
 
 const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
   
   // Determine display text based on current state
   let displayText;
@@ -47,33 +45,30 @@ const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
         </div>
         {!currentUploadPage && (
           <div className="flex gap-4 items-center">
-            {/* <div 
-              className="button-wrapper cursor-pointer"
-              onClick={() => setShowImportModal(true)}
+            <button
+              onClick={() => handleImportTypeSelect("discography")}
+              className="md:w-48 sm:w-40 w-36 h-9 sm:h-10 md:h-11 md:text-lg sm:text-sm text-xs font-semibold text-white border border-white/40 bg-white/5 rounded-lg transition-all duration-300 hover:bg-white/10 hover:border-white/60 active:scale-95 flex items-center justify-center cursor-pointer tracking-wider font-['Jura']"
             >
-              <button className="custom-button md:!w-32 sm:!w-24 !w-20 md:!text-[20px] !text-[12px] sm:!text-[14px] flex justify-center items-center">
-                import
-              </button>
-            </div> */}
-            <div 
-              className="button-wrapper cursor-pointer"
+              Import Catalog
+            </button>
+            <button
               onClick={() => setShowUploadModal(true)}
+              className="md:w-32 sm:w-24 w-20 h-9 sm:h-10 md:h-11 md:text-lg sm:text-sm text-xs font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95 flex items-center justify-center shadow-[0_0_15px_rgba(51,128,255,0.2)] cursor-pointer tracking-wider font-['Jura']"
+              style={{
+                background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+              }}
             >
-              <button className="custom-button md:!w-32 sm:!w-24 !w-20 md:!text-[20px] !text-[12px] sm:!text-[14px] flex justify-center items-center">
-                upload
-              </button>
-            </div>
+              Upload
+            </button>
           </div>
         )}
         {currentUploadPage && (
-          <div 
-            className="button-wrapper cursor-pointer"
+          <button
             onClick={() => setCurrentUploadPage(null)}
+            className="px-6 py-2.5 text-sm font-semibold text-gray-300 border border-white/20 rounded-lg transition-all duration-300 hover:bg-white/5 active:scale-95 flex items-center justify-center uppercase tracking-wider"
           >
-            <button className="custom-button md:!w-32 sm:!w-24 !w-20 md:!text-[16px] !text-[12px] sm:!text-[14px] flex justify-center items-center">
-              Cancel Upload
-            </button>
-          </div>
+            Cancel Upload
+          </button>
         )}
       </div>
 
@@ -82,13 +77,6 @@ const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         onUploadTypeSelect={handleUploadTypeSelect}
-      />
-
-      {/* Import Type Modal */}
-      <SelectImportType
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onImportTypeSelect={handleImportTypeSelect}
       />
     </>
   )

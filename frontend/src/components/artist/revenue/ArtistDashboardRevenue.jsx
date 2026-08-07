@@ -37,8 +37,8 @@ const ArtistDashboardRevenue = () => {
   });
 
   const balanceQuery = useArtistBalance();
-  const ledgerQuery = useArtistLedger({ 
-    page: ledgerPage, 
+  const ledgerQuery = useArtistLedger({
+    page: ledgerPage,
     limit: 20,
     type: ledgerType === 'all' ? undefined : ledgerType,
     startDate: dateRange.start,
@@ -79,19 +79,19 @@ const ArtistDashboardRevenue = () => {
       alert('Please fill in all fields');
       return;
     }
-    
+
     const amount = parseFloat(payoutAmount);
     if (amount <= 0) {
       alert('Amount must be greater than 0');
       return;
     }
-    
+
     const availableBalance = balanceQuery.data?.balance?.availableBalance || 0;
     if (amount > availableBalance) {
       alert('Amount exceeds available balance');
       return;
     }
-    
+
     requestPayoutMutation.mutate({ amount, paypalEmail }, {
       onSuccess: () => {
         setShowPayoutModal(false);
@@ -194,11 +194,10 @@ const ArtistDashboardRevenue = () => {
           <button
             onClick={() => setShowPayoutModal(true)}
             disabled={!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0}
-            className={`w-full py-2 px-4 rounded-lg flex text-white items-center justify-center gap-2 transition-all ${
-              (!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0)
+            className={`w-full py-2 px-4 rounded-lg flex text-white items-center justify-center gap-2 transition-all ${(!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0)
                 ? 'bg-gray-700 cursor-not-allowed'
                 : ''
-            }`}
+              }`}
             style={
               (!balanceQuery.data?.balance?.availableBalance || balanceQuery.data?.balance?.availableBalance <= 0)
                 ? {}
@@ -221,7 +220,7 @@ const ArtistDashboardRevenue = () => {
               Transaction Ledger
             </h2>
           </div>
-          
+
           <div className="overflow-x-auto">
             {ledgerQuery.isLoading ? (
               <div className="p-8 text-center">
@@ -255,19 +254,17 @@ const ArtistDashboardRevenue = () => {
                         <div className="text-sm text-gray-400">{item.reference}</div>
                       </td>
                       <td className="p-4">
-                        <div className={`flex items-center gap-1 ${
-                          item.type === 'credit' ? 'text-green-400' : 'text-red-400'
-                        }`}>
+                        <div className={`flex items-center gap-1 ${item.type === 'credit' ? 'text-green-400' : 'text-red-400'
+                          }`}>
                           {item.type === 'credit' ? <MdArrowUpward /> : <MdArrowDownward />}
                           {formatCurrency(item.amountUSD || item.amount)}
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          item.type === 'credit' 
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.type === 'credit'
                             ? 'bg-green-900/30 text-green-400'
                             : 'bg-red-900/30 text-red-400'
-                        }`}>
+                          }`}>
                           {item.type}
                         </span>
                       </td>
@@ -277,7 +274,7 @@ const ArtistDashboardRevenue = () => {
               </table>
             )}
           </div>
-          
+
           {/* Pagination */}
           {(ledgerQuery.data?.ledger || []).length > 0 && (
             <div className="p-4 border-t border-gray-800 flex justify-between items-center">
@@ -308,7 +305,7 @@ const ArtistDashboardRevenue = () => {
               Payout History
             </h2>
           </div>
-          
+
           <div className="overflow-x-auto">
             {payoutsQuery.isLoading ? (
               <div className="p-8 text-center">
@@ -339,13 +336,12 @@ const ArtistDashboardRevenue = () => {
                       <td className="p-4 text-gray-300">{formatDate(payout.createdAt)}</td>
                       <td className="p-4 text-white font-medium">{formatCurrency(payout.amount)}</td>
                       <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          payout.status === 'paid' 
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${payout.status === 'paid'
                             ? 'bg-green-900/30 text-green-400'
                             : payout.status === 'requested'
-                            ? 'bg-yellow-900/30 text-yellow-400'
-                            : 'bg-red-900/30 text-red-400'
-                        }`}>
+                              ? 'bg-yellow-900/30 text-yellow-400'
+                              : 'bg-red-900/30 text-red-400'
+                          }`}>
                           {payout.status}
                         </span>
                       </td>
@@ -379,7 +375,7 @@ const ArtistDashboardRevenue = () => {
                 </button>
               </div>
             </div>
-            
+
             <form onSubmit={handlePayoutRequest} className="p-6">
               {/* Available Balance Info */}
               <div className="mb-6 p-4 bg-blue-900/20 rounded-lg border border-blue-800/30">
@@ -391,7 +387,7 @@ const ArtistDashboardRevenue = () => {
                   {formatCurrency(balanceQuery.data?.balance?.availableBalance || 0)}
                 </div>
               </div>
-              
+
               {/* Amount Input */}
               <div className="mb-4">
                 <label className="block text-gray-400 mb-2">Amount to Withdraw</label>
@@ -413,7 +409,7 @@ const ArtistDashboardRevenue = () => {
                   Minimum withdrawal: {formatCurrency(1)}
                 </div>
               </div>
-              
+
               {/* PayPal Email Input */}
               <div className="mb-6">
                 <label className="block text-gray-400 mb-2">PayPal Email Address</label>
@@ -429,7 +425,7 @@ const ArtistDashboardRevenue = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button

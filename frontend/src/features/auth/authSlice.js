@@ -43,9 +43,9 @@ const storeAuthToLocal = (user) => {
     preferredGenres: preferredGenres.length > 0 ? preferredGenres : existingUser?.preferredGenres || [],
     playlist: playlist.length > 0 ? playlist : existingUser?.playlist || [],
     purchaseHistory: purchaseHistory.length > 0 ? purchaseHistory : existingUser?.purchaseHistory || [],
-     subscribedArtists: subscribedArtists.length > 0 
-    ? subscribedArtists 
-    : existingUser?.subscribedArtists || [],
+    subscribedArtists: subscribedArtists.length > 0
+      ? subscribedArtists
+      : existingUser?.subscribedArtists || [],
     purchasedSongs,
     purchasedAlbums,
     likedsong,
@@ -74,19 +74,19 @@ const clearAuthFromLocal = () => {
 // ====================
 
 export const registerUser = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
-  try {    
+  try {
     const res = await axios.post("/users/register", userData, {
       withCredentials: true,
     });
-    
+
     const { user } = res.data;
 
     const getTokenFromCookie = () => {
       if (typeof document === 'undefined') return null;
-      
+
       const cookies = document.cookie.split('; ');
       const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
-      
+
       if (tokenCookie) {
         return tokenCookie.split('=')[1];
       }
@@ -94,13 +94,13 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     };
 
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const token = getTokenFromCookie();
-    
+
     if (token) {
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      
+
       try {
         await axios.get("/users/me", { withCredentials: true });
       } catch (tokenError) {
@@ -121,19 +121,19 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
 
     storeAuthToLocal(user);
     return user;
-    
+
   } catch (err) {
     console.error("❌ Registration error:", err?.response?.data?.message);
-    
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete axios.defaults.headers.common["Authorization"];
-    
-     const errorMessage = err.response?.data?.message || 
-                        err.response?.data?.error ||
-                        err.message || 
-                        "Login failed";
-    
+
+    const errorMessage = err.response?.data?.message ||
+      err.response?.data?.error ||
+      err.message ||
+      "Login failed";
+
     return thunkAPI.rejectWithValue(errorMessage);
   }
 });
@@ -145,7 +145,7 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
     const res = await axios.post("/users/login", userData, {
       withCredentials: true,
     });
-    
+
     const { user } = res.data;
 
     const getTokenFromCookie = () => {
@@ -165,15 +165,15 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
 
     storeAuthToLocal(user);
     return user;
-    
+
   } catch (err) {
     // ✅ IMPROVED ERROR HANDLING
     let errorMessage = "Login failed";
-    
+
     if (err.response) {
       // Server responded with error
       const { data, status } = err.response;
-      
+
       if (status === 403) {
         errorMessage = data.message || "Invalid email or password";
       } else if (status === 400) {
@@ -190,27 +190,27 @@ export const loginUser = createAsyncThunk("auth/login", async (userData, thunkAP
       // Something else happened
       errorMessage = err.message || "An unexpected error occurred";
     }
-    
+
     // ✅ Clear local storage on login error
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete axios.defaults.headers.common["Authorization"];
-    
+
     // ✅ Show toast notification (optional)
     if (typeof window !== 'undefined') {
       toast.error(errorMessage);
     }
-    
+
     return thunkAPI.rejectWithValue(errorMessage);
   }
 });
 
 // 🆕 NEW: Social Login Success Handler
 export const handleSocialLoginSuccess = createAsyncThunk(
-  "auth/socialLoginSuccess", 
+  "auth/socialLoginSuccess",
   async ({ isNewUser }, thunkAPI) => {
     try {
-      
+
       // Get token from cookie
       const getTokenFromCookie = () => {
         if (typeof document === 'undefined') return null;
@@ -221,9 +221,9 @@ export const handleSocialLoginSuccess = createAsyncThunk(
 
       // Wait for cookie to be set by backend
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       const token = getTokenFromCookie();
-      
+
       if (token) {
         localStorage.setItem("token", token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -236,16 +236,16 @@ export const handleSocialLoginSuccess = createAsyncThunk(
 
       // Store to localStorage using existing function
       storeAuthToLocal(user);
-      
+
       return { user, isNewUser };
-      
+
     } catch (err) {
-      
+
       // Clear partial data on error
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       delete axios.defaults.headers.common["Authorization"];
-      
+
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Social login failed");
     }
   }
@@ -275,7 +275,7 @@ export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) =>
       try {
         await window.__PERSISTOR__.purge();
         await window.__PERSISTOR__.flush();
-      } catch (e) {}
+      } catch (e) { }
     }
     clearAuthFromLocal();
     delete axios.defaults.headers.common["Authorization"];
@@ -343,8 +343,8 @@ const authSlice = createSlice({
       storeAuthToLocal(state.user);
     },
     setRoleUpdateModal: (state, action) => {
-  state.roleUpdateModalOpen = action.payload;
-},
+      state.roleUpdateModalOpen = action.payload;
+    },
     addPurchasedSong: (state, action) => {
       if (state.user) {
         if (!state.user.purchasedSongs) {
@@ -366,6 +366,10 @@ const authSlice = createSlice({
         }
         storeAuthToLocal(state.user);
       }
+    },
+    updateUserSession: (state, action) => {
+      state.user = action.payload;
+      storeAuthToLocal(action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -392,13 +396,13 @@ const authSlice = createSlice({
         state.user = user;
         state.isAuthenticated = true;
         state.status = "succeeded";
-        
+
         if (isNewUser) {
           state.message = "Social registration successful! Please select your genres.";
         } else {
           state.message = "Social login successful!";
         }
-        
+
       })
       .addCase(handleSocialLoginSuccess.rejected, (state, action) => {
         state.user = null;
@@ -425,11 +429,11 @@ const authSlice = createSlice({
         storeAuthToLocal(user);
       })
       .addCase(getMyProfile.rejected, (state) => {
-  state.user = null;           // ✅ user clear
-  state.isAuthenticated = false;
-  state.status = "failed";
-  clearAuthFromLocal();        // ✅ localStorage bhi clear
-})
+        state.user = null;           // ✅ user clear
+        state.isAuthenticated = false;
+        state.status = "failed";
+        clearAuthFromLocal();        // ✅ localStorage bhi clear
+      })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
@@ -484,5 +488,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearMessage, addPurchase, addPurchasedSong, addPurchasedAlbum,setRoleUpdateModal } = authSlice.actions;
+export const { clearMessage, addPurchase, addPurchasedSong, addPurchasedAlbum, setRoleUpdateModal, updateUserSession } = authSlice.actions;
 export default authSlice.reducer;

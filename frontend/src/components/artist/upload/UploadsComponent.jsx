@@ -7,6 +7,10 @@ import {
   useDashboardSingles,
   useDashboardAlbums,
 } from "../../../hooks/api/useArtists";
+import { useDraftAlbums, useMigrationStatus } from "../../../hooks/api/useMigration";
+import { getS3Url } from "../../../utills/s3Utils";
+
+import { toast } from "sonner";
 
 /**
  * defaultTab  — "songs" | "albums" | null
@@ -17,11 +21,54 @@ import {
  *   Called once after we apply defaultTab so Dashboard can reset
  *   its signal. Without this, every re-render would force the tab back.
  */
-const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
+const UploadsComponent = ({ defaultTab = null, onTabConsumed, onDraftSelect }) => {
   const { data: songsData, isLoading: songsLoading } = useDashboardSingles();
   const { data: albumsData, isLoading: albumsLoading } = useDashboardAlbums();
 
-  const [activeTab, setActiveTab] = useState("albums");
+  const activeJobId = localStorage.getItem("activeMigrationJobId");
+  const { data: jobStatus } = useMigrationStatus(activeJobId, {
+    refetchInterval: (query) => {
+      const status = query.state?.data?.data?.status;
+      if (status === 'READY' || status === 'FAILED' || status === 'IMPORTED') {
+        return false;
+      }
+      return 5000;
+    }
+  });
+
+  const currentStatus = jobStatus?.data?.status;
+  const currentStep = jobStatus?.data?.currentStep;
+  const currentProgress = jobStatus?.data?.progress;
+  const isMigrating = currentStatus && !['READY', 'FAILED', 'IMPORTED'].includes(currentStatus);
+
+  useEffect(() => {
+    if (currentStatus === 'READY') {
+      toast.success("Migration completed! All drafts fetched.", { id: "mig-toast" });
+      localStorage.removeItem("activeMigrationJobId");
+    } else if (currentStatus === 'FAILED') {
+      toast.error("Migration failed.", { id: "mig-toast" });
+      localStorage.removeItem("activeMigrationJobId");
+    } else if (isMigrating && currentStep) {
+      toast.loading(`Syncing: ${currentStep} (${currentProgress || 0}%)`, { id: "mig-toast" });
+    }
+  }, [currentStatus, currentStep, currentProgress, isMigrating]);
+
+  const { data: draftsData, isLoading: draftsLoading } = useDraftAlbums({
+    refetchInterval: isMigrating ? 5000 : false
+  });
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("uploadsActiveTab") || "albums";
+    }
+    return "albums";
+  });
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("uploadsActiveTab", activeTab);
+    }
+  }, [activeTab]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("lastMonth");
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -68,7 +115,12 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
 
   const songs = songsData?.pages?.flatMap((page) => page.songs) || [];
   const albums = albumsData?.pages?.flatMap((page) => page.albums) || [];
-  const data = activeTab === "songs" ? songs : albums;
+  const drafts = draftsData?.data || [];
+
+  let data = [];
+  if (activeTab === "songs") data = songs;
+  else if (activeTab === "albums") data = albums;
+  else if (activeTab === "drafts") data = drafts;
 
   const filtered = data.filter((item) =>
     item.title?.toLowerCase().includes(search.toLowerCase())
@@ -77,7 +129,8 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
   // Show spinner while the active tab's data is loading
   if (
     (activeTab === "songs" && songsLoading) ||
-    (activeTab === "albums" && albumsLoading)
+    (activeTab === "albums" && albumsLoading) ||
+    (activeTab === "drafts" && draftsLoading)
   ) {
     return (
       <div className="p-4 md:p-6">
@@ -94,13 +147,15 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
       className={`
         group flex flex-col md:grid md:grid-cols-[60px_1fr_120px_140px]
         p-4 md:p-6 border-b border-gray-500/30 last:border-b-0
-        hover:bg-gradient-to-r hover:from-[#020617]/90 hover:to-[#001b3d]/90
-        hover:border-blue-500/30
-        hover:scale-[1.02] md:hover:scale-100 transition-all duration-500 ease-out
-        rounded-xl md:rounded-none md:hover:rounded-xl bg-white/3 md:bg-transparent
-        backdrop-blur-sm ${activeTab === "albums" ? "cursor-pointer" : ""}
+        hover:bg-gradient-to-r hover:scale-[1.02] md:hover:scale-100 transition-all duration-500 ease-out
+        rounded-xl md:rounded-none md:hover:rounded-xl bg-white/3 md:bg-transparent backdrop-blur-sm
+        hover:from-[#020617]/90 hover:to-[#001b3d]/90 hover:border-blue-500/30
+        ${activeTab === "drafts" || activeTab === "albums" ? "cursor-pointer" : ""}
       `}
-      onClick={activeTab === "albums" ? () => handleAlbumClick(item) : undefined}
+      onClick={() => {
+        if (activeTab === "albums") handleAlbumClick(item);
+        if (activeTab === "drafts" && onDraftSelect) onDraftSelect(item._id);
+      }}
     >
       {/* ── Mobile row ── */}
       <div className="md:hidden">
@@ -108,7 +163,7 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
           <div className="relative flex-shrink-0" data-title={item.title}>
             <div className="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-blue-500/20">
               <img
-                src={item.coverImage || "/api/placeholder/64/64"}
+                src={getS3Url(item.coverImage || item.coverImageKey) || "/api/placeholder/64/64"}
                 alt={item.title}
                 className="w-full h-full object-cover"
                 onError={handleImageError}
@@ -125,15 +180,14 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
             </h3>
             <div className="space-y-1">
               <span
-                className={`px-2 py-1 rounded-full lowercase text-xs font-medium ${
-                  item.accessType === "purchase-only"
-                    ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                    : item.accessType === "subscription"
-                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                    : "bg-green-500/20 text-green-300 border border-green-500/30"
-                }`}
+                className={`px-2 py-1 rounded-full lowercase text-xs font-medium ${item.accessType === "purchase-only"
+                  ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                  : item.accessType === "free"
+                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                    : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                  }`}
               >
-                {item.accessType?.charAt(0).toLowerCase() + item.accessType?.slice(1) || "Free"}
+                {item.accessType === "purchase-only" ? "purchase-only" : item.accessType === "free" ? "free" : "subscription"}
               </span>
               <div className="flex items-center gap-1 text-sm text-white/60">
                 <LuCalendarDays className="w-3 h-3 flex-shrink-0" />
@@ -156,7 +210,7 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
             data-title={item.title}
           >
             <img
-              src={item?.coverImage || "/api/placeholder/40/40"}
+              src={getS3Url(item?.coverImage || item?.coverImageKey) || "/api/placeholder/40/40"}
               alt={item?.title}
               className="w-full h-full object-cover"
               onError={handleImageError}
@@ -169,15 +223,14 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
 
         <div className="flex items-center justify-center">
           <span
-            className={`px-3 py-1 lowercase rounded-full text-xs font-medium ${
-              item?.accessType === "purchase-only"
-                ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                : item?.accessType === "subscription"
-                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                : "bg-green-500/20 text-green-300 border border-green-500/30"
-            }`}
+            className={`px-3 py-1 lowercase rounded-full text-xs font-medium ${item?.accessType === "purchase-only"
+              ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+              : item?.accessType === "free"
+                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+              }`}
           >
-            {item.accessType?.charAt(0).toLowerCase() + item.accessType?.slice(1) || "Free"}
+            {item?.accessType === "purchase-only" ? "purchase-only" : item?.accessType === "free" ? "free" : "subscription"}
           </span>
         </div>
 
@@ -201,23 +254,30 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab("albums")}
-            className={`px-4 py-2 rounded-lg text-sm ${
-              activeTab === "albums"
-                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                : "bg-white/5 text-white/60"
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm ${activeTab === "albums"
+              ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+              : "bg-white/5 text-white/60"
+              }`}
           >
             albums ({albums?.length})
           </button>
           <button
             onClick={() => setActiveTab("songs")}
-            className={`px-4 py-2 rounded-lg text-sm ${
-              activeTab === "songs"
-                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                : "bg-white/5 text-white/60"
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm ${activeTab === "songs"
+              ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+              : "bg-white/5 text-white/60"
+              }`}
           >
             songs ({songs?.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("drafts")}
+            className={`px-4 py-2 rounded-lg text-sm ${activeTab === "drafts"
+              ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+              : "bg-white/5 text-white/60"
+              }`}
+          >
+            drafts ({drafts?.length})
           </button>
         </div>
 
@@ -284,9 +344,8 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab("albums")}
-            className={`pb-2 text-lg px-2 relative ${
-              activeTab === "albums" ? "text-[#4DB3FF]" : "text-white/50"
-            }`}
+            className={`pb-2 text-lg px-2 relative ${activeTab === "albums" ? "text-[#4DB3FF]" : "text-white/50"
+              }`}
           >
             albums
             {activeTab === "albums" && (
@@ -295,12 +354,21 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
           </button>
           <button
             onClick={() => setActiveTab("songs")}
-            className={`pb-2 text-lg px-2 relative ${
-              activeTab === "songs" ? "text-[#4DB3FF]" : "text-white/50"
-            }`}
+            className={`pb-2 text-lg px-2 relative ${activeTab === "songs" ? "text-[#4DB3FF]" : "text-white/50"
+              }`}
           >
             songs
             {activeTab === "songs" && (
+              <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-[#4DB3FF]" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("drafts")}
+            className={`pb-2 text-lg px-2 relative ${activeTab === "drafts" ? "text-[#4DB3FF]" : "text-white/50"
+              }`}
+          >
+            drafts
+            {activeTab === "drafts" && (
               <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-[#4DB3FF]" />
             )}
           </button>
@@ -345,9 +413,44 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed }) => {
 
       {/* Content list */}
       <div className="space-y-2 md:space-y-0">
-        {filtered.length > 0 ? (
-          filtered.map(renderRow)
-        ) : (
+        {filtered.length > 0 && filtered.map(renderRow)}
+        
+        {activeTab === "drafts" && isMigrating && (
+          <>
+            {[1, 2, 3].map((i) => (
+              <div key={`skel-${i}`} className="grid grid-cols-1 md:grid-cols-[60px_1fr_120px_140px] items-center gap-4 py-4 md:py-3 px-6 hover:bg-white/5 transition-all border-b border-gray-500/20 last:border-b-0 animate-pulse">
+                {/* ── Mobile row ── */}
+                <div className="md:hidden">
+                  <div className="flex items-start gap-4">
+                    <div className="w-16 h-16 rounded-xl bg-white/10 flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0 space-y-2 mt-2">
+                      <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                      <div className="h-3 bg-white/10 rounded w-1/3"></div>
+                      <div className="h-4 bg-white/10 rounded-full w-20 mt-1"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Desktop row ── */}
+                <div className="hidden md:contents">
+                  <div className="flex justify-center"><div className="w-4 h-4 bg-white/10 rounded"></div></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-white/10 flex-shrink-0"></div>
+                    <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <div className="w-20 h-6 bg-white/10 rounded-full"></div>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="w-16 h-4 bg-white/10 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {filtered.length === 0 && !(activeTab === "drafts" && isMigrating) && (
           <div className="text-center py-12">
             <div className="inline-block p-6 bg-white/5 rounded-2xl border border-white/10">
               {search ? (

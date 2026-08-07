@@ -1,9 +1,8 @@
 import React from "react";
-import { FaCheckCircle, FaSignOutAlt } from 'react-icons/fa';
+import { FaCheckCircle, FaArrowRight } from 'react-icons/fa';
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logoutUser, setRoleUpdateModal } from "../../features/auth/authSlice";
-import { forceLogout } from "../../utills/axiosInstance";
+import { setRoleUpdateModal } from "../../features/auth/authSlice";
 import { selectRoleUpdateModalOpen, selectIsAuthenticated } from "../../features/auth/authSelectors";
 
 const RoleUpdateModal = () => {
@@ -14,15 +13,10 @@ const RoleUpdateModal = () => {
 
   if (!open || !isAuthenticated) return null;
 
-  const handleLogout = async () => {
-    dispatch(setRoleUpdateModal(false)); // ✅ pehle modal band karo
-    try {
-      await forceLogout();
-      dispatch(logoutUser());
-      navigate("/login", { replace: true });
-    } catch (error) {
-      navigate("/login", { replace: true });
-    }
+  const handleGoToDashboard = () => {
+    dispatch(setRoleUpdateModal(false));
+    // Hard refresh and go to dashboard
+    window.location.href = "/artist/dashboard";
   };
 
   return (
@@ -30,7 +24,7 @@ const RoleUpdateModal = () => {
       <div className="relative w-full max-w-sm mx-4">
         <div className="player-wrapper">
           <div className="player-card rounded-2xl p-8 flex flex-col items-center gap-6 animate-scaleIn">
-            
+
             <div className="relative">
               <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#020216] rounded-full flex items-center justify-center shadow-2xl border border-green-500/30">
                 <FaCheckCircle className="text-3xl text-green-500 animate-pulse" />
@@ -54,18 +48,18 @@ const RoleUpdateModal = () => {
                 You have successfully become an artist!
               </p>
               <p className="text-gray-400 text-xs leading-relaxed" style={{ fontFamily: 'Jura' }}>
-                Please log out and log back in to access your artist dashboard.
+                Your session is automatically updated. Click below to enter your dashboard.
               </p>
             </div>
 
             <div className="w-full">
               <button
                 className="w-full py-3 px-4 bg-transparent border border-green-500/60 hover:border-green-500 rounded-lg text-white transition-all duration-300 text-sm font-medium flex items-center justify-center space-x-2"
-                onClick={handleLogout}
+                onClick={handleGoToDashboard}
                 style={{ fontFamily: 'Jura' }}
               >
-                <FaSignOutAlt className="text-sm" />
-                <span>Logout & Login Again</span>
+                <span>Setup Your Dashboard</span>
+                <FaArrowRight className="text-sm ml-2" />
               </button>
             </div>
 
