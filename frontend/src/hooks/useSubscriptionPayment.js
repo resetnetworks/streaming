@@ -136,6 +136,20 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
       description: `${artist.name} - ${cycle} Subscription`,
       handler: (response) => {
         toast.success(`Subscription created successfully! Subscription ID: ${response.razorpay_subscription_id}`);
+        
+        // Trigger Google Ads / Analytics Purchase Event
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'purchase', {
+            transaction_id: response.razorpay_subscription_id,
+            value: subscriptionPrice || 0,
+            currency: 'INR',
+            items: [{
+              id: artist._id,
+              name: `${artist.name} - ${cycle} Subscription`
+            }]
+          });
+        }
+
         setTimeout(() => {
           window.location.reload();
         }, 2000);

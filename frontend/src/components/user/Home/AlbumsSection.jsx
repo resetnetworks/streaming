@@ -4,7 +4,7 @@ import { LuSquareChevronRight, LuSquareChevronLeft } from "react-icons/lu";
 import Skeleton from "react-loading-skeleton";
 
 import AlbumCard from "../AlbumCard";
-import { useAlbumsInfinite } from "../../../hooks/api/useAlbums";
+import { useRandomizedAlbumsInfinite } from "../../../hooks/api/useAlbums";
 import CurrencySelectionModal from "../CurrencySelectionModal";
 
 const AlbumsSection = ({ 
@@ -28,7 +28,7 @@ const AlbumsSection = ({
     isFetching,
     isFetchingNextPage,
     status,
-  } = useAlbumsInfinite({ limit: 10 });
+  } = useRandomizedAlbumsInfinite({ limit: 10 });
 
 
   // Flatten all pages into a single array
