@@ -29,7 +29,7 @@ export const useAlbums = (filters = { page: 1, limit: 10 }) => {
 export const useAlbumsInfinite = (filters = { limit: 10 }) => {
   return useInfiniteQuery({
     queryKey: ["albums", "infinite", filters],
-    queryFn: ({ pageParam = 1 }) => 
+    queryFn: ({ pageParam = 1 }) =>
       albumApi.fetchAll({ ...filters, page: pageParam }),
     getNextPageParam: (lastPage) => {
       const currentPage = lastPage.pagination?.page || 1;
@@ -38,6 +38,22 @@ export const useAlbumsInfinite = (filters = { limit: 10 }) => {
     },
     keepPreviousData: true,
     staleTime: 30 * 1000,
+  });
+};
+
+// Get randomized albums feed with infinite scroll
+export const useRandomizedAlbumsInfinite = (filters = { limit: 10 }) => {
+  return useInfiniteQuery({
+    queryKey: ["albums", "randomizedFeed", filters],
+    queryFn: ({ pageParam = 1 }) =>
+      albumApi.fetchRandomized({ ...filters, page: pageParam }),
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.pagination?.page || 1;
+      const totalPages = lastPage.pagination?.totalPages || 1;
+      return currentPage < totalPages ? currentPage + 1 : undefined;
+    },
+    keepPreviousData: true,
+    staleTime: 20 * 60 * 1000, // 20 minutes
   });
 };
 
@@ -57,10 +73,10 @@ export const useArtistAlbums = (artistId, filters = { limit: 10 }) => {
   return useInfiniteQuery({
     queryKey: albumKeys.artist(artistId, filters),
     queryFn: ({ pageParam = 1 }) =>
-      albumApi.fetchByArtist({ 
-        artistId, 
-        page: pageParam, 
-        limit: filters.limit 
+      albumApi.fetchByArtist({
+        artistId,
+        page: pageParam,
+        limit: filters.limit
       }),
     getNextPageParam: (lastPage) => {
       const currentPage = lastPage.pagination?.page || 1;
@@ -86,18 +102,18 @@ export const useArtistAlbumsSimple = (artistId, limit = 10) => {
 // Create album mutation
 export const useCreateAlbum = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: albumApi.create,
     onMutate: async (formData) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: albumKeys.lists() });
-      
+
       // Optimistically update cache for artist's albums
       if (formData.artistId) {
         const artistAlbumsKey = albumKeys.artist(formData.artistId, {});
         const previousArtistAlbums = queryClient.getQueryData(artistAlbumsKey);
-        
+
         if (previousArtistAlbums) {
           const optimisticAlbum = {
             _id: `temp-${Date.now()}`,
@@ -106,7 +122,7 @@ export const useCreateAlbum = () => {
             artist: { _id: formData.artistId },
             createdAt: new Date().toISOString(),
           };
-          
+
           queryClient.setQueryData(artistAlbumsKey, (old) => {
             if (!old?.albums) return old;
             return {
@@ -114,11 +130,11 @@ export const useCreateAlbum = () => {
               albums: [optimisticAlbum, ...old.albums],
             };
           });
-          
+
           return { previousArtistAlbums };
         }
       }
-      
+
       return {};
     },
     onError: (err, variables, context) => {
@@ -132,13 +148,13 @@ export const useCreateAlbum = () => {
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: albumKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ["artists", "dashboard-albums"], });
-      
+
       if (newAlbum.artist?.id) {
-        queryClient.invalidateQueries({ 
-          queryKey: albumKeys.artist(newAlbum.artist.id, {}) 
+        queryClient.invalidateQueries({
+          queryKey: albumKeys.artist(newAlbum.artist.id, {})
         });
       }
-      
+
       // Invalidate notifications query to load the new upload notification
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       setTimeout(() => {
@@ -151,18 +167,18 @@ export const useCreateAlbum = () => {
 // Update album mutation
 export const useUpdateAlbum = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: albumApi.update,
     onMutate: async (variables) => {
       const { albumId, formData } = variables;
-      
+
       // Cancel outgoing queries
       await queryClient.cancelQueries(albumKeys.detail(albumId));
-      
+
       // Snapshot previous value
       const previousAlbum = queryClient.getQueryData(albumKeys.detail(albumId));
-      
+
       // Optimistic update
       if (previousAlbum) {
         const updatedAlbum = {
@@ -170,10 +186,10 @@ export const useUpdateAlbum = () => {
           ...formData,
           updatedAt: new Date().toISOString(),
         };
-        
+
         queryClient.setQueryData(albumKeys.detail(albumId), updatedAlbum);
       }
-      
+
       return { previousAlbum };
     },
     onError: (err, variables, context) => {
@@ -186,13 +202,13 @@ export const useUpdateAlbum = () => {
       // Invalidate affected queries
       queryClient.invalidateQueries({ queryKey: albumKeys.lists() });
       queryClient.invalidateQueries({ queryKey: albumKeys.detail(updatedAlbum.id) });
-      
+
       if (updatedAlbum.artist?.id) {
-        queryClient.invalidateQueries({ 
-          queryKey: albumKeys.artist(updatedAlbum.artist.id, {}) 
+        queryClient.invalidateQueries({
+          queryKey: albumKeys.artist(updatedAlbum.artist.id, {})
         });
       }
-      
+
     },
   });
 };
@@ -200,17 +216,17 @@ export const useUpdateAlbum = () => {
 // Delete album mutation
 export const useDeleteAlbum = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: albumApi.delete,
     onMutate: async (albumId) => {
       // Cancel outgoing queries
       await queryClient.cancelQueries({ queryKey: albumKeys.lists() });
-      
+
       // Get album details before deletion for artist ID
       const albumDetail = queryClient.getQueryData(albumKeys.detail(albumId));
       const artistId = albumDetail?.artist?.id;
-      
+
       // Optimistically remove from lists
       queryClient.setQueryData(albumKeys.list({ page: 1, limit: 10 }), (old) => {
         if (!old?.albums) return old;
@@ -219,12 +235,12 @@ export const useDeleteAlbum = () => {
           albums: old.albums.filter(album => album._id !== albumId),
         };
       });
-      
+
       // Optimistically remove from artist's albums
       if (artistId) {
         const artistAlbumsKey = albumKeys.artist(artistId, {});
         const previousArtistAlbums = queryClient.getQueryData(artistAlbumsKey);
-        
+
         if (previousArtistAlbums) {
           queryClient.setQueryData(artistAlbumsKey, (old) => {
             if (!old?.albums) return old;
@@ -233,22 +249,22 @@ export const useDeleteAlbum = () => {
               albums: old.albums.filter(album => album._id !== albumId),
             };
           });
-          
+
           return { previousArtistAlbums };
         }
       }
-      
+
       return {};
     },
     onError: (err, albumId, context) => {
       // Rollback
       queryClient.invalidateQueries({ queryKey: albumKeys.lists() });
-      
+
       if (context?.previousArtistAlbums) {
         // Find artist ID from cache
         const albumDetail = queryClient.getQueryData(albumKeys.detail(albumId));
         const artistId = albumDetail?.artist?.id;
-        
+
         if (artistId) {
           const artistAlbumsKey = albumKeys.artist(artistId, {});
           queryClient.setQueryData(artistAlbumsKey, context.previousArtistAlbums);
@@ -265,12 +281,12 @@ export const useDeleteAlbum = () => {
 // Helper function for form data preparation
 export const prepareAlbumFormData = (albumData) => {
   const formData = new FormData();
-  
+
   Object.keys(albumData).forEach((key) => {
     const value = albumData[key];
-    
+
     if (value === undefined || value === null) return;
-    
+
     if (key === 'coverImage' && value instanceof File) {
       formData.append('coverImage', value);
     } else if (Array.isArray(value)) {
@@ -281,6 +297,6 @@ export const prepareAlbumFormData = (albumData) => {
       formData.append(key, value);
     }
   });
-  
+
   return formData;
 };

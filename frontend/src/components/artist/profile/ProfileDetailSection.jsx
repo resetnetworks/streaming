@@ -5,6 +5,7 @@ import { useArtistProfile, useUpdateArtistProfile } from "../../../hooks/api/use
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../features/auth/authSelectors";
 import ProfileEditForm from "./ProfileEditForm";
+import AccountSettingsModal from "./AccountSettingsModal";
 
 const ProfileDetailSection = ({ workspace }) => {
   const user = useSelector(selectCurrentUser);
@@ -22,6 +23,8 @@ const ProfileDetailSection = ({ workspace }) => {
     location: "",
     bio: ""
   });
+  
+  const [settingsModalMode, setSettingsModalMode] = useState(null); // "email", "password", or null
 
   // Update form data when artistProfile changes
   useEffect(() => {
@@ -167,7 +170,38 @@ const ProfileDetailSection = ({ workspace }) => {
           </div>
         </div>
 
-        <div className="h-0.5 w-full bg-[#8172bc2d] mt-4"></div>
+        <div className="h-0.5 w-full bg-[#8172bc2d] mt-4 mb-8"></div>
+
+        <div className="mb-10">
+          <h2 className="text-white text-xl font-medium mb-6 capitalize tracking-wider bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">account security</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+            <button
+              onClick={() => setSettingsModalMode("email")}
+              className="flex items-center justify-between p-5 rounded-xl border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/80 hover:border-blue-500/50 transition-all duration-300 group"
+            >
+              <div className="flex flex-col items-start">
+                <span className="text-white font-medium mb-1">Change Email Address</span>
+                <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Update your login email</span>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                →
+              </div>
+            </button>
+            
+            <button
+              onClick={() => setSettingsModalMode("password")}
+              className="flex items-center justify-between p-5 rounded-xl border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/80 hover:border-purple-500/50 transition-all duration-300 group"
+            >
+              <div className="flex flex-col items-start">
+                <span className="text-white font-medium mb-1">Change Password</span>
+                <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Keep your account secure</span>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                →
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       {showEditForm && artistProfile && (
@@ -178,6 +212,12 @@ const ProfileDetailSection = ({ workspace }) => {
           isSaving={isUpdating}
         />
       )}
+
+      <AccountSettingsModal 
+        isOpen={!!settingsModalMode}
+        initialMode={settingsModalMode || "email"}
+        onClose={() => setSettingsModalMode(null)}
+      />
     </>
   );
 };

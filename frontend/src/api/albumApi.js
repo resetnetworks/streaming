@@ -10,6 +10,12 @@ export const albumApi = {
     return res.data;
   },
 
+  // Get randomized albums feed
+  fetchRandomized: async ({ page = 1, limit = 10 } = {}) => {
+    const res = await axios.get(`/albums/feed/randomized?page=${page}&limit=${limit}`);
+    return res.data;
+  },
+
   // Get single album by ID or slug
   fetchById: async (id) => {
     const res = await axios.get(`/albums/${id}`);

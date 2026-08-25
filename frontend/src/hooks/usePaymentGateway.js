@@ -168,6 +168,20 @@ export const usePaymentGateway = () => {
           itemId: item._id
         }));
 
+        // Trigger Google Ads / Analytics Purchase Event
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'purchase', {
+            transaction_id: response.razorpay_payment_id || order.id,
+            value: paymentDetails.amount || 0,
+            currency: paymentDetails.currency || 'INR',
+            items: [{
+              id: item._id,
+              name: item.title,
+              category: itemType
+            }]
+          });
+        }
+
         toast.success(
           `Payment successful!`,
           {
