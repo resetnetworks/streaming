@@ -1,8 +1,8 @@
-import { 
-  FaMusic, 
-  FaMapMarkerAlt, 
-  FaUserAlt, 
-  FaEnvelope, 
+import {
+  FaMusic,
+  FaMapMarkerAlt,
+  FaUserAlt,
+  FaEnvelope,
   FaPhone,
   FaFileAlt,
   FaInstagram,
@@ -66,18 +66,18 @@ const ApplicationTabs = ({ activeTab, application }) => {
   };
 
   // Safe access to adminNotes - ensure it's always an array
-  const adminNotes = Array.isArray(application?.adminNotes) 
-    ? application.adminNotes 
+  const adminNotes = Array.isArray(application?.adminNotes)
+    ? application.adminNotes
     : [];
 
   // Safe access to socials - ensure it's always an array
-  const socials = Array.isArray(application?.socials) 
-    ? application.socials 
+  const socials = Array.isArray(application?.socials)
+    ? application.socials
     : [];
 
   // Safe access to documents - ensure it's always an array
-  const documents = Array.isArray(application?.documents) 
-    ? application.documents 
+  const documents = Array.isArray(application?.documents)
+    ? application.documents
     : [];
 
   if (activeTab === 'overview') {
@@ -98,7 +98,7 @@ const ApplicationTabs = ({ activeTab, application }) => {
               <FaMapMarkerAlt className="text-gray-400" />
               <div>
                 <p className="text-sm text-gray-400">Location</p>
-                <p className="text-white">{application?.location || 'Not specified'}</p>
+                <p className="text-white">{application?.country || 'Not specified'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -142,7 +142,7 @@ const ApplicationTabs = ({ activeTab, application }) => {
                 <p className="text-white">{application?.contact?.phone || application?.user?.phone || 'N/A'}</p>
               </div>
             </div>
-            
+
             {/* Social Links */}
             <div className="mt-4">
               <p className="text-sm text-gray-400 mb-3">Social Links / Portfolio</p>
@@ -153,7 +153,7 @@ const ApplicationTabs = ({ activeTab, application }) => {
                       const IconComponent = socialIcons[social.provider] || socialIcons.default;
                       const platformName = getPlatformName(social.provider);
                       const iconColor = getPlatformColor(social.provider);
-                      
+
                       return (
                         <a
                           key={social._id || index}
@@ -237,7 +237,7 @@ const ApplicationTabs = ({ activeTab, application }) => {
                 <div>
                   <p className="text-white font-medium">{doc.name || `Document ${index + 1}`}</p>
                   <p className="text-sm text-gray-400">
-                    Type: {doc.type || 'Unknown'} • 
+                    Type: {doc.type || 'Unknown'} •
                     Size: {doc.size ? `${(doc.size / 1024).toFixed(1)} KB` : 'Unknown'}
                   </p>
                 </div>

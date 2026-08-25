@@ -6,6 +6,7 @@ import { accountSettingsApi } from "../../../api/accountSettingsApi";
 import { FiX } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { toast } from "sonner";
+import { validators } from "../../../utills/validators";
 
 const AccountSettingsModal = ({ isOpen, onClose, initialMode = "email" }) => {
   const user = useSelector(selectCurrentUser);
@@ -91,6 +92,12 @@ const AccountSettingsModal = ({ isOpen, onClose, initialMode = "email" }) => {
       toast.error("New passwords do not match.");
       return;
     }
+    
+    if (!validators.password(passwordForm.newPassword)) {
+      toast.error(validators.passwordError);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await accountSettingsApi.changePassword({
