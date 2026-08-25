@@ -78,62 +78,58 @@ export const registerUser = createAsyncThunk("auth/register", async (userData, t
     const res = await axios.post("/users/register", userData, {
       withCredentials: true,
     });
+    
+    // Returning the message that OTP was sent
+    return res.data.message || "OTP sent to email";
+  } catch (err) {
+    console.error("❌ Registration error:", err?.response?.data?.message);
+    
+    const errorMessage = err.response?.data?.message ||
+      err.response?.data?.error ||
+      err.message ||
+      "Registration failed";
 
-    const { user } = res.data;
+    return thunkAPI.rejectWithValue(errorMessage);
+  }
+});
 
-    const getTokenFromCookie = () => {
-      if (typeof document === 'undefined') return null;
+export const verifyRegistration = createAsyncThunk("auth/verifyRegistration", async (verificationData, thunkAPI) => {
+  try {
+    const res = await axios.post("/users/verify-registration", verificationData, {
+      withCredentials: true,
+    });
 
-      const cookies = document.cookie.split('; ');
-      const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
+    const { user, token } = res.data;
 
-      if (tokenCookie) {
-        return tokenCookie.split('=')[1];
-      }
-      return null;
-    };
-
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const token = getTokenFromCookie();
-
+    // Check if token returned in body, or look in cookie (as backend might set it)
     if (token) {
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      try {
-        await axios.get("/users/me", { withCredentials: true });
-      } catch (tokenError) {
-        console.error('❌ Token verification failed:', tokenError);
-        throw new Error("Token verification failed after registration");
-      }
     } else {
-      try {
-        const meResponse = await axios.get("/users/me", { withCredentials: true });
-        if (meResponse.status !== 200) {
-          throw new Error("Authentication verification failed");
+      const getTokenFromCookie = () => {
+        if (typeof document === 'undefined') return null;
+        const cookies = document.cookie.split('; ');
+        const tokenCookie = cookies.find(cookie => cookie.startsWith('token='));
+        if (tokenCookie) {
+          return tokenCookie.split('=')[1];
         }
-      } catch (meError) {
-        console.error('❌ Authentication verification failed:', meError);
-        throw new Error("Authentication failed after registration");
+        return null;
+      };
+      const cookieToken = getTokenFromCookie();
+      if (cookieToken) {
+        localStorage.setItem("token", cookieToken);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${cookieToken}`;
       }
     }
 
     storeAuthToLocal(user);
     return user;
-
   } catch (err) {
-    console.error("❌ Registration error:", err?.response?.data?.message);
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    delete axios.defaults.headers.common["Authorization"];
-
     const errorMessage = err.response?.data?.message ||
       err.response?.data?.error ||
       err.message ||
-      "Login failed";
-
+      "Verification failed";
+    
     return thunkAPI.rejectWithValue(errorMessage);
   }
 });
@@ -250,6 +246,32 @@ export const handleSocialLoginSuccess = createAsyncThunk(
     }
   }
 );
+
+export const changeEmail = createAsyncThunk("auth/changeEmail", async (data, thunkAPI) => {
+  try {
+    const res = await axios.post("/users/change-email", data, {
+      withCredentials: true,
+    });
+    return res.data.message || "OTP sent to new email";
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to initiate email change");
+  }
+});
+
+export const verifyEmailChange = createAsyncThunk("auth/verifyEmailChange", async (data, thunkAPI) => {
+  try {
+    const res = await axios.post("/users/verify-email-change", data, {
+      withCredentials: true,
+    });
+    // This API likely updates the email and maybe returns the new user
+    if (res.data.user) {
+      storeAuthToLocal(res.data.user);
+    }
+    return res.data;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to verify email change");
+  }
+});
 
 export const getMyProfile = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
@@ -375,10 +397,22 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(registerUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.message = action.payload; // OTP sent message
+      })
+      .addCase(verifyRegistration.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(verifyRegistration.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.status = "succeeded";
-        state.message = "Registered successfully";
+        state.message = "Registered and verified successfully";
+      })
+      .addCase(verifyRegistration.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
