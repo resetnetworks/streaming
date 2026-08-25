@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMonetizationStatus, useSetupMonetization } from "../../../hooks/api/useMonetization";
 import { FaTimes, FaExclamationTriangle } from "react-icons/fa";
+import { toast } from "sonner";
 
 const ALLOWED_CYCLES = ["1m", "3m", "6m"];
 
@@ -60,8 +61,8 @@ const MonetizationModal = ({
   const handleSubmit = () => {
     const price = parseFloat(subscriptionPrice);
 
-    if (!subscriptionPrice || price <= 0) {
-      alert("Please enter a valid subscription price");
+    if (!subscriptionPrice || price < 1) {
+      toast.error("Subscription price must be at least $1.00");
       return;
     }
 

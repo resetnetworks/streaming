@@ -6,12 +6,12 @@ import { useAdminApplication } from '../../../hooks/api/useAdminArtistApplicatio
 import StatusBadge from './StatusBadge';
 import ApplicationTabs from './ApplicationTabs';
 
-const ApplicationDetail = ({ 
-  applicationId, 
+const ApplicationDetail = ({
+  applicationId,
   applications = [],
-  onBack, 
-  onOpenStatusModal, 
-  onOpenNotesModal 
+  onBack,
+  onOpenStatusModal,
+  onOpenNotesModal
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -20,7 +20,7 @@ const ApplicationDetail = ({
 
   // Since status updates happen in a modal and trigger query cache invalidation,
   // we don't need statusUpdateSuccess Redux selectors.
-  const statusUpdateSuccess = false; 
+  const statusUpdateSuccess = false;
   const statusUpdateError = null;
 
   // Loading state
@@ -42,11 +42,11 @@ const ApplicationDetail = ({
 
   // ✅ IMPROVED: Applications list से भी चेक करें अगर currentApplication न मिले
   let applicationToDisplay = currentApplication;
-  
+
   if (!currentApplication && applicationId && applications.length > 0) {
     // Applications list में ढूंढें
-    applicationToDisplay = applications.find(app => 
-      app._id === applicationId || 
+    applicationToDisplay = applications.find(app =>
+      app._id === applicationId ||
       app.id === applicationId ||
       (app._id && app._id.toString() === applicationId)
     );
@@ -70,7 +70,7 @@ const ApplicationDetail = ({
       </div>
     );
   }
-  
+
   return (
     <div className="bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden">
       {/* Success Alert */}
@@ -84,7 +84,7 @@ const ApplicationDetail = ({
           </div>
         </div>
       )}
-      
+
       {/* Error Alert */}
       {statusUpdateError && (
         <div className="bg-red-900/20 border border-red-700/50 p-4">
@@ -113,7 +113,7 @@ const ApplicationDetail = ({
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <StatusBadge status={applicationToDisplay.status} size="lg" />
         </div>
@@ -129,10 +129,10 @@ const ApplicationDetail = ({
               </h2>
               <div className="flex flex-wrap items-center gap-4 text-gray-400">
                 <span className="flex items-center gap-1">
-                  <FaUserAlt /> {applicationToDisplay?.legalName || 'Unknown'}
+                  <FaUserAlt /> {applicationToDisplay?.legalName || applicationToDisplay?.user?.name || 'Unknown'}
                 </span>
                 <span className="flex items-center gap-1">
-                  <FaEnvelope /> {applicationToDisplay?.contact?.email || 'N/A'}
+                  <FaEnvelope /> {applicationToDisplay?.contact?.email || applicationToDisplay?.user?.email || 'N/A'}
                 </span>
                 <span className="flex items-center gap-1">
                   <FaCalendarAlt />
@@ -144,7 +144,7 @@ const ApplicationDetail = ({
                 </span>
               </div>
             </div>
-            
+
             <div className="flex flex-col gap-3 min-w-[200px]">
               <button
                 onClick={() => {
@@ -164,11 +164,10 @@ const ApplicationDetail = ({
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-t-lg transition-colors duration-200 whitespace-nowrap ${
-                    activeTab === tab
+                  className={`px-4 py-2 rounded-t-lg transition-colors duration-200 whitespace-nowrap ${activeTab === tab
                       ? 'bg-gray-700 text-white border-b-2 border-blue-500'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
+                    }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
@@ -177,9 +176,9 @@ const ApplicationDetail = ({
           </div>
 
           {/* Tab Content */}
-          <ApplicationTabs 
-            activeTab={activeTab} 
-            application={applicationToDisplay} 
+          <ApplicationTabs
+            activeTab={activeTab}
+            application={applicationToDisplay}
           />
         </div>
       </div>
