@@ -14,6 +14,7 @@ import { FaPlay } from "react-icons/fa";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { TbRepeat, TbRepeatOnce } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const GhostPlayer = () => {
   const [open, setOpen] = useState(true);
@@ -25,16 +26,39 @@ const GhostPlayer = () => {
           className="absolute inset-0 z-10 rounded-none pointer-events-none"
           style={{
             background: "rgba(0,0,0,0.35)",
-            backdropFilter: "blur(1.5px)",
           }}
         />
 
-        <div className="w-full aspect-square overflow-hidden rounded-none bg-gray-700/60 relative">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-12 h-12 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" />
-            </svg>
-          </div>
+        <div
+          className="w-full aspect-square overflow-hidden rounded-none relative"
+          style={{
+            background: "linear-gradient(135deg, #1D4ED8 0%, #020216 100%)",
+          }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at 30% 40%, rgba(59,130,246,0.6) 0%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(29,78,216,0.5) 0%, transparent 50%)",
+            }}
+          />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[20%] left-[22%] w-[60%] h-[60%] opacity-80"
+            style={{
+              background:
+                "conic-gradient(from 0deg, #3B82F6, #1D4ED8, #2563EB, #3B82F6)",
+              borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
+              willChange: "transform",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 h-20"
+            style={{
+              background: "linear-gradient(to top, #0A0A23, transparent)",
+            }}
+          />
         </div>
 
         <div className="w-3/4 h-4 mt-3 rounded bg-gray-700/60" />
@@ -268,59 +292,59 @@ const PlayerUI = ({
             <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <filter id="f_outer" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="-3" dy="-3" stdDeviation="4" floodColor="rgba(137,48,7,0)"/>
+                  <feDropShadow dx="-3" dy="-3" stdDeviation="4" floodColor="rgba(137,48,7,0)" />
                 </filter>
                 <filter id="f_glass" x="-10%" y="-10%" width="120%" height="120%">
-                  <feFlood floodOpacity={0} result="BackgroundImageFix"/>
-                  <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                  <feOffset dy={1}/>
-                  <feGaussianBlur stdDeviation={1.5}/>
-                  <feComposite in2="hardAlpha" operator="out"/>
-                  <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-                  <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                  <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                  <feFlood floodOpacity={0} result="BackgroundImageFix" />
+                  <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                  <feOffset dy={1} />
+                  <feGaussianBlur stdDeviation={1.5} />
+                  <feComposite in2="hardAlpha" operator="out" />
+                  <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                  <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
+                  <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
                 </filter>
                 <linearGradient id="grad_ring" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ECF3FD"/>
-                  <stop offset="35%" stopColor="#1448FF"/>
-                  <stop offset="100%" stopColor="#010203"/>
+                  <stop offset="0%" stopColor="#ECF3FD" />
+                  <stop offset="35%" stopColor="#1448FF" />
+                  <stop offset="100%" stopColor="#010203" />
                 </linearGradient>
                 <linearGradient id="grad_fill" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#000000" stopOpacity="0.45"/>
-                  <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32"/>
-                  <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75"/>
-                  <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88"/>
-                  <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4"/>
-                  <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10"/>
+                  <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+                  <stop offset="0%" stopColor="#050F2A" stopOpacity="0.32" />
+                  <stop offset="30%" stopColor="#0941A4" stopOpacity="0.75" />
+                  <stop offset="56%" stopColor="#2775FF" stopOpacity="0.88" />
+                  <stop offset="78%" stopColor="#0C63FF" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#020A1A" stopOpacity="0.10" />
                 </linearGradient>
                 <linearGradient id="grad_stroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="white"/>
-                  <stop offset="10%" stopColor="#88B2EF"/>
-                  <stop offset="64%" stopColor="#88B2EF"/>
-                  <stop offset="87%" stopColor="#033CAA"/>
+                  <stop offset="0%" stopColor="white" />
+                  <stop offset="10%" stopColor="#88B2EF" />
+                  <stop offset="64%" stopColor="#88B2EF" />
+                  <stop offset="87%" stopColor="#033CAA" />
                 </linearGradient>
               </defs>
 
-              <circle cx="22" cy="22" r="21" fill="none" stroke="url(#grad_ring)" strokeWidth="1.2"/>
-              <circle cx="22" cy="22" r="19.4" fill="#1A1C20"/>
-              <circle cx="22" cy="22" r="19.4" fill="url(#grad_fill)"/>
-              <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#grad_stroke)" strokeWidth="0.7"/>
+              <circle cx="22" cy="22" r="21" fill="none" stroke="url(#grad_ring)" strokeWidth="1.2" />
+              <circle cx="22" cy="22" r="19.4" fill="#1A1C20" />
+              <circle cx="22" cy="22" r="19.4" fill="url(#grad_fill)" />
+              <circle cx="22" cy="22" r="19.4" fill="none" stroke="url(#grad_stroke)" strokeWidth="0.7" />
 
               {streamError?.songId === selectedSong?._id ? (
                 <g filter="url(#f_glass)">
-                  <rect x="15" y="20" width="14" height="10" rx="1.5" fill="white"/>
-                  <path d="M17 20V17a5 5 0 0 1 10 0v3" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  <rect x="15" y="20" width="14" height="10" rx="1.5" fill="white" />
+                  <path d="M17 20V17a5 5 0 0 1 10 0v3" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" />
                 </g>
               ) : isPlayerLoading ? (
                 <g>
                   <circle cx="22" cy="22" r="7" fill="none" stroke="white" strokeWidth="2" strokeDasharray="22" strokeDashoffset="10" opacity="0.8">
-                    <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite"/>
+                    <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="0.8s" repeatCount="indefinite" />
                   </circle>
                 </g>
               ) : isPlaying && !isDisplayOnly ? (
                 <g filter="url(#f_glass)">
-                  <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
-                  <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white"/>
+                  <rect x="16.5" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white" />
+                  <rect x="24" y="15.75" width="3.5" height="12.5" rx="1.5" fill="white" />
                 </g>
               ) : (
                 <g filter="url(#f_glass)" transform="translate(15.726, 14.691) scale(0.5455)">
@@ -424,9 +448,8 @@ const PlayerUI = ({
                 {nextSongs.map((song) => (
                   <div
                     key={song._id}
-                    className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-none p-1 transition ${
-                      song._id === selectedSong?._id ? "bg-blue-800/40" : ""
-                    }`}
+                    className={`flex items-center justify-between text-sm cursor-pointer hover:bg-blue-800/30 rounded-none p-1 transition ${song._id === selectedSong?._id ? "bg-blue-800/40" : ""
+                      }`}
                     onClick={() => handleNextSongClick(song)}
                   >
                     <div className="flex items-center gap-3">
