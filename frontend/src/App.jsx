@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { getMyProfile } from "./features/auth/authSlice";
 import UserLayout from "./components/user/UserLayout";
 import PayPalSuccessHandler from "./components/PayPalSuccessHandler";
+import StripeCheckoutModal from "./components/payments/StripeCheckoutModal";
 import ScrollToTop from "./components/ScrollToTop";
 import RoleUpdateModal from "./components/user/RoleUpdateModal";
 import {
@@ -114,6 +115,8 @@ useEffect(() => {
       <ScrollToTop />
       {/* paypal success handler */}
       {isAuthenticated && <PayPalSuccessHandler />}
+      {/* Stripe Embedded Checkout Modal */}
+      <StripeCheckoutModal />
         <Suspense fallback={<Loader />}>
           <Routes>
             {/* Public Routes */}
