@@ -1,18 +1,55 @@
 // ProfileDetailSection.jsx
 import React, { useState, useEffect } from "react";
 import { FiEdit3 } from "react-icons/fi";
+import {
+  FaSpotify,
+  FaInstagram,
+  FaSoundcloud,
+  FaYoutube,
+  FaTwitter,
+  FaFacebook,
+  FaTiktok,
+  FaBandcamp,
+  FaLink,
+} from "react-icons/fa";
+import { SiLinktree } from "react-icons/si";
 import { useArtistProfile, useUpdateArtistProfile } from "../../../hooks/api/useArtistDashboard";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../features/auth/authSelectors";
 import ProfileEditForm from "./ProfileEditForm";
 import AccountSettingsModal from "./AccountSettingsModal";
 
+const getSocialIcon = (platform) => {
+  switch (platform?.toLowerCase()) {
+    case "spotify":
+      return <FaSpotify className="text-[#1DB954]" />;
+    case "instagram":
+      return <FaInstagram className="text-[#E1306C]" />;
+    case "soundcloud":
+      return <FaSoundcloud className="text-[#FF5500]" />;
+    case "youtube":
+      return <FaYoutube className="text-[#FF0000]" />;
+    case "twitter":
+      return <FaTwitter className="text-[#1DA1F2]" />;
+    case "tiktok":
+      return <FaTiktok className="text-white" />;
+    case "facebook":
+      return <FaFacebook className="text-[#1877F2]" />;
+    case "bandcamp":
+      return <FaBandcamp className="text-[#629aa9]" />;
+    case "linktree":
+      return <SiLinktree className="text-[#43E660]" />;
+    default:
+      return <FaLink className="text-gray-400" />;
+  }
+};
+
 const ProfileDetailSection = ({ workspace }) => {
   const user = useSelector(selectCurrentUser);
   const workspaceId = workspace?.workspaceId;
   const { data: artistProfile, isLoading: profileLoading } = useArtistProfile(workspaceId);
   const { mutate: updateProfile, isLoading: isUpdating } = useUpdateArtistProfile();
-  
+
   const [showEditForm, setShowEditForm] = useState(false);
   const [formData, setFormData] = useState({
     businessEmail: "",
@@ -23,7 +60,7 @@ const ProfileDetailSection = ({ workspace }) => {
     location: "",
     bio: ""
   });
-  
+
   const [settingsModalMode, setSettingsModalMode] = useState(null); // "email", "password", or null
 
   // Update form data when artistProfile changes
@@ -46,11 +83,15 @@ const ProfileDetailSection = ({ workspace }) => {
   };
 
   const handleSaveProfile = (updatedData) => {
-    updateProfile(updatedData, {
-      onSuccess: () => {
-        setShowEditForm(false);
-      }
-    });
+    if (updatedData && typeof updatedData === "object" && !updatedData.nativeEvent) {
+      updateProfile(updatedData, {
+        onSuccess: () => {
+          setShowEditForm(false);
+        },
+      });
+    } else {
+      setShowEditForm(false);
+    }
   };
 
   const updateFormData = (field, value) => {
@@ -75,10 +116,10 @@ const ProfileDetailSection = ({ workspace }) => {
     );
   }
 
- const renderEmptyValue = (value) => {
-  if (typeof value === "object") return "Invalid data";
-  return value || <span className="text-gray-400 italic">Not provided</span>;
-};
+  const renderEmptyValue = (value) => {
+    if (typeof value === "object") return "Invalid data";
+    return value || <span className="text-gray-400 italic">Not provided</span>;
+  };
 
   return (
     <>
@@ -92,13 +133,12 @@ const ProfileDetailSection = ({ workspace }) => {
               </span>
             )}
           </div>
-          
-          <button 
+
+          <button
             onClick={handleEditClick}
             disabled={isUpdating}
-            className={`flex items-center justify-center w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] rounded-full backdrop-blur-md border border-white/20 text-white shadow-lg hover:shadow-2xl transition-all duration-200 ${
-              isUpdating ? 'bg-gray-600 cursor-not-allowed' : 'bg-gradient-to-tl from-black to-gray-500'
-            }`}
+            className={`flex items-center justify-center w-[30px] h-[30px] sm:w-[35px] sm:h-[35px] rounded-full backdrop-blur-md border border-white/20 text-white shadow-lg hover:shadow-2xl transition-all duration-200 ${isUpdating ? 'bg-gray-600 cursor-not-allowed' : 'bg-gradient-to-tl from-black to-gray-500'
+              }`}
             title="Edit Basic Details"
           >
             <FiEdit3 className="text-sm" />
@@ -158,7 +198,7 @@ const ProfileDetailSection = ({ workspace }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="mb-8">
           <h2 className="text-white text-lg font-medium mb-4">bio / description</h2>
           <div>
@@ -169,6 +209,53 @@ const ProfileDetailSection = ({ workspace }) => {
             </div>
           </div>
         </div>
+
+        {/* Social & Streaming Links */}
+        {(() => {
+          let socialsList = [];
+          if (artistProfile?.socials) {
+            if (Array.isArray(artistProfile.socials)) {
+              socialsList = artistProfile.socials;
+            } else if (typeof artistProfile.socials === "string") {
+              try {
+                socialsList = JSON.parse(artistProfile.socials);
+              } catch (e) {
+                socialsList = [];
+              }
+            }
+          }
+
+          return (
+            <div className="mb-8">
+              <h2 className="text-white text-lg font-medium mb-4">
+                social & streaming links
+              </h2>
+              {socialsList && socialsList.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {socialsList.map((link) => (
+                    <a
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 rounded-lg text-sm text-gray-200 hover:text-white transition-all duration-200 group"
+                    >
+                      <span className="text-base">{getSocialIcon(link.platform)}</span>
+                      <span className="capitalize font-medium">{link.platform}</span>
+                      <span className="text-xs text-gray-500 group-hover:text-gray-400 ml-1">↗</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="input-login !pl-[1rem] w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white">
+                  <span className="text-gray-400 italic">
+                    No social links added yet. Click the edit button to add your links.
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <div className="h-0.5 w-full bg-[#8172bc2d] mt-4 mb-8"></div>
 
@@ -187,7 +274,7 @@ const ProfileDetailSection = ({ workspace }) => {
                 →
               </div>
             </button>
-            
+
             <button
               onClick={() => setSettingsModalMode("password")}
               className="flex items-center justify-between p-5 rounded-xl border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/80 hover:border-purple-500/50 transition-all duration-300 group"
@@ -213,7 +300,7 @@ const ProfileDetailSection = ({ workspace }) => {
         />
       )}
 
-      <AccountSettingsModal 
+      <AccountSettingsModal
         isOpen={!!settingsModalMode}
         initialMode={settingsModalMode || "email"}
         onClose={() => setSettingsModalMode(null)}
