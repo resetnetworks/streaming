@@ -1,11 +1,48 @@
 import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { FiMapPin } from "react-icons/fi";
+import {
+  FaSpotify,
+  FaInstagram,
+  FaSoundcloud,
+  FaYoutube,
+  FaTwitter,
+  FaFacebook,
+  FaTiktok,
+  FaBandcamp,
+  FaLink,
+} from "react-icons/fa";
+import { SiLinktree } from "react-icons/si";
 import { toast } from "sonner";
 import axiosInstance from "../../../utills/axiosInstance";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSubscriptions, userDashboardKeys } from "../../../hooks/api/useUserDashboard";
 import { artistKeys } from "../../../hooks/api/useArtists";
+
+const getSocialIcon = (platform) => {
+  switch (platform?.toLowerCase()) {
+    case "spotify":
+      return <FaSpotify className="text-[#1DB954]" />;
+    case "instagram":
+      return <FaInstagram className="text-[#E1306C]" />;
+    case "soundcloud":
+      return <FaSoundcloud className="text-[#FF5500]" />;
+    case "youtube":
+      return <FaYoutube className="text-[#FF0000]" />;
+    case "twitter":
+      return <FaTwitter className="text-[#1DA1F2]" />;
+    case "tiktok":
+      return <FaTiktok className="text-white" />;
+    case "facebook":
+      return <FaFacebook className="text-[#1877F2]" />;
+    case "bandcamp":
+      return <FaBandcamp className="text-[#629aa9]" />;
+    case "linktree":
+      return <SiLinktree className="text-[#43E660]" />;
+    default:
+      return <FaLink className="text-gray-400" />;
+  }
+};
 
 const cycleLabel = (c) => {
   switch (c) {
@@ -59,6 +96,20 @@ const ArtistAboutSection = ({
   const isSubscribed = userSubscriptions.some(
     (sub) => sub.artist?.slug === artistId || sub.artist?._id === artistId || sub.artist?._id === artist?._id || sub.artist?.slug === artist?.slug
   );
+
+  const artistSocials = useMemo(() => {
+    if (!artist?.socials) return [];
+    if (Array.isArray(artist.socials)) return artist.socials;
+    if (typeof artist.socials === "string") {
+      try {
+        const parsed = JSON.parse(artist.socials);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  }, [artist?.socials]);
 
   const availableCycles = useMemo(() => {
     const plans = artist?.subscriptionPlans || [];
@@ -159,6 +210,30 @@ const ArtistAboutSection = ({
                 )}
               </p>
             )}
+
+            {artistSocials && artistSocials.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <h4 className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
+                  Links & Streaming
+                </h4>
+                <div className="flex flex-wrap items-center gap-3">
+                  {artistSocials.map((link) => (
+                    <a
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-gray-200 hover:text-white transition-all duration-200"
+                    >
+                      <span className="text-sm">{getSocialIcon(link.platform)}</span>
+                      <span className="capitalize font-medium">{link.platform}</span>
+                      <span className="text-[10px] text-gray-500">↗</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-6 pt-4 border-t border-white/10">
               <h3 className="text-lg font-semibold mb-2" style={{ color: '#4DB3FF' }}>
                 Subscription Details

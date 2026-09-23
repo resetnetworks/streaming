@@ -3,12 +3,49 @@ import { FiMapPin } from "react-icons/fi";
 import { HiUsers } from "react-icons/hi";
 import { FaCheckCircle } from "react-icons/fa";
 import { FiAlertTriangle, FiX } from "react-icons/fi";
+import {
+  FaSpotify,
+  FaInstagram,
+  FaSoundcloud,
+  FaYoutube,
+  FaTwitter,
+  FaFacebook,
+  FaTiktok,
+  FaBandcamp,
+  FaLink,
+} from "react-icons/fa";
+import { SiLinktree } from "react-icons/si";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "sonner";
 import axiosInstance from "../../../utills/axiosInstance";
 import { useLiveSubscriberCount } from "../../../hooks/useLiveSubscriberCount";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSubscriptions, userDashboardKeys } from "../../../hooks/api/useUserDashboard";
+
+const getSocialIcon = (platform) => {
+  switch (platform?.toLowerCase()) {
+    case "spotify":
+      return <FaSpotify className="text-[#1DB954]" />;
+    case "instagram":
+      return <FaInstagram className="text-[#E1306C]" />;
+    case "soundcloud":
+      return <FaSoundcloud className="text-[#FF5500]" />;
+    case "youtube":
+      return <FaYoutube className="text-[#FF0000]" />;
+    case "twitter":
+      return <FaTwitter className="text-[#1DA1F2]" />;
+    case "tiktok":
+      return <FaTiktok className="text-white" />;
+    case "facebook":
+      return <FaFacebook className="text-[#1877F2]" />;
+    case "bandcamp":
+      return <FaBandcamp className="text-[#629aa9]" />;
+    case "linktree":
+      return <SiLinktree className="text-[#43E660]" />;
+    default:
+      return <FaLink className="text-gray-400" />;
+  }
+};
 
 const cycleLabel = (c) => {
   switch (c) {
@@ -159,6 +196,19 @@ const ArtistHeroSection = ({
     artist?._id
   );
 
+  const artistSocials = useMemo(() => {
+    if (!artist?.socials) return [];
+    if (Array.isArray(artist.socials)) return artist.socials;
+    if (typeof artist.socials === "string") {
+      try {
+        const parsed = JSON.parse(artist.socials);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  }, [artist?.socials]);
 
   const availableCycles = useMemo(() => {
     const plans = artist?.subscriptionPlans || [];
@@ -271,7 +321,7 @@ const ArtistHeroSection = ({
                   </div>
                 </div>
 
-                {/* ✅ Button row — exact same position as original */}
+                {/* ✅ Button row & Social links */}
                 <div className="flex items-center gap-4 mt-3 flex-wrap">
                   <span className="text-lg font-semibold" style={{ color: '#4DB3FF' }}>
                     ${subscriptionPrice.toFixed(2)}/{cycleLabel(currentCycle)}
@@ -301,6 +351,23 @@ const ArtistHeroSection = ({
                     >
                       {subscriptionLoading ? "Processing..." : "Subscribe"}
                     </button>
+                  )}
+
+                  {artistSocials && artistSocials.length > 0 && (
+                    <div className="artist-social-links flex items-center gap-2">
+                      {artistSocials.map((link) => (
+                        <a
+                          key={link.platform}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Visit ${link.platform}`}
+                          className="social-icon-btn p-2 rounded-full bg-black/50 hover:bg-black/80 border border-white/15 hover:border-white/40 text-lg hover:scale-110 transition-all duration-200 shadow-sm flex items-center justify-center text-white"
+                        >
+                          {getSocialIcon(link.platform)}
+                        </a>
+                      ))}
+                    </div>
                   )}
                 </div>
 
