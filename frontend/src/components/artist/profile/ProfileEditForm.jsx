@@ -1,52 +1,124 @@
-// ProfileEditForm.js
-import React, { useState, useEffect, useCallback } from "react";
+// ProfileEditForm.jsx
+import React, { useState, useEffect } from "react";
 import { FiX, FiUser, FiMapPin, FiGlobe } from "react-icons/fi";
-import { FaYoutube, FaInstagram, FaFacebookSquare, FaSpotify, FaSoundcloud, FaGlobe } from "react-icons/fa";
+import {
+  FaSpotify,
+  FaInstagram,
+  FaSoundcloud,
+  FaYoutube,
+  FaTwitter,
+  FaFacebook,
+  FaTiktok,
+  FaBandcamp,
+} from "react-icons/fa";
 import { toast } from "sonner";
 import { useUpdateArtistProfile } from "../../../hooks/api/useArtistDashboard";
-import SocialMediaInput from "./SocialMediaInput";
+
+const SOCIAL_PLATFORMS = [
+  {
+    key: "spotify",
+    label: "Spotify Profile URL",
+    placeholder: "https://open.spotify.com/artist/...",
+    icon: <FaSpotify className="text-[#1DB954] text-lg" />,
+  },
+  {
+    key: "instagram",
+    label: "Instagram URL",
+    placeholder: "https://instagram.com/yourhandle",
+    icon: <FaInstagram className="text-[#E1306C] text-lg" />,
+  },
+  {
+    key: "soundcloud",
+    label: "SoundCloud URL",
+    placeholder: "https://soundcloud.com/yourhandle",
+    icon: <FaSoundcloud className="text-[#FF5500] text-lg" />,
+  },
+  {
+    key: "youtube",
+    label: "YouTube URL",
+    placeholder: "https://youtube.com/@yourhandle",
+    icon: <FaYoutube className="text-[#FF0000] text-lg" />,
+  },
+  {
+    key: "twitter",
+    label: "Twitter / X URL",
+    placeholder: "https://x.com/yourhandle",
+    icon: <FaTwitter className="text-[#1DA1F2] text-lg" />,
+  },
+  {
+    key: "tiktok",
+    label: "TikTok URL",
+    placeholder: "https://tiktok.com/@yourhandle",
+    icon: <FaTiktok className="text-white text-lg" />,
+  },
+  {
+    key: "facebook",
+    label: "Facebook URL",
+    placeholder: "https://facebook.com/yourpage",
+    icon: <FaFacebook className="text-[#1877F2] text-lg" />,
+  },
+  {
+    key: "bandcamp",
+    label: "Bandcamp URL",
+    placeholder: "https://yourhandle.bandcamp.com",
+    icon: <FaBandcamp className="text-[#629aa9] text-lg" />,
+  },
+];
+
+const normalizeUrl = (url) => {
+  if (!url) return "";
+  let trimmed = url.trim();
+  if (!trimmed) return "";
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = `https://${trimmed}`;
+  }
+  return trimmed;
+};
 
 const ProfileEditForm = ({ profile, onSave, onClose }) => {
   const { mutate: updateProfile, isLoading } = useUpdateArtistProfile();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
     location: "",
     country: "",
-    socials: []
   });
 
-  const [newSocial, setNewSocial] = useState({
-    platform: "",
-    url: ""
+  const [socialsForm, setSocialsForm] = useState({
+    spotify: "",
+    instagram: "",
+    soundcloud: "",
+    youtube: "",
+    twitter: "",
+    tiktok: "",
+    facebook: "",
+    bandcamp: "",
   });
-
-  const [socialError, setSocialError] = useState("");
-
-  const socialPlatforms = [
-    { value: "instagram", label: "Instagram", icon: <FaInstagram className="text-pink-500" /> },
-    { value: "youtube", label: "YouTube", icon: <FaYoutube className="text-red-500" /> },
-    { value: "facebook", label: "Facebook", icon: <FaFacebookSquare className="text-blue-500" /> },
-    { value: "spotify", label: "Spotify", icon: <FaSpotify className="text-green-500" /> },
-    { value: "soundcloud", label: "SoundCloud", icon: <FaSoundcloud className="text-orange-500" /> },
-    { value: "website", label: "Website", icon: <FaGlobe className="text-blue-400" /> },
-  ];
-
-  const isValidUrl = (url) => {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch (err) {
-    return false;
-  }
-};
 
   useEffect(() => {
     if (profile) {
-      let socialsArray = [];
+      setFormData({
+        name: profile.name || "",
+        bio: profile.bio || "",
+        location: profile.location || "",
+        country: profile.country || "",
+      });
+
+      const initial = {
+        spotify: "",
+        instagram: "",
+        soundcloud: "",
+        youtube: "",
+        twitter: "",
+        tiktok: "",
+        facebook: "",
+        bandcamp: "",
+      };
+
       if (profile.socials) {
-        if (typeof profile.socials === 'string') {
+        let socialsArray = [];
+        if (typeof profile.socials === "string") {
           try {
             socialsArray = JSON.parse(profile.socials);
           } catch (e) {
@@ -55,124 +127,67 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
         } else if (Array.isArray(profile.socials)) {
           socialsArray = profile.socials;
         }
+
+        socialsArray.forEach((item) => {
+          if (
+            item &&
+            item.platform &&
+            Object.prototype.hasOwnProperty.call(initial, item.platform.toLowerCase())
+          ) {
+            initial[item.platform.toLowerCase()] = item.url || "";
+          }
+        });
       }
 
-      setFormData({
-        name: profile.name || "",
-        bio: profile.bio || "",
-        location: profile.location || "",
-        country: profile.country || "",
-        socials: socialsArray
-      });
+      setSocialsForm(initial);
     }
   }, [profile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
-
-  const isDuplicateSocial = (platform) => {
-    return formData.socials.some(social => social.platform === platform);
-  };
-
-  const handleSocialAdd = () => {
-    setSocialError("");
-    
-    if (!newSocial.platform) {
-      setSocialError("Please select a platform");
-      return;
-    }
-    
-    if (!isValidUrl(newSocial.url)) {
-  setSocialError("Please enter a valid URL (must start with http or https)");
-  return;
-}
-
-const platformDomainMap = {
-  instagram: "instagram.com",
-  youtube: "youtube.com",
-  facebook: "facebook.com",
-  spotify: "spotify.com",
-  soundcloud: "soundcloud.com",
-};
-
-if (
-  platformDomainMap[newSocial.platform] &&
-  !newSocial.url.includes(platformDomainMap[newSocial.platform])
-) {
-  setSocialError(`Please enter a valid ${newSocial.platform} link`);
-  return;
-}
-
-
-    if (isDuplicateSocial(newSocial.platform)) {
-      setSocialError(`${newSocial.platform} link already exists`);
-      return;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      socials: [...prev.socials, { ...newSocial }]
-    }));
-    
-    setNewSocial({ platform: "", url: "" });
-  };
-
-  const handleSocialRemove = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      socials: prev.socials.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleSocialChange = useCallback((index, field, value) => {
-    setFormData(prev => {
-      const updatedSocials = [...prev.socials];
-      updatedSocials[index] = {
-        ...updatedSocials[index],
-        [field]: value
-      };
-      return {
-        ...prev,
-        socials: updatedSocials
-      };
-    });
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Convert object to array of { platform, url }, skipping empty inputs
+    // Auto-prepend https:// if missing as backend validator strictly checks require_protocol: true
+    const socialsPayload = Object.entries(socialsForm)
+      .filter(([_, url]) => url && url.trim().length > 0)
+      .map(([platform, url]) => ({
+        platform,
+        url: normalizeUrl(url),
+      }));
+
     const profileData = {
       name: formData.name,
-      bio: formData.bio || '',
-      location: formData.location || '',
-      country: formData.country || '',
+      bio: formData.bio || "",
+      location: formData.location || "",
+      country: formData.country || "",
+      socials: socialsPayload,
     };
-    
-    if (formData.socials.length > 0) {
-      profileData.socials = formData.socials;
-    }
-    
+
     updateProfile(profileData, {
       onSuccess: () => {
         toast.success("Profile updated successfully!");
-        onSave();
-        onClose();
+        if (onSave) onSave();
+        if (onClose) onClose();
       },
       onError: (error) => {
-        const errorMessage = error?.response?.data?.message || 'Failed to update profile';
+        const errorMessage =
+          error?.response?.data?.message || "Failed to update profile";
         toast.error(errorMessage);
-      }
+      },
     });
   };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div 
+      <div
         className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl my-auto shadow-2xl shadow-black/50 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -181,7 +196,9 @@ if (
             <h2 className="text-xl font-bold text-white">
               Edit Profile Information
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">Update your profile details</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Update your profile details and streaming links
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -228,7 +245,13 @@ if (
                 maxLength="500"
               />
               <div className="text-right mt-1">
-                <span className={`text-xs ${formData.bio.length > 500 ? 'text-red-400' : 'text-gray-400'}`}>
+                <span
+                  className={`text-xs ${
+                    formData.bio.length > 500
+                      ? "text-red-400"
+                      : "text-gray-400"
+                  }`}
+                >
                   {formData.bio.length}/500
                 </span>
               </div>
@@ -252,7 +275,7 @@ if (
                   <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Country
@@ -273,22 +296,45 @@ if (
             </div>
           </div>
 
-          {/* <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
-            <SocialMediaInput
-  newSocial={newSocial}
-  setNewSocial={setNewSocial}
-  socialError={socialError}
-  setSocialError={setSocialError}
-  socialPlatforms={socialPlatforms}
-  isDuplicateSocial={isDuplicateSocial}
-  handleSocialAdd={handleSocialAdd}
-  formData={formData}
-  handleSocialChange={handleSocialChange}
-  handleSocialRemove={handleSocialRemove}
-  isLoading={isLoading}
-/>
+          {/* Social & Streaming Links Section */}
+          <div className="pt-2 border-t border-gray-800">
+            <div className="mb-4">
+              <h3 className="text-base font-semibold text-white">
+                Social & Streaming Links
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Add links to your profiles so listeners can connect with you across platforms
+              </p>
+            </div>
 
-          </div> */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {SOCIAL_PLATFORMS.map((platform) => (
+                <div key={platform.key}>
+                  <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                    {platform.label}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      placeholder={platform.placeholder}
+                      value={socialsForm[platform.key] || ""}
+                      onChange={(e) =>
+                        setSocialsForm((prev) => ({
+                          ...prev,
+                          [platform.key]: e.target.value,
+                        }))
+                      }
+                      className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 pl-10"
+                      disabled={isLoading}
+                    />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                      {platform.icon}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-800">
             <button
@@ -310,7 +356,7 @@ if (
                   Saving...
                 </>
               ) : (
-                'Save Changes'
+                "Save Changes"
               )}
             </button>
           </div>
