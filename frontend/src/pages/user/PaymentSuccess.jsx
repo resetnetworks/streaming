@@ -1,9 +1,10 @@
 import { FaCheckCircle } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import UserLayout from "../../components/user/UserLayout";
 import UserHeader from "../../components/user/UserHeader";
+import axiosInstance from "../../utills/axiosInstance";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
@@ -11,10 +12,26 @@ export default function PaymentSuccess() {
   
   // Extract query parameters
   const queryParams = new URLSearchParams(location.search);
-  const payment_intent = queryParams.get('payment_intent');
+  const sessionId = queryParams.get('session_id') || queryParams.get('sessionId');
+  const payment_intent = queryParams.get('payment_intent') || sessionId;
   const type = queryParams.get('type'); // 'artist', 'song', or 'album'
   const id = queryParams.get('id');
   const amount = queryParams.get('amount');
+
+  const [sessionStatus, setSessionStatus] = useState(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    axiosInstance
+      .get(`/v2/payment/stripe/session-status?sessionId=${sessionId}`)
+      .then((res) => {
+        if (res.data) setSessionStatus(res.data);
+      })
+      .catch((err) => {
+        console.warn("Could not fetch Stripe session status:", err);
+      });
+  }, [sessionId]);
 
   // Format current date and time using vanilla JS
   const currentDate = new Date().toLocaleString('en-IN', {
@@ -130,6 +147,12 @@ export default function PaymentSuccess() {
                 <span className="text-gray-400 text-sm">Date & Time</span>
                 <span className="font-medium text-sm md:text-base">{currentDate}</span>
               </div>
+              {sessionStatus?.customerEmail && (
+                <div className="flex flex-col sm:flex-row justify-between mb-3 pb-2 border-b border-gray-700 gap-1">
+                  <span className="text-gray-400 text-sm">Receipt Sent To</span>
+                  <span className="font-medium text-sm md:text-base">{sessionStatus.customerEmail}</span>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row justify-between gap-1">
                 <span className="text-gray-400 text-sm">Payment Method</span>
                 <span className="font-medium text-sm md:text-base">Credit Card (via Stripe)</span>

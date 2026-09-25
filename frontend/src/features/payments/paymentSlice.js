@@ -292,6 +292,14 @@ const paymentSlice = createSlice({
       state.paypalSubscriptionStatus = null;
       state.paypalActivationResponse = null;
     },
+    // 🆕 Stripe Embedded Checkout actions
+    setStripeClientSecret: (state, action) => {
+      state.clientSecret = action.payload;
+      state.gateway = 'stripe';
+    },
+    closeStripeModal: (state) => {
+      state.clientSecret = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -548,6 +556,8 @@ export const {
   setSubscriptionCurrency,
   setPaypalSubscriptionStatus,
   clearPaypalSubscriptionData,
+  setStripeClientSecret,
+  closeStripeModal,
 } = paymentSlice.actions;
 
 export default paymentSlice.reducer;
