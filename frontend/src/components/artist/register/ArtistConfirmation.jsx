@@ -157,6 +157,19 @@ const ArtistConfirmation = ({ onReapply }) => {
               <span className="text-slate-400">Submitted:</span>
               <span className="text-white">{formatDate(submittedDate)}</span>
             </div>
+            {application?.portfolioLink && (
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-slate-400">Portfolio:</span>
+                <a
+                  href={application.portfolioLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:underline truncate max-w-[200px]"
+                >
+                  {application.portfolioLink}
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Show rejection reason if applicable */}
