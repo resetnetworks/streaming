@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import * as Sentry from "@sentry/react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { getMyProfile } from "./features/auth/authSlice";
 import UserLayout from "./components/user/UserLayout";
 import PayPalSuccessHandler from "./components/PayPalSuccessHandler";
@@ -38,8 +38,16 @@ function App() {
   const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
-  sessionStorage.removeItem("lazy-reloaded");
-}, []);
+    sessionStorage.removeItem("lazy-reloaded");
+
+    const paymentToast = sessionStorage.getItem("payment_toast");
+    if (paymentToast) {
+      sessionStorage.removeItem("payment_toast");
+      setTimeout(() => {
+        toast.success(paymentToast);
+      }, 300);
+    }
+  }, []);
 
 useEffect(() => {
   // Always verify authentication status with backend on startup to check if a valid HttpOnly session cookie exists

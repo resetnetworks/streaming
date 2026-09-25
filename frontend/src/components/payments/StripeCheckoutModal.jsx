@@ -4,6 +4,7 @@ import {
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 import { stripePromise } from "../../utills/stripe";
 import { closeStripeModal } from "../../features/payments/paymentSlice";
 
@@ -25,6 +26,26 @@ export default function StripeCheckoutModal({
     } else {
       dispatch(closeStripeModal());
     }
+  };
+
+  const handleComplete = () => {
+    const artistName = sessionStorage.getItem("pending_subscription_artist");
+    const itemTitle = sessionStorage.getItem("pending_item_purchase");
+
+    let message = "Payment completed successfully!";
+    if (artistName) {
+      message = `You have successfully subscribed to ${artistName}!`;
+      sessionStorage.removeItem("pending_subscription_artist");
+    } else if (itemTitle) {
+      message = `You have successfully purchased ${itemTitle}!`;
+      sessionStorage.removeItem("pending_item_purchase");
+    }
+
+    sessionStorage.setItem("payment_toast", message);
+    handleClose();
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   // Close on Escape key
@@ -70,7 +91,7 @@ export default function StripeCheckoutModal({
           <div id="checkout" className="w-full mt-2 mb-5">
             <EmbeddedCheckoutProvider
               stripe={stripePromise}
-              options={{ clientSecret }}
+              options={{ clientSecret, onComplete: handleComplete }}
             >
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>

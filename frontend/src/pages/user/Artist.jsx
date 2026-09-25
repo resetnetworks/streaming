@@ -118,6 +118,26 @@ const Artist = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Handle Stripe return redirect: clean query params and reload for fresh data
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (
+      params.get("session_id") ||
+      params.get("subscription") === "return" ||
+      params.get("payment") === "return"
+    ) {
+      const artistName = sessionStorage.getItem("pending_subscription_artist") || artist?.name;
+      const message = artistName
+        ? `You have successfully subscribed to ${artistName}!`
+        : "Payment completed successfully!";
+
+      sessionStorage.setItem("payment_toast", message);
+      sessionStorage.removeItem("pending_subscription_artist");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.reload();
+    }
+  }, [artist]);
+
   const handleSubscribeModalClose = () => {
     setSubscribeModalOpen(false);
     setModalType(null);

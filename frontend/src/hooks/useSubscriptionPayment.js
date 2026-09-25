@@ -46,6 +46,9 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
   try {
     // 🔥 STRIPE ADD HERE
     if (gateway === "stripe") {
+      if (artist?.name) {
+        sessionStorage.setItem("pending_subscription_artist", artist.name);
+      }
       await createStripeSubscription({
         artistId: artist._id,
         cycle,
