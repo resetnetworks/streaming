@@ -1,3 +1,4 @@
+//frontend usePlayer.js
 // hooks/usePlayer.js
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -142,6 +143,22 @@ export const usePlayer = () => {
             maxBufferSize: 60 * 1000 * 1000,
             maxBufferHole: 0.5,
             enableWorker: true,
+            xhrSetup: (xhr, url) => {
+              // Intercept the dummy key URL from the MediaConvert playlist
+              if (url.includes("api.musicreset.com/stream/key/")) {
+                const token = localStorage.getItem("token")?.replace(/"/g, "");
+                const localBase = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+                // Redirect to our actual backend
+                const newUrl = url.replace("https://api.musicreset.com/stream/key", `${localBase}/stream/key`);
+
+                // Re-open XHR with the new URL
+                xhr.open("GET", newUrl, true);
+
+                if (token) {
+                  xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+                }
+              }
+            }
           });
 
           hls.on(Hls.Events.ERROR, (event, data) => {
