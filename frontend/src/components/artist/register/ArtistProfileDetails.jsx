@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSubmitApplication } from '../../../hooks/api/useArtistApplications';
 import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
+import { documentKycApi } from '../../../api/documentKycApi';
 import { countries } from '../../../utills/countries';
 import { MdPerson, MdPublic, MdFolderOpen, MdKeyboardDoubleArrowLeft, MdLink } from 'react-icons/md';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
   const submitLoading = submitApplicationMutation.isLoading;
   const submitError = submitApplicationMutation.error?.message;
 
+  const [isUploading, setIsUploading] = useState(false);
   const [stageName, setStageName] = useState(formData.stageName || '');
   const [errors, setErrors] = useState({});
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -197,13 +199,14 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const prepareFormDataForSubmission = () => {
-    const formDataToSend = new FormData();
-    formDataToSend.append('stageName', formData?.stageName?.trim() || '');
-    formDataToSend.append('legalName', (formData?.firstName || '').trim());
-    formDataToSend.append('bio', formData?.bio?.trim() || "");
-    formDataToSend.append('country', (formData?.country || '').toUpperCase());
-    formDataToSend.append('contact[email]', formData?.email || '');
+  // old
+  // const prepareFormDataForSubmission = () => {
+  //   const formDataToSend = new FormData();
+  //   formDataToSend.append('stageName', formData?.stageName?.trim() || '');
+  //   formDataToSend.append('legalName', (formData?.firstName || '').trim());
+  //   formDataToSend.append('bio', formData?.bio?.trim() || "");
+  //   formDataToSend.append('country', (formData?.country || '').toUpperCase());
+  //   formDataToSend.append('contact[email]', formData?.email || '');
 
     const rawPortfolio = (formData?.portfolioLink || formData?.socialMedia || '').trim();
     if (rawPortfolio) {
@@ -218,8 +221,29 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
         formDataToSend.append(`documentFilenames[${index}]`, doc.filename || `document-${index}.${doc.mimeType?.split('/')[1] || 'pdf'}`);
       }
     });
+  //   documents.forEach((doc, index) => {
+  //     if (doc.file && doc.file instanceof File) {
+  //       formDataToSend.append('documents', doc.file, doc.filename || `document-${index}`);
+  //       formDataToSend.append(`documentTypes[${index}]`, doc.docType || DOCUMENT_TYPES.OTHER);
+  //       formDataToSend.append(`documentFilenames[${index}]`, doc.filename || `document-${index}.${doc.mimeType?.split('/')[1] || 'pdf'}`);
+  //     }
+  //   });
 
-    return formDataToSend;
+
+  //   return formDataToSend;
+
+  // new
+  const prepareSubmissionPayload = (uploadedDocuments) => {
+    return {
+      stageName: formData?.stageName?.trim() || '',
+      legalName: (formData?.firstName || '').trim(),
+      bio: formData?.bio?.trim() || "",
+      country: (formData?.country || '').toUpperCase(),
+      contact: {
+        email: formData?.email || ''
+      },
+      documents: uploadedDocuments
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -233,8 +257,49 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
     }
 
     try {
-      const formDataToSend = prepareFormDataForSubmission();
-      await submitApplicationMutation.mutateAsync(formDataToSend);
+      // const formDataToSend = prepareFormDataForSubmission();
+      // await submitApplicationMutation.mutateAsync(formDataToSend);
+
+      // new
+      setIsUploading(true);
+      const uploadedDocuments = [];
+
+      for (let i = 0; i < documents.length; i++) {
+        const doc = documents[i];
+        if (doc.file && doc.file instanceof File) {
+          const presignedPayload = {
+            fileName: doc.filename || `document-${i}.${doc.mimeType?.split('/')[1] || 'pdf'}`,
+            mimeType: doc.mimeType,
+            documentType: doc.docType || DOCUMENT_TYPES.GOV_ID,
+          };
+
+          const presignedData = await documentKycApi.getPresignedUploadUrl(presignedPayload);
+
+          const { uploadUrl, uploadHeaders, key, documentId } = presignedData;
+
+          await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': doc.mimeType,
+              ...(uploadHeaders || {})
+            },
+            body: doc.file
+          });
+
+          const url = uploadUrl.split('?')[0];
+
+          uploadedDocuments.push({
+            url: url,
+            filename: key,
+            docType: doc.docType || DOCUMENT_TYPES.GOV_ID,
+            documentId: documentId
+          });
+        }
+      }
+      setIsUploading(false);
+
+      const payloadToSend = prepareSubmissionPayload(uploadedDocuments);
+      await submitApplicationMutation.mutateAsync(payloadToSend);
 
       documents.forEach(doc => {
         if (doc.previewUrl) URL.revokeObjectURL(doc.previewUrl);
@@ -243,6 +308,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
       clearFormData();
       submitForm();
     } catch (error) {
+      setIsUploading(false);
       console.error('Submission error:', error);
       const errMsg = error?.response?.data?.message || error?.message || "";
       toast.error(errMsg || "Failed to submit application. Please try again.");
@@ -470,9 +536,9 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
               boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
             }}
             type="submit"
-            disabled={submitLoading}
+            disabled={submitLoading || isUploading}
           >
-            {submitLoading ? "Submitting..." : "Submit Application"}
+            {isUploading ? "Uploading document..." : submitLoading ? "Submitting..." : "Submit Application"}
           </button>
         </div>
 

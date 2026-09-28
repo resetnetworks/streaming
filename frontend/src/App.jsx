@@ -314,6 +314,10 @@ useEffect(() => {
             <Pages.ArtistDashboard />
           </ArtistRoute>}
             />
+            <Route 
+            path="/document-verification"
+            element={<Pages.DocumentVerification />}
+            />
           </Routes>      
         </Suspense>
         <Toaster richColors position="top-center" closeButton />
