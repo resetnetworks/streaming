@@ -361,7 +361,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
             Portfolio Link <span className="text-red-500">*</span>
           </label>
           <p className="text-slate-400 text-xs mt-1">
-            Provide any one link (e.g. Spotify, SoundCloud, Instagram, YouTube)
+            Provide any one link (e.g. Bandcamp, SoundCloud, Spotify, Apple Music, Youtube)
           </p>
         </div>
         <div className="w-full relative">

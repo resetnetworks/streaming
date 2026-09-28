@@ -1,6 +1,6 @@
 // ProfileDetailSection.jsx
 import React, { useState, useEffect } from "react";
-import { FiEdit3 } from "react-icons/fi";
+import { FiEdit3, FiGlobe } from "react-icons/fi";
 import {
   FaSpotify,
   FaInstagram,
@@ -10,6 +10,7 @@ import {
   FaFacebook,
   FaTiktok,
   FaBandcamp,
+  FaApple,
   FaLink,
 } from "react-icons/fa";
 import { SiLinktree } from "react-icons/si";
@@ -23,6 +24,14 @@ const getSocialIcon = (platform) => {
   switch (platform?.toLowerCase()) {
     case "spotify":
       return <FaSpotify className="text-[#1DB954]" />;
+    case "apple":
+    case "applemusic":
+    case "apple_music":
+    case "apple music":
+      return <FaApple className="text-[#FA243C]" />;
+    case "portfolio":
+    case "website":
+      return <FiGlobe className="text-[#38BDF8]" />;
     case "instagram":
       return <FaInstagram className="text-[#E1306C]" />;
     case "soundcloud":
@@ -219,7 +228,7 @@ const ProfileDetailSection = ({ workspace }) => {
             } else if (typeof artistProfile.socials === "string") {
               try {
                 socialsList = JSON.parse(artistProfile.socials);
-              } catch (e) {
+              } catch {
                 socialsList = [];
               }
             }
@@ -241,7 +250,11 @@ const ProfileDetailSection = ({ workspace }) => {
                       className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 rounded-lg text-sm text-gray-200 hover:text-white transition-all duration-200 group"
                     >
                       <span className="text-base">{getSocialIcon(link.platform)}</span>
-                      <span className="capitalize font-medium">{link.platform}</span>
+                      <span className="capitalize font-medium">
+                        {link.platform?.toLowerCase() === "apple"
+                          ? "Apple Music"
+                          : link.platform}
+                      </span>
                       <span className="text-xs text-gray-500 group-hover:text-gray-400 ml-1">↗</span>
                     </a>
                   ))}
