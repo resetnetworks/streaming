@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSubmitApplication } from '../../../hooks/api/useArtistApplications';
 import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
 import { countries } from '../../../utills/countries';
-import { MdPerson, MdPublic, MdFolderOpen, MdKeyboardDoubleArrowLeft } from 'react-icons/md';
+import { MdPerson, MdPublic, MdFolderOpen, MdKeyboardDoubleArrowLeft, MdLink } from 'react-icons/md';
 import { toast } from 'sonner';
 
 const DOCUMENT_TYPES = {
@@ -148,6 +148,29 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
     removeDocument(index);
   };
 
+  const isValidURL = (url) => {
+    try {
+      const urlToTest = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+      const parsed = new URL(urlToTest);
+      return Boolean(parsed.hostname && parsed.hostname.includes('.'));
+    } catch {
+      return false;
+    }
+  };
+
+  const getProviderFromUrl = (url) => {
+    const lower = url.toLowerCase();
+    if (lower.includes('spotify')) return 'spotify';
+    if (lower.includes('soundcloud')) return 'soundcloud';
+    if (lower.includes('instagram')) return 'instagram';
+    if (lower.includes('youtube') || lower.includes('youtu.be')) return 'youtube';
+    if (lower.includes('apple')) return 'apple';
+    if (lower.includes('tiktok')) return 'tiktok';
+    if (lower.includes('twitter') || lower.includes('x.com')) return 'twitter';
+    if (lower.includes('facebook')) return 'facebook';
+    return 'website';
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -156,6 +179,12 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
     }
     if (!formData.country) {
       newErrors.country = 'Country is required';
+    }
+    const currentPortfolioLink = (formData?.portfolioLink || formData?.socialMedia || '').trim();
+    if (!currentPortfolioLink) {
+      newErrors.portfolioLink = 'Portfolio link is required';
+    } else if (!isValidURL(currentPortfolioLink)) {
+      newErrors.portfolioLink = 'Please enter a valid link (e.g. Spotify, SoundCloud, Instagram)';
     }
     if (documents.length === 0) {
       newErrors.documents = 'Government ID is required';
@@ -175,6 +204,12 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
     formDataToSend.append('bio', formData?.bio?.trim() || "");
     formDataToSend.append('country', (formData?.country || '').toUpperCase());
     formDataToSend.append('contact[email]', formData?.email || '');
+
+    const rawPortfolio = (formData?.portfolioLink || formData?.socialMedia || '').trim();
+    if (rawPortfolio) {
+      const formattedPortfolio = /^https?:\/\//i.test(rawPortfolio) ? rawPortfolio : `https://${rawPortfolio}`;
+      formDataToSend.append('portfolioLink', formattedPortfolio);
+    }
 
     documents.forEach((doc, index) => {
       if (doc.file && doc.file instanceof File) {
@@ -318,6 +353,36 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
         </div>
         {errors.country && (
           <p className="text-red-500 text-xs text-left w-full mt-1">{errors.country}</p>
+        )}
+
+        {/* Portfolio Link Field */}
+        <div className="w-full mt-5 mb-2 text-left">
+          <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
+            Portfolio Link <span className="text-red-500">*</span>
+          </label>
+          <p className="text-slate-400 text-xs mt-1">
+            Provide any one link (e.g. Spotify, SoundCloud, Instagram, YouTube)
+          </p>
+        </div>
+        <div className="w-full relative">
+          <input
+            required
+            type="url"
+            name="portfolioLink"
+            placeholder="https://open.spotify.com/artist/..."
+            className="input-login pl-10"
+            value={formData.portfolioLink || formData.socialMedia || ''}
+            onChange={(e) => {
+              handleChange('portfolioLink', e.target.value);
+              handleChange('socialMedia', e.target.value);
+            }}
+          />
+          <MdLink className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+        </div>
+        {(errors.portfolioLink || errors.socialMedia) && (
+          <p className="text-red-500 text-xs text-left w-full mt-1">
+            {errors.portfolioLink || errors.socialMedia}
+          </p>
         )}
 
         {/* Government ID Document Upload */}
