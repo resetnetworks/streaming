@@ -70,10 +70,28 @@ const ApplicationTabs = ({ activeTab, application }) => {
     ? application.adminNotes
     : [];
 
-  // Safe access to socials - ensure it's always an array
-  const socials = Array.isArray(application?.socials)
-    ? application.socials
-    : [];
+  // Safe access to socials - ensure it's always an array and includes portfolioLink if present
+  const detectPlatform = (url = '') => {
+    const lower = url.toLowerCase();
+    if (lower.includes('spotify')) return 'spotify';
+    if (lower.includes('soundcloud')) return 'soundcloud';
+    if (lower.includes('instagram')) return 'instagram';
+    if (lower.includes('youtube') || lower.includes('youtu.be')) return 'youtube';
+    if (lower.includes('apple')) return 'apple';
+    if (lower.includes('tiktok')) return 'tiktok';
+    if (lower.includes('twitter') || lower.includes('x.com')) return 'twitter';
+    if (lower.includes('facebook')) return 'facebook';
+    return 'website';
+  };
+
+  const baseSocials = Array.isArray(application?.socials) ? [...application.socials] : [];
+  if (application?.portfolioLink && !baseSocials.some(s => s.url === application.portfolioLink)) {
+    baseSocials.unshift({
+      provider: detectPlatform(application.portfolioLink),
+      url: application.portfolioLink
+    });
+  }
+  const socials = baseSocials;
 
   // Safe access to documents - ensure it's always an array
   const documents = Array.isArray(application?.documents)
