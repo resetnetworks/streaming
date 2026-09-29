@@ -26,7 +26,7 @@ const AdminLayout = ({ children, activeTab, setActiveTab }) => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-auto">
+      <div id="admin-scroll-container" className="flex-1 overflow-auto">
         <AdminHeader activeTab={activeTab} />
         <main className="p-6">{children}</main>
       </div>
