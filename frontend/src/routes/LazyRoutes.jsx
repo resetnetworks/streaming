@@ -59,7 +59,9 @@ export const AcceptInvite = lazy(() => import("../pages/user/AcceptInvite"));
 // Artist pages routes
 export const ArtistRegister = lazy(() => import("../pages/artist/ArtistRegister"));
 export const ArtistDashboard = lazy(() => import("../pages/artist/Dashboard"));
-export const DocumentVerification = lazy(() => import("../document-kyc/DocumentVerification"));
+
+// delete this route then see next.
+// export const DocumentVerification = lazy(() => import("../document-kyc/DocumentVerification"));
 
 
 

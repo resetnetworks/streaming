@@ -199,7 +199,6 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // old
   // const prepareFormDataForSubmission = () => {
   //   const formDataToSend = new FormData();
   //   formDataToSend.append('stageName', formData?.stageName?.trim() || '');
@@ -208,19 +207,12 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
   //   formDataToSend.append('country', (formData?.country || '').toUpperCase());
   //   formDataToSend.append('contact[email]', formData?.email || '');
 
-    const rawPortfolio = (formData?.portfolioLink || formData?.socialMedia || '').trim();
-    if (rawPortfolio) {
-      const formattedPortfolio = /^https?:\/\//i.test(rawPortfolio) ? rawPortfolio : `https://${rawPortfolio}`;
-      formDataToSend.append('portfolioLink', formattedPortfolio);
-    }
+  //   const rawPortfolio = (formData?.portfolioLink || formData?.socialMedia || '').trim();
+  //   if (rawPortfolio) {
+  //     const formattedPortfolio = /^https?:\/\//i.test(rawPortfolio) ? rawPortfolio : `https://${rawPortfolio}`;
+  //     formDataToSend.append('portfolioLink', formattedPortfolio);
+  //   }
 
-    documents.forEach((doc, index) => {
-      if (doc.file && doc.file instanceof File) {
-        formDataToSend.append('documents', doc.file, doc.filename || `document-${index}`);
-        formDataToSend.append(`documentTypes[${index}]`, doc.docType || DOCUMENT_TYPES.OTHER);
-        formDataToSend.append(`documentFilenames[${index}]`, doc.filename || `document-${index}.${doc.mimeType?.split('/')[1] || 'pdf'}`);
-      }
-    });
   //   documents.forEach((doc, index) => {
   //     if (doc.file && doc.file instanceof File) {
   //       formDataToSend.append('documents', doc.file, doc.filename || `document-${index}`);
@@ -228,12 +220,15 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
   //       formDataToSend.append(`documentFilenames[${index}]`, doc.filename || `document-${index}.${doc.mimeType?.split('/')[1] || 'pdf'}`);
   //     }
   //   });
-
-
   //   return formDataToSend;
+  // };
 
-  // new
   const prepareSubmissionPayload = (uploadedDocuments) => {
+    const rawPortfolio = (formData?.portfolioLink || formData?.socialMedia || '').trim();
+    const formattedPortfolio = rawPortfolio && !/^https?:\/\//i.test(rawPortfolio)
+      ? `https://${rawPortfolio}`
+      : rawPortfolio;
+
     return {
       stageName: formData?.stageName?.trim() || '',
       legalName: (formData?.firstName || '').trim(),
@@ -242,6 +237,7 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
       contact: {
         email: formData?.email || ''
       },
+      portfolioLink: formattedPortfolio,
       documents: uploadedDocuments
     };
   };
