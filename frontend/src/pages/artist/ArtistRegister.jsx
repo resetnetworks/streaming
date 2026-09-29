@@ -49,7 +49,7 @@ const ArtistRegister = () => {
               country: '',
               website: '',
               socialMedia: '',
-              portfolioLink: '',
+              // portfolioLink: '',
               bio: '',
               profileImage: null,
               firstName: '',

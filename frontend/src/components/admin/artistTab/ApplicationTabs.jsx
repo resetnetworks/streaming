@@ -1,8 +1,11 @@
-import {
-  FaMusic,
-  FaMapMarkerAlt,
-  FaUserAlt,
-  FaEnvelope,
+import React, { useState } from 'react';
+import { documentKycApi } from '../../../api/documentKycApi';
+import { toast } from 'sonner';
+import { 
+  FaMusic, 
+  FaMapMarkerAlt, 
+  FaUserAlt, 
+  FaEnvelope, 
   FaPhone,
   FaFileAlt,
   FaInstagram,
@@ -18,6 +21,38 @@ import {
 } from 'react-icons/fa';
 
 const ApplicationTabs = ({ activeTab, application }) => {
+  const [viewingDocId, setViewingDocId] = useState(null);
+
+  const handleViewDocument = async (doc) => {
+    // console.log("🔍 [View Document Clicked]");
+    // console.log("👉 Target Document:", doc);
+
+    // Check if it's old data by looking at the folder path in the URL
+    // Old data uses /documents/, New encrypted data uses /document-kyc/
+    if (doc.url && !doc.url.includes('/document-kyc/')) {
+      // console.log("📂 Old document detected (no /document-kyc/ in URL). Opening direct URL.");
+      window.open(doc.url, '_blank');
+      return;
+    }
+
+    try {
+      setViewingDocId(doc.url || doc.documentId || 'loading');
+
+      const userId = application?.userId || application?.user?._id || application?.user;
+
+      const res = await documentKycApi.getPresignedViewUrl(userId);
+
+      if (res && res.viewUrl) {
+        window.open(res.viewUrl, '_blank');
+      }
+    } catch (error) {
+      toast.error('Failed to get secure view URL');
+      console.error(error);
+    } finally {
+      setViewingDocId(null);
+    }
+  };
+
   // Social platform icons mapping
   const socialIcons = {
     instagram: FaInstagram,
@@ -260,14 +295,13 @@ const ApplicationTabs = ({ activeTab, application }) => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <a
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                  <button
+                    onClick={() => handleViewDocument(doc)}
+                    disabled={viewingDocId === (doc.url || doc.documentId)}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50"
                   >
-                    View
-                  </a>
+                    {viewingDocId === (doc.url || doc.documentId) ? 'Opening...' : 'View'}
+                  </button>
                   <a
                     href={doc.url}
                     download
