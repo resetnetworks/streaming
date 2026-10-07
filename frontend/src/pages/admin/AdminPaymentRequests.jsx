@@ -202,7 +202,7 @@ const AdminPaymentRequests = () => {
                           </div>
                           <div className="text-sm text-gray-400 flex items-center">
                             <FaEnvelope className="mr-1 text-xs" />
-                            {payout.artistId?.email || 'N/A'}
+                            {payout.paypalEmail || 'N/A'}
                           </div>
                         </div>
                       </div>
