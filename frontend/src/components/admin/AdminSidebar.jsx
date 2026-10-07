@@ -5,7 +5,8 @@ import {
   FaCompactDisc,
   FaMusic,
   FaSignOutAlt,
-  FaWallet
+  FaWallet,
+  FaShieldAlt
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -58,18 +59,31 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
               Artists
             </button>
           </li>
+          <li>
+            <button
+              onClick={() => setActiveTab('copyright')}
+              className={`flex items-center w-full px-4 py-3 rounded-lg transition-colors ${
+                activeTab === 'copyright'
+                  ? 'bg-blue-900 text-white font-medium'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <FaShieldAlt className="mr-3" />
+              Copyright &amp; AudD
+            </button>
+          </li>
 
           <li className="pt-4 mt-4 border-t border-gray-700">
             <button
               onClick={() => setActiveTab('payments')}
-              className={`flex items-center w-full px-4 py-3 rounded-lg ${
-                activeTab === 'settings'
-                  ? 'bg-blue-900 text-white'
+              className={`flex items-center w-full px-4 py-3 rounded-lg transition-colors ${
+                activeTab === 'payments'
+                  ? 'bg-blue-900 text-white font-medium'
                   : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
               <FaWallet className="mr-3" />
-              payments requests
+              Payment Requests
             </button>
           </li>
         </ul>
