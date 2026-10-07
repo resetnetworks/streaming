@@ -4,6 +4,7 @@ import AdminLayout from './AdminLayout';
 import Dashboard from './Dashboard';
 import Artists from './Artists';
 import AdminPaymentRequests from './AdminPaymentRequests';
+import AdminCopyright from './AdminCopyright';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -12,6 +13,9 @@ const Admin = () => {
     switch (activeTab) {
       case 'artists':
         return <Artists />;
+
+      case 'copyright':
+        return <AdminCopyright />;
 
       case 'payments':
         return <AdminPaymentRequests />;
