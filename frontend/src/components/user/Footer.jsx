@@ -105,6 +105,15 @@ const Footer = () => {
               >
                 Terms &amp; Conditions
               </Link>
+              <a
+                href="https://blog.musicreset.com/investors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-gray-300 hover:text-[#4DB3FF] transition-colors"
+                style={{ fontFamily: "Jura" }}
+              >
+                Investor Relations
+              </a>
             </nav>
           </div>
 
