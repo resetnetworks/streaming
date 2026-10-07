@@ -1,7 +1,7 @@
 import React from "react";
 import IconHeader from "../../user/IconHeader";
 import MobileNavBar from "../../user/MobileNavBar";
-import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers, FaAd } from "react-icons/fa";
+import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers, FaAd, FaGift } from "react-icons/fa";
 import { FiMusic } from "react-icons/fi";
 import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
@@ -15,6 +15,7 @@ const menuItems = [
   { name: "revenue", icon: <FaWallet size={20} />, permission: "viewPayments" },
   { name: "dashboard", icon: <RxDashboard size={20} />, permission: "viewAnalytics" },
   { name: "adverts", icon: <FaAd size={20} />, permission: "viewAnalytics" },
+  { name: "referrals", label: "Referral Program", icon: <FaGift size={20} /> },
   { name: "team", icon: <FaUsers size={20} />, permission: "manageTeam" },
   // { name: "insights", icon: <FaChartLine size={18} /> },
 ];
@@ -135,7 +136,7 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
                         {item.icon}
                       </span>
                       <span className="text-sm font-medium flex-1 text-left capitalize">
-                        {item.name}
+                        {item.label || item.name}
                       </span>
                     </button>
                   ))}
@@ -188,7 +189,7 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
                 {item.icon}
               </span>
               <span className="text-sm font-medium flex-1 text-left capitalize">
-                {item.name}
+                {item.label || item.name}
               </span>
             </button>
           ))}

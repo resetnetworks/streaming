@@ -305,6 +305,10 @@ useEffect(() => {
             }
             />
             <Route 
+            path="/artist/register/apply"
+            element={<Pages.ArtistRegister />}
+            />
+            <Route 
             path="/artist/dashboard"
             element={
             <ArtistRoute

@@ -20,6 +20,8 @@ const Topbar = ({ selectedTab, currentUploadPage, setCurrentUploadPage }) => {
     displayText = <>welcome, <span className='font-semibold'>allison malone</span></>;
   } else if (selectedTab === "uploads") {
     displayText = "uploads";
+  } else if (selectedTab === "referrals") {
+    displayText = "Referral Program";
   } else {
     displayText = selectedTab;
   }
