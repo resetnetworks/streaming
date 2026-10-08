@@ -265,10 +265,6 @@ const RefereeProgressList = ({ referrals = [], isLoading = false }) => {
                   const isRejected = ref.status === "rejected";
 
                   const artistName = ref.refereeName || "Artist Applicant";
-                  const artistEmail =
-                    ref.refereeEmail ||
-                    ref.email ||
-                    `${artistName.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`;
 
                   const isQualified = isStage3Complete || ref.status === "qualified";
                   const isPendingApproval = !isStage2Complete && !isRejected;
@@ -287,9 +283,6 @@ const RefereeProgressList = ({ referrals = [], isLoading = false }) => {
                           <h4 className="text-white font-semibold text-sm truncate leading-tight">
                             {artistName}
                           </h4>
-                          <span className="text-gray-400 text-xs truncate block font-mono">
-                            {artistEmail}
-                          </span>
                         </div>
                       </div>
 
@@ -415,9 +408,11 @@ const RefereeProgressList = ({ referrals = [], isLoading = false }) => {
                       <h3 className="text-white font-bold text-lg">
                         {selectedReferee.refereeName || "Artist Applicant"}
                       </h3>
-                      <p className="text-gray-400 text-xs">
-                        {selectedReferee.refereeEmail || selectedReferee.email || "artist@example.com"}
-                      </p>
+                      {(selectedReferee.refereeEmail || selectedReferee.email) && (
+                        <p className="text-gray-400 text-xs font-mono">
+                          {selectedReferee.refereeEmail || selectedReferee.email}
+                        </p>
+                      )}
                     </div>
                   </div>
 
