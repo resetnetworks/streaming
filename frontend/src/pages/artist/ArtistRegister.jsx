@@ -33,6 +33,14 @@ const ArtistRegister = () => {
 
   // Draft form state management
   const [formData, setFormData] = useState(() => {
+    let initialRefCode = '';
+    try {
+      const queryParams = new URLSearchParams(window.location.search);
+      initialRefCode = (queryParams.get("ref") || '').trim().toUpperCase();
+    } catch (e) {
+      console.error('Error reading ref from URL:', e);
+    }
+
     try {
       const savedData = localStorage.getItem('artistApplicationData');
       if (savedData) {
@@ -56,6 +64,7 @@ const ArtistRegister = () => {
               lastName: '',
               email: '',
               ...parsedData,
+              referralCode: initialRefCode || parsedData.referralCode || '',
               portfolioLink: parsedData.portfolioLink || parsedData.socialMedia || '',
               documents: parsedData.documents || [],
               samples: parsedData.samples || []
@@ -79,6 +88,7 @@ const ArtistRegister = () => {
       firstName: '',
       lastName: '',
       email: '',
+      referralCode: initialRefCode || '',
     };
   });
 
@@ -142,9 +152,23 @@ const ArtistRegister = () => {
       firstName: '',
       lastName: '',
       email: '',
+      referralCode: '',
     });
     localStorage.removeItem('artistApplicationData');
   }, []);
+
+  // Sync ref query parameter from URL on mount
+  useEffect(() => {
+    try {
+      const queryParams = new URLSearchParams(window.location.search);
+      const refCode = (queryParams.get("ref") || '').trim().toUpperCase();
+      if (refCode) {
+        updateField('referralCode', refCode);
+      }
+    } catch (e) {
+      console.error('Error reading ref param on mount:', e);
+    }
+  }, [updateField]);
 
   // Debounced LocalStorage save function
   const saveToLocalStorage = useCallback(async () => {

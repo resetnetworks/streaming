@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
 import TeamComponent from "../../components/artist/team/TeamComponent";
 import AdvertsComponent from "../../components/artist/adverts/AdvertsComponent";
+import ReferralComponent from "../../components/artist/referrals/ReferralComponent";
 
 // Static tab components (no props needed)
 const tabComponents = {
@@ -24,6 +25,7 @@ const tabComponents = {
   dashboard: <HomeComponent />,
   revenue: <ArtistDashboardRevenue />,
   adverts: <AdvertsComponent />,
+  referrals: <ReferralComponent />,
 };
 
 export default function Dashboard() {
@@ -51,7 +53,7 @@ export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState(() => {
     if (typeof window !== "undefined") {
       const savedTab = localStorage.getItem("dashboardSelectedTab");
-      const validTabs = ["profile", "dashboard", "uploads", "revenue", "team", "adverts"];
+      const validTabs = ["profile", "dashboard", "uploads", "revenue", "team", "adverts", "referrals"];
       return validTabs.includes(savedTab) ? savedTab : "profile";
     }
     return "profile";

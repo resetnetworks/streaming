@@ -3,7 +3,7 @@ import { useSubmitApplication } from '../../../hooks/api/useArtistApplications';
 import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
 import { documentKycApi } from '../../../api/documentKycApi';
 import { countries } from '../../../utills/countries';
-import { MdPerson, MdPublic, MdFolderOpen, MdKeyboardDoubleArrowLeft, MdLink } from 'react-icons/md';
+import { MdPerson, MdPublic, MdFolderOpen, MdKeyboardDoubleArrowLeft, MdLink, MdCardGiftcard } from 'react-icons/md';
 import { toast } from 'sonner';
 
 const DOCUMENT_TYPES = {
@@ -28,8 +28,24 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
 
   const [isUploading, setIsUploading] = useState(false);
   const [stageName, setStageName] = useState(formData.stageName || '');
+  const [referralCode, setReferralCode] = useState(formData.referralCode || '');
   const [errors, setErrors] = useState({});
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  useEffect(() => {
+    if (formData.referralCode && formData.referralCode !== referralCode) {
+      setReferralCode(formData.referralCode);
+    }
+  }, [formData.referralCode, referralCode]);
+
+  const handleReferralCodeChange = (value) => {
+    const uppercased = value.toUpperCase();
+    setReferralCode(uppercased);
+    updateField('referralCode', uppercased);
+    if (errors.referralCode) {
+      setErrors(prev => ({ ...prev, referralCode: undefined }));
+    }
+  };
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -229,6 +245,8 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
       ? `https://${rawPortfolio}`
       : rawPortfolio;
 
+    const trimmedRefCode = (referralCode || formData?.referralCode || '').trim().toUpperCase();
+
     return {
       stageName: formData?.stageName?.trim() || '',
       legalName: (formData?.firstName || '').trim(),
@@ -238,7 +256,8 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
         email: formData?.email || ''
       },
       portfolioLink: formattedPortfolio,
-      documents: uploadedDocuments
+      documents: uploadedDocuments,
+      referralCode: trimmedRefCode || null
     };
   };
 
@@ -307,6 +326,12 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
       setIsUploading(false);
       console.error('Submission error:', error);
       const errMsg = error?.response?.data?.message || error?.message || "";
+      if (
+        errMsg.toLowerCase().includes('referral') ||
+        error?.response?.data?.code === 'INVALID_REFERRAL_CODE'
+      ) {
+        setErrors(prev => ({ ...prev, referralCode: errMsg }));
+      }
       toast.error(errMsg || "Failed to submit application. Please try again.");
     }
   };
@@ -501,6 +526,39 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
         </div>
         {errors.documents && (
           <p className="text-red-500 text-xs text-left w-full mt-1">{errors.documents}</p>
+        )}
+
+        {/* Referral Code Field (Optional) */}
+        <div className="w-full mt-5 mb-2 text-left">
+          <label className="block text-sm font-medium text-slate-300 uppercase tracking-wider">
+            Referral Code <span className="text-xs text-slate-400 font-normal lowercase">(optional)</span>
+          </label>
+          <p className="text-slate-400 text-xs mt-1">
+            If an artist invited you, enter their referral code below.
+          </p>
+        </div>
+        <div className="w-full relative">
+          <input
+            type="text"
+            name="referralCode"
+            placeholder="e.g., ARTIST_1234"
+            className="input-login pl-10 uppercase tracking-wide"
+            value={referralCode}
+            onChange={(e) => handleReferralCodeChange(e.target.value)}
+          />
+          <MdCardGiftcard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+          {referralCode && (
+            <button
+              type="button"
+              onClick={() => handleReferralCodeChange('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs bg-slate-800/80 hover:bg-slate-700 px-2 py-0.5 rounded transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        {errors.referralCode && (
+          <p className="text-red-500 text-xs text-left w-full mt-1">{errors.referralCode}</p>
         )}
 
         {/* Terms and Conditions Checkbox */}
