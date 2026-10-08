@@ -9,43 +9,19 @@ import {
   MdVerifiedUser,
   MdLibraryMusic,
   MdMonetizationOn,
-  MdRefresh
 } from "react-icons/md";
 
 const ReferralComponent = () => {
   const {
     data: referralsData,
     isLoading,
-    isFetching,
-    refetch
   } = useMyReferrals();
 
   const stats = referralsData?.stats || {};
   const referralsList = referralsData?.referrals || [];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
-      {/* Top Banner & Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-800">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-            Artist Referral Program
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Grow our music creator community and earn cash rewards for inviting talented artists.
-          </p>
-        </div>
-
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="self-start md:self-auto flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-slate-200 border border-gray-700/80 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer"
-        >
-          <MdRefresh className={`w-4 h-4 ${isFetching ? "animate-spin text-blue-400" : ""}`} />
-          <span>{isFetching ? "Refreshing..." : "Refresh Data"}</span>
-        </button>
-      </div>
-
+    <div className="p-4 md:p-6 w-full space-y-6 md:space-y-8 font-jura">
       {/* Stage 3: My Referral Code & Link Card */}
       <ReferralCodeCard />
 
@@ -61,7 +37,7 @@ const ReferralComponent = () => {
           <span>How It Works & Earning Milestones</span>
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
           {/* Step 1 */}
           <div className="relative flex flex-col p-4 rounded-xl bg-slate-900/40 border border-slate-800">
             <div className="w-10 h-10 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-3 font-bold text-sm">

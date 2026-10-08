@@ -4,7 +4,6 @@ import {
   MdPeopleAlt,
   MdHourglassTop,
   MdCheckCircle,
-  MdMonetizationOn,
   MdTrendingUp
 } from "react-icons/md";
 import { FaAward } from "react-icons/fa";
@@ -22,15 +21,15 @@ const ReferralStatsCards = ({ stats = {}, isLoading = false }) => {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 font-jura">
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="p-5 rounded-2xl bg-gradient-to-br from-gray-900/80 to-black border border-gray-800 animate-pulse h-32"
+            className="p-5 rounded-2xl bg-[#0A0A23]/40 border border-white/10 animate-pulse h-32"
           >
-            <div className="h-4 w-20 bg-gray-800 rounded mb-3" />
-            <div className="h-8 w-14 bg-gray-800/80 rounded mb-2" />
-            <div className="h-3 w-28 bg-gray-800/50 rounded" />
+            <div className="h-4 w-20 bg-white/10 rounded mb-3" />
+            <div className="h-8 w-14 bg-white/10 rounded mb-2" />
+            <div className="h-3 w-28 bg-white/5 rounded" />
           </div>
         ))}
       </div>
@@ -38,92 +37,92 @@ const ReferralStatsCards = ({ stats = {}, isLoading = false }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 font-jura">
       {/* 1. Total Invited */}
-      <div className="relative p-5 rounded-2xl bg-gradient-to-br from-gray-900/90 to-black border border-gray-800/90 shadow-lg hover:border-gray-700 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400">
+      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
+        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
           <MdPeopleAlt className="w-5 h-5" />
         </div>
-        <div className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
           Total Invited
         </div>
-        <div className="text-3xl font-extrabold text-white tracking-tight my-1">
+        <div className="text-3xl font-bold text-white tracking-tight my-1">
           {totalInvited}
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-gray-400">
           Artists joined with code
         </div>
       </div>
 
       {/* 2. In Progress */}
-      <div className="relative p-5 rounded-2xl bg-gradient-to-br from-gray-900/90 to-black border border-gray-800/90 shadow-lg hover:border-amber-500/30 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
+        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
           <MdHourglassTop className="w-5 h-5" />
         </div>
-        <div className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
           In Progress
         </div>
-        <div className="text-3xl font-extrabold text-amber-400 tracking-tight my-1">
+        <div className="text-3xl font-bold text-white tracking-tight my-1">
           {inProgressCount}
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-gray-400">
           Awaiting approval or music
         </div>
       </div>
 
       {/* 3. Qualified Referrals */}
-      <div className="relative p-5 rounded-2xl bg-gradient-to-br from-gray-900/90 to-black border border-gray-800/90 shadow-lg hover:border-emerald-500/30 transition-all">
+      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
         <div className="absolute top-4 right-4 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
           <MdCheckCircle className="w-5 h-5" />
         </div>
-        <div className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
           Qualified Referrals
         </div>
-        <div className="text-3xl font-extrabold text-emerald-400 tracking-tight my-1">
+        <div className="text-3xl font-bold text-emerald-400 tracking-tight my-1">
           {qualifiedCount}
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-gray-400">
           Completed all 3 stages
         </div>
       </div>
 
       {/* 4. Next $10 Reward Tracker */}
-      <div className="relative p-5 rounded-2xl bg-gradient-to-br from-blue-950/40 via-gray-900/90 to-black border border-blue-500/30 shadow-lg">
-        <div className="absolute top-4 right-4 p-2.5 bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-300">
+      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/60 backdrop-blur-lg border border-[#4DB3FF]/30 shadow-xl hover:border-[#4DB3FF]/50 transition-all">
+        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
           <MdTrendingUp className="w-5 h-5" />
         </div>
-        <div className="text-blue-300 text-xs font-medium uppercase tracking-wider mb-1">
+        <div className="text-[#4DB3FF] text-xs font-semibold uppercase tracking-wider mb-1">
           Next $10 Reward
         </div>
-        <div className="text-3xl font-extrabold text-white tracking-tight my-1 flex items-baseline gap-1">
+        <div className="text-3xl font-bold text-white tracking-tight my-1 flex items-baseline gap-1">
           <span>{milestoneProgress}</span>
-          <span className="text-lg font-normal text-slate-400">/ 3</span>
+          <span className="text-lg font-normal text-gray-400">/ 3</span>
         </div>
         {/* Progress Bar */}
-        <div className="w-full bg-slate-800 rounded-full h-2 mt-2 overflow-hidden border border-slate-700/60">
+        <div className="w-full bg-black/50 rounded-full h-2 mt-2 overflow-hidden border border-white/10">
           <div
-            className="bg-gradient-to-r from-blue-500 to-indigo-400 h-full rounded-full transition-all duration-500"
+            className="bg-gradient-to-r from-[#0F3272] via-[#1A5DB4] to-[#3380FF] h-full rounded-full transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
-        <div className="text-[11px] text-blue-300/80 mt-1.5 flex justify-between">
+        <div className="text-[11px] text-gray-400 mt-1.5 flex justify-between font-mono">
           <span>{3 - milestoneProgress} more to earn $10</span>
           <span>{progressPercent}%</span>
         </div>
       </div>
 
       {/* 5. Total Rewarded */}
-      <div className="relative p-5 rounded-2xl bg-gradient-to-br from-gray-900/90 to-black border border-gray-800/90 shadow-lg hover:border-purple-500/30 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
+        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
           <FaAward className="w-5 h-5" />
         </div>
-        <div className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">
+        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
           Total Rewarded
         </div>
-        <div className="text-3xl font-extrabold text-purple-300 tracking-tight my-1">
+        <div className="text-3xl font-bold text-white tracking-tight my-1">
           {rewardedCount}
         </div>
-        <div className="text-xs text-purple-400/80 font-medium">
+        <div className="text-xs text-gray-400">
           ${Math.floor(rewardedCount / 3) * 10} USD earned so far
         </div>
       </div>
