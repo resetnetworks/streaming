@@ -9,6 +9,7 @@ import {
 import { addPurchase } from '../features/auth/authSlice'; // ✅ Import the existing action
 import { toast } from 'sonner';
 import { useCreatePayment } from './api/usePayments';
+import { analytics, EVENT_TYPES } from '../utills/analytics/index.js';
 
 export const usePaymentGateway = () => {
   const dispatch = useDispatch();
@@ -77,6 +78,22 @@ export const usePaymentGateway = () => {
     };
 
     const paymentDetails = getPaymentDetails();
+
+    analytics.track(
+      EVENT_TYPES.PURCHASE_STARTED,
+      {
+        itemType,
+        amount: paymentDetails.amount,
+        currency: paymentDetails.currency,
+        gateway,
+        title: item?.title || item?.name,
+      },
+      {
+        songId: itemType === "song" ? item?._id : undefined,
+        albumId: itemType === "album" ? item?._id : undefined,
+        artistId: item?.artistId || item?.artist?._id || item?.artist,
+      }
+    );
 
     try {
       if (gateway === 'razorpay') {
@@ -167,6 +184,23 @@ export const usePaymentGateway = () => {
           itemType,
           itemId: item._id
         }));
+
+        analytics.track(
+          EVENT_TYPES.PURCHASE_COMPLETED,
+          {
+            itemType,
+            amount: paymentDetails.amount || 0,
+            currency: paymentDetails.currency || 'INR',
+            transactionId: response.razorpay_payment_id || order.id,
+            gateway: 'razorpay',
+            title: item.title,
+          },
+          {
+            songId: itemType === 'song' ? item._id : undefined,
+            albumId: itemType === 'album' ? item._id : undefined,
+            artistId: item.artistId || item.artist?._id || item.artist,
+          }
+        );
 
         // Trigger Google Ads / Analytics Purchase Event
         if (typeof window.gtag === 'function') {

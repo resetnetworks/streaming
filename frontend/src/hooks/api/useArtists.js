@@ -23,7 +23,8 @@ export const artistKeys = {
   subscriberCounts: () => [...artistKeys.all, "subscriber-count"],
   subscriberCount: (artistId) => [...artistKeys.subscriberCounts(), artistId],
   dashboardSingles: () => [...artistKeys.all, "dashboard-singles"],
-dashboardAlbums: () => [...artistKeys.all, "dashboard-albums"],
+  dashboardAlbums: () => [...artistKeys.all, "dashboard-albums"],
+  isFollowed: (artistId) => [...artistKeys.all, "is-followed", artistId],
 };
 
 // 📥 QUERIES (GET REQUESTS)
@@ -145,6 +146,37 @@ export const useSubscriberCounts = (artistIds) => {
       enabled: !!artistId,
       staleTime: 2 * 60 * 1000,
     })),
+  });
+};
+
+// Check if artist is followed by current user
+export const useIsArtistFollowed = (artistId, enabled = true) => {
+  return useQuery({
+    queryKey: artistKeys.isFollowed(artistId),
+    queryFn: () => artistApi.checkFollow(artistId),
+    enabled: Boolean(artistId && enabled),
+    staleTime: 60 * 1000,
+  });
+};
+
+// Toggle follow / unfollow artist
+export const useToggleFollowArtist = (artistId) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ isFollowing }) => {
+      if (isFollowing) {
+        return await artistApi.unfollow(artistId);
+      } else {
+        return await artistApi.follow(artistId);
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData(artistKeys.isFollowed(artistId), !variables.isFollowing);
+      queryClient.invalidateQueries({ queryKey: ["favorite-artists"] });
+      queryClient.invalidateQueries({ queryKey: ["artist-analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["daily-stats"] });
+    },
   });
 };
 

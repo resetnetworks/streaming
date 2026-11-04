@@ -8,6 +8,7 @@ import AlbumCard from "../../components/user/AlbumCard";
 import { useSearch } from "../../hooks/api/useSearch";
 import { usePlaybackControl } from "../../hooks/usePlaybackControl";
 import { play, pause, setSelectedSong } from "../../features/playback/playerSlice";
+import { useSearchAnalytics } from "../../utills/analytics/index.js";
 
 const Search = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,7 @@ const Search = () => {
   const { data, isLoading, error: queryError } = useSearch(searchQuery);
 
   const results = data?.results || { artists: [], songs: [], albums: [] };
+  const { trackResultClick } = useSearchAnalytics(searchQuery, results);
   const loading = isLoading && searchQuery.trim() !== "";
   const error = queryError ? (queryError.response?.data?.message || "Search failed") : null;
 
@@ -66,6 +68,7 @@ const Search = () => {
 
   const handlePlaySong = (song) => {
     if (!song) return;
+    trackResultClick({ itemType: "song", itemId: song._id, title: song.title });
     if (isSongSelected(song._id)) {
       isSongPlaying(song._id) ? pausePlayback() : resumePlayback();
     } else {
@@ -151,7 +154,10 @@ const Search = () => {
                         key={song._id}
                         songId={song._id}
                         isSelected={currentSong?._id === song._id}
-                        onTitleClick={() => navigate(`/song/${song.slug}`)}
+                        onTitleClick={() => {
+                          trackResultClick({ itemType: "song", itemId: song._id, title: song.title });
+                          navigate(`/song/${song.slug}`);
+                        }}
                         title={song.title}
                         image={song.coverImage || "/images/placeholder.png"}
                         onPlay={() => handlePlaySong(song)}
@@ -168,11 +174,17 @@ const Search = () => {
                     {results.artists.map((artist) => (
                       <RecentPlays
                         key={artist._id}
-                        onTitleClick={() => navigate(`/artist/${artist.slug}`)}
+                        onTitleClick={() => {
+                          trackResultClick({ itemType: "artist", itemId: artist._id, title: artist.name });
+                          navigate(`/artist/${artist.slug}`);
+                        }}
                         title={artist.name}
                         price="Artist"
                         image={artist.profileImage || "/images/placeholder.png"}
-                        onPlay={() => navigate(`/artist/${artist.slug}`)}
+                        onPlay={() => {
+                          trackResultClick({ itemType: "artist", itemId: artist._id, title: artist.name });
+                          navigate(`/artist/${artist.slug}`);
+                        }}
                         showControls={false}
                       />
                     ))}
@@ -190,7 +202,10 @@ const Search = () => {
                           tag={`${album.title || "music"}`}
                           artists={album.artist?.name || "Various Artists"}
                           image={album.coverImage || "/images/placeholder.png"}
-                          onClick={() => navigate(`/album/${album.slug}`)}
+                          onClick={() => {
+                            trackResultClick({ itemType: "album", itemId: album._id, title: album.title });
+                            navigate(`/album/${album.slug}`);
+                          }}
                         />
                       </div>
                     ))}

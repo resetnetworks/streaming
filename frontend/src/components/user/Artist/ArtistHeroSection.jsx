@@ -1,5 +1,10 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { FiMapPin, FiAlertTriangle, FiX } from "react-icons/fi";
+import { FiMapPin, FiAlertTriangle, FiX, FiUserPlus, FiCheck, FiUserMinus } from "react-icons/fi";
+import { useSelector } from "react-redux";
+import {
+  useIsArtistFollowed,
+  useToggleFollowArtist,
+} from "../../../hooks/api/useArtists";
 import {
   FaSpotify,
   FaInstagram,
@@ -178,15 +183,74 @@ const UnsubscribeModal = ({
 // ─── Main Component ────────────────────────────────────────────────────────────
 const ArtistHeroSection = ({
   artist,
+  currentUser,
   openSubscriptionOptions,
   subscriptionLoading,
   setSubscriptionLoading,
   requireLogin,
 }) => {
   const queryClient = useQueryClient();
+  const authUser = useSelector((state) => state.auth?.user);
+  const user = currentUser || authUser;
+
   const [unsubscribeModalOpen, setUnsubscribeModalOpen] = useState(false);
   const [isStickyVisible, setIsStickyVisible] = useState(false);
   const heroRef = useRef(null);
+
+  const targetArtistId = artist?._id;
+  const { data: serverIsFollowing = false } =
+    useIsArtistFollowed(targetArtistId, Boolean(user && targetArtistId));
+
+  const [optimisticFollowing, setOptimisticFollowing] = useState(null);
+  const isFollowing = optimisticFollowing !== null ? optimisticFollowing : serverIsFollowing;
+
+  // Sync back when server data updates
+  useEffect(() => {
+    setOptimisticFollowing(null);
+  }, [serverIsFollowing]);
+
+  const toggleFollowMutation = useToggleFollowArtist(targetArtistId);
+  const isUpdatingRef = useRef(false);
+
+  const handleFollowClick = async () => {
+    if (requireLogin && !requireLogin("favorite", "artist", artist)) {
+      return;
+    }
+    if (!user) {
+      toast.error("Please log in to follow artists.");
+      return;
+    }
+    if (!targetArtistId) {
+      toast.error("Artist info not loaded yet.");
+      return;
+    }
+    if (isUpdatingRef.current) return;
+
+    const prev = isFollowing;
+    const next = !prev;
+
+    // 1. Instant optimistic update - 0ms latency, zero flicker/light dimming!
+    setOptimisticFollowing(next);
+    isUpdatingRef.current = true;
+
+    try {
+      await toggleFollowMutation.mutateAsync({ isFollowing: prev });
+      if (next) {
+        toast.success(`Following ${artist?.name || "artist"}`);
+      } else {
+        toast.success(`Unfollowed ${artist?.name || "artist"}`);
+      }
+    } catch (error) {
+      console.error("Follow error:", error);
+      // Revert on error
+      setOptimisticFollowing(prev);
+      toast.error(
+        error.response?.data?.message || "Failed to update follow status"
+      );
+    } finally {
+      isUpdatingRef.current = false;
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -345,8 +409,46 @@ const ArtistHeroSection = ({
               </div>
             </div>
 
-            {/* Right: Subscribe CTA */}
-            <div className="shrink-0">
+            {/* Right: Actions (Follow + Subscribe) */}
+            <div className="shrink-0 flex items-center gap-2">
+              <motion.button
+                id="artist-sticky-follow-btn"
+                type="button"
+                onClick={handleFollowClick}
+                whileTap={{ scale: 0.94 }}
+                aria-label={isFollowing ? `Unfollow ${artist?.name}` : `Follow ${artist?.name}`}
+                className="min-w-[96px] h-[32px] px-3.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm border border-white/20 hover:border-white/35 bg-white/10 hover:bg-white/15 text-white backdrop-blur-md overflow-hidden select-none active:bg-white/20 transition-colors duration-150"
+                style={{ fontFamily: "Jura" }}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {isFollowing ? (
+                    <motion.span
+                      key="sticky-following"
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="flex items-center justify-center gap-1.5"
+                    >
+                      <FiCheck className="text-[#4DB3FF] text-xs shrink-0" />
+                      <span>Following</span>
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="sticky-follow"
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="flex items-center justify-center gap-1.5"
+                    >
+                      <FiUserPlus className="text-xs shrink-0" />
+                      <span>Follow</span>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+
               {isSubscribed ? (
                 <button
                   onClick={() => setUnsubscribeModalOpen(true)}
@@ -447,7 +549,47 @@ const ArtistHeroSection = ({
                 )}
 
                 {/* Action Buttons Row */}
-                <div className="flex items-center justify-center md:justify-start gap-3 mt-1.5 flex-wrap">
+                <div className="flex items-center justify-center md:justify-start gap-3 mt-3 flex-wrap">
+                  {/* Follow Button */}
+                  <motion.button
+                    id="artist-follow-btn"
+                    type="button"
+                    onClick={handleFollowClick}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label={isFollowing ? `Unfollow ${artist?.name}` : `Follow ${artist?.name}`}
+                    className="min-w-[124px] h-[42px] px-5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md border border-white/20 hover:border-white/35 bg-white/10 hover:bg-white/15 text-white backdrop-blur-md shadow-[0_0_12px_rgba(255,255,255,0.05)] overflow-hidden select-none active:bg-white/20 transition-colors duration-150"
+                    style={{ fontFamily: "Jura" }}
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      {isFollowing ? (
+                        <motion.span
+                          key="following"
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
+                          className="flex items-center justify-center gap-2"
+                        >
+                          <FiCheck className="text-[#4DB3FF] text-base shrink-0" />
+                          <span>Following</span>
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="follow"
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
+                          className="flex items-center justify-center gap-2"
+                        >
+                          <FiUserPlus className="text-sm shrink-0" />
+                          <span>Follow</span>
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+
+                  {/* Subscribe Button */}
                   {isSubscribed ? (
                     <button
                       onClick={() => setUnsubscribeModalOpen(true)}

@@ -239,17 +239,50 @@ export default function Album() {
 
   const handlePlaySong = (song) => {
     if (!album) return;
+    const resolvedArtistId =
+      album.artist?._id ||
+      album.artist?.id ||
+      (typeof album.artist === "string" ? album.artist : null);
+
+    const enrichedSong = {
+      ...song,
+      artist: album.artist,
+      artistId: resolvedArtistId,
+      albumId: album._id,
+      album: album,
+      artistSlug: getArtistSlug(),
+      albumSlug: album?.slug,
+    };
+
     const index = album.songs.findIndex((s) => s._id === song._id);
     const nextSongs = album.songs.slice(index + 1);
     dispatch(clearQueue());
     dispatch(
-      setPlaybackContext({ type: "album", id: album._id, songs: album.songs })
+      setPlaybackContext({
+        type: "album",
+        id: album._id,
+        artistId: resolvedArtistId,
+        artist: album.artist,
+        songs: album.songs.map((s) => ({
+          ...s,
+          artist: album.artist,
+          artistId: resolvedArtistId,
+          albumId: album._id,
+          album: album,
+          artistSlug: getArtistSlug(),
+          albumSlug: album?.slug,
+        })),
+      })
     );
-    dispatch(setSelectedSong(song));
+    dispatch(setSelectedSong(enrichedSong));
     nextSongs.forEach((s) =>
       dispatch(
         addToQueue({
           ...s,
+          artist: album.artist,
+          artistId: resolvedArtistId,
+          albumId: album._id,
+          album: album,
           artistSlug: getArtistSlug(),
           albumSlug: album?.slug,
         })
@@ -263,22 +296,48 @@ export default function Album() {
       toast.error("No songs in this album");
       return;
     }
+    const resolvedArtistId =
+      album.artist?._id ||
+      album.artist?.id ||
+      (typeof album.artist === "string" ? album.artist : null);
+
+    const firstSongEnriched = {
+      ...album.songs[0],
+      artist: album.artist,
+      artistId: resolvedArtistId,
+      albumId: album._id,
+      album: album,
+      artistSlug: getArtistSlug(),
+      albumSlug: album?.slug,
+    };
     const nextSongs = album.songs.slice(1);
     dispatch(clearQueue());
     dispatch(
-      setPlaybackContext({ type: "album", id: album._id, songs: album.songs })
-    );
-    dispatch(
-      setSelectedSong({
-        ...album.songs[0],
-        artistSlug: getArtistSlug(),
-        albumSlug: album?.slug,
+      setPlaybackContext({
+        type: "album",
+        id: album._id,
+        artistId: resolvedArtistId,
+        artist: album.artist,
+        songs: album.songs.map((s) => ({
+          ...s,
+          artist: album.artist,
+          artistId: resolvedArtistId,
+          albumId: album._id,
+          album: album,
+          artistSlug: getArtistSlug(),
+          albumSlug: album?.slug,
+        })),
       })
     );
+    dispatch(setSelectedSong(firstSongEnriched));
     nextSongs.forEach((s) =>
       dispatch(
         addToQueue({
           ...s,
+          artist: album.artist,
+          artistId: resolvedArtistId,
+          albumId: album._id,
+          album: album,
           artistSlug: getArtistSlug(),
           albumSlug: album?.slug,
         })
@@ -566,7 +625,7 @@ export default function Album() {
               <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap mb-5">
                 <span>{formatDateShort(album.releaseDate)}</span>
                 <span>·</span>
-                <span>{songs.length} songs</span>
+                <span>{songs.length} {songs.length === 1 ? 'track' : 'tracks'}</span>
                 {totalDuration > 0 && (
                   <>
                     <span>·</span>
@@ -828,7 +887,7 @@ export default function Album() {
                   <span className="text-sm md:text-xl">•</span>
                   <span>{formatDate(album.releaseDate)}</span>
                   <span className="text-sm md:text-xl">•</span>
-                  <span>{songs.length} songs</span>
+                  <span>{songs.length} {songs.length === 1 ? 'track' : 'tracks'}</span>
                   <span className="text-sm md:text-xl">•</span>
                   <span>{formatDuration(totalDuration)}</span>
                 </div>

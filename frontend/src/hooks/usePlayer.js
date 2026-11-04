@@ -30,6 +30,7 @@ import {
   selectPlaybackContextSongs,
 } from "../features/playback/playerSelectors";
 import { useLikeSong, useLikedSongs } from "./api/useSongs";
+import { usePlayerAnalytics } from "./usePlayerAnalytics.js";
 
 export const usePlayer = () => {
   const dispatch = useDispatch();
@@ -74,6 +75,17 @@ export const usePlayer = () => {
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
   const currentSong = displaySong;
+  const isPreview = selectedSong ? (streamData?.isPreview ?? false) : false;
+
+  const { notifySongEnded } = usePlayerAnalytics({
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
+    isPreview,
+    playbackContext,
+  });
+
   const contextSongs = playbackContextSongs.length > 0 ? playbackContextSongs : songs;
   const nextSongs = queue.upcoming;
 
@@ -224,6 +236,7 @@ export const usePlayer = () => {
         video.oncanplaythrough = () => { setIsBuffering(false); };
 
         video.onended = () => {
+          notifySongEnded();
           const repeat = repeatModeRef.current;
           if (repeat === "one") {
             video.currentTime = 0;
@@ -488,10 +501,6 @@ export const usePlayer = () => {
     window.addEventListener("toggle-playback", handler);
     return () => window.removeEventListener("toggle-playback", handler);
   }, [handleTogglePlay, dispatch]);
-
-  const isPreview = selectedSong
-    ? (streamData?.isPreview ?? false)
-    : false;
 
   const isPlayerLoading = streamLoading || isLoading;
 
