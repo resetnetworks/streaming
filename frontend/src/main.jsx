@@ -8,8 +8,15 @@ import { HelmetProvider } from "react-helmet-async";
 
 import App from "./App.jsx";
 import { store, persistor } from "./app/store.js";
+import { analytics } from "./utills/analytics/index.js";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
+
+/* -------------------- ANALYTICS CLIENT INIT -------------------- */
+analytics.init();
+if (typeof window !== "undefined") {
+  window.analytics = analytics;
+}
 
 /* -------------------- SENTRY INIT -------------------- */
 Sentry.init({

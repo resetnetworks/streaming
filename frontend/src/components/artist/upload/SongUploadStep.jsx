@@ -138,7 +138,7 @@ const SortableSongItem = ({
                     value={editSongName}
                     onChange={(e) => setEditSongName(e.target.value)}
                     className="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white text-sm"
-                    placeholder="Enter song name"
+                    placeholder="Enter track name"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") saveEditSong(song.id);
@@ -219,7 +219,7 @@ const SortableSongItem = ({
             <button
               onClick={() => startEditSong(song)}
               className="text-blue-400 hover:text-blue-300 p-1 transition-colors"
-              title="Edit song name"
+              title="Edit track name"
             >
               <FiEdit2 size={18} />
             </button>
@@ -229,7 +229,7 @@ const SortableSongItem = ({
             <button
               onClick={() => removeSong(song.id)}
               className="text-red-400 hover:text-red-300 p-1 transition-colors"
-              title="Remove song"
+              title="Remove track"
               disabled={isEditing}
             >
               <FiTrash2 size={18} />
@@ -443,7 +443,7 @@ const SongUploadStep = ({
             <FiUpload size={22} className="text-blue-400" />
           </div>
         </div>
-        <h3 className="text-white text-lg mb-1">Select Songs for Album</h3>
+        <h3 className="text-white text-lg mb-1">Select Tracks for Album</h3>
         <p className="text-gray-400 text-xs mb-3.5 max-w-md mx-auto">
           Upload multiple audio files. You can drag to reorder before uploading.
         </p>
@@ -468,11 +468,11 @@ const SongUploadStep = ({
         <div className="bg-gray-900/50 rounded-lg border border-gray-700 p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h4 className="text-white">Songs List</h4>
+              <h4 className="text-white">Tracks List</h4>
               {!hasStartedUpload && (
                 <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                   <MdDragIndicator size={14} />
-                  Drag songs to reorder track order
+                  Drag tracks to reorder track order
                 </p>
               )}
             </div>

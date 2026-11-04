@@ -214,7 +214,7 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
             >
               2
             </div>
-            <span className="ml-2 text-sm">Upload Songs</span>
+            <span className="ml-2 text-sm">Upload Tracks</span>
           </div>
         </div>
       </div>
@@ -265,13 +265,13 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
                       <span className="text-blue-300 font-medium">"{createdAlbum.title}"</span>{" "}
                       has been created with{" "}
                       <span className="text-green-400">{uploadedSongs.length}</span>{" "}
-                      song{uploadedSongs.length !== 1 ? "s" : ""}.
+                      track{uploadedSongs.length !== 1 ? "s" : ""}.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3 mb-6">
                       <div className="bg-gray-800/50 rounded-lg p-3">
                         <div className="text-lg font-bold text-green-400">{uploadedSongs.length}</div>
-                        <div className="text-xs text-gray-400">Songs Uploaded</div>
+                        <div className="text-xs text-gray-400">Tracks Uploaded</div>
                       </div>
                       <div className="bg-gray-800/50 rounded-lg p-3">
                         <div className="text-lg font-bold text-red-400">
@@ -297,9 +297,9 @@ const AlbumUpload = ({ onCancel, onComplete, onBatchProgress }) => {
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl text-white mb-2">Add Songs to Album</h2>
+                <h2 className="text-xl text-white mb-2">Add Tracks to Album</h2>
                 <p className="text-gray-400">
-                  Now add songs to{" "}
+                  Now add tracks to{" "}
                   <span className="text-blue-300">"{createdAlbum.title}"</span>
                 </p>
               </div>

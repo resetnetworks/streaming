@@ -113,4 +113,22 @@ export const artistApi = {
       ...res.data,
     };
   },
+
+  // Check if current user follows artist
+  checkFollow: async (artistId) => {
+    const res = await axios.get(`/favorite-artists/${artistId}/favorite`);
+    return res.data?.isFavorited || false;
+  },
+
+  // Follow artist
+  follow: async (artistId) => {
+    const res = await axios.post(`/favorite-artists/${artistId}/favorite`);
+    return res.data;
+  },
+
+  // Unfollow artist
+  unfollow: async (artistId) => {
+    const res = await axios.delete(`/favorite-artists/${artistId}/favorite`);
+    return res.data;
+  },
 };
