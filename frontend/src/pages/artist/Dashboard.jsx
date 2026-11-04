@@ -84,6 +84,22 @@ export default function Dashboard() {
     }
   }, [selectedTab]);
 
+  // Support navigation between subcomponents (e.g. from HomeComponent to Uploads)
+  useEffect(() => {
+    const handleNavigateTabEvent = (e) => {
+      const { tab, subTab } = e.detail || {};
+      if (tab) {
+        if (subTab) {
+          setUploadedTabToShow(subTab);
+          localStorage.setItem("uploadsActiveTab", subTab);
+        }
+        setSelectedTab(tab);
+      }
+    };
+    window.addEventListener("navigate-tab", handleNavigateTabEvent);
+    return () => window.removeEventListener("navigate-tab", handleNavigateTabEvent);
+  }, []);
+
 
 
   // Persist upload page so refresh doesn't lose progress
@@ -296,6 +312,21 @@ export default function Dashboard() {
       return <TeamComponent workspace={activeWorkspace} />;
     }
 
+    if (selectedTab === "dashboard") {
+      return (
+        <HomeComponent
+          workspace={activeWorkspace}
+          onNavigateToUploads={(subTab) => {
+            if (subTab) {
+              setUploadedTabToShow(subTab);
+              localStorage.setItem("uploadsActiveTab", subTab);
+            }
+            setSelectedTab("uploads");
+          }}
+        />
+      );
+    }
+
     return tabComponents[selectedTab] || null;
   };
 
@@ -357,7 +388,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h3 className="text-white text-lg mb-1">Single Track</h3>
-                      <p className="text-gray-400 text-sm">Upload one individual song</p>
+                      <p className="text-gray-400 text-sm">Upload one individual track</p>
                     </div>
                   </div>
                 </button>
@@ -375,7 +406,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h3 className="text-white text-lg mb-1">Album</h3>
-                      <p className="text-gray-400 text-sm">Create album with multiple songs</p>
+                      <p className="text-gray-400 text-sm">Create album with multiple tracks</p>
                     </div>
                   </div>
                 </button>

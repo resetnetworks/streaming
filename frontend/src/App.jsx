@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Toaster, toast } from "sonner";
 import { getMyProfile } from "./features/auth/authSlice";
+import { analytics, RouteAnalyticsListener } from "./utills/analytics/index.js";
 import UserLayout from "./components/user/UserLayout";
 import PayPalSuccessHandler from "./components/PayPalSuccessHandler";
 import StripeCheckoutModal from "./components/payments/StripeCheckoutModal";
@@ -55,6 +56,10 @@ useEffect(() => {
     .unwrap()
     .then((userData) => {
       if (userData?._id) {
+        analytics.identify(userData._id, {
+          email: userData.email,
+          role: userData.role,
+        });
         Sentry.setUser({
           id: userData._id,
           email: userData.email,
@@ -121,6 +126,7 @@ useEffect(() => {
   return (
       <BrowserRouter>
       <ScrollToTop />
+      <RouteAnalyticsListener />
       {/* paypal success handler */}
       {isAuthenticated && <PayPalSuccessHandler />}
       {/* Stripe Embedded Checkout Modal */}

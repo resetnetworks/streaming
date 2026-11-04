@@ -9,6 +9,7 @@ import {
 } from '../features/payments/paymentSlice';
 import { useCreateSubscription } from './api/usePayments';
 import { toast } from 'sonner';
+import { analytics, EVENT_TYPES } from '../utills/analytics/index.js';
 
 export const useSubscriptionPayment = () => {
   const dispatch = useDispatch();
@@ -31,6 +32,17 @@ export const useSubscriptionPayment = () => {
   const openSubscriptionOptions = (artist, cycle, subscriptionPrice) => {
     setPendingSubscription({ artist, cycle, subscriptionPrice });
     setShowSubscriptionOptions(true);
+    analytics.track(
+      EVENT_TYPES.SUBSCRIPTION_CLICKED,
+      {
+        cycle,
+        subscriptionPrice,
+        artistName: artist?.name,
+      },
+      {
+        artistId: artist?._id,
+      }
+    );
   };
 
   // ✅ UPDATED: Handle both regular method selection and PayPal with currency
@@ -42,6 +54,48 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
   setShowSubscriptionOptions(false);
   dispatch(setPaymentGateway(gateway));
   dispatch(setSubscriptionCycle(cycle));
+
+  analytics.track(
+    EVENT_TYPES.CHECKOUT_STARTED,
+    {
+      gateway,
+      cycle,
+      subscriptionPrice,
+      currency: options?.currency || "INR",
+      artistName: artist?.name,
+    },
+    {
+      artistId: artist?._id,
+    }
+  );
+
+  analytics.track(
+    EVENT_TYPES.PAYMENT_INITIATED,
+    {
+      gateway,
+      cycle,
+      subscriptionPrice,
+      currency: options?.currency || "INR",
+      artistName: artist?.name,
+    },
+    {
+      artistId: artist?._id,
+    }
+  );
+
+  analytics.track(
+    EVENT_TYPES.SUBSCRIPTION_STARTED,
+    {
+      gateway,
+      cycle,
+      subscriptionPrice,
+      currency: options?.currency || "INR",
+      artistName: artist?.name,
+    },
+    {
+      artistId: artist?._id,
+    }
+  );
 
   try {
     // 🔥 STRIPE ADD HERE
@@ -140,6 +194,33 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
       handler: (response) => {
         toast.success(`Subscription created successfully! Subscription ID: ${response.razorpay_subscription_id}`);
         
+        analytics.track(
+          EVENT_TYPES.PAYMENT_COMPLETED,
+          {
+            gateway: "razorpay",
+            cycle,
+            subscriptionPrice,
+            transactionId: response.razorpay_subscription_id,
+            artistName: artist?.name,
+          },
+          {
+            artistId: artist?._id,
+          }
+        );
+
+        analytics.track(
+          EVENT_TYPES.SUBSCRIPTION_ACTIVATED,
+          {
+            gateway: "razorpay",
+            cycle,
+            subscriptionId: response.razorpay_subscription_id,
+            artistName: artist?.name,
+          },
+          {
+            artistId: artist?._id,
+          }
+        );
+
         // Trigger Google Ads / Analytics Purchase Event
         if (typeof window.gtag === 'function') {
           window.gtag('event', 'purchase', {
@@ -174,6 +255,17 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
       modal: {
         ondismiss: () => {
           toast.info('Subscription was cancelled.');
+          analytics.track(
+            EVENT_TYPES.PAYMENT_ABANDONED,
+            {
+              gateway: "razorpay",
+              cycle,
+              artistName: artist?.name,
+            },
+            {
+              artistId: artist?._id,
+            }
+          );
         }
       }
     };
@@ -183,6 +275,18 @@ const handleSubscriptionMethodSelect = async (gateway, options = {}) => {
       rzp.on('payment.failed', (response) => {
         const errorMsg = response.error?.description || 'Please try again.';
         toast.error(`Subscription failed: ${errorMsg}`);
+        analytics.track(
+          EVENT_TYPES.PAYMENT_FAILED,
+          {
+            gateway: "razorpay",
+            cycle,
+            reason: errorMsg,
+            artistName: artist?.name,
+          },
+          {
+            artistId: artist?._id,
+          }
+        );
       });
       rzp.open();
     } catch (error) {

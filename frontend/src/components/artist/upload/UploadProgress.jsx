@@ -14,7 +14,7 @@ const UploadProgress = ({
   return (
     <div className="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white text-lg">Uploading Album Songs</h3>
+        <h3 className="text-white text-lg">Uploading Album Tracks</h3>
         <span className="text-blue-400">
           {currentIndex + 1} of {totalSongs}
         </span>
@@ -35,7 +35,7 @@ const UploadProgress = ({
         </div>
       </div>
       
-      {/* Current song info */}
+      {/* Current track info */}
       <div className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg mb-4">
         <div className="w-12 h-12 bg-blue-900/30 rounded flex items-center justify-center">
           <FiMusic className="text-blue-400" size={24} />
@@ -45,7 +45,7 @@ const UploadProgress = ({
             {currentSongName || `Track ${currentIndex + 1}`}
           </p>
           <p className="text-gray-400 text-sm">
-            Uploading song {currentIndex + 1} of {totalSongs}
+            Uploading track {currentIndex + 1} of {totalSongs}
           </p>
         </div>
         <div className="text-right">

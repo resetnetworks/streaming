@@ -268,7 +268,7 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed, onDraftSelect }) =
               : "bg-white/5 text-white/60"
               }`}
           >
-            songs ({songs?.length})
+            tracks ({songs?.length})
           </button>
           <button
             onClick={() => setActiveTab("drafts")}
@@ -357,7 +357,7 @@ const UploadsComponent = ({ defaultTab = null, onTabConsumed, onDraftSelect }) =
             className={`pb-2 text-lg px-2 relative ${activeTab === "songs" ? "text-[#4DB3FF]" : "text-white/50"
               }`}
           >
-            songs
+            tracks
             {activeTab === "songs" && (
               <div className="absolute -bottom-[19px] left-0 w-full h-0.5 rounded-lg bg-[#4DB3FF]" />
             )}

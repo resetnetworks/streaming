@@ -1,7 +1,7 @@
-// SubscribeModal.js को update करें
 import React from "react";
 import { FaLock, FaTimes, FaUser, FaShoppingCart, FaPlay } from 'react-icons/fa';
 import { IoMusicalNotes } from 'react-icons/io5';
+import { analytics, EVENT_TYPES } from "../../utills/analytics";
 
 const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", itemData = null }) => {
   if (!open || !artist) return null;
@@ -98,7 +98,22 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
             <div className="w-full">
               <button
                 className="w-full py-3 px-4 rounded-lg text-white transition-all duration-300 text-sm font-medium hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-                onClick={onNavigate}
+                onClick={(e) => {
+                  analytics.track(
+                    EVENT_TYPES.SUBSCRIPTION_CLICKED,
+                    {
+                      source: "subscribe_modal",
+                      modalType: type,
+                      songId: itemData?._id || itemData?.id,
+                      artistName: artist?.name,
+                    },
+                    {
+                      artistId: artist?._id || artist?.id,
+                      songId: itemData?._id || itemData?.id,
+                    }
+                  );
+                  if (onNavigate) onNavigate(e);
+                }}
                 style={{
                   fontFamily: 'Jura',
                   background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)'

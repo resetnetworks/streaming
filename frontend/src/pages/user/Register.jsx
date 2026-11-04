@@ -13,6 +13,7 @@ import axios from "../../utills/axiosInstance";
 import PageSEO from "../../components/PageSeo/PageSEO";
 import { validators } from "../../utills/validators";
 import IconHeader from "../../components/user/IconHeader";
+import { analytics, EVENT_TYPES } from "../../utills/analytics/index.js";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -41,7 +42,22 @@ const Register = () => {
   });
 
   useEffect(() => {
+    analytics.track(EVENT_TYPES.SIGNUP_STARTED, { source: "web_register_page" });
+  }, []);
+
+  useEffect(() => {
     if (justRegistered && user) {
+      analytics.track(EVENT_TYPES.SIGNUP_COMPLETED, {
+        method: "email",
+        role: user.role,
+      });
+      if (user._id) {
+        analytics.identify(user._id, {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        });
+      }
       const timer = setTimeout(async () => {
         try {
           localStorage.setItem("justRegistered", "true");
