@@ -245,7 +245,7 @@ const FavouriteGen = () => {
 
   return (
     <>
-    <section className="min-h-screen w-full flex flex-col items-center bg-[#020216] text-white px-4">
+    <section className="min-h-screen w-full flex flex-col items-center bg-[#09090D] text-white px-4">
       <IconHeader />
 
       <h1 className="text-4xl text-center mt-6 px-2 font-['Jura'] uppercase tracking-wider font-extrabold bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">

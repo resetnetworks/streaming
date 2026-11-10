@@ -61,7 +61,7 @@ export default function AcceptInvite() {
         noIndex={true}
       />
       <div 
-        className="min-h-screen flex items-center justify-center bg-[#020216] px-4 font-jura"
+        className="min-h-screen flex items-center justify-center bg-[#09090D] px-4 font-jura"
         style={{ fontFamily: "'Jura', sans-serif" }}
       >
         <div className="max-w-md w-full bg-[#0A0A23] bg-opacity-80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center shadow-2xl relative overflow-hidden">

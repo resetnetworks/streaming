@@ -341,7 +341,7 @@ const AdvertsComponent = () => {
     <div className="p-4 md:p-6 font-jura select-none relative min-h-[500px]">
 
       {/* Glassmorphism Lock Overlay */}
-      <div className="absolute inset-0 bg-[#020216]/65 backdrop-blur-[6px] z-[999] flex flex-col items-center justify-center text-center p-6 select-none pointer-events-auto">
+      <div className="absolute inset-0 bg-[#09090D]/65 backdrop-blur-[6px] z-[999] flex flex-col items-center justify-center text-center p-6 select-none pointer-events-auto">
         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#3380FF]/20 to-[#4DB3FF]/20 border border-[#4DB3FF]/40 flex items-center justify-center mb-4 shadow-lg shadow-[#4DB3FF]/10">
           <svg className="w-8 h-8 text-[#4DB3FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -566,7 +566,7 @@ const AdvertsComponent = () => {
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-gray-300">
-                      <thead className="bg-[#020216] text-gray-400 text-xs uppercase tracking-widest border-b border-gray-800/80">
+                      <thead className="bg-[#09090D] text-gray-400 text-xs uppercase tracking-widest border-b border-gray-800/80">
                         <tr>
                           <th className="py-4 px-6">Name / Details</th>
                           <th className="py-4 px-6 text-center">Type</th>
@@ -669,7 +669,7 @@ const AdvertsComponent = () => {
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-gray-300">
-                      <thead className="bg-[#020216] text-gray-400 text-xs uppercase tracking-widest border-b border-gray-800/80">
+                      <thead className="bg-[#09090D] text-gray-400 text-xs uppercase tracking-widest border-b border-gray-800/80">
                         <tr>
                           <th className="py-4 px-6">Date</th>
                           <th className="py-4 px-6">Type</th>
@@ -729,7 +729,7 @@ const AdvertsComponent = () => {
                   required
                   value={form.destinationLink}
                   onChange={handleDestinationChange}
-                  className="w-full bg-[#020216] border border-gray-700 rounded-lg py-2.5 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura cursor-pointer"
+                  className="w-full bg-[#09090D] border border-gray-700 rounded-lg py-2.5 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura cursor-pointer"
                 >
                   <option value="">Select Promotion Target</option>
                   <option value="/song/not-today-123">Song: Not Today (Single)</option>
@@ -747,7 +747,7 @@ const AdvertsComponent = () => {
                   placeholder="e.g. Autumn Beats Boost"
                   value={form.name}
                   onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full bg-[#020216] border border-gray-700 rounded-lg py-2.5 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura"
+                  className="w-full bg-[#09090D] border border-gray-700 rounded-lg py-2.5 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura"
                 />
               </div>
 
@@ -760,7 +760,7 @@ const AdvertsComponent = () => {
                     onClick={() => setForm(prev => ({ ...prev, type: "banner", assetFile: null, assetPreviewUrl: "" }))}
                     className={`flex items-center justify-center gap-3 p-4 rounded-xl border text-sm font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${form.type === "banner"
                         ? "bg-[#0f3272]/30 border-[#4DB3FF] text-[#4DB3FF] shadow-md shadow-[#4DB3FF]/10"
-                        : "bg-[#020216] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
+                        : "bg-[#09090D] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
                       }`}
                   >
                     <MdImage className="text-xl" />
@@ -771,7 +771,7 @@ const AdvertsComponent = () => {
                     onClick={() => setForm(prev => ({ ...prev, type: "featured", assetFile: null, assetPreviewUrl: "" }))}
                     className={`flex items-center justify-center gap-3 p-4 rounded-xl border text-sm font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${form.type === "featured"
                         ? "bg-[#0f3272]/30 border-[#4DB3FF] text-[#4DB3FF] shadow-md shadow-[#4DB3FF]/10"
-                        : "bg-[#020216] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
+                        : "bg-[#09090D] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
                       }`}
                   >
                     <MdStar className="text-xl" />
@@ -791,7 +791,7 @@ const AdvertsComponent = () => {
                       name="targeting"
                       checked={form.targetType === "general"}
                       onChange={() => setForm(prev => ({ ...prev, targetType: "general" }))}
-                      className="form-radio text-[#3380FF] focus:ring-[#4DB3FF] bg-[#020216] border-gray-700"
+                      className="form-radio text-[#3380FF] focus:ring-[#4DB3FF] bg-[#09090D] border-gray-700"
                     />
                     <span className="ml-2 text-sm text-gray-300">General (Wide Reach)</span>
                   </label>
@@ -801,14 +801,14 @@ const AdvertsComponent = () => {
                       name="targeting"
                       checked={form.targetType === "genre"}
                       onChange={() => setForm(prev => ({ ...prev, targetType: "genre" }))}
-                      className="form-radio text-[#3380FF] focus:ring-[#4DB3FF] bg-[#020216] border-gray-700"
+                      className="form-radio text-[#3380FF] focus:ring-[#4DB3FF] bg-[#09090D] border-gray-700"
                     />
                     <span className="ml-2 text-sm text-gray-300">Target Specific Genres</span>
                   </label>
                 </div>
 
                 {form.targetType === "genre" && (
-                  <div className="bg-[#020216] p-4 rounded-lg border border-gray-800">
+                  <div className="bg-[#09090D] p-4 rounded-lg border border-gray-800">
                     <span className="block text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wider">Select Target Genres:</span>
                     <div className="flex flex-wrap gap-2">
                       {availableGenres.map(genre => {
@@ -838,7 +838,7 @@ const AdvertsComponent = () => {
                     placeholder="e.g. Mumbai, Delhi, Bengaluru (Leave blank for nationwide)"
                     value={form.regions}
                     onChange={(e) => setForm(prev => ({ ...prev, regions: e.target.value }))}
-                    className="w-full bg-[#020216] border border-gray-700 rounded-lg py-2 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-xs font-jura"
+                    className="w-full bg-[#09090D] border border-gray-700 rounded-lg py-2 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-xs font-jura"
                   />
                 </div>
               </div>
@@ -851,7 +851,7 @@ const AdvertsComponent = () => {
                     <select
                       value={form.budgetType}
                       onChange={(e) => setForm(prev => ({ ...prev, budgetType: e.target.value }))}
-                      className="bg-[#020216] border border-gray-700 rounded-lg py-2.5 px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] text-sm font-jura cursor-pointer"
+                      className="bg-[#09090D] border border-gray-700 rounded-lg py-2.5 px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] text-sm font-jura cursor-pointer"
                     >
                       <option value="daily">Daily Limit</option>
                       <option value="lifetime">Total Limit</option>
@@ -864,7 +864,7 @@ const AdvertsComponent = () => {
                       placeholder="Min $5.00"
                       value={form.budgetLimit}
                       onChange={(e) => setForm(prev => ({ ...prev, budgetLimit: e.target.value }))}
-                      className="w-full bg-[#020216] border border-gray-700 rounded-lg py-2.5 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura"
+                      className="w-full bg-[#09090D] border border-gray-700 rounded-lg py-2.5 px-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura"
                     />
                   </div>
                 </div>
@@ -877,7 +877,7 @@ const AdvertsComponent = () => {
                       required
                       value={form.startDate}
                       onChange={(e) => setForm(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="bg-[#020216] border border-gray-700 rounded-lg py-2.5 px-2 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] text-xs font-jura cursor-pointer"
+                      className="bg-[#09090D] border border-gray-700 rounded-lg py-2.5 px-2 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] text-xs font-jura cursor-pointer"
                       style={{ colorScheme: "dark" }}
                     />
                     <input
@@ -885,7 +885,7 @@ const AdvertsComponent = () => {
                       required
                       value={form.endDate}
                       onChange={(e) => setForm(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="bg-[#020216] border border-gray-700 rounded-lg py-2.5 px-2 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] text-xs font-jura cursor-pointer"
+                      className="bg-[#09090D] border border-gray-700 rounded-lg py-2.5 px-2 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] text-xs font-jura cursor-pointer"
                       style={{ colorScheme: "dark" }}
                     />
                   </div>
@@ -898,7 +898,7 @@ const AdvertsComponent = () => {
                   Ad Asset Upload * ({form.type === "featured" ? "Promotional Cover Artwork" : "Banner Image JPG/PNG, 728x90"})
                 </label>
 
-                <div className="relative border-2 border-dashed border-gray-700 hover:border-[#4DB3FF]/50 rounded-xl p-6 bg-[#020216] text-center transition-all">
+                <div className="relative border-2 border-dashed border-gray-700 hover:border-[#4DB3FF]/50 rounded-xl p-6 bg-[#09090D] text-center transition-all">
                   <input
                     type="file"
                     accept="image/*"
@@ -985,16 +985,16 @@ const AdvertsComponent = () => {
 
                   {/* Mock Search Results Screen */}
                   <div className="bg-[#0E1525] rounded-xl border border-gray-800 p-4 space-y-3 font-sans">
-                    <div className="w-full bg-[#020216] border border-gray-800 rounded-md py-1.5 px-3 flex items-center justify-between text-xs text-gray-500">
+                    <div className="w-full bg-[#09090D] border border-gray-800 rounded-md py-1.5 px-3 flex items-center justify-between text-xs text-gray-500">
                       <span>🔍 Search tracks, artists...</span>
                     </div>
 
                     <div className="text-[10px] font-bold uppercase tracking-wider text-[#4DB3FF] mt-2">Sponsored Placement</div>
 
                     {/* Promoted Row #1 */}
-                    <div className="flex items-center justify-between bg-gradient-to-r from-[#3380FF]/15 to-[#020216] border border-[#4DB3FF]/30 p-2.5 rounded-lg">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-[#3380FF]/15 to-[#09090D] border border-[#4DB3FF]/30 p-2.5 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-[#020216] border border-gray-800 flex items-center justify-center text-white overflow-hidden">
+                        <div className="w-10 h-10 rounded bg-[#09090D] border border-gray-800 flex items-center justify-center text-white overflow-hidden">
                           {form.assetPreviewUrl ? (
                             <img src={form.assetPreviewUrl} alt="Art Preview" className="w-full h-full object-cover" />
                           ) : (
@@ -1014,7 +1014,7 @@ const AdvertsComponent = () => {
                     <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-4">Organic Results</div>
 
                     {/* Organic Row #2 */}
-                    <div className="flex items-center justify-between bg-[#020216]/50 p-2 rounded-lg opacity-40">
+                    <div className="flex items-center justify-between bg-[#09090D]/50 p-2 rounded-lg opacity-40">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded bg-[#0E1525] border border-gray-800"></div>
                         <div>
@@ -1028,7 +1028,7 @@ const AdvertsComponent = () => {
                   {/* Promotion target */}
                   <div className="mt-8 pt-6 border-t border-gray-800/80 w-full">
                     <span className="text-xs text-gray-500 uppercase tracking-widest block mb-2 font-semibold">Promotion target</span>
-                    <div className="bg-[#020216] border border-gray-800 rounded-lg p-3 text-xs text-[#4DB3FF] font-semibold truncate">
+                    <div className="bg-[#09090D] border border-gray-800 rounded-lg p-3 text-xs text-[#4DB3FF] font-semibold truncate">
                       {form.destinationLink || "Select a target link above"}
                     </div>
                   </div>
@@ -1085,7 +1085,7 @@ const AdvertsComponent = () => {
 
                   <div className="mt-8 pt-6 border-t border-gray-800/80 w-full">
                     <span className="text-xs text-gray-500 uppercase tracking-widest block mb-2 font-semibold">Promotion target</span>
-                    <div className="bg-[#020216] border border-gray-800 rounded-lg p-3 text-xs text-[#4DB3FF] font-semibold truncate">
+                    <div className="bg-[#09090D] border border-gray-800 rounded-lg p-3 text-xs text-[#4DB3FF] font-semibold truncate">
                       {form.destinationLink || "Select a target link above"}
                     </div>
                   </div>
@@ -1123,7 +1123,7 @@ const AdvertsComponent = () => {
             </div>
 
             {/* Wallet Info Display */}
-            <div className="bg-[#020216] border border-gray-800 p-4 rounded-xl flex justify-between items-center text-sm">
+            <div className="bg-[#09090D] border border-gray-800 p-4 rounded-xl flex justify-between items-center text-sm">
               <span className="text-gray-400">Current Balance:</span>
               <span className="text-white font-extrabold text-[#4DB3FF]">{formatCurrency(walletBalance)}</span>
             </div>
@@ -1140,7 +1140,7 @@ const AdvertsComponent = () => {
                     onClick={() => setTopUpAmount(String(amt))}
                     className={`py-2 text-sm font-semibold rounded border transition-all cursor-pointer ${topUpAmount === String(amt)
                         ? "bg-[#3380FF] border-[#4DB3FF] text-white"
-                        : "bg-[#020216] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
+                        : "bg-[#09090D] border-gray-800 text-gray-400 hover:border-gray-700 hover:text-gray-300"
                       }`}
                   >
                     {formatCurrency(amt)}
@@ -1157,7 +1157,7 @@ const AdvertsComponent = () => {
                   placeholder="Custom Amount (Min $10.00)"
                   value={topUpAmount}
                   onChange={(e) => setTopUpAmount(e.target.value)}
-                  className="w-full bg-[#020216] border border-gray-700 rounded-lg py-2.5 pl-8 pr-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura"
+                  className="w-full bg-[#09090D] border border-gray-700 rounded-lg py-2.5 pl-8 pr-4 text-white outline-none focus:outline-none focus:ring-0 focus:border-[#4DB3FF] transition-all text-sm font-jura"
                 />
               </div>
             </div>

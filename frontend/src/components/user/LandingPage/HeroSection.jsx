@@ -157,7 +157,7 @@ const MusicCard = ({ goToHome, isHeroInView }) => (
       <div
         className="relative overflow-hidden h-[240px] md:h-[340px]"
         style={{
-          background: "linear-gradient(135deg, #1D4ED8 0%, #020216 100%)",
+          background: "linear-gradient(135deg, #1D4ED8 0%, #09090D 100%)",
         }}
       >
         <div
@@ -223,7 +223,7 @@ const HeroSection = () => {
     <div
       ref={heroRef}
       className="min-h-screen relative overflow-hidden flex items-center"
-      style={{ background: "#020216" }}
+      style={{ background: "#09090D" }}
     >
       {/* Background orbs */}
       <div
@@ -378,7 +378,7 @@ const HeroSection = () => {
       {/* Bottom fade */}
       <div
         className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none z-[5]"
-        style={{ background: "linear-gradient(to top, #020216, transparent)" }}
+        style={{ background: "linear-gradient(to top, #09090D, transparent)" }}
       />
     </div>
   );

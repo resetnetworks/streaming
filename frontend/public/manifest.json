@@ -3,7 +3,7 @@
   "short_name": "resetmusic",
   "start_url": "/home",
   "display": "standalone",
-  "background_color": "#020216",
+  "background_color": "#09090D",
   "theme_color": "#0D1B3F",
   "description": "Reset Streaming Platform by Reset Music - Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles. Multi-currency support with monthly subscriptions.",
   "icons": [

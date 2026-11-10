@@ -32,7 +32,7 @@ const GhostPlayer = () => {
         <div
           className="w-full aspect-square overflow-hidden rounded-none relative"
           style={{
-            background: "linear-gradient(135deg, #1D4ED8 0%, #020216 100%)",
+            background: "linear-gradient(135deg, #1D4ED8 0%, #09090D 100%)",
           }}
         >
           <div

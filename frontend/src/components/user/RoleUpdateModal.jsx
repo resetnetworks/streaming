@@ -26,7 +26,7 @@ const RoleUpdateModal = () => {
           <div className="player-card rounded-2xl p-8 flex flex-col items-center gap-6 animate-scaleIn">
 
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#020216] rounded-full flex items-center justify-center shadow-2xl border border-green-500/30">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#09090D] rounded-full flex items-center justify-center shadow-2xl border border-green-500/30">
                 <FaCheckCircle className="text-3xl text-green-500 animate-pulse" />
               </div>
               <div className="absolute inset-0 rounded-full border-2 border-green-500 opacity-20"></div>

@@ -28,7 +28,7 @@ const SubscribeModal = ({ open, artist, onClose, onNavigate, type = "play", item
 
             {/* Dynamic Icon */}
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#020216] rounded-full flex items-center justify-center shadow-2xl border border-[#88b2ef]/30">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#09090D] rounded-full flex items-center justify-center shadow-2xl border border-[#88b2ef]/30">
                 {isPurchaseModal ? (
                   <FaShoppingCart className="text-3xl text-[#88b2ef]" />
                 ) : (

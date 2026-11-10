@@ -71,7 +71,7 @@ const SocialLoginCallback = () => {
   }, [dispatch, navigate]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#020216] text-white">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#09090D] text-white">
       <div className="flex flex-col items-center justify-center p-8 rounded-[24px] max-w-[450px] w-full text-center">
         <Loader />
       </div>
