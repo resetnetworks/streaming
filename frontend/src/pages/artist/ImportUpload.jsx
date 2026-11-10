@@ -87,7 +87,7 @@ const GenreDropdown = ({ selectedGenres, toggleGenre }) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-[#020216] border border-[#4DB3FF]/40 hover:bg-[#4DB3FF]/10 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-[#4DB3FF] text-sm outline-none transition-all text-left flex justify-between items-center"
+        className="w-full bg-[#09090D] border border-[#4DB3FF]/40 hover:bg-[#4DB3FF]/10 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-[#4DB3FF] text-sm outline-none transition-all text-left flex justify-between items-center"
       >
         <span>
           {selectedGenres.length === 0
@@ -114,7 +114,7 @@ const GenreDropdown = ({ selectedGenres, toggleGenre }) => {
                     checked={isSelected}
                     disabled={isDisabled}
                     onChange={() => toggleGenre(g)}
-                    className="w-4 h-4 rounded border-[#4DB3FF]/50 bg-[#020216] text-[#4DB3FF] focus:ring-[#4DB3FF] focus:ring-offset-0 cursor-pointer accent-[#4DB3FF]"
+                    className="w-4 h-4 rounded border-[#4DB3FF]/50 bg-[#09090D] text-[#4DB3FF] focus:ring-[#4DB3FF] focus:ring-offset-0 cursor-pointer accent-[#4DB3FF]"
                   />
                   <span className={`text-sm capitalize ${isSelected ? "text-white font-medium" : "text-gray-300"}`}>
                     {g}
@@ -141,7 +141,7 @@ const SortableTrackItemSingle = ({
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : "auto" };
 
   return (
-    <div ref={setNodeRef} style={style} className="bg-[#020216] border border-white/5 rounded-lg p-3 flex justify-between items-center group hover:border-[#4DB3FF]/30 transition-all animate-fadeIn">
+    <div ref={setNodeRef} style={style} className="bg-[#09090D] border border-white/5 rounded-lg p-3 flex justify-between items-center group hover:border-[#4DB3FF]/30 transition-all animate-fadeIn">
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <div {...attributes} {...listeners} className="cursor-grab hover:text-white text-gray-500">
           <MdDragIndicator size={16} />
@@ -156,7 +156,7 @@ const SortableTrackItemSingle = ({
           )}
         </div>
         <div className="flex-grow min-w-0">
-          <input type="text" value={track.title} onChange={(e) => { const val = e.target.value; setTracks((prev) => prev.map((t) => (t.id === track.id ? { ...t, title: val } : t))); }} className="bg-transparent border border-transparent hover:border-white/10 focus:border-[#4DB3FF]/50 p-0.5 text-white font-semibold text-sm focus:ring-0 focus:outline-none w-full mb-0.5 truncate uppercase tracking-wider font-['Jura'] hover:bg-white/5 focus:bg-[#020216] rounded transition-all" />
+          <input type="text" value={track.title} onChange={(e) => { const val = e.target.value; setTracks((prev) => prev.map((t) => (t.id === track.id ? { ...t, title: val } : t))); }} className="bg-transparent border border-transparent hover:border-white/10 focus:border-[#4DB3FF]/50 p-0.5 text-white font-semibold text-sm focus:ring-0 focus:outline-none w-full mb-0.5 truncate uppercase tracking-wider font-['Jura'] hover:bg-white/5 focus:bg-[#09090D] rounded transition-all" />
           <span className="font-['Jura'] text-[12px] text-gray-500">{track.duration}</span>
         </div>
       </div>
@@ -191,7 +191,7 @@ const SortableTrackItemDraft = ({
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : "auto" };
 
   return (
-    <div ref={setNodeRef} style={style} className="bg-[#020216] border border-white/5 rounded-lg p-2.5 flex justify-between items-center group hover:border-[#4DB3FF]/30 transition-all">
+    <div ref={setNodeRef} style={style} className="bg-[#09090D] border border-white/5 rounded-lg p-2.5 flex justify-between items-center group hover:border-[#4DB3FF]/30 transition-all">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div {...attributes} {...listeners} className="cursor-grab hover:text-white text-gray-500">
           <MdDragIndicator size={14} />
@@ -206,7 +206,7 @@ const SortableTrackItemDraft = ({
           )}
         </div>
         <div className="flex-grow min-w-0">
-          <input type="text" value={track.title} onChange={(e) => { const val = e.target.value; setTracks((prev) => prev.map((t) => (t.id === track.id ? { ...t, title: val } : t))); }} className="bg-transparent border border-transparent hover:border-white/10 focus:border-[#4DB3FF]/50 p-0.5 text-white font-semibold text-xs focus:ring-0 focus:outline-none w-full mb-0.5 truncate uppercase tracking-wider hover:bg-white/5 focus:bg-[#020216] rounded transition-all font-['Jura']" />
+          <input type="text" value={track.title} onChange={(e) => { const val = e.target.value; setTracks((prev) => prev.map((t) => (t.id === track.id ? { ...t, title: val } : t))); }} className="bg-transparent border border-transparent hover:border-white/10 focus:border-[#4DB3FF]/50 p-0.5 text-white font-semibold text-xs focus:ring-0 focus:outline-none w-full mb-0.5 truncate uppercase tracking-wider hover:bg-white/5 focus:bg-[#09090D] rounded transition-all font-['Jura']" />
           <span className="font-mono text-[10px] text-gray-500 block">{track.duration}</span>
         </div>
       </div>
@@ -814,7 +814,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
   // ================= RENDER METHOD 2: CLASSIC SINGLE RELEASE IMPORTER =================
   if (importMode === "single") {
     return (
-      <div className="min-h-screen bg-[#020216] text-[#dfe3e9] font-['Jura'] p-6 md:p-12 flex flex-col gap-6 pb-32 select-none relative animate-fadeIn">
+      <div className="min-h-screen bg-[#09090D] text-[#dfe3e9] font-['Jura'] p-6 md:p-12 flex flex-col gap-6 pb-32 select-none relative animate-fadeIn">
 
 
 
@@ -856,7 +856,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                   type="text"
                   value={albumTitle}
                   onChange={(e) => setAlbumTitle(e.target.value)}
-                  className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-white text-sm outline-none transition-all"
+                  className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-white text-sm outline-none transition-all"
                 />
               </div>
 
@@ -901,7 +901,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                 <select
                   value={accessType}
                   onChange={(e) => setAccessType(e.target.value)}
-                  className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-white text-sm outline-none transition-all"
+                  className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-white text-sm outline-none transition-all"
                 >
                   <option value="subscription">Subscription</option>
                   <option value="purchase-only">Purchase Only</option>
@@ -919,7 +919,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                     step="0.01"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-white text-sm outline-none transition-all"
+                    className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 px-4 text-white text-sm outline-none transition-all"
                     placeholder="e.g. 5.99"
                   />
                 </div>
@@ -935,7 +935,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                     type="date"
                     value={releaseDate}
                     onChange={(e) => setReleaseDate(e.target.value)}
-                    className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 pl-10 pr-4 text-white text-sm outline-none transition-all [color-scheme:dark]"
+                    className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.2)] rounded py-2.5 pl-10 pr-4 text-white text-sm outline-none transition-all [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -947,7 +947,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full flex-grow bg-[#020216] border border-white/10 focus:border-[#4DB3FF] rounded py-2.5 px-4 text-white text-sm outline-none transition-all resize-none min-h-[100px]"
+                  className="w-full flex-grow bg-[#09090D] border border-white/10 focus:border-[#4DB3FF] rounded py-2.5 px-4 text-white text-sm outline-none transition-all resize-none min-h-[100px]"
                 />
               </div>
             </div>
@@ -974,7 +974,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                       type="text"
                       value={singleUrl}
                       onChange={(e) => setSingleUrl(e.target.value)}
-                      className="w-full bg-[#020216] border border-white/10 focus:border-[#4DB3FF] focus:shadow-[inset_0_0_10px_rgba(77,179,255,0.2)] rounded-lg py-3 pl-12 pr-4 text-white font-['Jura'] text-sm outline-none transition-all placeholder:text-gray-600"
+                      className="w-full bg-[#09090D] border border-white/10 focus:border-[#4DB3FF] focus:shadow-[inset_0_0_10px_rgba(77,179,255,0.2)] rounded-lg py-3 pl-12 pr-4 text-white font-['Jura'] text-sm outline-none transition-all placeholder:text-gray-600"
                       placeholder="Paste URL here..."
                     />
                   </div>
@@ -1076,7 +1076,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
 
   // ================= RENDER METHOD 3: NEW DISCOGRAPHY SYNC GRID =================
   return (
-    <div className="min-h-screen bg-[#020216] text-[#dfe3e9] font-['Jura'] p-6 md:p-12 flex flex-col gap-8 pb-32 select-none relative overflow-x-hidden animate-fadeIn">
+    <div className="min-h-screen bg-[#09090D] text-[#dfe3e9] font-['Jura'] p-6 md:p-12 flex flex-col gap-8 pb-32 select-none relative overflow-x-hidden animate-fadeIn">
 
       {/* ================= STATE 1: INITIAL SEARCH PANEL ================= */}
       {!artistProfile && (
@@ -1096,7 +1096,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                   type="url"
                   value={discographyUrl}
                   onChange={(e) => setDiscographyUrl(e.target.value)}
-                  className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.3)] rounded-lg py-3.5 pl-12 pr-4 text-white text-sm outline-none transition-all placeholder:text-gray-500 font-mono tracking-wide"
+                  className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.3)] rounded-lg py-3.5 pl-12 pr-4 text-white text-sm outline-none transition-all placeholder:text-gray-500 font-mono tracking-wide"
                   placeholder="https://artistname.bandcamp.com"
                 />
               </div>
@@ -1144,7 +1144,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute -bottom-1 -right-1 bg-[#020216] rounded-full p-1 border border-[#4DB3FF]/30">
+              <div className="absolute -bottom-1 -right-1 bg-[#09090D] rounded-full p-1 border border-[#4DB3FF]/30">
                 <IoCheckmarkCircle className="text-[#4DB3FF] text-base" />
               </div>
             </div>
@@ -1194,7 +1194,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                   {/* Select toggle icon (top right) */}
                   <div
                     onClick={(e) => handleToggleSelect(release.id, e)}
-                    className="absolute top-3.5 right-3.5 z-25 bg-[#020216] rounded-full p-1 border border-white/10 hover:border-[#4DB3FF] shadow-[0_2px_8px_rgba(0,0,0,0.8)] cursor-pointer transition-all duration-300 flex items-center justify-center text-lg"
+                    className="absolute top-3.5 right-3.5 z-25 bg-[#09090D] rounded-full p-1 border border-white/10 hover:border-[#4DB3FF] shadow-[0_2px_8px_rgba(0,0,0,0.8)] cursor-pointer transition-all duration-300 flex items-center justify-center text-lg"
                   >
                     {isSelected ? (
                       <IoCheckmarkCircle className="text-[#4DB3FF]" />
@@ -1204,7 +1204,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                   </div>
 
                   {/* Cover Art Wrapper */}
-                  <div className="w-full aspect-square overflow-hidden relative bg-[#020216]">
+                  <div className="w-full aspect-square overflow-hidden relative bg-[#09090D]">
                     {release.coverImage ? (
                       <img
                         src={release.coverImage}
@@ -1289,7 +1289,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
 
       {/* ================= STATE 3: ALBUM DETAIL INSPECTOR MODAL ================= */}
       {inspectingRelease && (
-        <div className="fixed inset-0 z-50 bg-[#020216]/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#09090D]/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 overflow-y-auto">
           <div className="w-full max-w-6xl bg-[#0A0A23] border border-[#4DB3FF]/30 rounded-xl p-6 md:p-8 flex flex-col gap-6 relative shadow-[0_0_50px_rgba(2,2,22,0.9)] animate-fadeIn">
 
             {/* Modal Close Button */}
@@ -1317,10 +1317,10 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
               {/* ================= LEFT COLUMN: Album Metadata (lg:col-span-4) ================= */}
-              <aside className="lg:col-span-4 bg-[#020216]/80 border border-white/5 rounded-xl p-6 flex flex-col gap-6 self-stretch">
+              <aside className="lg:col-span-4 bg-[#09090D]/80 border border-white/5 rounded-xl p-6 flex flex-col gap-6 self-stretch">
 
                 {/* Cover art preview with editor hover state */}
-                <div className="w-full max-w-[240px] aspect-square mx-auto rounded-lg overflow-hidden relative group border border-white/5 flex-shrink-0 bg-[#020216]">
+                <div className="w-full max-w-[240px] aspect-square mx-auto rounded-lg overflow-hidden relative group border border-white/5 flex-shrink-0 bg-[#09090D]">
                   {coverUrl ? (
                     <img
                       src={coverUrl}
@@ -1360,7 +1360,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                       type="text"
                       value={albumTitle}
                       onChange={(e) => setAlbumTitle(e.target.value)}
-                      className="w-full bg-[#020216] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] focus:shadow-[0_0_10px_rgba(77,179,255,0.15)] rounded py-2 px-3.5 text-white text-xs outline-none transition-all font-semibold uppercase"
+                      className="w-full bg-[#09090D] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] focus:shadow-[0_0_10px_rgba(77,179,255,0.15)] rounded py-2 px-3.5 text-white text-xs outline-none transition-all font-semibold uppercase"
                     />
                   </div>
 
@@ -1405,7 +1405,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                     <select
                       value={accessType}
                       onChange={(e) => setAccessType(e.target.value)}
-                      className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_10px_rgba(77,179,255,0.15)] rounded px-3 py-2 text-white text-sm outline-none transition-all"
+                      className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_10px_rgba(77,179,255,0.15)] rounded px-3 py-2 text-white text-sm outline-none transition-all"
                     >
                       <option value="subscription">Subscription</option>
                       <option value="purchase-only">Purchase Only</option>
@@ -1423,7 +1423,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                         step="0.01"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="w-full bg-[#020216] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_10px_rgba(77,179,255,0.15)] rounded px-3 py-2 text-white text-sm outline-none transition-all"
+                        className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_10px_rgba(77,179,255,0.15)] rounded px-3 py-2 text-white text-sm outline-none transition-all"
                         placeholder="e.g. 5.99"
                       />
                     </div>
@@ -1439,7 +1439,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                         type="date"
                         value={releaseDate}
                         onChange={(e) => setReleaseDate(e.target.value)}
-                        className="w-full bg-[#020216] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded py-2 pl-9 pr-3.5 text-white text-xs outline-none transition-all [color-scheme:dark]"
+                        className="w-full bg-[#09090D] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded py-2 pl-9 pr-3.5 text-white text-xs outline-none transition-all [color-scheme:dark]"
                       />
                     </div>
                   </div>
@@ -1451,7 +1451,7 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full flex-grow bg-[#020216] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded py-2 px-3.5 text-white text-xs outline-none transition-all resize-none min-h-[90px]"
+                      className="w-full flex-grow bg-[#09090D] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded py-2 px-3.5 text-white text-xs outline-none transition-all resize-none min-h-[90px]"
                     />
                   </div>
                 </div>

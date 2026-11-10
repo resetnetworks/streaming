@@ -231,7 +231,7 @@ const MonetizationModal = ({
                             value={subscriptionPrice}
                             onChange={(e) => setSubscriptionPrice(e.target.value)}
                             placeholder="0.00"
-                            className="w-full p-2.5 bg-[#020216] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded-lg pr-12 text-white font-mono text-sm outline-none transition-all"
+                            className="w-full p-2.5 bg-[#09090D] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded-lg pr-12 text-white font-mono text-sm outline-none transition-all"
                             min="0"
                             step="0.01"
                             disabled={setupLoading}
@@ -251,7 +251,7 @@ const MonetizationModal = ({
                         <select
                           value={cycle}
                           onChange={(e) => setCycle(e.target.value)}
-                          className="w-full p-2.5 bg-[#020216] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded-lg text-white font-['Jura'] text-xs outline-none transition-all uppercase tracking-wider h-[38px]"
+                          className="w-full p-2.5 bg-[#09090D] border border-[#4DB3FF]/20 focus:border-[#4DB3FF] rounded-lg text-white font-['Jura'] text-xs outline-none transition-all uppercase tracking-wider h-[38px]"
                           disabled={setupLoading}
                           required
                         >
@@ -259,7 +259,7 @@ const MonetizationModal = ({
                             <option
                               key={cycleOption}
                               value={cycleOption}
-                              className="bg-[#020216] text-white"
+                              className="bg-[#09090D] text-white"
                             >
                               {getCycleDisplayName(cycleOption)}
                             </option>

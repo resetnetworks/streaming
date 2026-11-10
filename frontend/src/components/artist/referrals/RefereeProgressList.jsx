@@ -3,13 +3,29 @@ import React, { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  MdCalendarToday,
-  MdAccessTime,
-  MdMoreHoriz,
-  MdSearch,
-  MdPersonOutline,
-  MdClose,
-} from "react-icons/md";
+  LuSearch,
+  LuCalendar,
+  LuCheck,
+  LuX,
+  LuClock,
+} from "react-icons/lu";
+
+// Inner 3D panel style for main containers (matches Analytics & Revenue Dashboards)
+const innerPanel3dStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #151e32 0%, #090e1a 100%)",
+  boxShadow:
+    "inset 0 3px 8px rgba(0, 0, 0, 0.75), inset 0 1px 2px rgba(0, 0, 0, 0.9), inset 0 -1px 1px rgba(255, 255, 255, 0.05)",
+};
+
+// Reusable 3D sunken well style (matches CardStat & Revenue)
+const sunkenCardStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+  border: "1px solid rgba(0, 0, 0, 0.95)",
+  boxShadow:
+    "inset 0 4px 8px rgba(0, 0, 0, 0.9), inset 0 1px 3px rgba(0, 0, 0, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 1px 0 rgba(255, 255, 255, 0.05)",
+};
+
+const MotionDiv = motion.div;
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
@@ -24,94 +40,79 @@ const formatDate = (dateStr) => {
   }
 };
 
-// ─── Clean Check & Pending Nodes ─────────────────────────────────────────────
+// Clean minimal nodes for stepper
 const CheckNode = () => (
-  <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-sm relative z-10">
-    <svg
-      className="w-3 h-3 text-[#02050e]"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={3.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
+  <div className="w-4 h-4 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center shrink-0">
+    <LuCheck className="w-2.5 h-2.5 text-emerald-400 stroke-[3]" />
   </div>
 );
 
 const PendingNode = ({ isCurrent = false }) => (
   <div
-    className={`w-5 h-5 rounded-full ${
+    className={`w-4 h-4 rounded-full ${
       isCurrent
-        ? "border border-[#4DB3FF]/60 bg-[#0A0A23]"
-        : "border border-white/20 bg-[#0A0A23]"
-    } flex items-center justify-center shrink-0 relative z-10`}
+        ? "border border-[#0459FE] bg-[#0459FE]/20"
+        : "border border-white/10 bg-black/40"
+    } flex items-center justify-center shrink-0`}
   >
     <span
       className={`w-1.5 h-1.5 rounded-full ${
-        isCurrent ? "bg-[#4DB3FF]" : "bg-white/30"
+        isCurrent ? "bg-[#38bdf8]" : "bg-white/20"
       }`}
     />
   </div>
 );
 
-// ─── Seamless Stepper (Clean Labels Only, No Dates) ───────────────────────────
-const StepperTimeline = ({ isStage1, isStage2, isStage3 }) => {
+// Minimal 3-Stage Progress Timeline
+const StepperTimeline = ({ isStage2, isStage3 }) => {
   return (
-    <div className="relative w-full max-w-[280px] sm:max-w-[300px] mx-auto select-none">
-      {/* ── Line 1: Node 1 to Node 2 (left: 16.666% to 50%) ── */}
-      <div className="absolute top-[9px] left-[16.666%] w-[33.333%] h-[2px] -z-0">
+    <div className="relative w-full max-w-[260px] mx-auto select-none">
+      {/* Connector Line 1 */}
+      <div className="absolute top-[8px] left-[16.666%] w-[33.333%] h-[2px]">
         {isStage2 ? (
-          <div className="h-full bg-emerald-500" />
+          <div className="h-full bg-emerald-500/60" />
         ) : (
           <div className="h-full bg-white/10" />
         )}
       </div>
 
-      {/* ── Line 2: Node 2 to Node 3 (left: 50% to 83.333%) ── */}
-      <div className="absolute top-[9px] left-[50%] w-[33.333%] h-[2px] -z-0">
+      {/* Connector Line 2 */}
+      <div className="absolute top-[8px] left-[50%] w-[33.333%] h-[2px]">
         {isStage3 ? (
-          <div className="h-full bg-emerald-500" />
-        ) : isStage2 ? (
-          <div className="h-full border-t-2 border-dashed border-[#4DB3FF]/60" />
+          <div className="h-full bg-emerald-500/60" />
         ) : (
           <div className="h-full bg-white/10" />
         )}
       </div>
 
-      {/* ── 3 Nodes Grid ── */}
+      {/* 3 Step Nodes */}
       <div className="grid grid-cols-3 relative z-10">
-        {/* Node 1 */}
         <div className="flex flex-col items-center text-center">
           <CheckNode />
-          <span className="text-[11px] font-medium mt-1 leading-tight whitespace-nowrap text-emerald-400">
+          <span className="text-[10px] font-semibold mt-1 text-emerald-400 whitespace-nowrap">
             Applied
           </span>
         </div>
 
-        {/* Node 2 */}
         <div className="flex flex-col items-center text-center">
           {isStage2 ? <CheckNode /> : <PendingNode isCurrent={true} />}
           <span
-            className={`text-[11px] font-medium mt-1 leading-tight whitespace-nowrap ${
-              isStage2 ? "text-emerald-400" : "text-gray-400"
+            className={`text-[10px] font-semibold mt-1 whitespace-nowrap ${
+              isStage2 ? "text-emerald-400" : "text-slate-400"
             }`}
           >
             Approved
           </span>
         </div>
 
-        {/* Node 3 */}
         <div className="flex flex-col items-center text-center">
           {isStage3 ? <CheckNode /> : <PendingNode isCurrent={false} />}
           <span
-            className={`text-[11px] font-medium mt-1 leading-tight whitespace-nowrap ${
-              isStage3 ? "text-emerald-400" : "text-gray-400"
+            className={`text-[10px] font-semibold mt-1 whitespace-nowrap ${
+              isStage3 ? "text-emerald-400" : "text-slate-400"
             }`}
           >
-            First Upload
+            First Track
           </span>
         </div>
       </div>
@@ -145,308 +146,278 @@ const RefereeProgressList = ({ referrals = [], isLoading = false }) => {
 
   if (isLoading) {
     return (
-      <div className="p-6 rounded-2xl bg-[#0A0A23]/40 border border-white/10 animate-pulse space-y-4">
-        <div className="h-6 w-40 bg-white/10 rounded" />
-        <div className="h-16 bg-white/5 rounded-xl" />
-        <div className="h-16 bg-white/5 rounded-xl" />
-        <div className="h-16 bg-white/5 rounded-xl" />
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent shadow-md">
+        <div className="h-48 rounded-2xl p-6 animate-pulse" style={innerPanel3dStyle} />
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl overflow-hidden font-jura">
-      {/* Table Top Controls Header */}
-      <div className="p-5 md:p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/[0.02]">
-        <div>
-          <h3 className="text-lg md:text-xl font-bold text-white tracking-wide">
-            Invited Artists Progress
-          </h3>
-          <p className="text-gray-400 text-xs mt-0.5">
-            Track real-time progress of referees towards your next reward.
-          </p>
+    <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent shadow-md">
+      <div
+        className="rounded-2xl overflow-hidden flex flex-col"
+        style={innerPanel3dStyle}
+      >
+        {/* Table Header & Controls (Clean, without extra subtitles) */}
+        <div className="p-4 sm:p-5 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Referred Artists
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Status Filter Pills with Smooth Framer Motion Slide Indicator */}
+            <div
+              className="flex items-center gap-1 p-1 rounded-xl self-start sm:self-auto"
+              style={{
+                background: "#060911",
+                border: "1px solid rgba(0, 0, 0, 0.95)",
+                boxShadow:
+                  "inset 0 3px 6px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.05)",
+              }}
+            >
+              {[
+                { key: "all", label: "ALL" },
+                { key: "in_progress", label: "IN PROGRESS" },
+                { key: "qualified", label: "QUALIFIED" },
+              ].map((tab) => {
+                const isActive = filterStatus === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setFilterStatus(tab.key)}
+                    className={`relative px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer select-none ${
+                      isActive
+                        ? "text-white"
+                        : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    {isActive && (
+                      <MotionDiv
+                        layoutId="activeRefereeFilterPill"
+                        className="absolute inset-0 bg-[#0459FE] rounded-lg shadow-sm shadow-[#0459FE]/40"
+                        transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Clean Search Input */}
+            <div className="relative">
+              <LuSearch className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search artist..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="bg-[#050811] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#0459FE] transition-colors w-36 sm:w-44"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Filter Pills */}
-          <div className="flex items-center bg-black/50 p-1 rounded-xl border border-white/10 relative">
-            {[
-              { key: "all", label: "All" },
-              { key: "in_progress", label: "In Progress" },
-              { key: "qualified", label: "Qualified" },
-            ].map((tab) => {
-              const isActive = filterStatus === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setFilterStatus(tab.key)}
-                  className={`relative px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer select-none ${
-                    isActive
-                      ? "text-white"
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeRefereeFilterPill"
-                      className="absolute inset-0 bg-gradient-to-r from-[#0F3272] via-[#1A5DB4] to-[#3380FF] rounded-lg shadow-md -z-0"
-                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
-                    />
-                  )}
-                  <span className="relative z-10">{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Input */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search referee..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-black/50 border border-white/10 rounded-xl pl-9 pr-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#4DB3FF] transition-colors w-40 sm:w-48 font-jura"
-            />
-            <MdSearch className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-      </div>
-
-      {/* Responsive Table View */}
-      <div className="overflow-x-auto w-full">
-        <div className="min-w-[1050px] w-full">
-          {/* Table Column Headers */}
-          <div className="grid grid-cols-[21%_14%_28%_14%_15%_8%] items-center px-6 py-3.5 border-b border-white/5 text-xs font-semibold text-gray-400 tracking-wider select-none bg-white/[0.02]">
-            <div>ARTIST</div>
-            <div>INVITE DATE</div>
-            <div className="text-center">PROGRESS</div>
-            <div>CURRENT STATUS</div>
-            <div>REWARD STATUS</div>
-            <div className="text-right pr-2">ACTIONS</div>
-          </div>
-
-          {/* Referral Rows */}
-          <AnimatePresence mode="wait">
-            {filteredReferrals.length === 0 ? (
-              <motion.div
-                key="empty-state"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                className="p-12 text-center flex flex-col items-center justify-center"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 flex items-center justify-center text-[#4DB3FF] mb-3">
-                  <MdPersonOutline className="w-7 h-7" />
-                </div>
-                <h4 className="text-white font-semibold text-base mb-1">
-                  {referrals.length === 0 ? "No Referrals Yet" : "No Matching Referees"}
-                </h4>
-                <p className="text-gray-400 text-xs max-w-sm">
-                  {referrals.length === 0
-                    ? "Share your referral link or code above with other music creators. When they join and publish music, you'll see them here!"
-                    : "Try adjusting your search or status filter to see other referees."}
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key={filterStatus}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                className="divide-y divide-white/5"
-              >
-                {filteredReferrals.map((ref) => {
-                  const isStage1Complete = Boolean(ref.stage1_applied?.completed ?? true);
+        {/* Responsive Table View */}
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-black/30 border-b border-white/5">
+                <th className="p-4 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Artist</th>
+                <th className="p-4 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider">Date</th>
+                <th className="p-4 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider text-center">Progress</th>
+                <th className="p-4 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider text-center">Status</th>
+                <th className="p-4 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider text-center">Reward</th>
+                <th className="p-4 text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-sm">
+              {filteredReferrals.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-slate-400">
+                    <p className="text-sm font-medium">No referred artists found</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredReferrals.map((ref) => {
                   const isStage2Complete = Boolean(ref.stage2_artistApproved?.completed);
                   const isStage3Complete = Boolean(ref.stage3_contentUploaded?.completed);
                   const isRejected = ref.status === "rejected";
-
+                  const isQualified = isStage3Complete || ref.status === "qualified";
                   const artistName = ref.refereeName || "Artist Applicant";
 
-                  const isQualified = isStage3Complete || ref.status === "qualified";
-                  const isPendingApproval = !isStage2Complete && !isRejected;
-
                   return (
-                    <div
+                    <tr
                       key={ref.id || ref._id}
-                      className="grid grid-cols-[21%_14%_28%_14%_15%_8%] items-center px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                      className="hover:bg-white/[0.03] transition-colors"
                     >
-                      {/* Column 1: Artist */}
-                      <div className="flex items-center gap-3 pr-2 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-[#0F3272]/50 border border-[#3380FF]/30 flex items-center justify-center text-[#4DB3FF] font-bold text-sm shadow-sm shrink-0">
-                          {artistName[0]?.toUpperCase() || "A"}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-white font-semibold text-sm truncate leading-tight">
+                      {/* 1. Artist */}
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#0459FE]/15 border border-[#0459FE]/25 flex items-center justify-center text-[#38bdf8] font-bold text-xs shrink-0">
+                            {artistName[0]?.toUpperCase() || "A"}
+                          </div>
+                          <span className="text-sm sm:text-base font-semibold text-white truncate max-w-[180px]">
                             {artistName}
-                          </h4>
+                          </span>
                         </div>
-                      </div>
+                      </td>
 
-                      {/* Column 2: Invite Date */}
-                      <div className="flex items-center gap-2.5">
-                        <MdCalendarToday className="w-4 h-4 text-gray-400 shrink-0" />
-                        <span className="text-white text-xs font-medium block leading-tight">
-                          {formatDate(ref.createdAt)}
-                        </span>
-                      </div>
+                      {/* 2. Date */}
+                      <td className="p-4 text-sm text-slate-300 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <LuCalendar className="w-3.5 h-3.5 text-slate-500" />
+                          <span>{formatDate(ref.createdAt)}</span>
+                        </div>
+                      </td>
 
-                      {/* Column 3: Progress Stepper */}
-                      <div>
+                      {/* 3. Stepper Progress */}
+                      <td className="p-4">
                         <StepperTimeline
-                          isStage1={isStage1Complete}
                           isStage2={isStage2Complete}
                           isStage3={isStage3Complete}
                         />
-                      </div>
+                      </td>
 
-                      {/* Column 4: Current Status */}
-                      <div>
+                      {/* 4. Current Status (Clean Plain Text Without Capsule) */}
+                      <td className="p-4 text-center whitespace-nowrap">
                         {isQualified ? (
-                          <span className="text-emerald-400 font-semibold text-xs">
+                          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-emerald-400">
                             Qualified
                           </span>
-                        ) : isPendingApproval ? (
-                          <div className="inline-flex items-center gap-1.5 text-gray-300 font-medium text-xs">
-                            <MdAccessTime className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                            <span>Pending Approval</span>
-                          </div>
                         ) : isRejected ? (
-                          <span className="text-red-400 font-semibold text-xs">
+                          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-rose-400">
                             Declined
                           </span>
                         ) : (
-                          <div className="inline-flex items-center gap-1.5 text-[#4DB3FF] font-semibold text-xs">
-                            <MdAccessTime className="w-3.5 h-3.5 text-[#4DB3FF]" />
-                            <span>In Progress</span>
-                          </div>
+                          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#38bdf8]">
+                            In Progress
+                          </span>
                         )}
-                      </div>
+                      </td>
 
-                      {/* Column 5: Reward Status */}
-                      <div>
+                      {/* 5. Reward Status (Clean Plain Text Without Capsule) */}
+                      <td className="p-4 text-center whitespace-nowrap">
                         {isQualified ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            Milestone Met
+                          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-emerald-400">
+                            $10 Milestone Met
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/5 text-gray-400 border border-white/10">
-                            Not Eligible
+                          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400">
+                            Pending
                           </span>
                         )}
-                      </div>
+                      </td>
 
-                      {/* Column 6: Actions */}
-                      <div className="flex items-center justify-end gap-2 pr-2">
+                      {/* 6. Action */}
+                      <td className="p-4 text-right whitespace-nowrap">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedReferee(ref);
-                          }}
-                          className="px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors cursor-pointer"
+                          type="button"
+                          onClick={() => setSelectedReferee(ref)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#060911] border border-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
                         >
                           View
                         </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedReferee(ref);
-                          }}
-                          className="p-1.5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-colors cursor-pointer"
-                          title="Options"
-                        >
-                          <MdMoreHoriz className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                      </td>
+                    </tr>
                   );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Details Modal (Portaled to document.body for true full-screen viewport center) */}
+      {/* Details Modal */}
       {typeof document !== "undefined" &&
         createPortal(
           <AnimatePresence>
             {selectedReferee && (
-              <motion.div
-                key="referral-modal-backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+              <div
                 onClick={() => setSelectedReferee(null)}
-                className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-dashboard-fade-in"
               >
-                <motion.div
-                  key="referral-modal-dialog"
-                  initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
+                <div
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full max-w-md bg-[#0A0A23] border border-white/10 rounded-2xl p-6 shadow-2xl relative font-jura"
+                  className="relative rounded-2xl p-[1px] bg-gradient-to-b from-white/20 via-white/5 to-transparent w-full max-w-md shadow-2xl"
                 >
-                  <button
-                    onClick={() => setSelectedReferee(null)}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/10 cursor-pointer"
+                  <div
+                    className="rounded-2xl p-6 relative overflow-hidden"
+                    style={innerPanel3dStyle}
                   >
-                    <MdClose className="w-5 h-5" />
-                  </button>
+                    {/* Modal Header */}
+                    <div className="flex justify-between items-center mb-5 pb-4 border-b border-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#0459FE]/15 border border-[#0459FE]/25 flex items-center justify-center text-[#38bdf8] font-bold text-base">
+                          {(selectedReferee.refereeName || "A")[0]?.toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-white tracking-tight">
+                            {selectedReferee.refereeName || "Artist Applicant"}
+                          </h3>
+                          {(selectedReferee.refereeEmail || selectedReferee.email) && (
+                            <p className="text-xs text-slate-400">
+                              {selectedReferee.refereeEmail || selectedReferee.email}
+                            </p>
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="flex items-center gap-3.5 mb-5">
-                    <div className="w-12 h-12 rounded-full bg-[#0F3272]/50 border border-[#3380FF]/30 flex items-center justify-center text-[#4DB3FF] font-bold text-lg">
-                      {(selectedReferee.refereeName || "A")[0]?.toUpperCase()}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReferee(null)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                      >
+                        <LuX className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div>
-                      <h3 className="text-white font-bold text-lg">
-                        {selectedReferee.refereeName || "Artist Applicant"}
-                      </h3>
-                      {(selectedReferee.refereeEmail || selectedReferee.email) && (
-                        <p className="text-gray-400 text-xs font-mono">
-                          {selectedReferee.refereeEmail || selectedReferee.email}
-                        </p>
-                      )}
+
+                    {/* Info Rows in Sunken Well Style */}
+                    <div
+                      className="p-4 rounded-xl space-y-3 mb-5 text-xs sm:text-sm"
+                      style={sunkenCardStyle}
+                    >
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Invite Date</span>
+                        <span className="text-white font-medium">
+                          {formatDate(selectedReferee.createdAt)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Current Status</span>
+                        <span className="text-[#38bdf8] font-bold capitalize">
+                          {selectedReferee.status || "In Progress"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Referral Code</span>
+                        <span className="text-white font-bold">
+                          {selectedReferee.referralCode || "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Milestone Progress</span>
+                        <span className="text-white font-medium">
+                          {selectedReferee.status === "qualified"
+                            ? "Complete ($10 Qualified)"
+                            : "Awaiting First Music Release"}
+                        </span>
+                      </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedReferee(null)}
+                      className="w-full py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-300 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+                    >
+                      Close
+                    </button>
                   </div>
-
-                  <div className="space-y-3 bg-white/[0.03] rounded-xl p-4 border border-white/5 mb-5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Invite Date</span>
-                      <span className="text-white font-mono">{formatDate(selectedReferee.createdAt)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Status</span>
-                      <span className="text-[#4DB3FF] font-semibold capitalize">
-                        {selectedReferee.status || "In Progress"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Referral Code</span>
-                      <span className="text-[#4DB3FF] font-mono">{selectedReferee.referralCode || "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Reward Eligibility</span>
-                      <span className="text-white">
-                        {selectedReferee.status === "qualified" ? "Eligible for Cash Reward" : "Pending all 3 steps"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedReferee(null)}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0F3272] via-[#1A5DB4] to-[#3380FF] text-white font-semibold text-xs hover:opacity-90 transition-all cursor-pointer shadow-lg"
-                  >
-                    Close
-                  </button>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
           </AnimatePresence>,
           document.body

@@ -95,7 +95,7 @@ const Home = () => {
       />
 
 
-      <div className="relative overflow-hidden bg-[#020216] w-full min-h-screen">
+      <div className="relative overflow-hidden bg-[#09090D] w-full min-h-screen">
         <div className="relative z-10 w-full">
           <UserHeader />
           <SkeletonTheme baseColor="#1f2937" highlightColor="#374151">

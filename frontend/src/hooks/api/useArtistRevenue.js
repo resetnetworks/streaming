@@ -1,5 +1,4 @@
-// src/hooks/api/useArtistRevenue.js
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { artistRevenueApi } from "../../api/artistRevenueApi";
 import { toast } from "sonner";
 
@@ -22,7 +21,7 @@ export const useArtistLedger = (filters = { page: 1, limit: 20 }) => {
   return useQuery({
     queryKey: artistRevenueKeys.ledger(filters),
     queryFn: () => artistRevenueApi.fetchLedger(filters),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     staleTime: 2 * 60 * 1000,
   });
 };

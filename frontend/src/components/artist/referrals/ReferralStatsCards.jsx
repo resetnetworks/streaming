@@ -1,12 +1,20 @@
 // src/components/artist/referrals/ReferralStatsCards.jsx
 import React from "react";
 import {
-  MdPeopleAlt,
-  MdHourglassTop,
-  MdCheckCircle,
-  MdTrendingUp
-} from "react-icons/md";
-import { FaAward } from "react-icons/fa";
+  LuUsers,
+  LuClock,
+  LuCircleCheck,
+  LuTrendingUp,
+  LuDollarSign,
+} from "react-icons/lu";
+
+// Reusable 3D sunken well style (matches Analytics & Revenue Dashboards)
+const sunkenCardStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+  border: "1px solid rgba(0, 0, 0, 0.95)",
+  boxShadow:
+    "inset 0 4px 8px rgba(0, 0, 0, 0.9), inset 0 1px 3px rgba(0, 0, 0, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 1px 0 rgba(255, 255, 255, 0.05)",
+};
 
 const ReferralStatsCards = ({ stats = {}, isLoading = false }) => {
   const totalInvited = stats.totalInvited ?? 0;
@@ -18,18 +26,23 @@ const ReferralStatsCards = ({ stats = {}, isLoading = false }) => {
   // Progress towards next 3-referral milestone ($10)
   const milestoneProgress = unrewardedQualifiedCount % 3;
   const progressPercent = Math.min(100, Math.round((milestoneProgress / 3) * 100));
+  const earnedDollars = Math.floor(rewardedCount / 3) * 10;
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 font-jura">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="p-5 rounded-2xl bg-[#0A0A23]/40 border border-white/10 animate-pulse h-32"
+            className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent"
           >
-            <div className="h-4 w-20 bg-white/10 rounded mb-3" />
-            <div className="h-8 w-14 bg-white/10 rounded mb-2" />
-            <div className="h-3 w-28 bg-white/5 rounded" />
+            <div
+              className="h-28 rounded-[15px] p-4 flex flex-col justify-between animate-pulse"
+              style={sunkenCardStyle}
+            >
+              <div className="h-3 w-16 bg-white/10 rounded" />
+              <div className="h-6 w-12 bg-white/10 rounded" />
+            </div>
           </div>
         ))}
       </div>
@@ -37,93 +50,114 @@ const ReferralStatsCards = ({ stats = {}, isLoading = false }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 font-jura">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
       {/* 1. Total Invited */}
-      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
-          <MdPeopleAlt className="w-5 h-5" />
-        </div>
-        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          Total Invited
-        </div>
-        <div className="text-3xl font-bold text-white tracking-tight my-1">
-          {totalInvited}
-        </div>
-        <div className="text-xs text-gray-400">
-          Artists joined with code
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent transition-all duration-200 shadow-md">
+        <div
+          className="h-full rounded-[15px] p-4 flex flex-col justify-between relative overflow-hidden"
+          style={sunkenCardStyle}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Total Invited
+            </span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#0459FE]/15 border border-[#0459FE]/25 text-[#38bdf8]">
+              <LuUsers className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1.5">
+            {totalInvited}
+          </div>
         </div>
       </div>
 
       {/* 2. In Progress */}
-      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
-          <MdHourglassTop className="w-5 h-5" />
-        </div>
-        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          In Progress
-        </div>
-        <div className="text-3xl font-bold text-white tracking-tight my-1">
-          {inProgressCount}
-        </div>
-        <div className="text-xs text-gray-400">
-          Awaiting approval or music
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent transition-all duration-200 shadow-md">
+        <div
+          className="h-full rounded-[15px] p-4 flex flex-col justify-between relative overflow-hidden"
+          style={sunkenCardStyle}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              In Progress
+            </span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#0459FE]/15 border border-[#0459FE]/25 text-[#38bdf8]">
+              <LuClock className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1.5">
+            {inProgressCount}
+          </div>
         </div>
       </div>
 
       {/* 3. Qualified Referrals */}
-      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
-          <MdCheckCircle className="w-5 h-5" />
-        </div>
-        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          Qualified Referrals
-        </div>
-        <div className="text-3xl font-bold text-emerald-400 tracking-tight my-1">
-          {qualifiedCount}
-        </div>
-        <div className="text-xs text-gray-400">
-          Completed all 3 stages
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent transition-all duration-200 shadow-md">
+        <div
+          className="h-full rounded-[15px] p-4 flex flex-col justify-between relative overflow-hidden"
+          style={sunkenCardStyle}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Qualified
+            </span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#0459FE]/15 border border-[#0459FE]/25 text-[#38bdf8]">
+              <LuCircleCheck className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight mt-1.5">
+            {qualifiedCount}
+          </div>
         </div>
       </div>
 
       {/* 4. Next $10 Reward Tracker */}
-      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/60 backdrop-blur-lg border border-[#4DB3FF]/30 shadow-xl hover:border-[#4DB3FF]/50 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
-          <MdTrendingUp className="w-5 h-5" />
-        </div>
-        <div className="text-[#4DB3FF] text-xs font-semibold uppercase tracking-wider mb-1">
-          Next $10 Reward
-        </div>
-        <div className="text-3xl font-bold text-white tracking-tight my-1 flex items-baseline gap-1">
-          <span>{milestoneProgress}</span>
-          <span className="text-lg font-normal text-gray-400">/ 3</span>
-        </div>
-        {/* Progress Bar */}
-        <div className="w-full bg-black/50 rounded-full h-2 mt-2 overflow-hidden border border-white/10">
-          <div
-            className="bg-gradient-to-r from-[#0F3272] via-[#1A5DB4] to-[#3380FF] h-full rounded-full transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-        <div className="text-[11px] text-gray-400 mt-1.5 flex justify-between font-mono">
-          <span>{3 - milestoneProgress} more to earn $10</span>
-          <span>{progressPercent}%</span>
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent transition-all duration-200 shadow-md">
+        <div
+          className="h-full rounded-[15px] p-4 flex flex-col justify-between relative overflow-hidden"
+          style={sunkenCardStyle}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Next $10 Reward
+            </span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#0459FE]/15 border border-[#0459FE]/25 text-[#38bdf8]">
+              <LuTrendingUp className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-1.5">
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-baseline gap-1">
+              <span>{milestoneProgress}</span>
+              <span className="text-sm font-semibold text-slate-500">/ 3</span>
+            </div>
+            {/* Subtle Progress Bar */}
+            <div className="w-full bg-[#050811] rounded-full h-1.5 mt-2 overflow-hidden border border-white/5">
+              <div
+                className="bg-gradient-to-r from-[#0459FE] to-[#38bdf8] h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* 5. Total Rewarded */}
-      <div className="relative p-5 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl hover:border-white/20 transition-all">
-        <div className="absolute top-4 right-4 p-2.5 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-xl text-[#4DB3FF]">
-          <FaAward className="w-5 h-5" />
-        </div>
-        <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          Total Rewarded
-        </div>
-        <div className="text-3xl font-bold text-white tracking-tight my-1">
-          {rewardedCount}
-        </div>
-        <div className="text-xs text-gray-400">
-          ${Math.floor(rewardedCount / 3) * 10} USD earned so far
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent transition-all duration-200 shadow-md col-span-2 sm:col-span-1">
+        <div
+          className="h-full rounded-[15px] p-4 flex flex-col justify-between relative overflow-hidden"
+          style={sunkenCardStyle}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Total Earned
+            </span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#0459FE]/15 border border-[#0459FE]/25 text-[#38bdf8]">
+              <LuDollarSign className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1.5">
+            ${earnedDollars}
+          </div>
         </div>
       </div>
     </div>

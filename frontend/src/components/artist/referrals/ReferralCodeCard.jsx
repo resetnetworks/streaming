@@ -2,15 +2,28 @@
 import React, { useState } from "react";
 import { useMyReferralCode } from "../../../hooks/api/useReferrals";
 import {
-  MdContentCopy,
-  MdCheck,
-  MdCardGiftcard,
-  MdRefresh,
-  MdShare,
-  MdInfoOutline
-} from "react-icons/md";
+  LuCopy,
+  LuCheck,
+  LuRefreshCw,
+  LuShare2,
+} from "react-icons/lu";
 import { FaTwitter, FaEnvelope } from "react-icons/fa";
 import { toast } from "sonner";
+
+// Inner 3D panel style for main containers (matches Analytics & Revenue Dashboards)
+const innerPanel3dStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #151e32 0%, #090e1a 100%)",
+  boxShadow:
+    "inset 0 3px 8px rgba(0, 0, 0, 0.75), inset 0 1px 2px rgba(0, 0, 0, 0.9), inset 0 -1px 1px rgba(255, 255, 255, 0.05)",
+};
+
+// Reusable 3D sunken well style (matches CardStat & Revenue)
+const sunkenCardStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+  border: "1px solid rgba(0, 0, 0, 0.95)",
+  boxShadow:
+    "inset 0 4px 8px rgba(0, 0, 0, 0.9), inset 0 1px 3px rgba(0, 0, 0, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 1px 0 rgba(255, 255, 255, 0.05)",
+};
 
 const ReferralCodeCard = () => {
   const { data, isLoading, isError, error, refetch, isFetching } = useMyReferralCode();
@@ -27,7 +40,7 @@ const ReferralCodeCard = () => {
     try {
       await navigator.clipboard.writeText(referralCode);
       setCopiedCode(true);
-      toast.success("Referral code copied to clipboard!");
+      toast.success("Referral code copied!");
       setTimeout(() => setCopiedCode(false), 2000);
     } catch {
       toast.error("Failed to copy code");
@@ -39,14 +52,14 @@ const ReferralCodeCard = () => {
     try {
       await navigator.clipboard.writeText(referralLink);
       setCopiedLink(true);
-      toast.success("Referral link copied to clipboard!");
+      toast.success("Referral link copied!");
       setTimeout(() => setCopiedLink(false), 2000);
     } catch {
       toast.error("Failed to copy link");
     }
   };
 
-  const shareText = `Join me on Reset Music! Register as an artist with my referral code ${referralCode} and share your sound with the world: ${referralLink}`;
+  const shareText = `Join me on Reset Music! Register as an artist with my referral code ${referralCode} and share your sound: ${referralLink}`;
 
   const handleShareTwitter = () => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
@@ -55,13 +68,13 @@ const ReferralCodeCard = () => {
 
   const handleShareEmail = () => {
     const subject = "Invitation to Join Reset Music as an Artist";
-    const body = `Hey,\n\nI invite you to join Reset Music using my referral link:\n${referralLink}\n\nOr use my referral code: ${referralCode}\n\nOnce approved and after uploading your first music, you'll be part of the creator collective!`;
+    const body = `Hey,\n\nI invite you to join Reset Music using my referral link:\n${referralLink}\n\nOr use my referral code: ${referralCode}\n\nOnce approved and after releasing your first music, you'll be part of the creator collective!`;
     const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
+    if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
           title: "Join Reset Music as an Artist",
@@ -80,167 +93,172 @@ const ReferralCodeCard = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-900/90 to-black border border-gray-800 shadow-xl animate-pulse">
-        <div className="h-6 w-48 bg-gray-800 rounded mb-4" />
-        <div className="h-4 w-72 bg-gray-800/60 rounded mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-14 bg-gray-800/40 rounded-xl" />
-          <div className="h-14 bg-gray-800/40 rounded-xl" />
-        </div>
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent shadow-md">
+        <div className="h-44 rounded-2xl p-6 animate-pulse" style={innerPanel3dStyle} />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-red-950/20 to-black border border-red-900/40 text-center">
-        <p className="text-red-400 font-medium mb-3">
-          {error?.response?.data?.message || "Failed to load referral code."}
-        </p>
-        <button
-          onClick={() => refetch()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-red-900/40 hover:bg-red-800/60 text-red-200 rounded-lg text-sm transition-colors border border-red-700/50"
-        >
-          <MdRefresh className={isFetching ? "animate-spin" : ""} />
-          Try Again
-        </button>
+      <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent shadow-md">
+        <div className="rounded-2xl p-6 text-center" style={innerPanel3dStyle}>
+          <p className="text-rose-400 text-sm font-medium mb-3">
+            {error?.response?.data?.message || "Failed to load referral code."}
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs transition-colors cursor-pointer"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8 rounded-2xl bg-[#0A0A23]/40 backdrop-blur-lg border border-white/10 shadow-xl text-white relative overflow-hidden font-jura">
-      {/* Decorative subtle glow */}
-      <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-[#4DB3FF]/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 bg-[#4DB3FF]/10 border border-[#4DB3FF]/20 rounded-lg text-[#4DB3FF]">
-              <MdCardGiftcard className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-              My Referral Code & Link
+    <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent shadow-md">
+      <div
+        className="rounded-2xl p-5 md:p-6 relative overflow-hidden"
+        style={innerPanel3dStyle}
+      >
+        {/* Header Info */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              Referral Program
             </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Earn $10 for every 3 artists who join and release their first track
+            </p>
           </div>
-          <p className="text-gray-400 text-sm">
-            Invite fellow artists to Reset Music. Earn <span className="text-emerald-400 font-semibold">$10</span> for every 3 qualified artists who join and release music.
-          </p>
+
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="self-start sm:self-auto flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all duration-200 cursor-pointer active:scale-95"
+            style={{
+              background: "#060911",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow:
+                "inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.05)",
+            }}
+            title="Refresh code"
+          >
+            <LuRefreshCw
+              className={`w-3.5 h-3.5 text-[#38bdf8] transition-transform ${
+                isFetching ? "animate-spin" : ""
+              }`}
+            />
+            <span>{isFetching ? "Syncing..." : "Refresh"}</span>
+          </button>
         </div>
 
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          title="Refresh code"
-          className="self-start md:self-auto flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-gray-300 transition-colors cursor-pointer"
-        >
-          <MdRefresh className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
-          <span>Refresh</span>
-        </button>
-      </div>
+        {/* Code and Link Boxes */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
+          {/* Referral Code Box */}
+          <div className="lg:col-span-5 rounded-xl p-4 flex flex-col justify-between" style={sunkenCardStyle}>
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Your Referral Code
+            </span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-2xl font-black tracking-wider text-[#38bdf8] select-all">
+                {referralCode || "—"}
+              </span>
+              <button
+                onClick={handleCopyCode}
+                disabled={!referralCode}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 shadow-md"
+                style={{
+                  background: "linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)",
+                  color: "white",
+                }}
+              >
+                {copiedCode ? (
+                  <>
+                    <LuCheck className="w-3.5 h-3.5" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <LuCopy className="w-3.5 h-3.5" />
+                    <span>Copy Code</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
 
-      {/* Code and Link Boxes */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6 relative z-10">
-        {/* Referral Code Box */}
-        <div className="lg:col-span-5 p-4 bg-black/40 rounded-xl border border-white/10 flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-            Your Unique Code
-          </span>
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-2xl font-mono font-bold tracking-wider text-[#4DB3FF] select-all">
-              {referralCode || "—"}
+          {/* Shareable Link Box */}
+          <div className="lg:col-span-7 rounded-xl p-4 flex flex-col justify-between" style={sunkenCardStyle}>
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Shareable Referral Link
+            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-[#050811] border border-white/10 rounded-xl px-3.5 py-2 overflow-hidden text-ellipsis whitespace-nowrap text-xs text-slate-300 select-all font-sans">
+                {referralLink || "—"}
+              </div>
+              <button
+                onClick={handleCopyLink}
+                disabled={!referralLink}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 flex-shrink-0 shadow-md"
+                style={{
+                  background: "linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)",
+                  color: "white",
+                }}
+              >
+                {copiedLink ? (
+                  <>
+                    <LuCheck className="w-3.5 h-3.5" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <LuCopy className="w-3.5 h-3.5" />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Minimal Quick Share Bar */}
+        <div className="pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+              Share:
             </span>
             <button
-              onClick={handleCopyCode}
-              disabled={!referralCode}
-              className="flex items-center gap-1.5 px-3 py-2 bg-[#0F3272]/50 hover:bg-[#0F3272]/70 text-[#4DB3FF] border border-[#3380FF]/30 rounded-lg text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+              onClick={handleShareTwitter}
+              title="Share on X / Twitter"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer text-xs"
             >
-              {copiedCode ? (
-                <>
-                  <MdCheck className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400">Copied</span>
-                </>
-              ) : (
-                <>
-                  <MdContentCopy className="w-4 h-4" />
-                  <span>Copy Code</span>
-                </>
-              )}
+              <FaTwitter className="w-3 h-3" />
+              <span>X / Twitter</span>
             </button>
-          </div>
-        </div>
 
-        {/* Shareable Link Box */}
-        <div className="lg:col-span-7 p-4 bg-black/40 rounded-xl border border-white/10 flex flex-col justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-            Shareable Referral Link
-          </span>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 overflow-hidden text-ellipsis whitespace-nowrap text-xs font-mono text-gray-300 select-all">
-              {referralLink || "—"}
-            </div>
             <button
-              onClick={handleCopyLink}
-              disabled={!referralLink}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#0F3272] via-[#1A5DB4] to-[#3380FF] hover:opacity-90 text-white rounded-lg text-xs font-semibold transition-all active:scale-95 shadow-lg font-jura cursor-pointer flex-shrink-0"
+              onClick={handleShareEmail}
+              title="Share via Email"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer text-xs"
             >
-              {copiedLink ? (
-                <>
-                  <MdCheck className="w-4 h-4 text-white" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <MdContentCopy className="w-4 h-4" />
-                  <span>Copy Link</span>
-                </>
-              )}
+              <FaEnvelope className="w-3 h-3" />
+              <span>Email</span>
             </button>
+
+            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+              <button
+                onClick={handleNativeShare}
+                title="Share Options"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer text-xs"
+              >
+                <LuShare2 className="w-3 h-3 text-[#38bdf8]" />
+                <span>Share</span>
+              </button>
+            )}
           </div>
-        </div>
-      </div>
-
-      {/* Social Share & Quick Action Bar */}
-      <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-4 relative z-10">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 mr-1">
-            Quick Share:
-          </span>
-          <button
-            onClick={handleShareTwitter}
-            title="Share on Twitter / X"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 rounded-lg text-xs font-medium transition-all active:scale-95 cursor-pointer"
-          >
-            <FaTwitter className="w-3.5 h-3.5" />
-            <span>Twitter / X</span>
-          </button>
-
-          <button
-            onClick={handleShareEmail}
-            title="Share via Email"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 rounded-lg text-xs font-medium transition-all active:scale-95 cursor-pointer"
-          >
-            <FaEnvelope className="w-3 h-3" />
-            <span>Email</span>
-          </button>
-
-          {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-            <button
-              onClick={handleNativeShare}
-              title="More Share Options"
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 rounded-lg text-xs font-medium transition-all cursor-pointer"
-            >
-              <MdShare className="w-3.5 h-3.5" />
-              <span>More</span>
-            </button>
-          )}
-        </div>
-
-        {/* Milestone info hint */}
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <MdInfoOutline className="w-4 h-4 text-[#4DB3FF] flex-shrink-0" />
-          <span>Code is permanently bound to your artist account.</span>
         </div>
       </div>
     </div>

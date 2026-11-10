@@ -103,7 +103,7 @@ const LoginRequiredModal = ({
 
             {/* Dynamic Icon */}
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#020216] rounded-full flex items-center justify-center shadow-2xl border border-[#88b2ef]/30">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#0d1b3f] to-[#09090D] rounded-full flex items-center justify-center shadow-2xl border border-[#88b2ef]/30">
                 {getIcon()}
               </div>
               <div className="absolute inset-0 rounded-full border-2 border-[#3b82f6] opacity-20"></div>
