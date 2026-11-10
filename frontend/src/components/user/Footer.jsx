@@ -24,7 +24,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative mt-8 bg-[#020216] text-white overflow-hidden">
+    <footer className="relative mt-8 bg-[#09090D] text-white overflow-hidden">
       {/* Gradient Line at Top */}
       <div className="gradiant-line"></div>
 

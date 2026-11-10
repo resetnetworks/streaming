@@ -149,7 +149,7 @@ const CardStat = ({
         .card .text {
           font-size: var(--value-font-size);
           font-weight: 900;
-          font-family: monospace;
+          font-family: 'Jura', sans-serif;
           color: white;
           line-height: 1.1;
           z-index: 2;

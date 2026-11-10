@@ -7,10 +7,12 @@ export const artistRevenueApi = {
     return res.data; // Expected: { success, balance }
   },
 
-  fetchLedger: async ({ page = 1, limit = 20 } = {}) => {
-    const res = await axios.get("/v2/artist/ledger", {
-      params: { page, limit },
-    });
+  fetchLedger: async ({ page = 1, limit = 20, type } = {}) => {
+    const params = { page, limit };
+    if (type && type !== "all") {
+      params.type = type;
+    }
+    const res = await axios.get("/v2/artist/ledger", { params });
     return res.data; // Expected: { success, page, limit, ledger }
   },
 

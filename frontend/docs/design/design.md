@@ -5,8 +5,8 @@
 ## 1. Primary Colors
 
 ### Backgrounds (Dark Theme)
-- `bg-[#020216]` - **Deepest Background**: Use for the Landing page, Hero sections, and main page wrappers.
-- Solid `#020216` as the background (no blue glowing orb or square grid mesh in background).
+- `bg-[#09090D]` - **Deepest Background**: Use for the Landing page, Hero sections, and main page wrappers.
+- Solid `#09090D` as the background (no blue glowing orb or square grid mesh in background).
 - `bg-[#0E1525]` - **Sidebar Background**: Use for the User/Artist sidebars and mobile navbars.
 *Rule: Never use light backgrounds. Stick to these deep navy/black tones.*
 
@@ -58,7 +58,7 @@ Always wrap forms, success summaries, and main panels in a premium gradient card
 
 ### Unified Loader Component
 Use the SVG icon-based `<Loader />` component across all pages:
-- Set `bg-[#020216]` for the full-screen loader layout.
+- Set `bg-[#09090D]` for the full-screen loader layout.
 - For nested sub-page loaders (e.g. inside cards/dashboard tabs), use:
   ```jsx
   <Loader noBg={true} />

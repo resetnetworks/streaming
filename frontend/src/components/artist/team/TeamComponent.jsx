@@ -365,7 +365,7 @@ export default function TeamComponent({ workspace }) {
                   placeholder="collaborator@example.com"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full bg-[#020216] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4DB3FF]/50 transition-colors text-sm"
+                  className="w-full bg-[#09090D] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4DB3FF]/50 transition-colors text-sm"
                 />
               </div>
 
@@ -375,7 +375,7 @@ export default function TeamComponent({ workspace }) {
                 <select
                   value={inviteRole}
                   onChange={(e) => handleInviteRoleChange(e.target.value)}
-                  className="w-full bg-[#020216] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4DB3FF]/50 transition-colors text-sm capitalize"
+                  className="w-full bg-[#09090D] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4DB3FF]/50 transition-colors text-sm capitalize"
                 >
                   <option value="manager">Manager (Full edit rights, team administration)</option>
                   <option value="editor">Editor (Upload and edit tracks)</option>
@@ -464,7 +464,7 @@ export default function TeamComponent({ workspace }) {
                 <select
                   value={editRole}
                   onChange={(e) => handleEditRoleChange(e.target.value)}
-                  className="w-full bg-[#020216] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4DB3FF]/50 transition-colors text-sm capitalize"
+                  className="w-full bg-[#09090D] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#4DB3FF]/50 transition-colors text-sm capitalize"
                 >
                   <option value="manager">Manager (Full edit rights, team administration)</option>
                   <option value="editor">Editor (Upload and edit tracks)</option>

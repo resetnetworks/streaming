@@ -25,10 +25,7 @@ const sunkenCardStyle = {
  * - Card 2 (Right): Conversion Funnel (Clean, unified progress bars with exact counts)
  */
 export const ArtistSubscriptionFunnel = ({
-  overview = null,
-  balanceData = null,
   funnel = null,
-  range = "30d",
 }) => {
   const counts = funnel?.funnelCounts || {};
 
@@ -122,7 +119,7 @@ export const ArtistSubscriptionFunnel = ({
               value: {
                 show: true,
                 fontSize: "26px",
-                fontFamily: "monospace",
+                fontFamily: "Jura, sans-serif",
                 fontWeight: 900,
                 color: "#ffffff",
                 offsetY: 6,
@@ -263,7 +260,7 @@ export const ArtistSubscriptionFunnel = ({
             <h2 className="text-white text-xl font-bold tracking-tight">Subscriptions</h2>
             <div className="text-right">
               <span className="text-xs text-gray-300 block font-bold uppercase tracking-wider">Activated</span>
-              <span className="text-white text-lg font-black font-mono">
+              <span className="text-white text-lg font-black">
                 {formatCompactNumber(subscription_activated)}
               </span>
             </div>
@@ -311,7 +308,7 @@ export const ArtistSubscriptionFunnel = ({
                 <span className="text-gray-300 text-[11px] font-bold uppercase tracking-wider truncate">
                   {item.label}
                 </span>
-                <span className="text-white text-2xl font-black font-mono tracking-tight my-1.5">
+                <span className="text-white text-2xl font-black tracking-tight my-1.5">
                   {formatCompactNumber(item.count)}
                 </span>
                 <span className="text-gray-400 text-xs font-bold tracking-wide">
@@ -336,7 +333,7 @@ export const ArtistSubscriptionFunnel = ({
             <h2 className="text-white text-xl font-bold tracking-tight">Conversion Funnel</h2>
             <div className="text-right">
               <span className="text-xs text-gray-300 block font-bold uppercase tracking-wider">Conversion Rate</span>
-              <span className="text-[#38bdf8] text-lg font-black font-mono">
+              <span className="text-[#38bdf8] text-lg font-black">
                 {conversionRate}
                 <span className="text-xs text-gray-400 font-sans ml-0.5">%</span>
               </span>
@@ -352,7 +349,7 @@ export const ArtistSubscriptionFunnel = ({
                   <span className="text-white font-bold text-sm tracking-wide group-hover:text-blue-300 transition-colors">
                     {stage.label}
                   </span>
-                  <div className="flex items-center font-mono">
+                  <div className="flex items-center">
                     <span className="text-white font-black text-sm tracking-tight">
                       {formatCompactNumber(stage.count)}
                     </span>
@@ -387,7 +384,7 @@ export const ArtistSubscriptionFunnel = ({
               <span className="text-gray-300 text-[11px] font-bold uppercase tracking-wider truncate">
                 Abandoned
               </span>
-              <span className="text-white text-2xl font-black font-mono tracking-tight my-1.5">
+              <span className="text-white text-2xl font-black tracking-tight my-1.5">
                 {formatCompactNumber(payment_abandoned)}
               </span>
               <span className="text-gray-400 text-xs font-bold tracking-wide">
@@ -403,7 +400,7 @@ export const ArtistSubscriptionFunnel = ({
               <span className="text-gray-300 text-[11px] font-bold uppercase tracking-wider truncate">
                 Failed Pay
               </span>
-              <span className="text-white text-2xl font-black font-mono tracking-tight my-1.5">
+              <span className="text-white text-2xl font-black tracking-tight my-1.5">
                 {formatCompactNumber(payment_failed)}
               </span>
               <span className="text-gray-400 text-xs font-bold tracking-wide">
@@ -419,7 +416,7 @@ export const ArtistSubscriptionFunnel = ({
               <span className="text-gray-300 text-[11px] font-bold uppercase tracking-wider truncate">
                 Timeouts
               </span>
-              <span className="text-white text-2xl font-black font-mono tracking-tight my-1.5">
+              <span className="text-white text-2xl font-black tracking-tight my-1.5">
                 {formatCompactNumber(payment_abandoned)}
               </span>
               <span className="text-gray-400 text-xs font-bold tracking-wide">

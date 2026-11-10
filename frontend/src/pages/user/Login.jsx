@@ -103,7 +103,7 @@ const Login = () => {
       />
 
       <>
-        <section className="w-full min-h-screen flex flex-col items-center bg-[#020216] px-4">
+        <section className="w-full min-h-screen flex flex-col items-center bg-[#09090D] px-4">
           <IconHeader />
 
           <div className="text-white sm:mt-auto mt-10 mb-auto flex flex-col justify-around items-center w-full max-w-[650px]">

@@ -349,7 +349,7 @@ const UserHeader = () => {
       {/* Workspace Selection Modal */}
       {workspaceModalOpen && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-gradient-to-b from-[#0A0A23] to-[#020216] border border-[#4DB3FF]/30 p-6 rounded-2xl w-full max-w-md shadow-[0_0_15px_rgba(77,179,255,0.2)] mx-4 font-['Jura']">
+          <div className="bg-gradient-to-b from-[#0A0A23] to-[#09090D] border border-[#4DB3FF]/30 p-6 rounded-2xl w-full max-w-md shadow-[0_0_15px_rgba(77,179,255,0.2)] mx-4 font-['Jura']">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-white tracking-wider">Select Workspace</h2>
               <button

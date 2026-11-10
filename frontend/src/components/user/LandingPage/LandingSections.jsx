@@ -99,7 +99,7 @@ const LandingSections = () => {
   return (
     <section
       className="relative py-24 md:py-32 overflow-hidden"
-      style={{ background: "#020216" }}
+      style={{ background: "#09090D" }}
     >
       {/* Background glows */}
       <div
