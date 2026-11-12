@@ -18,7 +18,6 @@ import { useArtistProfile, useUpdateArtistProfile } from "../../../hooks/api/use
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../features/auth/authSelectors";
 import ProfileEditForm from "./ProfileEditForm";
-import AccountSettingsModal from "./AccountSettingsModal";
 
 const getSocialIcon = (platform) => {
   switch (platform?.toLowerCase()) {
@@ -69,8 +68,6 @@ const ProfileDetailSection = ({ workspace }) => {
     location: "",
     bio: ""
   });
-
-  const [settingsModalMode, setSettingsModalMode] = useState(null); // "email", "password", or null
 
   // Update form data when artistProfile changes
   useEffect(() => {
@@ -155,52 +152,46 @@ const ProfileDetailSection = ({ workspace }) => {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-white text-lg font-medium mb-4">personal information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-200 mb-2">
                 name
               </label>
               <div className="relative">
-                <div className="input-login !pl-[1rem] w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white">
+                <div className="input-login !pl-[1rem] w-full bg-[#0d1527] border border-white/15 rounded-xl py-3 px-4 text-white font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
                   {renderEmptyValue(formData.name)}
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-200 mb-2">
                 location
               </label>
               <div className="relative">
-                <div className="input-login !pl-[1rem] w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white">
+                <div className="input-login !pl-[1rem] w-full bg-[#0d1527] border border-white/15 rounded-xl py-3 px-4 text-white font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
                   {renderEmptyValue(formData.location)}
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="mb-8">
-          <h2 className="text-white text-lg font-medium mb-4">contact information</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-200 mb-2">
                 business email
               </label>
               <div className="relative">
-                <div className="input-login !pl-[1rem] w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white">
+                <div className="input-login !pl-[1rem] w-full bg-[#0d1527] border border-white/15 rounded-xl py-3 px-4 text-white font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
                   {renderEmptyValue(formData.businessEmail)}
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-200 mb-2">
                 country
               </label>
               <div className="relative">
-                <div className="input-login !pl-[1rem] appearance-none w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white">
+                <div className="input-login !pl-[1rem] appearance-none w-full bg-[#0d1527] border border-white/15 rounded-xl py-3 px-4 text-white font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
                   {renderEmptyValue(formData.country)}
                 </div>
               </div>
@@ -212,7 +203,7 @@ const ProfileDetailSection = ({ workspace }) => {
           <h2 className="text-white text-lg font-medium mb-4">bio / description</h2>
           <div>
             <div className="relative">
-              <div className="input-login !pl-[1rem] w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white min-h-[120px]">
+              <div className="input-login !pl-[1rem] w-full bg-[#0d1527] border border-white/15 rounded-xl py-3 px-4 text-white min-h-[120px] font-medium leading-relaxed shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
                 {renderEmptyValue(formData.bio)}
               </div>
             </div>
@@ -240,28 +231,23 @@ const ProfileDetailSection = ({ workspace }) => {
                 social & streaming links
               </h2>
               {socialsList && socialsList.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 sm:gap-4">
                   {socialsList.map((link) => (
                     <a
                       key={link.platform}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 hover:border-gray-600 rounded-lg text-sm text-gray-200 hover:text-white transition-all duration-200 group"
+                      title={link.platform?.toLowerCase() === "apple" ? "Apple Music" : link.platform}
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0d1527] hover:bg-[#111b33] border border-white/15 hover:border-white/30 flex items-center justify-center text-xl sm:text-2xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.4)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
                     >
-                      <span className="text-base">{getSocialIcon(link.platform)}</span>
-                      <span className="capitalize font-medium">
-                        {link.platform?.toLowerCase() === "apple"
-                          ? "Apple Music"
-                          : link.platform}
-                      </span>
-                      <span className="text-xs text-gray-500 group-hover:text-gray-400 ml-1">↗</span>
+                      {getSocialIcon(link.platform)}
                     </a>
                   ))}
                 </div>
               ) : (
-                <div className="input-login !pl-[1rem] w-full bg-gray-800/50 border border-gray-700/50 rounded-lg py-3 px-4 text-white">
-                  <span className="text-gray-400 italic">
+                <div className="w-full bg-[#0d1527] border border-white/15 rounded-xl py-3 px-4 text-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
+                  <span className="text-gray-400 italic text-sm">
                     No social links added yet. Click the edit button to add your links.
                   </span>
                 </div>
@@ -269,39 +255,6 @@ const ProfileDetailSection = ({ workspace }) => {
             </div>
           );
         })()}
-
-        <div className="h-0.5 w-full bg-[#8172bc2d] mt-4 mb-8"></div>
-
-        <div className="mb-10">
-          <h2 className="text-white text-xl font-medium mb-6 capitalize tracking-wider bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">account security</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-            <button
-              onClick={() => setSettingsModalMode("email")}
-              className="flex items-center justify-between p-5 rounded-xl border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/80 hover:border-blue-500/50 transition-all duration-300 group"
-            >
-              <div className="flex flex-col items-start">
-                <span className="text-white font-medium mb-1">Change Email Address</span>
-                <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Update your login email</span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                →
-              </div>
-            </button>
-
-            <button
-              onClick={() => setSettingsModalMode("password")}
-              className="flex items-center justify-between p-5 rounded-xl border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/80 hover:border-purple-500/50 transition-all duration-300 group"
-            >
-              <div className="flex flex-col items-start">
-                <span className="text-white font-medium mb-1">Change Password</span>
-                <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Keep your account secure</span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                →
-              </div>
-            </button>
-          </div>
-        </div>
       </div>
 
       {showEditForm && artistProfile && (
@@ -312,12 +265,6 @@ const ProfileDetailSection = ({ workspace }) => {
           isSaving={isUpdating}
         />
       )}
-
-      <AccountSettingsModal
-        isOpen={!!settingsModalMode}
-        initialMode={settingsModalMode || "email"}
-        onClose={() => setSettingsModalMode(null)}
-      />
     </>
   );
 };

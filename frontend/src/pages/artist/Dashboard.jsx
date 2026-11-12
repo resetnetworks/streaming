@@ -332,8 +332,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="flex min-h-screen">
-        <div className="flex-shrink-0">
+      <div className="flex h-screen overflow-hidden">
+        <div className="flex-shrink-0 md:h-screen md:sticky md:top-0">
           <Sidebar
             selectedTab={selectedTab}
             setSelectedTab={handleTabChange}
@@ -343,16 +343,18 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="flex-grow min-w-0 flex flex-col overflow-hidden">
-          <Topbar
-            selectedTab={selectedTab}
-            currentUploadPage={currentUploadPage}
-            setCurrentUploadPage={setCurrentUploadPage}
-            onUploadSelect={handleUploadTypeSelect}
-            isMonetized={isMonetized}
-          />
+        <div className="flex-grow min-w-0 flex flex-col h-screen overflow-hidden">
+          <div className="flex-shrink-0">
+            <Topbar
+              selectedTab={selectedTab}
+              currentUploadPage={currentUploadPage}
+              setCurrentUploadPage={setCurrentUploadPage}
+              onUploadSelect={handleUploadTypeSelect}
+              isMonetized={isMonetized}
+            />
+          </div>
 
-          <main className="flex-grow relative">
+          <main className="flex-grow relative overflow-y-auto">
             {renderMainContent()}
           </main>
         </div>
@@ -369,7 +371,7 @@ export default function Dashboard() {
 
         {/* Upload type picker modal (shown before album flow starts) */}
         {showUploadModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[99999]">
             <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 max-w-md w-full mx-4">
               <h2 className="text-2xl text-white mb-2">Choose Upload Type</h2>
               <p className="text-gray-400 mb-6">Select what you want to upload</p>

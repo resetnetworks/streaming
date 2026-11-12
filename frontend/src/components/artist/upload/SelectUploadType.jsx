@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   IoClose,
   IoMusicalNotes,
@@ -28,19 +29,20 @@ const SelectUploadType = ({ isOpen, onClose, onUploadTypeSelect }) => {
 
   // Agar modal open nahi hai to kuch na dikhao
   if (!isOpen && !isClosing) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop with blur overlay */}
       <div
-        className={`fixed inset-0 z-[998] transition-all duration-300 ease-out ${
+        className={`fixed inset-0 z-[99998] transition-all duration-300 ease-out ${
           isClosing ? "opacity-0" : "bg-black/60 backdrop-blur-sm"
         }`}
         onClick={handleClose}
       />
 
       {/* Modal Card with animation */}
-      <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         <div
           className={`subscription-wrapper md:w-[26rem] w-[90vw] max-w-md transition-all duration-300 ease-out transform ${
             isClosing
@@ -262,7 +264,8 @@ const SelectUploadType = ({ isOpen, onClose, onUploadTypeSelect }) => {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

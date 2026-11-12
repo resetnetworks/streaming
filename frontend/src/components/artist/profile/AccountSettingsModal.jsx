@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser } from "../../../features/auth/authSelectors";
@@ -118,8 +119,10 @@ const AccountSettingsModal = ({ isOpen, onClose, initialMode = "email" }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
       <div 
         className="w-full max-w-[420px] rounded-[24px] p-8 flex flex-col relative animate-fade-in-up"
         style={{
@@ -305,7 +308,8 @@ const AccountSettingsModal = ({ isOpen, onClose, initialMode = "email" }) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

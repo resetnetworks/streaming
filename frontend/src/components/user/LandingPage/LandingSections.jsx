@@ -58,8 +58,8 @@ const StepCard = ({ step, index, isInView }) => (
       <path
         d="M674.3 76.3c0-3.9-3.1-7-7-7h-612c-3.9 0-7 3.1-7 7v97.3c0 3.9 3.1 7 7 7h739.3c3.9 0 7-3.1 7-7V97c0-3.9-3.1-7-7-7H681.3c-3.9 0-7-3.1-7-7v-6.8Z"
         fill={`url(#cardGrad-${index})`}
-        stroke="rgba(96,165,250,0.18)"
-        strokeWidth="1.3"
+        stroke="rgba(77,179,255,0.4)"
+        strokeWidth="1.5"
         fillRule="evenodd"
       />
     </svg>
@@ -74,16 +74,16 @@ const StepCard = ({ step, index, isInView }) => (
 
     {/* Content */}
     <div className="relative px-6 py-5">
-      <h3 className="text-white font-semibold text-xl leading-tight mb-3 pt-1">
+      <h3 className="text-white font-bold text-xl leading-tight">
         {step.title}
       </h3>
 
       {/* Bottom glow line – always visible with a gradient fade */}
       <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[50%] h-[1px] opacity-50"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[50%] h-[1px] opacity-60"
         style={{
           background:
-            "linear-gradient(90deg, transparent, #60a5fa, transparent)",
+            "linear-gradient(90deg, rgba(96,165,250,0), #60a5fa, rgba(96,165,250,0))",
         }}
       />
     </div>
@@ -102,34 +102,31 @@ const LandingSections = () => {
       style={{ background: "#09090D" }}
     >
       {/* Background glows */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ transform: "translateZ(0)", willChange: "transform" }}
-      >
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute top-[20%] -left-[10%] w-[600px] h-[600px] rounded-full"
+          className="absolute top-[20%] -left-[10%] w-[650px] h-[650px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(37,99,235,0.12) 0%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(37,99,235,0.22) 0%, rgba(37,99,235,0.06) 45%, rgba(37,99,235,0) 70%)",
           }}
         />
         <div
-          className="absolute bottom-[5%] -right-[5%] w-[500px] h-[500px] rounded-full"
+          className="absolute bottom-[5%] -right-[5%] w-[550px] h-[550px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(29,78,216,0.08) 0%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(29,78,216,0.18) 0%, rgba(29,78,216,0) 70%)",
           }}
         />
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px)",
+              "linear-gradient(to right, rgba(77,179,255,0.055) 1px, rgba(77,179,255,0) 1px), linear-gradient(to bottom, rgba(77,179,255,0.055) 1px, rgba(77,179,255,0) 1px)",
             backgroundSize: "60px 60px",
             maskImage:
-              "radial-gradient(ellipse at 20% 40%, black 10%, transparent 70%)",
+              "radial-gradient(ellipse at 20% 40%, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 70%)",
             WebkitMaskImage:
-              "radial-gradient(ellipse at 20% 40%, black 10%, transparent 70%)",
+              "radial-gradient(ellipse at 20% 40%, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 70%)",
           }}
         />
       </div>
@@ -175,7 +172,7 @@ const LandingSections = () => {
             </motion.h2>
 
             <motion.p
-              className="text-gray-400 font-light leading-relaxed mb-6 text-base md:text-lg"
+              className="text-slate-300 font-normal leading-relaxed mb-8 text-base md:text-lg"
               initial={{ opacity: 0, y: 15 }}
               animate={perkInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.72, duration: 0.6 }}
@@ -187,15 +184,11 @@ const LandingSections = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={perkInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => navigate("/artist/register")}
-              className="px-8 py-3.5 rounded-lg text-sm font-medium tracking-wide cursor-pointer"
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(59,130,246,0.5)",
-                color: "#fff",
-                backdropFilter: "blur(8px)",
-                transition: "border-color 0.25s ease, color 0.25s ease",
-              }}
+              className="px-8 py-3.5 sm:px-9 sm:py-4 rounded-xl text-white text-sm sm:text-base font-semibold cursor-pointer tracking-wide border border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50 transition-all duration-200"
+              style={{ backdropFilter: 'blur(8px)' }}
             >
               Become an Artist
             </motion.button>

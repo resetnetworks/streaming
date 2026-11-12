@@ -122,12 +122,15 @@ const SingleUpload = ({ onCancel, onComplete }) => {
   }, [createSongMutation.isError, createSongMutation.error]);
 
   return (
-    <div className="p-6 relative">
+    <div className="p-4 sm:p-6 relative min-h-screen">
       {/* Floating upload progress indicator */}
       {(isUploadingAudio || isUploadingCover) && (
-        <div className="absolute top-4 right-4 bg-blue-900/50 backdrop-blur-sm text-blue-300 px-4 py-2 rounded-lg flex items-center gap-2 z-50">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-300 border-t-transparent" />
-          <span className="text-sm">
+        <div
+          className="fixed top-20 right-6 backdrop-blur-md px-4 py-2.5 rounded-xl flex items-center gap-2.5 z-50 text-[#4DB3FF] border border-[#4DB3FF]/40 shadow-[0_0_25px_rgba(77,179,255,0.25)]"
+          style={{ background: "rgba(9, 14, 26, 0.9)" }}
+        >
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#4DB3FF] border-t-transparent" />
+          <span className="text-sm font-semibold">
             {isUploadingAudio
               ? `Uploading audio... ${audioUploadProgress}%`
               : `Uploading cover... ${coverImageUploadProgress}%`}
@@ -137,8 +140,11 @@ const SingleUpload = ({ onCancel, onComplete }) => {
 
       {/* Inline error banner for mutation failures */}
       {createSongMutation.isError && (
-        <div className="absolute top-4 right-4 bg-red-900/50 backdrop-blur-sm text-red-300 px-4 py-2 rounded-lg z-50">
-          <span className="text-sm">Error: {createSongMutation.error?.message}</span>
+        <div
+          className="fixed top-20 right-6 backdrop-blur-md px-4 py-2.5 rounded-xl z-50 text-rose-300 border border-rose-500/40 shadow-[0_0_25px_rgba(244,63,94,0.25)]"
+          style={{ background: "rgba(25, 10, 15, 0.9)" }}
+        >
+          <span className="text-sm font-semibold">Error: {createSongMutation.error?.message}</span>
         </div>
       )}
 
