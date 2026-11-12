@@ -146,11 +146,11 @@ const MusicCard = ({ goToHome, isHeroInView }) => (
     />
     {/* Main card */}
     <div
-      className="relative w-[260px] md:w-[340px] rounded-3xl overflow-hidden border border-[#4DB3FF]/25 z-10"
+      className="relative w-[260px] md:w-[340px] rounded-3xl overflow-hidden border border-[#4DB3FF]/40 z-10"
       style={{
-        background: "linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%)",
+        background: "linear-gradient(145deg, #0F224E 0%, #080D1F 100%)",
         boxShadow:
-          "0 40px 100px rgba(0,0,0,0.6), 0 0 60px rgba(59,130,246,0.12)",
+          "0 30px 80px rgba(0,0,0,0.8), 0 0 50px rgba(59,130,246,0.25)",
       }}
     >
       {/* Album art */}
@@ -164,7 +164,7 @@ const MusicCard = ({ goToHome, isHeroInView }) => (
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse at 30% 40%, rgba(59,130,246,0.6) 0%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(29,78,216,0.5) 0%, transparent 50%)",
+              "radial-gradient(ellipse at 30% 40%, rgba(59,130,246,0.6) 0%, rgba(59,130,246,0) 60%), radial-gradient(ellipse at 70% 70%, rgba(29,78,216,0.5) 0%, rgba(29,78,216,0) 50%)",
           }}
         />
         <motion.div
@@ -181,7 +181,7 @@ const MusicCard = ({ goToHome, isHeroInView }) => (
         <div
           className="absolute bottom-0 left-0 right-0 h-20"
           style={{
-            background: "linear-gradient(to top, #0A0A23, transparent)",
+            background: "linear-gradient(to top, #0A0A23 0%, rgba(10,10,35,0) 100%)",
           }}
         />
       </div>
@@ -189,25 +189,28 @@ const MusicCard = ({ goToHome, isHeroInView }) => (
       <div className="p-5 pb-6">
         <div className="flex items-center gap-2.5 mb-4">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.4)]"
             style={{ background: "linear-gradient(135deg, #3B82F6, #1D4ED8)" }}
           >
             M
           </div>
-          <span className="text-sm text-gray-400 font-medium">resetmusic</span>
+          <span className="text-sm text-slate-300 font-semibold">resetmusic</span>
         </div>
-        <p className="text-white font-bold text-lg mb-1">Midnight Signal</p>
-        <p className="text-gray-500 text-xs mb-4">Ambient · Instrumental</p>
-        <motion.button
+        <p className="text-white font-extrabold text-xl mb-1 tracking-tight">Midnight Signal</p>
+        <p className="text-[#4DB3FF] text-xs font-semibold tracking-wider uppercase">Ambient · Instrumental</p>
+        {/* <motion.button
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.96, y: 0 }}
           transition={{ type: "spring", stiffness: 350, damping: 22 }}
-          className="w-full py-3 rounded-lg text-white text-sm font-semibold cursor-pointer border-none"
-          style={{ background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)' }}
+          className="w-full py-3 rounded-xl text-white text-sm font-bold cursor-pointer border-none tracking-wide"
+          style={{
+            background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+            boxShadow: '0 0 20px rgba(51,128,255,0.4)',
+          }}
           onClick={goToHome}
         >
           Listen Now
-        </motion.button>
+        </motion.button> */}
       </div>
     </div>
   </motion.div>
@@ -226,40 +229,37 @@ const HeroSection = () => {
       style={{ background: "#09090D" }}
     >
       {/* Background orbs */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ transform: "translateZ(0)", willChange: "transform" }}
-      >
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[950px] h-[950px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(37,99,235,0.18) 0%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(37,99,235,0.28) 0%, rgba(37,99,235,0.08) 45%, rgba(37,99,235,0) 70%)",
           }}
         />
         <div
-          className="absolute top-[25%] -left-[8%] w-[500px] h-[500px] rounded-full"
+          className="absolute top-[25%] -left-[8%] w-[550px] h-[550px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(59,130,246,0.1) 0%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0) 70%)",
           }}
         />
         <div
-          className="absolute top-[10%] -right-[3%] w-[450px] h-[450px] rounded-full"
+          className="absolute top-[10%] -right-[3%] w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(29,78,216,0.12) 0%, transparent 70%)",
+              "radial-gradient(ellipse, rgba(29,78,216,0.2) 0%, rgba(29,78,216,0) 70%)",
           }}
         />
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: `linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(to right, rgba(77,179,255,0.065) 1px, rgba(77,179,255,0) 1px), linear-gradient(to bottom, rgba(77,179,255,0.065) 1px, rgba(77,179,255,0) 1px)`,
             backgroundSize: "60px 60px",
             maskImage:
-              "radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%)",
+              "radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 75%)",
             WebkitMaskImage:
-              "radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%)",
+              "radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 75%)",
           }}
         />
       </div>
@@ -279,7 +279,7 @@ const HeroSection = () => {
                   duration: 0.85,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="hero-heading font-extrabold leading-[1.08] tracking-[-0.03em] mb-5"
+                className="hero-heading font-extrabold leading-[1.08] tracking-[-0.03em] mb-8"
               >
                 <span className="hero-heading-gradient block">For The Next Gen</span>
                 <span className="hero-heading-gradient block">
@@ -327,31 +327,28 @@ const HeroSection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.72, duration: 0.7 }}
-                className="flex flex-wrap gap-3 justify-center md:justify-start mb-10"
+                className="flex flex-wrap gap-3.5 justify-center md:justify-start mb-10"
               >
                 <motion.button
                   onClick={() => navigate("/home")}
                   whileHover={{ scale: 1.05, y: -3 }}
                   whileTap={{ scale: 0.96, y: 0 }}
                   transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                  className="px-7 py-3.5 sm:px-9 sm:py-4 rounded-lg text-white text-sm sm:text-base font-semibold cursor-pointer border-none tracking-wide"
+                  className="px-8 py-3.5 sm:px-9 sm:py-4 rounded-xl text-white text-sm sm:text-base font-bold cursor-pointer border-none tracking-wide"
                   style={{
                     background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
-                    boxShadow: "0 12px 32px rgba(51,128,255,0.35)",
+                    boxShadow: "0 0 30px rgba(51,128,255,0.45)",
                   }}
                 >
                   Start Streaming
                 </motion.button>
                 <motion.button
                   onClick={() => navigate("/artist/register")}
-                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96, y: 0 }}
                   transition={{ type: "spring", stiffness: 350, damping: 22 }}
-                  className="px-7 py-3.5 sm:px-9 sm:py-4 rounded-lg text-gray-300 text-sm sm:text-base font-medium cursor-pointer tracking-wide hero-outline-btn"
-                  style={{
-                    background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
+                  className="px-8 py-3.5 sm:px-9 sm:py-4 rounded-xl text-white text-sm sm:text-base font-semibold cursor-pointer tracking-wide border border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50 transition-all duration-200"
+                  style={{ backdropFilter: 'blur(8px)' }}
                 >
                   Join as Artist
                 </motion.button>
@@ -378,7 +375,7 @@ const HeroSection = () => {
       {/* Bottom fade */}
       <div
         className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none z-[5]"
-        style={{ background: "linear-gradient(to top, #09090D, transparent)" }}
+        style={{ background: "linear-gradient(to top, #09090D 0%, rgba(9,9,13,0) 100%)" }}
       />
     </div>
   );

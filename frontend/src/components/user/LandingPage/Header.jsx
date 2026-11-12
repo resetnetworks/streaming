@@ -62,7 +62,7 @@ function SpotlightNav({ links, onLinkClick }) {
           background: `radial-gradient(
             110px circle at var(--spotlight-x, 50%) 100%,
             rgba(255,255,255,0.14) 0%,
-            transparent 60%
+            rgba(255,255,255,0) 60%
           )`,
         }}
       />
@@ -72,7 +72,7 @@ function SpotlightNav({ links, onLinkClick }) {
           key={link.text}
           href={link.href}
           onClick={(e) => onLinkClick(e, link.href, link.type)}
-          className="text-slate-400 hover:text-white font-medium px-4 py-2 transition-colors duration-200 text-sm"
+          className="text-slate-200 hover:text-white font-semibold px-4 py-2 transition-colors duration-200 text-sm"
           style={{ position: "relative", zIndex: 10 }}
           whileTap={{ scale: 0.97 }}
         >
@@ -157,10 +157,10 @@ const Header = () => {
           <div className="hidden sm:flex items-center gap-3">
             <motion.button
               onClick={() => navigate("/login")}
-              className="px-6 py-2 text-sm font-semibold text-slate-300 rounded-lg border border-white/20 hover:text-white hover:border-white/40 transition-all duration-200"
+              className="px-6 py-2 text-sm font-semibold text-white rounded-lg border border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50 transition-all duration-200"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              style={{ background: 'transparent', backdropFilter: 'blur(8px)' }}
+              style={{ backdropFilter: 'blur(8px)' }}
             >
               Login
             </motion.button>
@@ -169,7 +169,7 @@ const Header = () => {
               className="px-6 py-2 text-sm font-semibold text-white rounded-lg transition-all duration-200"
               style={{
                 background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
-                boxShadow: '0 12px 32px rgba(51,128,255,0.35)',
+                boxShadow: '0 0 25px rgba(51,128,255,0.45)',
               }}
               whileHover={{ scale: 1.04, y: -1 }}
               whileTap={{ scale: 0.96 }}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiCalendar,
   FiMusic,
@@ -17,6 +18,22 @@ import {
 import GenreModal from "./GenreModal";
 import { toast } from "sonner";
 import { compressCoverImage } from "../../../utills/imageCompression";
+
+// Inner 3D panel style for main containers (matches Analytics Dashboard & Subscription Funnel)
+const panelCardStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #151e32 0%, #090e1a 100%)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  boxShadow:
+    "inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.6)",
+};
+
+// Reusable sunken input/dropzone style (recessed hole effect matching CardStat / Analytics)
+const sunkenInputStyle = {
+  background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  boxShadow:
+    "inset 0 3px 6px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 255, 255, 0.04)",
+};
 
 // Access type options array
 const ACCESS_TYPE_OPTIONS = [
@@ -455,340 +472,361 @@ const UploadForm = ({
   const typeText = getTypeText();
 
   return (
-    <form
+    <motion.form
       onSubmit={handleSubmit}
-      className="w-full p-4 md:p-6 flex flex-col gap-8"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full max-w-5xl mx-auto p-4 sm:p-6 md:p-8 flex flex-col gap-6"
     >
-      {/* FORM CONTENT - Same as before */}
-      {/* ... rest of your JSX remains exactly the same ... */}
-      {/* The JSX structure doesn't change, only the handleSubmit function changes */}
-
       {/* SECTION 1: Basic Info (Cover, Title, Date) */}
-     <div
-  className={`flex flex-col lg:flex-row gap-6 items-start pb-8 ${
-    type !== "album" ? "border-b border-gray-700" : ""
-  }`}
->
-  {/* Left Side: Image Upload */}
-  <div className="w-full lg:w-[250px] shrink-0">
-    <div className="h-[250px]">
-      <input
-        type="file"
-        accept="image/*"
-        id="cover-upload"
-        ref={coverImageInputRef}
-        onChange={handleCoverImageChange}
-        className="hidden"
-      />
-
-      <label
-        htmlFor="cover-upload"
-        className="cursor-pointer block w-full h-full relative overflow-hidden group rounded-xl 
-          bg-gradient-to-br from-gray-800 to-gray-900 
-          border-2 border-dashed border-gray-500 hover:border-blue-400 transition-all"
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05, duration: 0.35 }}
+        className="rounded-2xl p-6 sm:p-8 flex flex-col lg:flex-row gap-7 items-start relative overflow-hidden"
+        style={panelCardStyle}
       >
-        {coverImage ? (
-          <div className="relative w-full h-full">
-            <img
-              src={coverImage}
-              alt="Cover Preview"
-              className="w-full h-full object-cover"
+        {/* Left Side: Image Upload */}
+        <div className="w-full lg:w-[240px] shrink-0">
+          <div className="h-[240px]">
+            <input
+              type="file"
+              accept="image/*"
+              id="cover-upload"
+              ref={coverImageInputRef}
+              onChange={handleCoverImageChange}
+              className="hidden"
             />
 
-            {/* Upload Progress Overlay */}
-            {isUploadingCover && (
-              <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-                <div className="w-16 h-16 mb-2">
-                  <div className="relative w-full h-full">
-                    <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
-                    <div
-                      className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"
-                      style={{
-                        transform: `rotate(${coverImageUploadProgress * 3.6}deg)`,
-                      }}
-                    ></div>
+            <label
+              htmlFor="cover-upload"
+              className="cursor-pointer block w-full h-full relative overflow-hidden group rounded-2xl transition-all duration-300"
+              style={{
+                background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+                border: "1.5px dashed rgba(77, 179, 255, 0.35)",
+                boxShadow: "inset 0 3px 8px rgba(0, 0, 0, 0.8)",
+              }}
+            >
+              {coverImage ? (
+                <div className="relative w-full h-full">
+                  <img
+                    src={coverImage}
+                    alt="Cover Preview"
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+
+                  {/* Upload Progress Overlay */}
+                  {isUploadingCover && (
+                    <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center">
+                      <div className="w-14 h-14 mb-2">
+                        <div className="relative w-full h-full">
+                          <div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
+                          <div
+                            className="absolute inset-0 rounded-full border-4 border-[#4DB3FF] border-t-transparent animate-spin"
+                            style={{
+                              transform: `rotate(${coverImageUploadProgress * 3.6}deg)`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      <span className="text-white text-sm font-semibold">
+                        {Math.round(coverImageUploadProgress)}%
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Hover Change Overlay */}
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold bg-white/10 border border-white/30 backdrop-blur-md px-4 py-2 rounded-full shadow-lg">
+                      Change Image
+                    </span>
                   </div>
                 </div>
-                <span className="text-white text-sm">
-                  {Math.round(coverImageUploadProgress)}%
-                </span>
-              </div>
-            )}
-
-            {/* Hover Change Overlay */}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="text-white text-sm font-medium bg-black/60 px-4 py-2 rounded-full">
-                Change Image
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-            <div className="text-gray-400 text-4xl mb-2 group-hover:text-blue-400 transition-colors">
-              <FiImage />
-            </div>
-            <span className="text-gray-200 text-sm font-semibold group-hover:text-blue-400 transition-colors">
-              Upload Cover Art <span className="text-red-400">*</span>
-            </span>
-            <span className="text-gray-300 text-xs mt-1">
-              Click or drag & drop an image
-            </span>
-          </div>
-        )}
-      </label>
-    </div>
-  </div>
-
-  {/* Right Side: Inputs */}
-  <div className="flex-1 flex flex-col gap-6 w-full">
-    {/* Title and Date Row */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Title Input */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
-          {typeText.titleLabel} Title
-          <span className="text-red-400">*</span>
-        </label>
-        <input
-          type="text"
-          placeholder={typeText.titlePlaceholder}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
-                     focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500"
-          required
-          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-        />
-      </div>
-
-      {/* Date Input (Original custom with blue button) */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
-          Release Date
-          <span className="text-red-400">*</span>
-        </label>
-        <div className="relative w-full">
-          <input
-            type="text"
-            placeholder="YYYY-MM-DD"
-            value={date}
-            onChange={handleDateChange}
-            className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
-                       focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500 pr-12"
-            disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-          />
-
-          <input
-            type="date"
-            ref={hiddenDateInputRef}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="absolute top-0 left-0 w-full h-full opacity-0 pointer-events-none"
-          />
-          <div
-            onClick={openCalendar}
-            className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer 
-                       bg-[#4DB3FF] text-white p-2 rounded-md transition-all"
-          >
-            <FiCalendar size={16} />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center group-hover:scale-[1.02] transition-transform duration-300">
+                  <div className="w-14 h-14 rounded-2xl bg-[#0459FE]/15 border border-[#4DB3FF]/30 text-[#4DB3FF] flex items-center justify-center text-2xl mb-3 shadow-[0_0_15px_rgba(77,179,255,0.15)] group-hover:border-[#4DB3FF] transition-all">
+                    <FiImage />
+                  </div>
+                  <span className="text-white text-sm font-semibold group-hover:text-[#4DB3FF] transition-colors">
+                    Upload Cover Art <span className="text-red-400">*</span>
+                  </span>
+                  <span className="text-slate-400 text-xs mt-1">
+                    Click or drag & drop an image
+                  </span>
+                </div>
+              )}
+            </label>
           </div>
         </div>
-        <div className="text-gray-300 text-xs">
-          Format: YYYY-MM-DD • You can type or select from calendar
-        </div>
-      </div>
-    </div>
 
-    {/* Access Type Selection */}
-    <div className="flex flex-col gap-1.5" ref={accessDropdownRef}>
-      <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
-        Access Type
-        <span className="text-red-400">*</span>
-      </label>
-
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setShowAccessDropdown(!showAccessDropdown)}
-          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 flex items-center justify-between 
-                     hover:border-gray-500 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2 rounded-lg ${
-                selectedAccessType.color === "green"
-                  ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/50"
-                  : selectedAccessType.color === "blue"
-                    ? "bg-blue-500/30 text-blue-300 border border-blue-500/50"
-                    : "bg-amber-500/30 text-amber-300 border border-amber-500/50"
-              }`}
-            >
-              <IconComponent size={20} />
+        {/* Right Side: Inputs */}
+        <div className="flex-1 flex flex-col gap-5 w-full">
+          {/* Title and Date Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Title Input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-slate-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                {typeText.titleLabel} Title
+                <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder={typeText.titlePlaceholder}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={sunkenInputStyle}
+                className="w-full text-white px-4 py-3 rounded-xl outline-none focus:border-[#4DB3FF] focus:ring-1 focus:ring-[#4DB3FF]/30 transition-all placeholder:text-slate-500 text-sm font-medium"
+                required
+                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+              />
             </div>
-            <div className="text-left">
-              <div className="text-white text-sm font-bold">
-                {selectedAccessType.label}
-              </div>
-              <div className="text-gray-300 text-xs font-medium">
-                {selectedAccessType.description}
-              </div>
-            </div>
-          </div>
-          <FiChevronDown
-            size={20}
-            className={`text-gray-400 transition-transform ${
-              showAccessDropdown ? "rotate-180" : ""
-            }`}
-          />
-        </button>
 
-        {/* Dropdown Menu */}
-        {showAccessDropdown && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl shadow-black/30 z-20 overflow-hidden">
-            {ACCESS_TYPE_OPTIONS.map((option) => {
-              const OptionIcon = option.icon;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleAccessTypeSelect(option.value)}
-                  className={`w-full px-4 py-3 flex items-center gap-3 text-left transition-colors ${
-                    accessType === option.value
-                      ? "bg-gray-700/80 border-l-4 border-blue-400"
-                      : "hover:bg-gray-700/50 border-l-4 border-transparent"
-                  }`}
+            {/* Date Input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-slate-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                Release Date
+                <span className="text-red-400">*</span>
+              </label>
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  placeholder="YYYY-MM-DD"
+                  value={date}
+                  onChange={handleDateChange}
+                  style={sunkenInputStyle}
+                  className="w-full text-white px-4 py-3 rounded-xl outline-none focus:border-[#4DB3FF] focus:ring-1 focus:ring-[#4DB3FF]/30 transition-all placeholder:text-slate-500 pr-12 text-sm font-medium"
+                  disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+                />
+
+                <input
+                  type="date"
+                  ref={hiddenDateInputRef}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="absolute top-0 left-0 w-full h-full opacity-0 pointer-events-none"
+                />
+                <div
+                  onClick={openCalendar}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer bg-[#0459FE] hover:bg-[#3380FF] text-white p-2 rounded-lg transition-all shadow-[0_0_12px_rgba(4,89,254,0.4)] flex items-center justify-center active:scale-95"
                 >
+                  <FiCalendar size={16} />
+                </div>
+              </div>
+              <div className="text-slate-400 text-xs">
+                Format: YYYY-MM-DD
+              </div>
+            </div>
+          </div>
+
+          {/* Access Type Selection */}
+          <div className="flex flex-col gap-1.5" ref={accessDropdownRef}>
+            <label className="text-slate-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+              Access Type
+              <span className="text-red-400">*</span>
+            </label>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowAccessDropdown(!showAccessDropdown)}
+                style={sunkenInputStyle}
+                className="w-full rounded-xl px-4 py-3 flex items-center justify-between hover:border-white/20 focus:border-[#4DB3FF] focus:ring-1 focus:ring-[#4DB3FF]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+              >
+                <div className="flex items-center gap-3">
                   <div
                     className={`p-2 rounded-lg ${
-                      option.color === "green"
-                        ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/50"
-                        : option.color === "blue"
-                          ? "bg-blue-500/30 text-blue-300 border border-[#4DB3FF]"
-                          : "bg-amber-500/30 text-amber-300 border border-amber-500/50"
+                      selectedAccessType.color === "green"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                        : selectedAccessType.color === "blue"
+                          ? "bg-[#0459FE]/20 text-[#4DB3FF] border border-[#0459FE]/40 shadow-[0_0_10px_rgba(77,179,255,0.15)]"
+                          : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                     }`}
                   >
-                    <OptionIcon size={18} />
+                    <IconComponent size={18} />
                   </div>
-                  <div className="flex-1">
-                    <div className="text-white text-sm font-semibold">
-                      {option.label}
+                  <div className="text-left">
+                    <div className="text-white text-sm font-bold">
+                      {selectedAccessType.label}
                     </div>
-                    <div className="text-gray-300 text-xs">
-                      {option.description}
+                    <div className="text-slate-400 text-xs font-medium">
+                      {selectedAccessType.description}
                     </div>
                   </div>
-                  {accessType === option.value && (
-                    <FiCheck className="text-blue-400 shrink-0" size={20} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      <div className="text-gray-300 text-xs">
-        {typeText.accessDescription}
-      </div>
-    </div>
+                </div>
+                <FiChevronDown
+                  size={18}
+                  className={`text-slate-400 transition-transform duration-200 ${
+                    showAccessDropdown ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-    {/* Price Input (only for purchase-only) */}
-    {accessType === "purchase-only" && (
-      <div className="flex flex-col gap-1.5">
-        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
-          Price (USD)
-          <span className="text-red-400">*</span>
-        </label>
-        <div className="flex gap-3">
-          <div className="relative flex-1">
-            <FiDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {showAccessDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-[#090e1a] border border-white/15 rounded-xl shadow-2xl shadow-black/90 z-30 overflow-hidden divide-y divide-white/5"
+                  >
+                    {ACCESS_TYPE_OPTIONS.map((option) => {
+                      const OptionIcon = option.icon;
+                      const isSelected = accessType === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleAccessTypeSelect(option.value)}
+                          className={`w-full px-4 py-3.5 flex items-center gap-3 text-left transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-[#0459FE]/15 border-l-4 border-[#4DB3FF]"
+                              : "hover:bg-white/[0.04] border-l-4 border-transparent"
+                          }`}
+                        >
+                          <div
+                            className={`p-2 rounded-lg ${
+                              option.color === "green"
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                                : option.color === "blue"
+                                  ? "bg-[#0459FE]/20 text-[#4DB3FF] border border-[#0459FE]/40"
+                                  : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                            }`}
+                          >
+                            <OptionIcon size={18} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-semibold">
+                              {option.label}
+                            </div>
+                            <div className="text-slate-400 text-xs">
+                              {option.description}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <FiCheck className="text-[#4DB3FF] shrink-0" size={18} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="text-slate-400 text-xs">
+              {typeText.accessDescription}
+            </div>
+          </div>
+
+          {/* Price Input (only for purchase-only) */}
+          {accessType === "purchase-only" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-slate-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                Price (USD)
+                <span className="text-red-400">*</span>
+              </label>
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <FiDollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={price}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || (!isNaN(value) && parseFloat(value) >= 0)) {
+                        setPrice(value);
+                      }
+                    }}
+                    style={sunkenInputStyle}
+                    className="w-full text-white pl-10 pr-4 py-3 rounded-xl outline-none focus:border-[#4DB3FF] focus:ring-1 focus:ring-[#4DB3FF]/30 transition-all placeholder:text-slate-500 text-sm font-medium"
+                    min="0"
+                    step="0.01"
+                    required={accessType === "purchase-only"}
+                    disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+                  />
+                </div>
+                <div
+                  style={sunkenInputStyle}
+                  className="w-32 text-slate-300 px-4 py-3 rounded-xl flex items-center justify-center text-sm font-semibold tracking-wider font-mono"
+                >
+                  USD ($)
+                </div>
+              </div>
+              <div className="text-slate-400 text-xs">
+                Set price for individual purchase (USD only)
+              </div>
+            </div>
+          )}
+
+          {/* Description (only for album type) */}
+          {type === "album" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-slate-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                Description
+              </label>
+              <textarea
+                placeholder={typeText.descriptionPlaceholder}
+                value={description}
+                maxLength={300}
+                onChange={(e) => setDescription(e.target.value)}
+                style={sunkenInputStyle}
+                className="w-full h-[120px] text-white px-4 py-3 rounded-xl outline-none focus:border-[#4DB3FF] focus:ring-1 focus:ring-[#4DB3FF]/30 transition-all placeholder:text-slate-500 resize-none text-sm font-medium"
+                disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+              />
+              <div className="flex justify-between text-xs mt-1">
+                <span className="text-slate-400">{typeText.descriptionLabel}</span>
+                <span
+                  className={`font-medium ${
+                    description.length > 280 ? "text-amber-300" : "text-slate-400"
+                  }`}
+                >
+                  {description.length}/300
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Copyright */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-slate-200 text-xs font-bold uppercase tracking-wider">
+              Copyright
+            </label>
             <input
-              type="number"
-              placeholder="0.00"
-              value={price}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "" || (!isNaN(value) && parseFloat(value) >= 0)) {
-                  setPrice(value);
-                }
-              }}
-              className="w-full bg-gray-800 text-white pl-10 pr-4 py-3 rounded-lg outline-none border border-gray-600 
-                         focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500"
-              min="0"
-              step="0.01"
-              required={accessType === "purchase-only"}
+              type="text"
+              placeholder="© Your Name / Label"
+              value={copyright}
+              onChange={(e) => setCopyright(e.target.value)}
+              style={sunkenInputStyle}
+              className="w-full text-white px-4 py-3 rounded-xl outline-none focus:border-[#4DB3FF] focus:ring-1 focus:ring-[#4DB3FF]/30 transition-all placeholder:text-slate-500 text-sm font-medium"
               disabled={isSubmitting || isUploadingAudio || isUploadingCover}
             />
+            <div className="text-slate-400 text-xs">
+              Ownership or label info
+            </div>
           </div>
-          <div className="w-32 bg-gray-700 text-gray-200 px-4 py-3 rounded-lg border border-gray-600 flex items-center justify-center text-sm font-medium">
-            USD ($)
-          </div>
         </div>
-        <div className="text-gray-300 text-xs">
-          Set price for individual purchase (USD only)
-        </div>
-      </div>
-    )}
-
-    {/* Description (only for album type) */}
-    {type === "album" && (
-      <div className="flex flex-col gap-1.5">
-        <label className="text-gray-100 text-sm font-semibold flex items-center gap-1">
-          Description
-        </label>
-        <textarea
-          placeholder={typeText.descriptionPlaceholder}
-          value={description}
-          maxLength={300}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full h-[120px] bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
-                     focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500 resize-none"
-          disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-        />
-        <div className="flex justify-between text-xs mt-1">
-          <span className="text-gray-300">{typeText.descriptionLabel}</span>
-          <span
-            className={`font-medium ${
-              description.length > 280 ? "text-amber-300" : "text-gray-300"
-            }`}
-          >
-            {description.length}/300
-          </span>
-        </div>
-      </div>
-    )}
-
-    {/* Copyright */}
-    <div className="flex flex-col gap-1.5">
-      <label className="text-gray-100 text-sm font-semibold">
-        Copyright
-      </label>
-      <input
-        type="text"
-        placeholder="© Your Name / Label"
-        value={copyright}
-        onChange={(e) => setCopyright(e.target.value)}
-        className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg outline-none border border-gray-600 
-                   focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all placeholder:text-gray-500"
-        disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-      />
-      <div className="text-gray-300 text-xs">
-        Ownership or label info
-      </div>
-    </div>
-  </div>
-</div>
+      </motion.div>
 
       {/* SECTION 2: ADD TRACK */}
       {type !== "album" && (
-        <div className="flex flex-col gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.35 }}
+          className="rounded-2xl p-6 sm:p-8 flex flex-col gap-4 relative overflow-hidden"
+          style={panelCardStyle}
+        >
           <div className="flex items-center justify-between">
-            <h3 className="text-gray-100 text-lg font-semibold lowercase tracking-wide">
+            <h3 className="text-white text-base font-bold lowercase tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-4 rounded-full bg-[#0459FE]" />
               upload track
             </h3>
             {tracks.length > 0 && (
-              <div className="text-blue-400 text-sm font-medium">
+              <div className="text-[#4DB3FF] text-xs font-semibold px-3 py-1 rounded-full bg-[#0459FE]/15 border border-[#4DB3FF]/30 shadow-[0_0_10px_rgba(77,179,255,0.15)]">
                 {tracks.length} file selected
               </div>
             )}
@@ -796,12 +834,16 @@ const UploadForm = ({
 
           {/* Big Clickable Upload Area */}
           <label
-            className={`relative overflow-hidden group border-2 border-dashed transition-all cursor-pointer rounded-2xl min-h-[180px] flex flex-col items-center justify-center p-8 text-center
+            className={`relative overflow-hidden group border-2 border-dashed transition-all duration-300 cursor-pointer rounded-2xl min-h-[170px] flex flex-col items-center justify-center p-7 text-center
             ${
               tracks.length > 0 || isUploadingAudio
-                ? "opacity-50 pointer-events-none border-gray-700 bg-gray-800/20"
-                : "bg-gray-800/40 border-[#4DB3FF] hover:bg-gray-800/60 shadow-xl"
+                ? "opacity-60 pointer-events-none border-white/10"
+                : "border-[#4DB3FF]/40 hover:border-[#4DB3FF] hover:shadow-[0_0_25px_rgba(77,179,255,0.15)]"
             }`}
+            style={{
+              background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+              boxShadow: "inset 0 3px 8px rgba(0, 0, 0, 0.8)",
+            }}
           >
             <input
               type="file"
@@ -813,10 +855,10 @@ const UploadForm = ({
             />
 
             {/* Center Icon Section */}
-            <div className="mb-5 w-20 h-20 rounded-full border border-[#4DB3FF]/30 bg-[#4DB3FF]/5 flex items-center justify-center text-[#4DB3FF] group-hover:scale-110 transition-transform duration-300">
+            <div className="mb-4 w-16 h-16 rounded-2xl border border-[#4DB3FF]/30 bg-[#0459FE]/15 flex items-center justify-center text-[#4DB3FF] shadow-[0_0_20px_rgba(77,179,255,0.15)] group-hover:scale-105 transition-transform duration-300">
               {isUploadingAudio ? (
-                <div className="relative w-12 h-12">
-                  <div className="absolute inset-0 rounded-full border-4 border-gray-600"></div>
+                <div className="relative w-10 h-10">
+                  <div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
                   <div
                     className="absolute inset-0 rounded-full border-4 border-[#4DB3FF] border-t-transparent animate-spin"
                     style={{
@@ -825,18 +867,13 @@ const UploadForm = ({
                   ></div>
                 </div>
               ) : (
-                <div className="relative">
-                  <FiMusic size={32} />
-                  <div className="absolute -bottom-2 -right-2">
-                    <FiUpload size={16} />
-                  </div>
-                </div>
+                <FiUpload size={28} className="text-[#4DB3FF]" />
               )}
             </div>
 
             {/* Text Content */}
-            <div className="space-y-2">
-              <h4 className="text-white text-xl font-semibold tracking-tight">
+            <div className="space-y-1.5">
+              <h4 className="text-white text-lg font-bold tracking-tight">
                 {isUploadingAudio
                   ? `Uploading... ${audioUploadProgress}%`
                   : tracks.length > 0
@@ -845,7 +882,7 @@ const UploadForm = ({
                       ? "Click anywhere to upload mix"
                       : "Click anywhere to upload track"}
               </h4>
-              <p className="text-[#4DB3FF] text-sm max-w-[280px] mx-auto leading-relaxed">
+              <p className="text-slate-400 text-xs sm:text-sm max-w-sm mx-auto leading-relaxed">
                 {isUploadingAudio
                   ? "Uploading, please wait..."
                   : tracks.length > 0
@@ -858,46 +895,48 @@ const UploadForm = ({
 
             {/* Progress Bar for Upload */}
             {isUploadingAudio && (
-              <div className="w-64 mt-4 bg-gray-700 rounded-full h-2">
+              <div className="w-64 mt-4 bg-gray-800 rounded-full h-2 overflow-hidden border border-white/10">
                 <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-[#0F3272] to-[#3380FF] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${audioUploadProgress}%` }}
                 ></div>
               </div>
-            )}
-
-            {/* Decorative pulse effect when no track is selected */}
-            {!tracks.length && !isUploadingAudio && (
-              <div className="absolute inset-0 border-2 border-blue-500/20 rounded-2xl animate-pulse -z-10 group-hover:hidden"></div>
             )}
           </label>
 
           {/* Track Details List */}
           {tracks.map((track) => (
-            <div
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
               key={track.id}
-              className="bg-gray-800/30 rounded-xl border border-gray-700 p-5 mt-2"
+              className="rounded-xl border border-white/10 p-5 mt-2"
+              style={{
+                background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+                boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.6)",
+              }}
             >
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <h4 className="text-white text-xs font-bold uppercase tracking-[0.2em] opacity-60">
+                  <div className="w-2.5 h-2.5 bg-[#4DB3FF] rounded-full shadow-[0_0_8px_rgba(77,179,255,0.8)] animate-pulse"></div>
+                  <h4 className="text-slate-300 text-xs font-bold uppercase tracking-[0.2em]">
                     Track Details
                   </h4>
                 </div>
                 <button
+                  type="button"
                   onClick={() => removeTrack(track.id)}
-                  className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1.5 px-3 py-1 bg-red-400/10 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   disabled={isSubmitting || isUploadingAudio}
                 >
-                  <FiTrash2 size={14} /> remove
+                  <FiTrash2 size={13} /> remove
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Name Field */}
-                <div className="space-y-2">
-                  <label className="text-gray-500 text-xs font-bold uppercase">
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
                     Track Name
                   </label>
                   {editingTrackId === track.id ? (
@@ -912,28 +951,29 @@ const UploadForm = ({
                             ? saveTrackName(track.id)
                             : e.key === "Escape" && cancelEditing()
                         }
-                        className="flex-1 bg-gray-900/50 text-white px-4 py-2 rounded-lg border border-blue-500/50 outline-none text-sm"
+                        className="flex-1 bg-[#070b14] text-white px-3.5 py-2 rounded-lg border border-[#4DB3FF] outline-none text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
                         disabled={isSubmitting || isUploadingAudio}
                       />
                       <button
+                        type="button"
                         onClick={() => saveTrackName(track.id)}
-                        className="text-emerald-400 p-2"
+                        className="text-emerald-400 hover:text-emerald-300 p-2 cursor-pointer"
                       >
                         <FiCheck size={18} />
                       </button>
                     </div>
                   ) : (
                     <div
-                      className="flex items-center gap-2 group/name cursor-pointer"
+                      className="flex items-center gap-2 group/name cursor-pointer py-1"
                       onClick={() => startEditing(track.id, track.name)}
                     >
-                      <span className="text-white text-base font-medium group-hover:text-blue-400 transition-colors">
+                      <span className="text-white text-base font-semibold group-hover:text-[#4DB3FF] transition-colors">
                         {track.name}
                       </span>
                       {!(isSubmitting || isUploadingAudio) && (
                         <FiEdit2
                           size={14}
-                          className="text-gray-500 opacity-0 group-hover/name:opacity-100 transition-opacity"
+                          className="text-slate-400 opacity-0 group-hover/name:opacity-100 transition-opacity"
                         />
                       )}
                     </div>
@@ -941,12 +981,12 @@ const UploadForm = ({
                 </div>
 
                 {/* Duration Field */}
-                <div className="space-y-2">
-                  <label className="text-gray-500 text-xs font-bold uppercase">
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
                     Duration
                   </label>
-                  <div className="flex items-center gap-2.5 text-white text-base">
-                    <FiClock className="text-blue-500" size={18} />
+                  <div className="flex items-center gap-2.5 text-white text-base font-semibold py-1">
+                    <FiClock className="text-[#4DB3FF]" size={18} />
                     <span
                       className={
                         track.duration === "Loading..."
@@ -959,90 +999,99 @@ const UploadForm = ({
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* SECTION 3: GENRE SELECTION */}
-     <div className="mt-6 border-t border-gray-700 pt-6">
-  <div className="flex flex-col gap-3">
-    {/* Header with label and counter */}
-    <div className="flex items-center justify-between">
-      <h3 className="text-gray-100 text-sm font-semibold lowercase tracking-wide flex items-center gap-1">
-        select genres
-        <span className="text-red-400">*</span>
-      </h3>
-      <div
-        className={`text-sm font-medium ${
-          selectedGenres.length === 5 ? "text-amber-300" : "text-gray-300"
-        }`}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18, duration: 0.35 }}
+        className="rounded-2xl p-6 sm:p-8 flex flex-col gap-4 relative overflow-hidden"
+        style={panelCardStyle}
       >
-        {selectedGenres.length}/5 selected
-      </div>
-    </div>
-
-    {/* Selected Genres Chips */}
-    {selectedGenres.length > 0 && (
-      <div className="flex flex-wrap gap-2">
-        {selectedGenres.map((genre, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-2 bg-blue-500/20 border border-blue-500/40 px-3 py-2 rounded-lg group hover:border-blue-400 transition-colors"
-          >
-            <FiTag size={12} className="text-blue-400" />
-            <span className="text-blue-300 text-sm font-medium">{genre}</span>
-            <button
-              type="button"
-              onClick={() => removeGenre(genre)}
-              className="text-gray-400 hover:text-red-400 transition-colors ml-1 p-0.5 rounded-full hover:bg-red-400/10 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+        <div className="flex flex-col gap-3">
+          {/* Header with label and counter */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-white text-base font-bold lowercase tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-4 rounded-full bg-[#0459FE]" />
+              select genres
+              <span className="text-red-400">*</span>
+            </h3>
+            <div
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                selectedGenres.length === 5
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                  : "bg-white/5 text-slate-300 border border-white/10"
+              }`}
             >
-              <FiX size={14} />
-            </button>
+              {selectedGenres.length}/5 selected
+            </div>
           </div>
-        ))}
-      </div>
-    )}
 
-    {/* Add Genre Button */}
-    <button
-      type="button"
-      onClick={openGenreModal}
-      className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 border border-dashed rounded-lg font-medium transition-all
-        ${
-          selectedGenres.length >= 5
-            ? "border-gray-600 text-gray-500 cursor-not-allowed"
-            : "border-gray-500 text-gray-300 hover:text-white hover:border-blue-400 hover:bg-gray-800/50 active:scale-[0.98]"
-        }`}
-      disabled={
-        selectedGenres.length >= 5 ||
-        isSubmitting ||
-        isUploadingAudio ||
-        isUploadingCover
-      }
-    >
-      <FiPlus
-        size={18}
-        className={
-          selectedGenres.length >= 5
-            ? "text-gray-500"
-            : "text-gray-400 group-hover:text-blue-400 transition-colors"
-        }
-      />
-      <span className="text-sm">
-        {selectedGenres.length >= 5
-          ? "Maximum genres selected"
-          : "Add Genres"}
-      </span>
-    </button>
+          {/* Selected Genres Chips */}
+          {selectedGenres.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {selectedGenres.map((genre, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 bg-[#0459FE]/15 border border-[#4DB3FF]/40 px-3.5 py-1.5 rounded-xl text-[#4DB3FF] shadow-[0_0_12px_rgba(77,179,255,0.12)] group hover:border-[#4DB3FF] transition-all"
+                >
+                  <FiTag size={13} className="text-[#4DB3FF]" />
+                  <span className="text-sm font-semibold">{genre}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeGenre(genre)}
+                    className="text-slate-400 hover:text-red-400 transition-colors ml-1 p-0.5 rounded-full hover:bg-red-400/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    disabled={isSubmitting || isUploadingAudio || isUploadingCover}
+                  >
+                    <FiX size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-    {/* Helper text */}
-    <p className="text-gray-300 text-xs">
-      Select up to 5 genres that best describe your music
-    </p>
-  </div>
-      </div>
+          {/* Add Genre Button */}
+          <button
+            type="button"
+            onClick={openGenreModal}
+            className={`w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 border border-dashed rounded-xl font-semibold transition-all cursor-pointer
+              ${
+                selectedGenres.length >= 5
+                  ? "border-white/10 text-slate-500 cursor-not-allowed bg-white/[0.02]"
+                  : "border-white/20 text-slate-200 hover:text-white hover:border-[#4DB3FF] hover:bg-[#0459FE]/10 active:scale-[0.99] shadow-sm"
+              }`}
+            disabled={
+              selectedGenres.length >= 5 ||
+              isSubmitting ||
+              isUploadingAudio ||
+              isUploadingCover
+            }
+          >
+            <FiPlus
+              size={18}
+              className={
+                selectedGenres.length >= 5
+                  ? "text-slate-500"
+                  : "text-[#4DB3FF]"
+              }
+            />
+            <span className="text-sm">
+              {selectedGenres.length >= 5
+                ? "Maximum genres selected"
+                : "Add Genres"}
+            </span>
+          </button>
+
+          {/* Helper text */}
+          <p className="text-slate-400 text-xs">
+            Select up to 5 genres that best describe your music
+          </p>
+        </div>
+      </motion.div>
 
       {/* Genre Modal */}
       <GenreModal
@@ -1055,22 +1104,34 @@ const UploadForm = ({
       />
 
       {/* Submit Buttons */}
-      <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-700">
-        <button
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.24, duration: 0.35 }}
+        className="flex items-center justify-end gap-3 pt-4 border-t border-white/10"
+      >
+        <motion.button
           type="button"
           onClick={onCancel}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           disabled={isSubmitting || isUploadingAudio || isUploadingCover}
-          className={`text-gray-400 hover:text-white px-6 py-2.5 rounded-lg font-medium transition-all hover:bg-gray-800/50 ${
+          className={`px-6 py-2.5 rounded-xl font-semibold text-sm text-slate-300 hover:text-white border border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all backdrop-blur-sm cursor-pointer ${
             isSubmitting || isUploadingAudio || isUploadingCover
               ? "opacity-50 cursor-not-allowed"
               : ""
           }`}
         >
           Cancel
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="submit"
-          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-8 py-2.5 rounded-full font-medium transition-all shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+          whileHover={{ scale: 1.03, y: -1 }}
+          whileTap={{ scale: 0.97 }}
+          className="px-8 py-3 rounded-xl text-white font-bold text-sm tracking-wide cursor-pointer border-none transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-[0_0_25px_rgba(51,128,255,0.4)]"
+          style={{
+            background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
+          }}
           disabled={
             isLocked ||
             isSubmitting ||
@@ -1095,9 +1156,9 @@ const UploadForm = ({
           ) : (
             typeText.submitButton
           )}
-        </button>
-      </div>
-    </form>
+        </motion.button>
+      </motion.div>
+    </motion.form>
   );
 };
 

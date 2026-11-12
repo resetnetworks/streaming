@@ -1,7 +1,6 @@
 // src/components/ProfileHeroSection.jsx
 import React, { useRef, useState } from "react";
-import { FiEdit3 } from "react-icons/fi";
-import { IoLogOutOutline } from "react-icons/io5";
+import { FiEdit3, FiMail, FiLock } from "react-icons/fi";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +8,9 @@ import { useArtistProfile } from "../../../hooks/api/useArtistDashboard";
 import { useS3Upload } from "../../../hooks/api/useS3Upload";
 import { getS3Url } from "../../../utills/s3Utils";
 import {  compressArtistCoverImage, compressProfileImage } from "../../../utills/imageCompression";
-import { logoutUser } from "../../../features/auth/authSlice";
 import { useDispatch } from "react-redux";
-import { forceLogout } from "../../../utills/axiosInstance";
 
-const ProfileHeroSection = ({ workspace }) => {
+const ProfileHeroSection = ({ workspace, onOpenSettings }) => {
   const navigate = useNavigate();
   const workspaceId = workspace?.workspaceId;
   
@@ -37,13 +34,6 @@ const ProfileHeroSection = ({ workspace }) => {
 
   const dispatch = useDispatch();
   const hasImage = selectedImageType === "profile" ? !!artistProfile?.profileImage : !!artistProfile?.coverImage;
-
-  const handleLogout = async () => {
-    await forceLogout();
-    await dispatch(logoutUser());
-    toast.success('Logged out successfully');
-    navigate('/login');
-  };
 
   const triggerImageUpload = (type) => {
     setUploadType(type);
@@ -365,19 +355,24 @@ const ProfileHeroSection = ({ workspace }) => {
               </div>
             </div>
           </div>
-          
-          {/* Right Side: Logout Button */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-8 w-full sm:w-auto">
-            <button 
-              onClick={handleLogout}
-              className="text-white font-bold px-5 py-2.5 rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95 flex items-center gap-1.5 sm:gap-2 text-sm w-full sm:w-auto justify-center cursor-pointer"
-              style={{
-                background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
-                boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
-              }}
+
+          {/* Right Side - Account Security Actions */}
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap mt-3 sm:mt-0">
+            <button
+              type="button"
+              onClick={() => onOpenSettings?.("email")}
+              className="group flex items-center gap-2 px-3.5 py-2 rounded-[0.2rem] text-xs sm:text-sm font-medium text-gray-200 hover:text-white bg-black/40 hover:bg-black/60 border border-white/15 hover:border-white/30 backdrop-blur-md shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer"
             >
-              <span>Logout</span>
-              <IoLogOutOutline className="text-base" />
+              <FiMail className="text-sm sm:text-base text-gray-400 group-hover:text-white transition-colors" />
+              <span>Change Email</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenSettings?.("password")}
+              className="group flex items-center gap-2 px-3.5 py-2 rounded-[0.2rem] text-xs sm:text-sm font-medium text-gray-200 hover:text-white bg-black/40 hover:bg-black/60 border border-white/15 hover:border-white/30 backdrop-blur-md shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer"
+            >
+              <FiLock className="text-sm sm:text-base text-gray-400 group-hover:text-white transition-colors" />
+              <span>Change Password</span>
             </button>
           </div>
         </div>
@@ -385,7 +380,7 @@ const ProfileHeroSection = ({ workspace }) => {
 
       {/* Image Preview Modal */}
       {showImagePreviewModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[99999] p-4">
           <div className="bg-gray-900 rounded-xl max-w-md w-full overflow-hidden border border-gray-700">
             {/* Modal Header */}
             <div className="p-4 border-b border-gray-800">

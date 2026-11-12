@@ -5,7 +5,13 @@ import { FaChartLine, FaRegUserCircle, FaBars, FaTimes, FaWallet, FaUsers, FaAd,
 import { FiMusic } from "react-icons/fi";
 import { useEffect } from "react";
 import { RxDashboard } from "react-icons/rx";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { IoLogOutOutline } from "react-icons/io5";
+import { logoutUser } from "../../../features/auth/authSlice";
+import { forceLogout } from "../../../utills/axiosInstance";
 import { useArtistProfile } from "../../../hooks/api/useArtists";
 import { useMyWorkspaces } from "../../../hooks/api/useWorkspace";
 
@@ -21,6 +27,25 @@ const menuItems = [
 ];
 
 const Sidebar = ({ selectedTab, setSelectedTab }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleLogout = async () => {
+    try {
+      if (queryClient) {
+        queryClient.clear();
+      }
+      await forceLogout();
+      await dispatch(logoutUser());
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+      navigate("/login");
+    }
+  };
+
   const { data: workspaces = [] } = useMyWorkspaces();
   const activeWorkspace = React.useMemo(() => {
     if (!workspaces || workspaces.length === 0) return null;
@@ -142,21 +167,31 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
                   ))}
                 </div>
               </div>
-              {/* Clickable Profile Section for Mobile */}
-              <div 
-                className="flex flex-col items-center mb-40 px-2 cursor-pointer"
-                onClick={() => handleMenuItemClick("profile")}
-              >
-                <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0">
-                  <img 
-                    src={imageUrl} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover" 
-                  />
+              {/* Profile & Logout Section for Mobile */}
+              <div className="p-4 border-t border-gray-700/60 w-full mt-auto flex-shrink-0 flex flex-col gap-3">
+                <div 
+                  className="flex items-center gap-3 px-1 cursor-pointer"
+                  onClick={() => handleMenuItemClick("profile")}
+                >
+                  <div className="w-10 h-10 rounded-full border-2 border-blue-500 overflow-hidden flex-shrink-0">
+                    <img 
+                      src={imageUrl} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <span className="text-white text-sm font-medium tracking-wide truncate hover:text-blue-400 transition-colors">
+                    {artistName}
+                  </span>
                 </div>
-                <span className="text-white text-sm tracking-wide text-center max-w-full hover:text-blue-400 transition-colors">
-                  {artistName}
-                </span>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-[0.2rem] text-sm font-medium text-gray-200 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 hover:border-red-500 transition-all duration-200 active:scale-95 cursor-pointer"
+                >
+                  <IoLogOutOutline className="text-lg" />
+                  <span>Logout</span>
+                </button>
               </div>
             </aside>
           </div>
@@ -168,16 +203,16 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
   // Desktop Sidebar
   return (
     <aside 
-      className="w-72 bg-[#222126B2] flex flex-col justify-between pb-4 border-r border-gray-500 h-full"
+      className="w-72 bg-[#222126B2] flex flex-col justify-between border-r border-gray-700/60 h-screen sticky top-0 flex-shrink-0 select-none"
     >
-      <div>
+      <div className="flex flex-col flex-1 overflow-y-auto">
         <IconHeader />
         <div className="w-full mt-6">
           {filteredMenuItems.map((item) => (
             <button
               key={item.name}
               onClick={() => setSelectedTab(item.name)}
-              className={`flex items-center gap-4 px-5 py-2 mb-2 w-full transition-all focus:outline-none cursor-pointer ${
+              className={`flex items-center gap-4 px-5 py-2.5 mb-2 w-full transition-all focus:outline-none cursor-pointer ${
                 selectedTab === item.name
                   ? "bg-gradient-to-r from-[#0950D7] via-[#4197C8] to-[#0950D7] text-white shadow-lg border-r-4 border-blue-900"
                   : "hover:bg-gray-800 text-gray-400"
@@ -195,22 +230,17 @@ const Sidebar = ({ selectedTab, setSelectedTab }) => {
           ))}
         </div>
       </div>
-      {/* Clickable Profile Section for Desktop */}
-      {/* <div 
-        className="sticky bottom-64 flex flex-col items-center px-2 cursor-pointer group"
-        onClick={() => setSelectedTab("profile")}
-      >
-        <div className="w-16 h-16 rounded-full border-2 border-blue-500 overflow-hidden mb-2 flex-shrink-0 group-hover:border-blue-400 transition-colors">
-          <img
-            src={imageUrl}
-            alt="Profile"
-            className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-        <span className="text-white text-sm tracking-wide text-center max-w-full group-hover:text-blue-400 transition-colors">
-          {artistName}
-        </span>
-      </div> */}
+
+      {/* Logout button fixed at bottom of Sidebar */}
+      <div className="p-4 border-t border-gray-700/60 w-full mt-auto flex-shrink-0">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-[0.2rem] text-sm font-medium text-gray-200 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 hover:border-red-500 transition-all duration-200 active:scale-95 cursor-pointer"
+        >
+          <IoLogOutOutline className="text-lg" />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };
