@@ -1,5 +1,6 @@
 // ProfileEditForm.jsx
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FiX,
   FiUser,
@@ -8,6 +9,7 @@ import {
   FiPlus,
   FiChevronDown,
   FiTrash2,
+  FiCheck,
 } from "react-icons/fi";
 import {
   FaSpotify,
@@ -24,40 +26,37 @@ import {
 import { toast } from "sonner";
 import { useUpdateArtistProfile } from "../../../hooks/api/useArtistDashboard";
 
-const PRIMARY_PLATFORMS = [
+const ALL_LINK_OPTIONS = [
   {
     key: "portfolio",
-    label: "Portfolio / Website URL",
+    label: "Website",
     placeholder: "https://yourportfolio.com",
-    icon: <FiGlobe className="text-[#38BDF8] text-lg" />,
+    icon: <FiGlobe className="text-[#38BDF8]" />,
   },
   {
     key: "bandcamp",
-    label: "Bandcamp URL",
+    label: "Bandcamp",
     placeholder: "https://yourhandle.bandcamp.com",
-    icon: <FaBandcamp className="text-[#629aa9] text-lg" />,
+    icon: <FaBandcamp className="text-[#629aa9]" />,
   },
   {
     key: "soundcloud",
-    label: "SoundCloud URL",
+    label: "SoundCloud",
     placeholder: "https://soundcloud.com/yourhandle",
-    icon: <FaSoundcloud className="text-[#FF5500] text-lg" />,
+    icon: <FaSoundcloud className="text-[#FF5500]" />,
   },
   {
     key: "spotify",
-    label: "Spotify Profile URL",
+    label: "Spotify",
     placeholder: "https://open.spotify.com/artist/...",
-    icon: <FaSpotify className="text-[#1DB954] text-lg" />,
+    icon: <FaSpotify className="text-[#1DB954]" />,
   },
   {
     key: "apple",
-    label: "Apple Music URL",
+    label: "Apple Music",
     placeholder: "https://music.apple.com/...",
-    icon: <FaApple className="text-[#FA243C] text-lg" />,
-  }
-];
-
-const SOCIAL_DROPDOWN_OPTIONS = [
+    icon: <FaApple className="text-[#FA243C]" />,
+  },
   {
     key: "instagram",
     label: "Instagram",
@@ -90,41 +89,85 @@ const SOCIAL_DROPDOWN_OPTIONS = [
   },
   {
     key: "other",
-    label: "Other Link",
+    label: "Other",
     icon: <FaLink className="text-gray-400" />,
     placeholder: "https://...",
   },
 ];
 
+const getPlatformInfo = (key) =>
+  ALL_LINK_OPTIONS.find((o) => o.key === key) || {
+    key,
+    label: key,
+    placeholder: "https://...",
+    icon: <FaLink className="text-gray-400" />,
+  };
+
 const normalizeUrl = (url) => {
   if (!url) return "";
   let trimmed = url.trim();
   if (!trimmed) return "";
-  if (!/^https?:\/\//i.test(trimmed)) {
-    trimmed = `https://${trimmed}`;
-  }
+  if (!/^https?:\/\//i.test(trimmed)) trimmed = `https://${trimmed}`;
   return trimmed;
+};
+
+const PRIMARY_KEYS = ["portfolio", "bandcamp", "soundcloud", "spotify", "apple"];
+
+// Input row for a link
+const LinkRow = ({ item, onPlatformChange, onUrlChange, onRemove, isLoading }) => {
+  const info = getPlatformInfo(item.platform);
+
+  return (
+    <div className="flex items-center gap-2 group">
+      {/* Platform selector */}
+      <div className="relative flex-shrink-0 w-36">
+        <select
+          value={item.platform}
+          onChange={(e) => onPlatformChange(item.id, e.target.value)}
+          disabled={isLoading}
+          className="w-full h-11 bg-[#0a0f1e] border border-white/15 rounded-lg px-3 pr-7 text-sm text-white/85 appearance-none focus:outline-none focus:border-blue-500/60 cursor-pointer disabled:opacity-50 shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)]"
+        >
+          {ALL_LINK_OPTIONS.map((opt) => (
+            <option key={opt.key} value={opt.key} className="bg-[#0d1527] text-white">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <FiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-white/35 pointer-events-none text-xs" />
+      </div>
+
+      {/* URL input */}
+      <input
+        type="url"
+        placeholder={info.placeholder}
+        value={item.url}
+        onChange={(e) => onUrlChange(item.id, e.target.value)}
+        disabled={isLoading}
+        className="flex-1 h-11 bg-[#0a0f1e] border border-white/15 rounded-lg px-3.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-blue-500/60 focus:bg-[#0c1326] transition-colors shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)] disabled:opacity-50"
+      />
+
+      {/* Remove */}
+      <button
+        type="button"
+        onClick={() => onRemove(item.id)}
+        disabled={isLoading}
+        className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+        title="Remove"
+      >
+        <FiTrash2 className="text-sm" />
+      </button>
+    </div>
+  );
 };
 
 const ProfileEditForm = ({ profile, onSave, onClose }) => {
   const { mutate: updateProfile, isLoading } = useUpdateArtistProfile();
+  const [isClosing, setIsClosing] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    bio: "",
-    location: "",
-    country: "",
-  });
+  const [formData, setFormData] = useState({ name: "", bio: "", location: "", country: "" });
 
-  const [socialsForm, setSocialsForm] = useState({
-    bandcamp: "",
-    soundcloud: "",
-    spotify: "",
-    apple: "",
-    portfolio: "",
-  });
-
-  const [customSocials, setCustomSocials] = useState([]);
+  // Single unified links list: [{id, platform, url}]
+  const [links, setLinks] = useState([{ id: 1, platform: "portfolio", url: "" }]);
 
   useEffect(() => {
     if (profile) {
@@ -135,442 +178,284 @@ const ProfileEditForm = ({ profile, onSave, onClose }) => {
         country: profile.country || "",
       });
 
-      const initialPrimary = {
-        bandcamp: "",
-        soundcloud: "",
-        spotify: "",
-        apple: "",
-        portfolio: "",
-      };
-      const initialCustom = [];
+      const collected = [];
 
       if (profile.socials) {
-        let socialsArray = [];
+        let arr = [];
         if (typeof profile.socials === "string") {
-          try {
-            socialsArray = JSON.parse(profile.socials);
-          } catch {
-            socialsArray = [];
-          }
+          try { arr = JSON.parse(profile.socials); } catch { arr = []; }
         } else if (Array.isArray(profile.socials)) {
-          socialsArray = profile.socials;
+          arr = profile.socials;
         }
 
-        socialsArray.forEach((item, index) => {
-          if (!item || !item.url) return;
-          const platKey = (item.platform || "").toLowerCase();
-          if (
-            platKey === "apple music" ||
-            platKey === "applemusic" ||
-            platKey === "apple_music" ||
-            platKey === "apple"
-          ) {
-            initialPrimary.apple = item.url;
-          } else if (
-            platKey === "portfolio link" ||
-            platKey === "portfoliolink" ||
-            platKey === "website" ||
-            platKey === "portfolio"
-          ) {
-            initialPrimary.portfolio = item.url;
-          } else if (
-            Object.prototype.hasOwnProperty.call(initialPrimary, platKey)
-          ) {
-            initialPrimary[platKey] = item.url;
-          } else {
-            initialCustom.push({
-              id: Date.now() + index,
-              platform: platKey,
-              url: item.url,
-            });
-          }
+        arr.forEach((item, idx) => {
+          if (!item?.url) return;
+          let key = (item.platform || "").toLowerCase().replace(/[^a-z]/g, "");
+          if (key === "applemusic" || key === "applemusic" || key === "applemusic") key = "apple";
+          if (key === "portfoliolink" || key === "website") key = "portfolio";
+          if (!ALL_LINK_OPTIONS.find((o) => o.key === key)) key = "other";
+          collected.push({ id: Date.now() + idx, platform: key, url: item.url });
         });
       }
 
-      if (
-        !initialPrimary.portfolio &&
-        (profile.portfolioLink || profile.portfolio || profile.website)
-      ) {
-        initialPrimary.portfolio =
-          profile.portfolioLink || profile.portfolio || profile.website || "";
+      // portfolio from dedicated field
+      if (!collected.find((l) => l.platform === "portfolio")) {
+        const pUrl = profile.portfolioLink || profile.portfolio || profile.website || "";
+        if (pUrl) collected.unshift({ id: Date.now(), platform: "portfolio", url: pUrl });
       }
 
-      setSocialsForm(initialPrimary);
-      setCustomSocials(initialCustom);
+      setLinks(
+        collected.length > 0
+          ? collected
+          : [{ id: Date.now(), platform: "portfolio", url: "" }]
+      );
     }
   }, [profile]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => { onClose(); setIsClosing(false); }, 250);
   };
 
-  const handleAddSocial = () => {
-    const usedKeys = customSocials.map((s) => s.platform);
-    const available = SOCIAL_DROPDOWN_OPTIONS.find(
-      (opt) => opt.key !== "other" && !usedKeys.includes(opt.key)
-    );
-    const nextPlatform = available ? available.key : "instagram";
-    setCustomSocials((prev) => [
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const addLink = () => {
+    const usedKeys = links.map((l) => l.platform);
+    const next = ALL_LINK_OPTIONS.find((o) => o.key !== "other" && !usedKeys.includes(o.key));
+    setLinks((prev) => [
       ...prev,
-      { id: Date.now() + Math.random(), platform: nextPlatform, url: "" },
+      { id: Date.now() + Math.random(), platform: next?.key || "other", url: "" },
     ]);
   };
 
-  const handlePlatformChange = (id, newPlatform) => {
-    setCustomSocials((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, platform: newPlatform } : item
-      )
-    );
-  };
+  const updatePlatform = (id, plat) =>
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, platform: plat } : l)));
 
-  const handleUrlChange = (id, newUrl) => {
-    setCustomSocials((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, url: newUrl } : item
-      )
-    );
-  };
+  const updateUrl = (id, url) =>
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, url } : l)));
 
-  const handleRemoveSocial = (id) => {
-    setCustomSocials((prev) => prev.filter((item) => item.id !== id));
-  };
+  const removeLink = (id) =>
+    setLinks((prev) => {
+      const next = prev.filter((l) => l.id !== id);
+      return next.length === 0 ? [{ id: Date.now(), platform: "portfolio", url: "" }] : next;
+    });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Primary 5 links
-    const primaryPayload = Object.entries(socialsForm)
-      .filter(([, url]) => url && url.trim().length > 0)
-      .map(([platform, url]) => ({
-        platform,
-        url: normalizeUrl(url),
-      }));
+    const socialsPayload = links
+      .filter((l) => l.url?.trim())
+      .map((l) => ({ platform: l.platform, url: normalizeUrl(l.url) }));
 
-    // Dynamic additional links
-    const customPayload = customSocials
-      .filter((item) => item.url && item.url.trim().length > 0)
-      .map((item) => ({
-        platform: item.platform,
-        url: normalizeUrl(item.url),
-      }));
-
-    const socialsPayload = [...primaryPayload, ...customPayload];
-
-    const profileData = {
-      name: formData.name,
-      bio: formData.bio || "",
-      location: formData.location || "",
-      country: formData.country || "",
-      socials: socialsPayload,
-    };
-
-    updateProfile(profileData, {
-      onSuccess: () => {
-        toast.success("Profile updated successfully!");
-        if (onSave) onSave();
-        if (onClose) onClose();
-      },
-      onError: (error) => {
-        const errorMessage =
-          error?.response?.data?.message || "Failed to update profile";
-        toast.error(errorMessage);
-      },
-    });
+    updateProfile(
+      { name: formData.name, bio: formData.bio || "", location: formData.location || "", country: formData.country || "", socials: socialsPayload },
+      {
+        onSuccess: () => {
+          toast.success("Profile updated!");
+          if (onSave) onSave();
+          handleClose();
+        },
+        onError: (err) => {
+          toast.error(err?.response?.data?.message || "Failed to update profile");
+        },
+      }
+    );
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <>
+      {/* Backdrop */}
       <div
-        className="bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl my-auto shadow-2xl shadow-black/50 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <div>
-            <h2 className="text-xl font-bold text-white">
-              Edit Profile Information
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Update your profile details and streaming links
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-all duration-200 disabled:opacity-50"
-            disabled={isLoading}
-          >
-            <FiX className="text-lg text-gray-400 hover:text-white" />
-          </button>
-        </div>
+        className={`fixed inset-0 z-[99998] transition-all duration-250 ease-out ${
+          isClosing ? "opacity-0" : "bg-black/70 backdrop-blur-sm"
+        }`}
+        onClick={handleClose}
+      />
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Artist Name <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 pl-10"
-                  placeholder="Enter your artist name"
-                  required
-                  disabled={isLoading}
-                />
-                <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-              </div>
-            </div>
+      {/* Modal */}
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-y-auto">
+        <div
+          className={`subscription-wrapper w-full max-w-[32rem] transition-all duration-250 ease-out transform ${
+            isClosing ? "opacity-0 scale-95 translate-y-2" : "opacity-100 scale-100 translate-y-0"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="relative subscription-card text-left max-h-[90vh] overflow-y-auto">
+            {/* Close */}
+            <button
+              onClick={handleClose}
+              disabled={isLoading}
+              className="absolute top-3 right-3 text-white/30 hover:text-white/70 p-1.5 rounded-lg hover:bg-white/5 transition-all z-10 cursor-pointer"
+            >
+              <FiX className="text-base" />
+            </button>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Biography
-              </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                rows="4"
-                className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
-                placeholder="Tell your story..."
-                disabled={isLoading}
-                maxLength="500"
-              />
-              <div className="text-right mt-1">
-                <span
-                  className={`text-xs ${formData.bio.length > 500
-                    ? "text-red-400"
-                    : "text-gray-400"
-                    }`}
-                >
-                  {formData.bio.length}/500
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Location (City)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 pl-10"
-                    placeholder="e.g., Los Angeles"
-                    disabled={isLoading}
-                  />
-                  <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            {/* Header */}
+            <div className="px-6 pt-6 pb-5 border-b border-white/8 text-left">
+              <div className="flex items-center gap-3">
+                <div className="button-wrapper w-10 h-10 rounded-xl flex-shrink-0">
+                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-blue-500 to-blue-800 flex items-center justify-center">
+                    <FiUser className="text-lg text-white" />
+                  </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Country
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 pl-10"
-                    placeholder="e.g., United States"
-                    disabled={isLoading}
-                  />
-                  <FiGlobe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <div>
+                  <h2 className="text-xl font-bold text-white leading-tight">Edit Profile</h2>
+                  <p className="text-sm text-white/40">Update your profile and links</p>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Social & Streaming Links Section */}
-          <div className="pt-2 border-t border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-base font-semibold text-white">
-                  Social & Streaming Links
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Add links to your profiles so listeners can connect with you across platforms
-                </p>
-              </div>
-              {customSocials.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleAddSocial}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 hover:text-blue-300 border border-blue-500/30 rounded-lg text-xs font-medium transition-all cursor-pointer flex-shrink-0"
-                >
-                  <FiPlus className="text-sm" />
-                  <span>Add Link</span>
-                </button>
-              )}
-            </div>
-
-            {/* Combined 2-Column Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Primary 5 Platforms */}
-              {PRIMARY_PLATFORMS.map((platform) => (
-                <div key={platform.key}>
-                  <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                    {platform.label}
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+              <div className="px-6 pt-5 pb-2 space-y-4 text-left">
+                {/* Artist Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-2">
+                    Artist Name <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
+                    <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35 text-sm pointer-events-none" />
                     <input
-                      type="url"
-                      placeholder={platform.placeholder}
-                      value={socialsForm[platform.key] || ""}
-                      onChange={(e) =>
-                        setSocialsForm((prev) => ({
-                          ...prev,
-                          [platform.key]: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 pl-10"
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
                       disabled={isLoading}
+                      placeholder="Your artist name"
+                      className="w-full h-11 bg-[#0a0f1e] border border-white/15 rounded-lg pl-10 pr-4 text-sm text-white placeholder-white/25 focus:outline-none focus:border-blue-500/60 focus:bg-[#0c1326] transition-colors shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)] disabled:opacity-50"
                     />
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center pointer-events-none">
-                      {platform.icon}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+                      Bio
+                    </label>
+                    <span className={`text-xs font-medium ${formData.bio.length > 450 ? "text-red-400" : "text-white/35"}`}>
+                      {formData.bio.length}/500
+                    </span>
+                  </div>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    rows="3"
+                    maxLength="500"
+                    disabled={isLoading}
+                    placeholder="Write a short bio..."
+                    className="w-full bg-[#0a0f1e] border border-white/15 rounded-lg px-3.5 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-blue-500/60 focus:bg-[#0c1326] transition-colors shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)] resize-none disabled:opacity-50"
+                  />
+                </div>
+
+                {/* City + Country */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-2">
+                      City
+                    </label>
+                    <div className="relative">
+                      <FiMapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35 text-sm pointer-events-none" />
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        placeholder="Los Angeles"
+                        className="w-full h-11 bg-[#0a0f1e] border border-white/15 rounded-lg pl-10 pr-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-blue-500/60 focus:bg-[#0c1326] transition-colors shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)] disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-2">
+                      Country
+                    </label>
+                    <div className="relative">
+                      <FiGlobe className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35 text-sm pointer-events-none" />
+                      <input
+                        type="text"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        placeholder="United States"
+                        className="w-full h-11 bg-[#0a0f1e] border border-white/15 rounded-lg pl-10 pr-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-blue-500/60 focus:bg-[#0c1326] transition-colors shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)] disabled:opacity-50"
+                      />
                     </div>
                   </div>
                 </div>
-              ))}
 
-              {/* Dynamic Added Social Links */}
-              {customSocials.map((item) => {
-                const selectedOption =
-                  SOCIAL_DROPDOWN_OPTIONS.find(
-                    (opt) => opt.key === item.platform
-                  ) || {
-                    key: item.platform,
-                    label: item.platform,
-                    placeholder: "https://...",
-                    icon: <FaLink className="text-gray-400" />,
-                  };
+                {/* Divider */}
+                <div className="h-px bg-white/8" />
 
-                return (
-                  <div key={item.id}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-medium text-gray-300">
-                        {selectedOption.label} URL
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSocial(item.id)}
-                        className="text-gray-500 hover:text-red-400 transition-colors p-0.5 cursor-pointer text-xs flex items-center gap-1"
-                        title="Remove link"
-                      >
-                        <FiTrash2 className="text-xs" />
-                        <span className="text-[10px]">Remove</span>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      {/* Platform Dropdown */}
-                      <div className="relative w-32 sm:w-36 flex-shrink-0">
-                        <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-xs">
-                          {selectedOption.icon}
-                        </div>
-                        <select
-                          value={item.platform}
-                          onChange={(e) =>
-                            handlePlatformChange(item.id, e.target.value)
-                          }
-                          className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2.5 pl-7 pr-6 text-xs text-white appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-                          disabled={isLoading}
-                        >
-                          {SOCIAL_DROPDOWN_OPTIONS.map((opt) => (
-                            <option
-                              key={opt.key}
-                              value={opt.key}
-                              className="bg-gray-800 text-white"
-                            >
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                        <FiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs" />
-                      </div>
-
-                      {/* URL Input */}
-                      <div className="relative flex-1">
-                        <input
-                          type="url"
-                          placeholder={selectedOption.placeholder}
-                          value={item.url}
-                          onChange={(e) =>
-                            handleUrlChange(item.id, e.target.value)
-                          }
-                          className="w-full p-2.5 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* When total items in grid is odd, fill the next slot with "+ Add Link" card */}
-              {(PRIMARY_PLATFORMS.length + customSocials.length) % 2 !== 0 && (
+                {/* Links */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                    {customSocials.length === 0
-                      ? "Additional Socials"
-                      : "Add Another"}
+                  <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">
+                    Links
                   </label>
+
+                  <div className="space-y-2.5">
+                    {links.map((item) => (
+                      <LinkRow
+                        key={item.id}
+                        item={item}
+                        onPlatformChange={updatePlatform}
+                        onUrlChange={updateUrl}
+                        onRemove={removeLink}
+                        isLoading={isLoading}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Add link — full width, below links */}
                   <button
                     type="button"
-                    onClick={handleAddSocial}
-                    className="w-full h-[42px] px-3 bg-gray-900/60 hover:bg-gray-800/80 border border-dashed border-gray-700 hover:border-gray-500 rounded-lg text-xs font-medium text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                    onClick={addLink}
+                    disabled={isLoading}
+                    className="mt-2.5 w-full h-10 flex items-center justify-center gap-2 border border-dashed border-white/15 hover:border-blue-400/40 hover:bg-blue-500/5 text-white/35 hover:text-blue-300 rounded-lg text-sm transition-all cursor-pointer disabled:opacity-40"
                   >
-                    <FiPlus className="text-blue-400 group-hover:scale-110 transition-transform text-sm" />
-                    <span>
-                      {customSocials.length === 0
-                        ? "Add More (Instagram, YouTube, etc.)"
-                        : "Add Another Social Link"}
-                    </span>
+                    <FiPlus className="text-sm" />
+                    <span>Add Link</span>
                   </button>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-lg transition-all duration-200 font-medium border border-gray-700 hover:border-gray-600 disabled:opacity-50"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </button>
+              {/* Actions — only Save */}
+              <div className="px-6 pt-5 pb-6">
+                <div className="button-wrapper !w-full !inline-block">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="custom-button !w-full !h-11 !text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiCheck className="text-sm" />
+                        <span>Save Changes</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </>,
+    document.body
   );
 };
 
