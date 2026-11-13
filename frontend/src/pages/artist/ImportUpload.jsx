@@ -1074,46 +1074,78 @@ export default function ImportUpload({ onCancel, onComplete, draftId }) {
     );
   }
 
+  // Shared panel styles (matches Analytics + Revenue + Team tabs)
+  const innerPanel3dStyle = {
+    background: "radial-gradient(ellipse at 50% 0%, #151e32 0%, #090e1a 100%)",
+    boxShadow:
+      "inset 0 3px 8px rgba(0,0,0,0.75), inset 0 1px 2px rgba(0,0,0,0.9), inset 0 -1px 1px rgba(255,255,255,0.05)",
+  };
+
+  const sunkenInputStyle = {
+    background: "radial-gradient(ellipse at 50% 0%, #0d1527 0%, #050811 100%)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow:
+      "inset 0 3px 6px rgba(0,0,0,0.9), inset 0 1px 2px rgba(0,0,0,0.95), 0 1px 0 rgba(255,255,255,0.04)",
+  };
+
   // ================= RENDER METHOD 3: NEW DISCOGRAPHY SYNC GRID =================
   return (
-    <div className="min-h-screen bg-[#09090D] text-[#dfe3e9] font-['Jura'] p-6 md:p-12 flex flex-col gap-8 pb-32 select-none relative overflow-x-hidden animate-fadeIn">
+    <div className="p-4 md:p-6 space-y-6 font-['Jura'] text-white select-none">
 
       {/* ================= STATE 1: INITIAL SEARCH PANEL ================= */}
       {!artistProfile && (
-        <div className="flex flex-col gap-4">
-          <section className="bg-[#0A0A23]/90 backdrop-blur-[44px] border border-[#4DB3FF]/40 rounded-xl p-8 flex flex-col items-center justify-center text-center max-w-5xl mx-auto w-full mt-8 shadow-[0_0_40px_rgba(77,179,255,0.15)] animate-fadeIn">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#4DB3FF] mb-3 uppercase font-['Jura']">
-              IMPORT YOUR CATALOG
-            </h1>
-            <p className="text-sm md:text-base text-gray-300 mb-8 max-w-xl font-['Jura']">
-              Paste your Bandcamp profile URL below to automatically fetch and import all your albums at once.
-            </p>
+        <div className="space-y-6">
 
-            <div className="flex flex-col md:flex-row w-full gap-4 max-w-4xl">
-              <div className="relative flex-grow">
-                <IoLinkOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4DB3FF]/80 text-xl" />
-                <input
-                  type="url"
-                  value={discographyUrl}
-                  onChange={(e) => setDiscographyUrl(e.target.value)}
-                  className="w-full bg-[#09090D] border border-[#4DB3FF]/40 focus:border-[#4DB3FF] focus:shadow-[0_0_15px_rgba(77,179,255,0.3)] rounded-lg py-3.5 pl-12 pr-4 text-white text-sm outline-none transition-all placeholder:text-gray-500 font-mono tracking-wide"
-                  placeholder="https://artistname.bandcamp.com"
-                />
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              Import Catalog
+            </h1>
+          </div>
+
+          {/* Main import panel */}
+          <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/10 via-white/5 to-transparent">
+            <div className="rounded-2xl p-6 sm:p-10 flex flex-col items-center text-center" style={innerPanel3dStyle}>
+
+              {/* Icon */}
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 bg-[#0459FE]/15 border border-[#0459FE]/25 text-[#38bdf8]">
+                <IoDownloadOutline className="text-2xl" />
               </div>
-              <button
-                onClick={handleDiscographyScrape}
-                disabled={loading || !discographyUrl.trim()}
-                className="px-8 py-3.5 text-sm font-semibold text-white rounded-lg transition-all duration-300 hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 shrink-0 group cursor-pointer disabled:opacity-55 disabled:pointer-events-none"
-                style={{
-                  background: 'linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)',
-                  boxShadow: '0 0 15px rgba(51, 128, 255, 0.2)',
-                }}
-              >
-                <IoSync className={`text-lg ${loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
-                {loading ? "Fetching Catalog..." : "Fetch Catalog"}
-              </button>
+
+              <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight mb-2">
+                Import Your Catalog
+              </h2>
+              <p className="text-sm text-slate-400 mb-8 max-w-md">
+                Paste your Bandcamp profile URL to automatically fetch and import all your albums at once.
+              </p>
+
+              {/* Input row */}
+              <div className="flex flex-col sm:flex-row w-full gap-3 max-w-2xl">
+                <div className="relative flex-grow">
+                  <IoLinkOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none" />
+                  <input
+                    type="url"
+                    value={discographyUrl}
+                    onChange={(e) => setDiscographyUrl(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-white text-sm outline-none focus:border-[#0459FE] focus:ring-1 focus:ring-[#0459FE] transition-colors placeholder:text-slate-500"
+                    style={sunkenInputStyle}
+                    placeholder="https://artistname.bandcamp.com"
+                  />
+                </div>
+                <button
+                  onClick={handleDiscographyScrape}
+                  disabled={loading || !discographyUrl.trim()}
+                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "linear-gradient(45deg, #0F3272 0%, #1A5DB4 60%, #3380FF 100%)" }}
+                >
+                  <IoSync className={`text-base ${loading ? "animate-spin" : ""}`} />
+                  {loading ? "Fetching..." : "Fetch Catalog"}
+                </button>
+              </div>
+
             </div>
-          </section>
+          </div>
+
         </div>
       )}
 

@@ -42,7 +42,8 @@ const Register = () => {
   });
 
   useEffect(() => {
-    analytics.track(EVENT_TYPES.SIGNUP_STARTED, { source: "web_register_page" });
+    analytics.track(EVENT_TYPES.SIGNUP_STARTED, { source: "web_register_page" }, {}, { immediate: true });
+    analytics.flush();
   }, []);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ const Register = () => {
       analytics.track(EVENT_TYPES.SIGNUP_COMPLETED, {
         method: "email",
         role: user.role,
-      });
+      }, {}, { immediate: true });
       if (user._id) {
         analytics.identify(user._id, {
           email: user.email,
@@ -58,6 +59,7 @@ const Register = () => {
           role: user.role,
         });
       }
+      analytics.flush();
       const timer = setTimeout(async () => {
         try {
           localStorage.setItem("justRegistered", "true");
