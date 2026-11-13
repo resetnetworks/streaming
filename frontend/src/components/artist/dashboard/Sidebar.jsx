@@ -16,14 +16,13 @@ import { useArtistProfile } from "../../../hooks/api/useArtists";
 import { useMyWorkspaces } from "../../../hooks/api/useWorkspace";
 
 const menuItems = [
-  { name: "profile", icon: <FaRegUserCircle size={20} /> },
-  { name: "uploads", icon: <FiMusic size={20} strokeWidth={1.5} />, permission: "uploadSong" },
-  { name: "revenue", icon: <FaWallet size={20} />, permission: "viewPayments" },
   { name: "dashboard", icon: <RxDashboard size={20} />, permission: "viewAnalytics" },
-  { name: "adverts", icon: <FaAd size={20} />, permission: "viewAnalytics" },
+  { name: "profile",   icon: <FaRegUserCircle size={20} /> },
+  { name: "uploads",   icon: <FiMusic size={20} strokeWidth={1.5} />, permission: "uploadSong" },
+  { name: "revenue",   icon: <FaWallet size={20} />, permission: "viewPayments" },
   { name: "referrals", label: "Referral Program", icon: <FaGift size={20} /> },
-  { name: "team", icon: <FaUsers size={20} />, permission: "manageTeam" },
-  // { name: "insights", icon: <FaChartLine size={18} /> },
+  { name: "team",      icon: <FaUsers size={20} />, permission: "manageTeam" },
+  { name: "adverts",   icon: <FaAd size={20} />, permission: "viewAnalytics" },
 ];
 
 const Sidebar = ({ selectedTab, setSelectedTab }) => {

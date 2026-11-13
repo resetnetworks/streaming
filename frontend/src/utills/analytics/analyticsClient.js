@@ -49,9 +49,10 @@ export class AnalyticsClient {
    * @param {string} eventName - One of registered EVENT_TYPES
    * @param {Object} properties - Custom event properties
    * @param {Object} entities - Optional { songId, albumId, artistId }
+   * @param {Object} options - Optional tracking options e.g. { immediate: true }
    * @returns {Object|null} Sanitized event if queued, null if invalid
    */
-  track(eventName, properties = {}, entities = {}) {
+  track(eventName, properties = {}, entities = {}, options = {}) {
     if (!this.initialized) {
       this.init();
     }
@@ -64,6 +65,17 @@ export class AnalyticsClient {
     }
 
     this.queue.enqueue(sanitized);
+
+    // Fast-path immediate flush for time-sensitive conversion events
+    if (
+      options?.immediate ||
+      eventName === EVENT_TYPES.SIGNUP_COMPLETED ||
+      eventName === EVENT_TYPES.PAYMENT_COMPLETED ||
+      eventName === EVENT_TYPES.LOGIN_COMPLETED
+    ) {
+      this.queue.flush();
+    }
+
     return sanitized;
   }
 

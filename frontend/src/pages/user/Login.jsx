@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../features/auth/authSlice";
 import { toast } from "sonner";
+import { analytics } from "../../utills/analytics/index.js";
 
 import PageSEO from "../../components/PageSeo/PageSEO";
 
@@ -35,6 +36,13 @@ const Login = () => {
       .unwrap()
       .then((loggedUser) => {
         toast.success("Login successful");
+        if (loggedUser?._id) {
+          analytics.identify(loggedUser._id, {
+            email: loggedUser.email,
+            role: loggedUser.role,
+          });
+          analytics.flush();
+        }
         if (loggedUser?.role === "artist") {
           navigate("/artist/dashboard");
         } else {
