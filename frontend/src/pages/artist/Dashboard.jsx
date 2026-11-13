@@ -18,6 +18,7 @@ import { useMyWorkspaces } from "../../hooks/api/useWorkspace";
 import TeamComponent from "../../components/artist/team/TeamComponent";
 import AdvertsComponent from "../../components/artist/adverts/AdvertsComponent";
 import ReferralComponent from "../../components/artist/referrals/ReferralComponent";
+import ArtistReferralBanner from "../../components/artist/referrals/ArtistReferralBanner";
 
 // Static tab components (no props needed)
 const tabComponents = {
@@ -316,6 +317,7 @@ export default function Dashboard() {
       return (
         <HomeComponent
           workspace={activeWorkspace}
+          onNavigateToTab={(tab) => setSelectedTab(tab)}
           onNavigateToUploads={(subTab) => {
             if (subTab) {
               setUploadedTabToShow(subTab);
@@ -355,6 +357,12 @@ export default function Dashboard() {
           </div>
 
           <main className="flex-grow relative overflow-y-auto">
+            {/* Top Referral Program Banner across tabs (excluding profile and referrals) */}
+            {!currentUploadPage && selectedTab !== "referrals" && selectedTab !== "profile" && (
+              <div className="px-4 md:px-6 pt-4 pb-0">
+                <ArtistReferralBanner onNavigate={() => setSelectedTab("referrals")} />
+              </div>
+            )}
             {renderMainContent()}
           </main>
         </div>
