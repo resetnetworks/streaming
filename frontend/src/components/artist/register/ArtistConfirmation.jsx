@@ -2,26 +2,26 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useMyApplication } from '../../../hooks/api/useArtistApplications';
-import { 
-  MdCheckCircle, 
-  MdOutlineVerified, 
-  MdHome, 
+import {
+  MdCheckCircle,
+  MdOutlineVerified,
+  MdHome,
   MdHourglassEmpty,
   MdCancel,
   MdRefresh
 } from 'react-icons/md';
 import Loader from '../../Loader';
-const ArtistConfirmation = ({ onReapply }) => {
-  const myApplicationQuery = useMyApplication();
-  const application = myApplicationQuery.data;
+const ArtistConfirmation = ({ onReapply, applicationData }) => {
+  const myApplicationQuery = useMyApplication({ enabled: !applicationData });
+  const application = applicationData || myApplicationQuery.data;
 
   // Scroll to top when component loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-  
+
   // If loading
-  if (myApplicationQuery.isLoading) {
+  if (!application && myApplicationQuery.isLoading) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-6">
         <Loader noBg={true} />
@@ -51,7 +51,7 @@ const ArtistConfirmation = ({ onReapply }) => {
 
   // Get status configuration
   const getStatusConfig = () => {
-    switch(status) {
+    switch (status) {
       case 'pending':
       case 'under_review':
       case 'submitted':
@@ -95,7 +95,7 @@ const ArtistConfirmation = ({ onReapply }) => {
           showReapply: false
         };
     }
-  };  const statusConfig = getStatusConfig();
+  }; const statusConfig = getStatusConfig();
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -107,7 +107,7 @@ const ArtistConfirmation = ({ onReapply }) => {
 
   return (
     <div className="text-white flex flex-col items-center justify-center min-h-[60vh] px-4 py-8 w-full max-w-[650px] mx-auto mt-6">
-      <div 
+      <div
         className="w-full rounded-[24px] p-8 mt-4 flex flex-col items-center"
         style={{
           background: 'linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%)',
@@ -123,11 +123,11 @@ const ArtistConfirmation = ({ onReapply }) => {
         <div className="mb-4 flex items-center justify-center">
           {statusConfig.icon}
         </div>
-        
+
         <h1 className="text-2xl font-bold text-white mb-2 text-center">
           {statusConfig.title}
         </h1>
-        
+
         <p className="text-slate-400 text-sm mb-6 text-center">
           {statusConfig.subtitle}
         </p>
@@ -135,15 +135,15 @@ const ArtistConfirmation = ({ onReapply }) => {
         {/* Application Details Card */}
         <div className="bg-slate-950/40 rounded-xl p-5 mb-6 border border-slate-700/60 w-full">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <div className={`w-2.5 h-2.5 ${statusConfig.statusColor === 'text-yellow-400' ? 'bg-yellow-500' : 
-                           statusConfig.statusColor === 'text-green-400' ? 'bg-green-500' :
-                           statusConfig.statusColor === 'text-red-400' ? 'bg-red-500' : 'bg-blue-500'} 
+            <div className={`w-2.5 h-2.5 ${statusConfig.statusColor === 'text-yellow-400' ? 'bg-yellow-500' :
+              statusConfig.statusColor === 'text-green-400' ? 'bg-green-500' :
+                statusConfig.statusColor === 'text-red-400' ? 'bg-red-500' : 'bg-blue-500'} 
                            rounded-full animate-pulse`}></div>
             <span className={`text-xs font-semibold uppercase tracking-wider ${statusConfig.statusColor}`}>
               {statusConfig.statusText}
             </span>
           </div>
-          
+
           <div className="space-y-2.5 text-xs">
             <div className="flex justify-between">
               <span className="text-slate-400">Application ID:</span>

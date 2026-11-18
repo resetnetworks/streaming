@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import IconHeader from "../../components/user/IconHeader";
 import ProgressTracker from '../../components/artist/register/ProgressTracker';
@@ -10,10 +11,12 @@ import { useSelector } from "react-redux";
 import { selectIsAuthenticated, selectCurrentUser } from "../../features/auth/authSelectors";
 import { useMyApplication, useCheckUserArtistRole } from "../../hooks/api/useArtistApplications";
 import Loader from "../../components/Loader";
+import { ArtistApplicationFormContext } from "../../context/ArtistApplicationFormContext";
 
-export const ArtistApplicationFormContext = React.createContext();
+export { ArtistApplicationFormContext };
 
 const ArtistRegister = () => {
+  const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
 
@@ -233,10 +236,24 @@ const ArtistRegister = () => {
       return;
     }
 
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("reapply") === "true") {
+        setSkipApplicationCheck(true);
+        setShowExistingApplication(false);
+        if (isAuthenticated) {
+          setCurrentStep(1);
+        }
+        return;
+      }
+    } catch (e) {
+      console.error("Error reading reapply param:", e);
+    }
+
     if (!fetchLoading && !userCheckLoading && myApplication) {
       if (myApplication.status !== 'rejected') {
-        setShowExistingApplication(true);
-        setCurrentStep(2); // Go directly to confirmation step
+        // Redirect to dedicated conversion URL so ads tracking records conversions properly
+        navigate('/artist/application-submitted', { replace: true });
       } else if (myApplication.status === 'rejected') {
         setShowExistingApplication(false);
         if (isAuthenticated) {
@@ -244,7 +261,7 @@ const ArtistRegister = () => {
         }
       }
     }
-  }, [myApplication, fetchLoading, isAuthenticated, skipApplicationCheck, userCheckLoading]);
+  }, [myApplication, fetchLoading, isAuthenticated, skipApplicationCheck, userCheckLoading, navigate]);
 
   // Set initial step based on authentication status
   useEffect(() => {
@@ -326,12 +343,16 @@ const ArtistRegister = () => {
     setCurrentStep(prev => Math.max(0, prev - 1));
   };
 
-  const submitForm = () => {
-    nextStep();
+  const submitForm = (submittedData) => {
+    navigate('/artist/application-submitted', {
+      replace: true,
+      state: { justSubmitted: true, application: submittedData?.data || submittedData }
+    });
   };
 
   const handleReapply = () => {
     setShowExistingApplication(false);
+    setSkipApplicationCheck(true);
     if (isAuthenticated) {
       setCurrentStep(1);
     } else {
