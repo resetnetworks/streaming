@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSubmitApplication } from '../../../hooks/api/useArtistApplications';
-import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
+import { ArtistApplicationFormContext } from '../../../context/ArtistApplicationFormContext';
 import { documentKycApi } from '../../../api/documentKycApi';
 import { countries } from '../../../utills/countries';
 import { MdPerson, MdPublic, MdFolderOpen, MdKeyboardDoubleArrowLeft, MdLink, MdCardGiftcard } from 'react-icons/md';
@@ -314,14 +314,14 @@ const ArtistProfileDetails = ({ nextStep, prevStep, submitForm }) => {
       setIsUploading(false);
 
       const payloadToSend = prepareSubmissionPayload(uploadedDocuments);
-      await submitApplicationMutation.mutateAsync(payloadToSend);
+      const response = await submitApplicationMutation.mutateAsync(payloadToSend);
 
       documents.forEach(doc => {
         if (doc.previewUrl) URL.revokeObjectURL(doc.previewUrl);
       });
 
       clearFormData();
-      submitForm();
+      submitForm(response);
     } catch (error) {
       setIsUploading(false);
       console.error('Submission error:', error);

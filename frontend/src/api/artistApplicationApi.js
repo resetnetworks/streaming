@@ -9,11 +9,11 @@ export const artistApplicationApi = {
 
   fetchMyApplication: async () => {
     const res = await axios.get("/v2/artist/application/me");
-    return res.data.application || res.data;
+    return res.data?.application !== undefined ? res.data.application : res.data;
   },
 
   checkUserRole: async () => {
-    const res = await axios.get("/v2/auth/me");
-    return res.data.user || res.data;
+    const res = await axios.get("/users/me");
+    return res.data?.user || res.data;
   },
 };

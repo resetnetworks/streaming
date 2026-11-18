@@ -7,7 +7,7 @@ import { validators } from '../../../utills/validators';
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser, verifyRegistration } from '../../../features/auth/authSlice';
-import { ArtistApplicationFormContext } from '../../../pages/artist/ArtistRegister';
+import { ArtistApplicationFormContext } from '../../../context/ArtistApplicationFormContext';
 
 const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
   const dispatch = useDispatch();
@@ -124,7 +124,7 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
 
     try {
       const userData = await dispatch(verifyRegistration({ email: formData.email, otp })).unwrap();
-      
+
       toast.success("Account created! Continuing to artist application...");
 
       // Store basic user info in artist application Context
@@ -311,7 +311,7 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
       {/* OTP Verification Modal */}
       {step === "verify" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
-          <div 
+          <div
             className="w-full max-w-[400px] rounded-[24px] p-8 flex flex-col items-center relative animate-fade-in-up"
             style={{
               background: 'linear-gradient(145deg, #0D1B3F 0%, #0A0A23 100%)',
@@ -323,21 +323,21 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
             `,
             }}
           >
-            <button 
+            <button
               type="button"
               onClick={() => setStep("register")}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
             >
               ✕
             </button>
-            
+
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">Verify Email</h2>
               <p className="text-slate-400 text-sm">
-                We've sent a 6-digit code to <br/><strong>{formData.email}</strong>
+                We've sent a 6-digit code to <br /><strong>{formData.email}</strong>
               </p>
             </div>
-            
+
             <form onSubmit={handleVerifySubmit} className="w-full" noValidate>
               <div className="w-full mb-2">
                 <label htmlFor="otp" className="block text-sm font-medium text-slate-300 uppercase tracking-wider text-center">Verification Code</label>
@@ -361,13 +361,12 @@ const ArtistBasicInfo = ({ onRegistrationSuccess }) => {
                   return (
                     <div
                       key={index}
-                      className={`w-12 h-14 flex items-center justify-center text-xl font-bold bg-[#0A0A23] text-white border rounded-lg transition-colors relative ${
-                        isActive ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"
-                      }`}
+                      className={`w-12 h-14 flex items-center justify-center text-xl font-bold bg-[#0A0A23] text-white border rounded-lg transition-colors relative ${isActive ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"
+                        }`}
                     >
                       {char}
                       {isActive && (
-                        <span 
+                        <span
                           className={`absolute w-[2px] h-6 bg-blue-500 animate-pulse ${char ? 'ml-4' : ''}`}
                           style={{ animationDuration: '1s' }}
                         />

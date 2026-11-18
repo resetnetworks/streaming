@@ -315,6 +315,14 @@ useEffect(() => {
             element={<Pages.ArtistRegister />}
             />
             <Route 
+            path="/artist/application-submitted"
+            element={<Pages.ArtistApplicationSubmitted />}
+            />
+            <Route 
+            path="/artist/application-status"
+            element={<Pages.ArtistApplicationSubmitted />}
+            />
+            <Route 
             path="/artist/dashboard"
             element={
             <ArtistRoute
