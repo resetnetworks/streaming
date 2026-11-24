@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { FiMapPin, FiAlertTriangle, FiX, FiUserPlus, FiCheck, FiUserMinus } from "react-icons/fi";
+import { FiMapPin, FiAlertTriangle, FiX, FiUserPlus, FiUserMinus } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import {
   useIsArtistFollowed,
@@ -430,7 +430,6 @@ const ArtistHeroSection = ({
                       transition={{ duration: 0.18, ease: "easeOut" }}
                       className="flex items-center justify-center gap-1.5"
                     >
-                      <FiCheck className="text-[#4DB3FF] text-xs shrink-0" />
                       <span>Following</span>
                     </motion.span>
                   ) : (
@@ -570,7 +569,6 @@ const ArtistHeroSection = ({
                           transition={{ duration: 0.18, ease: "easeOut" }}
                           className="flex items-center justify-center gap-2"
                         >
-                          <FiCheck className="text-[#4DB3FF] text-base shrink-0" />
                           <span>Following</span>
                         </motion.span>
                       ) : (
