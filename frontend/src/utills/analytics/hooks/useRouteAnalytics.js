@@ -82,9 +82,33 @@ export function useRouteAnalytics() {
     if (lastPathRef.current === currentPath) {
       return;
     }
+    const isFirstLoad = lastPathRef.current === null;
     lastPathRef.current = currentPath;
 
     const { eventName, entities, properties } = matchRouteToEvent(currentPath);
+
+    // Send SPA page_view on subsequent route changes to GA4, GTM, and Meta Pixel
+    // (Initial page load is already sent by index.html to avoid duplicate counts)
+    if (!isFirstLoad && typeof window !== "undefined") {
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "page_view", {
+          page_path: currentPath + (location.search || ""),
+          page_location: window.location.href,
+          page_title: document.title,
+        });
+      }
+      if (Array.isArray(window.dataLayer)) {
+        window.dataLayer.push({
+          event: "page_view",
+          page_path: currentPath + (location.search || ""),
+          page_location: window.location.href,
+          page_title: document.title,
+        });
+      }
+      if (typeof window.fbq === "function") {
+        window.fbq("track", "PageView");
+      }
+    }
 
     if (eventName) {
       analytics.track(eventName, {
