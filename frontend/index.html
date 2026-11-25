@@ -2,13 +2,6 @@
 <html lang="en">
 
 <head>
-  <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-WWZVWH55');</script>
-  <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reset Music - Ambient & Electronic Music Streaming</title>
@@ -28,33 +21,54 @@
   <meta property="og:description"
     content="Stream ambient, instrumental, classical and experimental music. Built for next generation musicians, sound designers, listeners and audiophiles." />
   <meta property="og:site_name" content="Reset Music" />
-
   <meta property="og:image" content="https://musicreset.com/og-image-1200x630.jpg" />
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0R55RTZN64"></script>
+  <!-- Production Analytics: Google Tag Manager, GA4, & Meta Pixel -->
   <script>
+    var isProduction = window.location.hostname === 'musicreset.com' ||
+                       window.location.hostname === 'www.musicreset.com' ||
+                       window.location.hostname.endsWith('.musicreset.com');
+
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
 
-    gtag('config', 'G-0R55RTZN64');
-  </script>
+    if (isProduction) {
+      // 1. Google Tag Manager
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-WWZVWH55');
 
-  <!-- Meta Pixel Code -->
-  <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '29497278716575363');
-    fbq('track', 'PageView');
+      // 2. Google Analytics 4 (gtag.js)
+      function gtag(){ window.dataLayer.push(arguments); }
+      window.gtag = gtag;
+
+      var gaScript = document.createElement('script');
+      gaScript.async = true;
+      gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-0R55RTZN64';
+      document.head.appendChild(gaScript);
+
+      gtag('js', new Date());
+      gtag('config', 'G-0R55RTZN64');
+
+      // 3. Meta Pixel Code
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '29497278716575363');
+      fbq('track', 'PageView');
+    } else {
+      // Development / Localhost: Mock gtag & fbq to safely suppress all external hits
+      console.log('ℹ️ Local/Dev environment: Google Analytics, GTM, and Meta Pixel tracking are disabled.');
+      window.gtag = function() {};
+      window.fbq = function() {};
+    }
   </script>
-  <!-- End Meta Pixel Code -->
 
   <!-- Google Search Site Name Schema -->
   <script type="application/ld+json">
